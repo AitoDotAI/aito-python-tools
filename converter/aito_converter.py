@@ -63,7 +63,7 @@ class AitoConverter:
         :param text_analyzer: analyzer for text data. It can be also be ['English', 'Finnish', 'Swedish, 'German']
         :return: Aito Table Schema as dict
         """
-        type_map = {'string': 'Text',
+        type_map = {'string': 'String',
                     'unicode': 'Text',
                     'bytes': 'Text',
                     'floating': 'Decimal',
@@ -112,10 +112,14 @@ class AitoConverter:
         """
         start = timeit.default_timer()
         read_functions = {'csv': pd.read_csv, 'xlsx': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
-        default_options = {'csv': {'low_memory': False}, 'xlsx': {}, 'json': {'orient': 'records'},
+        default_options = {'csv': {}, 'xlsx': {}, 'json': {'orient': 'records'},
                            'ndjson': {'orient': 'records', 'lines': True}}
 
-        options = default_options[in_format] if not load_options else load_options.update(default_options[in_format])
+        if not load_options:
+            options = default_options[in_format]
+        else:
+            options = load_options
+            options.update(default_options[in_format])
         df = read_functions[in_format](in_file_path, **options)
         self.logger.info(f"Read file {str(in_file_path)} took {timeit.default_timer() - start}")
         return df
@@ -188,7 +192,6 @@ class AitoConverter:
                                                           in_format, out_file_name, in_file_name)
         except Exception as e:
             raise e
-
         df = self.read_file(in_file_path, in_format, load_options)
 
         if special_fix_functions:
