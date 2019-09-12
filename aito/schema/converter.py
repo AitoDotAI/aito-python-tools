@@ -10,10 +10,11 @@ import pandas as pd
 
 
 class Converter:
+    allowed_format = ['csv', 'json', 'xlsx', 'ndjson']
+
     def __init__(self):
         set_up_logger('converter')
         self.logger = logging.getLogger('AitoConverter')
-        self.allowed_format = ['csv', 'json', 'xlsx', 'ndjson']
         self.default_options = {
             'csv': {}, 'xlsx': {}, 'json': {'orient': 'records'}, 'ndjson': {'orient': 'records', 'lines': True}
         }
@@ -129,7 +130,7 @@ class Converter:
                      out_file_name: str = None,
                      read_options: Dict = None,
                      convert_options: Dict = None,
-                     apply_functions: List[Callable[[pd.DataFrame, ...], pd.DataFrame]] = None,
+                     apply_functions: List[Callable[..., pd.DataFrame]] = None,
                      generate_aito_schema: bool = True):
         """
         Converting a file into expected format and generate aito schema if required

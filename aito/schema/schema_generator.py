@@ -3,7 +3,7 @@ import pandas as pd
 
 class SchemaGeneartor:
     @staticmethod
-    def table_schema_from_pandas_dataframe( table_df: pd.DataFrame, default_text_analyzer='Whitespace'):
+    def table_schema_from_pandas_dataframe(table_df: pd.DataFrame, default_text_analyzer='Whitespace'):
         """
         Return aito schema in dictionary format
         :param table_df: The pandas DataFrame containing table data
