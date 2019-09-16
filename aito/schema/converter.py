@@ -16,7 +16,10 @@ class Converter:
         set_up_logger('converter')
         self.logger = logging.getLogger('AitoConverter')
         self.default_options = {
-            'csv': {}, 'xlsx': {}, 'json': {'orient': 'records'}, 'ndjson': {'orient': 'records', 'lines': True}
+            'csv': {},
+            'xlsx': {},
+            'json': {'orient': 'records'},
+            'ndjson': {'orient': 'records', 'lines': True}
         }
         self.default_apply_functions = [self.datetime_to_string]
 
@@ -57,7 +60,7 @@ class Converter:
             options = load_options
             options.update(self.default_options[in_format])
         df = read_functions[in_format](read_input, **options)
-        self.logger.info(f"Read input took {timeit.default_timer() - start}")
+        self.logger.info(f"Read input took {(timeit.default_timer() - start):.3f}")
         return df
 
     def apply_functions_on_df(self, df: pd.DataFrame, functions: List[Callable]) -> pd.DataFrame:
@@ -71,8 +74,8 @@ class Converter:
         for f in functions:
             start_f = timeit.default_timer()
             df = f(df)
-            self.logger.info(f"Applying function {f.__name__} took {timeit.default_timer() - start_f}")
-        self.logger.info(f"Applying all functions took {timeit.default_timer() - start}")
+            self.logger.info(f"Applying function {f.__name__} took {(timeit.default_timer() - start_f):.3f}")
+        self.logger.info(f"Applying all functions took {(timeit.default_timer() - start):.3f}")
         return df
 
     def df_to_format(self, df: pd.DataFrame, out_format: str, write_output, convert_options: Dict = None):
@@ -102,7 +105,7 @@ class Converter:
             options.update(self.default_options[out_format])
 
         convert_functions[out_format](write_output, **options)
-        self.logger.info(f"Convert to {out_format} and write to file took {timeit.default_timer() - start}")
+        self.logger.info(f"Convert to {out_format} and write to file took {(timeit.default_timer() - start):.3f}")
 
     def convert_file(self,
                      read_input,
