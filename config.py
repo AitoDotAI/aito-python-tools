@@ -18,7 +18,7 @@ def set_up_logger(log_file_name: str = 'log_file', log_folder: str = '.log', log
     log_folder.mkdir(parents=True, exist_ok=True)
     if (log_folder / f"{log_file_name}.log").exists():
         log_file_name = log_file_name + str(datetime.datetime.now().isoformat(' ', 'seconds'))
-    log_path = log_folder/ (log_file_name + '.log')
+    log_path = log_folder / (log_file_name + '.log')
     logging.basicConfig(filename=str(log_path), level=logging_level,
-                        format='%(asctime)-5s %(name)-5s %(logging_level)-10s %(message)s',
+                        format='%(asctime)-5s %(name)-5s %(levelname)-10s %(message)s',
                         datefmt='%H:%M:%S')
