@@ -1,5 +1,3 @@
-import json
-
 import ndjson
 
 from aito.schema.converter import Converter
