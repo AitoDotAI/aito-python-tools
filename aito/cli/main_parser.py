@@ -19,7 +19,6 @@ class MainParser():
 
     def parse_and_execute(self, parsing_args) -> int:
         args = self.parser.parse_args(parsing_args[0:1])
-        print(args)
         if args.action not in self.actions:
             self.parser.error(f"unrecognized action {args.action}")
         self.actions[args.action].parse_and_execute(parsing_args[1:])

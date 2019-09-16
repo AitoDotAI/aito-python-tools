@@ -44,7 +44,7 @@ class ConvertParser():
         if args['compress_output_file']:
             convert_args['convert_options']['compression'] = 'gzip'
         if args['input_format'] == 'csv':
-            convert_args['read_options']['delimiter'] = convert_args['delimiter']
+            convert_args['read_options']['delimiter'] = args['delimiter']
 
         converter = Converter()
         converter.convert_file(**convert_args)
