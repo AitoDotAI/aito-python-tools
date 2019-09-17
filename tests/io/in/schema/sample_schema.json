@@ -1,8 +1,9 @@
 {
     "columns": {
         "Remark": {
+            "analyzer": "en",
             "nullable": true,
-            "type": "String"
+            "type": "Text"
         },
         "amount": {
             "nullable": false,
@@ -13,8 +14,9 @@
             "type": "Int"
         },
         "name": {
+            "analyzer": "en",
             "nullable": false,
-            "type": "String"
+            "type": "Text"
         }
     },
     "type": "table"

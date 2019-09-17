@@ -9,6 +9,7 @@ verify_ssl = true
 pandas = "*"
 ndjson="*"
 xlrd="*"
+langdetect = "*"
 
 [requires]
 python_version = "3.6"

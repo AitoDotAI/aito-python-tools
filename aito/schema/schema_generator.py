@@ -1,16 +1,17 @@
 import pandas as pd
+from langdetect import detect
 
 
 class SchemaGeneartor:
     @staticmethod
-    def table_schema_from_pandas_dataframe(table_df: pd.DataFrame, default_text_analyzer='Whitespace'):
+    def table_schema_from_pandas_dataframe(table_df: pd.DataFrame):
         """
         Return aito schema in dictionary format
         :param table_df: The pandas DataFrame containing table data
-        :param default_text_analyzer: analyzer for text data
         :return: Aito Table Schema as dict
         """
-        type_map = {'string': 'String',
+        rows_count = table_df.shape[0]
+        type_map = {'string': 'Text',
                     'unicode': 'Text',
                     'bytes': 'Text',
                     'floating': 'Decimal',
@@ -35,7 +36,12 @@ class SchemaGeneartor:
                 'type': type_map[pd.api.types.infer_dtype(table_df[col].values, skipna=True)]
             }
             if col_schema['type'] == 'Text':
-                col_schema['analyzer'] = default_text_analyzer
+                if rows_count < 1000:
+                    sample_text = table_df[col].str.cat(sep=' ')
+                else:
+                    sample_text = table_df[col].sample(1000).str.cat(sep=' ')
+                lang = detect(sample_text)
+                col_schema['analyzer'] = lang
             columns_schema[col] = col_schema
 
         table_schema = {'type': 'table', 'columns': columns_schema}
