@@ -21,9 +21,9 @@ class ConvertParser:
         for more specific input format options
         ''',
                                  epilog='''example:
-        python aito.py convert ./myFile.json
-        python aito.py convert -t json ./myFile.txt
-        python aito.py convert -t json - convertedFile.ndjson < myFile.json
+        python aito.py convert json ./myFile.json
+        python aito.py convert json - convertedFile.ndjson < myFile.json
+        python aito.py convert -zs myFile_schema.json json - convertedFile.ndjson < myFile.json
         
         With no input, or when input is -, read from standard input
         With no output, or when output is -, read from standard output 
@@ -32,8 +32,8 @@ class ConvertParser:
         parser = self.parser
         parser.add_argument('-z', '--compress-output-file', action='store_true',
                             help='compress output file with gzip')
-        parser.add_argument('-s', '--generate-aito-schema', action='store_true',
-                            help='generate an inferred aito schema')
+        parser.add_argument('-s', '--generate-aito-schema', metavar='schema-file', type=str,
+                            help='write inferred aito schema to a json file')
 
         parser.add_argument('input-format', choices=['csv', 'json', 'xlsx'], help='input format', )
         parser.add_argument('input', default='-', type=str, nargs='?', help="input file, dir, or stream")
@@ -83,6 +83,8 @@ class ConvertFormatParser:
         else:
             parsed_args['output'] = check_valid_path(parsed_args['output'])
 
+        if parsed_args['generate_aito_schema']:
+            parsed_args['generate_aito_schema'] = check_valid_path((parsed_args['generate_aito_schema']))
         shared_convert_args = {
             'read_input': parsed_args['input'],
             'write_output': parsed_args['output'],

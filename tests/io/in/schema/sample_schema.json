@@ -1,0 +1,21 @@
+{
+    "columns": {
+        "Remark": {
+            "nullable": true,
+            "type": "String"
+        },
+        "amount": {
+            "nullable": false,
+            "type": "Decimal"
+        },
+        "id": {
+            "nullable": false,
+            "type": "Int"
+        },
+        "name": {
+            "nullable": false,
+            "type": "String"
+        }
+    },
+    "type": "table"
+}

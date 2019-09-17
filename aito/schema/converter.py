@@ -115,7 +115,7 @@ class Converter:
                      read_options: Dict = None,
                      convert_options: Dict = None,
                      apply_functions: List[Callable[..., pd.DataFrame]] = None,
-                     generate_aito_schema: bool = True):
+                     generate_aito_schema: Path = None):
         """
         Converting a file into expected format and generate aito schema if required
         :param read_input: filepath to input or input buffer
@@ -145,7 +145,6 @@ class Converter:
         if generate_aito_schema:
             generator = SchemaGeneartor()
             schema = generator.table_schema_from_pandas_dataframe(df)
-            print(file=write_output)
-            print("Generated schema", file=write_output)
-            json.dump(schema, write_output, indent=4, sort_keys=True)
+            with generate_aito_schema.open(mode='w') as f:
+                json.dump(schema, f, indent=4, sort_keys=True)
 

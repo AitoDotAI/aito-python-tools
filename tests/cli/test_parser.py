@@ -1,4 +1,5 @@
 import ndjson
+import json
 
 from tests.test_case import TestCaseCompare
 from aito.cli.main_parser import MainParser
@@ -7,8 +8,8 @@ from aito.cli.main_parser import MainParser
 class TestAitoConvertParser(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='cli')
-        cls.input_folder = cls.input_folder.parent / 'schema'
+        super().setUpClass(test_path='cli/convert')
+        cls.input_folder = cls.input_folder.parent.parent / 'schema'
         cls.main_parser = MainParser()
 
     def setUp(self):
@@ -38,3 +39,10 @@ class TestAitoConvertParser(TestCaseCompare):
                                             f"{self.out_file_path}"])
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample.ndjson').open()))
+
+    def test_generate_schema(self):
+        schema_path = self.output_folder / f"{self.method_name}_schema_out.json"
+        self.main_parser.parse_and_execute(['convert', f"-s={schema_path}", 'csv',
+                                            f"{self.input_folder / 'sample.csv'}", f"{self.out_file_path}"])
+        self.assertDictEqual(json.load(schema_path.open()),
+                             json.load((self.input_folder / 'sample_schema.json').open()))
