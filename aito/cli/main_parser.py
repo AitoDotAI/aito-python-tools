@@ -2,6 +2,7 @@ import argparse
 
 from aito.cli.convert_parser import ConvertParser
 from aito.cli.parser import AitoParser
+from config import set_up_logger
 
 
 class MainParser:
@@ -18,6 +19,7 @@ class MainParser:
         }
 
     def parse_and_execute(self, parsing_args) -> int:
+        set_up_logger()
         args = self.parser.parse_args(parsing_args[0:1])
         if args.action not in self.actions_parser:
             self.parser.error(f"unrecognized action {args.action}")

@@ -13,7 +13,6 @@ class Converter:
     allowed_format = ['csv', 'json', 'xlsx', 'ndjson']
 
     def __init__(self):
-        set_up_logger('converter')
         self.logger = logging.getLogger('AitoConverter')
         self.default_options = {
             'csv': {},
@@ -51,7 +50,7 @@ class Converter:
         :param load_options: dictionary contains arguments for pandas read function
         :return:
         """
-        start = timeit.default_timer()
+        self.logger.info("Start reading input...")
         read_functions = {'csv': pd.read_csv, 'xlsx': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
 
         if not load_options:
@@ -60,7 +59,6 @@ class Converter:
             options = load_options
             options.update(self.default_options[in_format])
         df = read_functions[in_format](read_input, **options)
-        self.logger.info(f"Read input took {(timeit.default_timer() - start):.3f}")
         return df
 
     def apply_functions_on_df(self, df: pd.DataFrame, functions: List[Callable]) -> pd.DataFrame:
@@ -70,12 +68,9 @@ class Converter:
         :param functions:
         :return:
         """
-        start = timeit.default_timer()
+        self.logger.info("Start processing data...")
         for f in functions:
-            start_f = timeit.default_timer()
             df = f(df)
-            self.logger.info(f"Applying function {f.__name__} took {(timeit.default_timer() - start_f):.3f}")
-        self.logger.info(f"Applying all functions took {(timeit.default_timer() - start):.3f}")
         return df
 
     def df_to_format(self, df: pd.DataFrame, out_format: str, write_output, convert_options: Dict = None):
@@ -96,7 +91,7 @@ class Converter:
         :param convert_options: dictionary contains arguments for pandas convert function
         :return:
         """
-        start = timeit.default_timer()
+        self.logger.info(f"Start converting to {out_format} and writing to output...")
         convert_functions = {'csv': df.to_csv, 'xlsx': df.to_excel, 'json': df.to_json, 'ndjson': df.to_json}
         if not convert_options:
             options = self.default_options[out_format]
@@ -105,7 +100,6 @@ class Converter:
             options.update(self.default_options[out_format])
 
         convert_functions[out_format](write_output, **options)
-        self.logger.info(f"Convert to {out_format} and write to file took {(timeit.default_timer() - start):.3f}")
 
     def convert_file(self,
                      read_input,
