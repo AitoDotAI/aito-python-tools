@@ -1,12 +1,11 @@
 import json
 import logging
-import timeit
 from pathlib import Path
-from typing import Union, List, Dict, Callable
-from config import set_up_logger
-from aito.schema.schema_generator import SchemaGenerator
+from typing import List, Dict, Callable
 
 import pandas as pd
+
+from aito.schema.schema_handler import SchemaHandler
 
 
 class Converter:
@@ -137,8 +136,8 @@ class Converter:
         self.df_to_format(df, out_format, write_output, convert_options)
 
         if generate_aito_schema:
-            generator = SchemaGenerator()
-            schema = generator.table_schema_from_pandas_dataframe(df)
+            generator = SchemaHandler()
+            schema = generator.generate_table_schema_from_pandas_dataframe(df)
             with generate_aito_schema.open(mode='w') as f:
                 json.dump(schema, f, indent=4, sort_keys=True)
 

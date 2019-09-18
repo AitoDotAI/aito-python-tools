@@ -1,9 +1,9 @@
 import argparse
 import sys
 
+from config import set_up_logger
 from tests.test_case import *
 from tests.test_result import *
-import unittest
 
 
 class ArgParser(argparse.ArgumentParser):
@@ -62,15 +62,15 @@ def get_test_suites(starting_dir: Path):
     return test_suites
 
 
-
 if __name__ == '__main__':
     test_parser = generate_parser()
+    set_up_logger()
+
     args = test_parser.parse_args()
     if args.meld:
         result_class = TestResultCompareFileMeld
     else:
         result_class = unittest.TextTestResult
-
     runner = unittest.TextTestRunner(verbosity=args.verbosity, resultclass=result_class)
     result = False
     if args.testOption:
