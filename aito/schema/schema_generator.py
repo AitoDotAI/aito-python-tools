@@ -2,7 +2,7 @@ import pandas as pd
 from langdetect import detect
 
 
-class SchemaGeneartor:
+class SchemaGenerator:
     @staticmethod
     def table_schema_from_pandas_dataframe(table_df: pd.DataFrame):
         """
@@ -11,24 +11,27 @@ class SchemaGeneartor:
         :return: Aito Table Schema as dict
         """
         rows_count = table_df.shape[0]
-        type_map = {'string': 'Text',
-                    'unicode': 'Text',
-                    'bytes': 'Text',
-                    'floating': 'Decimal',
-                    'integer': 'Int',
-                    'mixed - integer': 'Decimal',
-                    'mixed - integer - float': 'Decimal',
-                    'boolean': 'Boolean',
-                    'decimal': 'Decimal',
-                    'datetime64': 'String',
-                    'datetime': 'String',
-                    'date': 'String',
-                    'timedelta64': 'String',
-                    'timedelta': 'String',
-                    'time': 'String',
-                    'period': 'String',
-                    'mixed': 'Text'
-                    }
+        type_map = {
+            'string': 'Text',
+            'unicode': 'Text',
+            'bytes': 'Text',
+            'floating': 'Decimal',
+            'integer': 'Int',
+            'mixed - integer': 'Decimal',
+            'mixed - integer - float': 'Decimal',
+            'decimal': 'Decimal',
+            'complex': 'Decimal',
+            'categorical': 'String',
+            'boolean': 'Boolean',
+            'datetime64': 'String',
+            'datetime': 'String',
+            'date': 'String',
+            'timedelta64': 'String',
+            'timedelta': 'String',
+            'time': 'String',
+            'period': 'String',
+            'mixed': 'Text'
+        }
         columns_schema = {}
         for col in table_df.columns.values:
             col_schema = {

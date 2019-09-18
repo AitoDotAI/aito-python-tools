@@ -30,10 +30,12 @@ class ConvertParser:
         ''',
                                  add_help=False)
         parser = self.parser
+        parser.add_argument('-e', '--encoding', type=str, default='utf-8',
+                            help="encoding to use (default: 'utf-8')")
+        parser.add_argument('-g', '--generate-aito-schema', metavar='schema-output-file', type=str,
+                            help='write inferred aito schema to a json file')
         parser.add_argument('-z', '--compress-output-file', action='store_true',
                             help='compress output file with gzip')
-        parser.add_argument('-s', '--generate-aito-schema', metavar='schema-file', type=str,
-                            help='write inferred aito schema to a json file')
 
         parser.add_argument('input-format', choices=['csv', 'json', 'xlsx'], help='input format', )
         parser.add_argument('input', default='-', type=str, nargs='?', help="input file, dir, or stream")
@@ -90,7 +92,9 @@ class ConvertFormatParser:
             'write_output': parsed_args['output'],
             'in_format': self.input_format,
             'out_format': 'ndjson',
-            'read_options': {},
+            'read_options': {
+                'encoding': parsed_args['encoding']
+            },
             'convert_options': {
                 'compression': 'gzip' if parsed_args['compress_output_file'] else None
             },
