@@ -46,3 +46,9 @@ class TestAitoConvertParser(TestCaseCompare):
                                             f"{self.input_folder / 'sample.csv'}", f"{self.out_file_path}"])
         self.assertDictEqual(json.load(schema_out_path.open()),
                              json.load((self.input_folder / 'sample_schema.json').open()))
+
+    def test_use_schema(self):
+        self.main_parser.parse_and_execute(['convert', f"-u={self.input_folder / 'sample_schema_altered.json'}", 'csv',
+                                            f"{self.input_folder / 'sample.csv'}", f"{self.out_file_path}"])
+        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
+                              ndjson.load((self.input_folder / 'sample_altered.ndjson').open()))

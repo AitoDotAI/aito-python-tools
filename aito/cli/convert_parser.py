@@ -33,6 +33,8 @@ class ConvertParser:
                             help="encoding to use (default: 'utf-8')")
         parser.add_argument('-g', '--generate-aito-schema', metavar='schema-output-file', type=str,
                             help='write inferred aito schema to a json file')
+        parser.add_argument('-u', '--use-aito-schema', metavar='schema-input-file', type=str,
+                            help='convert the data to match the desired schema')
         parser.add_argument('-z', '--compress-output-file', action='store_true',
                             help='compress output file with gzip')
 
@@ -85,6 +87,9 @@ class ConvertFormatParser:
 
         if parsed_args['generate_aito_schema']:
             parsed_args['generate_aito_schema'] = check_valid_path((parsed_args['generate_aito_schema']))
+        if parsed_args['use_aito_schema']:
+            parsed_args['use_aito_schema'] = check_valid_path((parsed_args['use_aito_schema']))
+
         shared_convert_args = {
             'read_input': parsed_args['input'],
             'write_output': parsed_args['output'],
@@ -96,7 +101,8 @@ class ConvertFormatParser:
             'convert_options': {
                 'compression': 'gzip' if parsed_args['compress_output_file'] else None
             },
-            'generate_aito_schema': parsed_args['generate_aito_schema']
+            'generate_aito_schema': parsed_args['generate_aito_schema'],
+            'use_aito_schema': parsed_args['use_aito_schema']
         }
 
         return parsed_args, shared_convert_args

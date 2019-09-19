@@ -126,7 +126,7 @@ class DataFrameConverter:
                      convert_options: Dict = None,
                      apply_functions: List[Callable[..., pd.DataFrame]] = None,
                      generate_aito_schema: Path = None,
-                     convert_from_aito_schema_input: Path = None):
+                     use_aito_schema: Path = None):
         """
         Converting a file into expected format and generate aito schema if required
         :param read_input: filepath to input or input buffer
@@ -137,7 +137,7 @@ class DataFrameConverter:
         :param convert_options: dictionary contains arguments for pandas convert function
         :param apply_functions: List of partial functions that will be chained applied to the loaded pd.DataFrame
         :param generate_aito_schema: option to auto generate aito schema
-        :param convert_from_aito_schema_input: use an aito schema to dictates data types and convert the data
+        :param use_aito_schema: use an aito schema to dictates data types and convert the data
         :return:
         """
         try:
@@ -152,8 +152,8 @@ class DataFrameConverter:
             apply_functions = self.default_apply_functions
         df = self.apply_functions_on_df(df, apply_functions)
 
-        if convert_from_aito_schema_input:
-            with convert_from_aito_schema_input.open() as f:
+        if use_aito_schema:
+            with use_aito_schema.open() as f:
                 table_schema = json.load(f)
             df = self.convert_df_from_aito_table_schema(df, table_schema)
 

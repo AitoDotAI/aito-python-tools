@@ -53,6 +53,6 @@ class TestDataFrameConverter(TestCaseCompare):
     def test_csv_to_ndjson_with_aito_schema(self):
         schema_altered = self.input_folder / 'sample_schema_altered.json'
         self.converter.convert_file(self.input_folder / 'sample.csv', self.out_file_path, 'csv', 'ndjson',
-                                    convert_from_aito_schema_input=schema_altered)
+                                    use_aito_schema=schema_altered)
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample_altered.ndjson').open()))
