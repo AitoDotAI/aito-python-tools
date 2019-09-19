@@ -56,19 +56,26 @@ class DataFrameConverter:
 
     def convert_df_from_aito_table_schema(self, df: pd.DataFrame, table_schema: Dict):
         self.schema_handler.validate_table_schema(table_schema)
+
         columns_schema = table_schema['columns']
         df_columns = set(df.columns.values)
         table_schema_columns = set(columns_schema.keys())
+
         for col in (df_columns - table_schema_columns):
             self.logger.warn(f"Column '{col}' found in the input data but not found in the input schema")
         for col in (table_schema_columns - df_columns):
             self.logger.warn(f"Column '{col}' found in the input schema but not found in the input data")
-        selecting_columns_with_types = {
-            col: self.schema_handler.aito_types_to_pandas_dtypes[columns_schema[col]['type']]
-            for col in table_schema_columns.intersection(df_columns)
-        }
-        self.logger.info("Converting data types to match with the input schema...")
-        return df[list(selecting_columns_with_types.keys())].astype(selecting_columns_with_types, skipna=True)
+
+        for col in table_schema_columns.intersection(df_columns):
+            col_schema = columns_schema[col]
+            col_schema_nullable = True if ('nullable' not in col_schema or col_schema['nullable']) else False
+            if not col_schema_nullable and df[col].isna().any():
+                raise ValueError(f"Column '{col}' is nullable but stated non-nullable in the input schema")
+            col_schema_dtype = self.schema_handler.aito_types_to_pandas_dtypes[col_schema['type']]
+            if col_schema_dtype != df[col].dtype.name:
+                self.logger.info(f"Converting column '{col}' data type to match with the input schema...")
+                df[col] = df[col].astype(col_schema_dtype, skipna = True)
+        return df
 
     def read_file_to_df(self, read_input, in_format: str, load_options: Dict = None) -> pd.DataFrame:
         """
