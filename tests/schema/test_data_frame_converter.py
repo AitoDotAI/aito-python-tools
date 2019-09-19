@@ -2,16 +2,16 @@ import json
 
 import ndjson
 
-from aito.schema.converter import Converter
+from aito.schema.data_frame_converter import DataFrameConverter
 from tests.test_case import TestCaseCompare
 
 
-class TestPandasConverter(TestCaseCompare):
+class TestDataFrameConverter(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
         super().setUpClass(test_path='schema/converter')
         cls.input_folder = cls.input_folder.parent
-        cls.converter = Converter()
+        cls.converter = DataFrameConverter()
 
     def setUp(self):
         super().setUp()
@@ -49,3 +49,10 @@ class TestPandasConverter(TestCaseCompare):
                                     generate_aito_schema=schema_file_path)
         self.assertDictEqual(json.load(schema_file_path.open()),
                              json.load((self.input_folder / 'sample_schema.json').open()))
+
+    def test_csv_to_ndjson_with_aito_schema(self):
+        schema_altered = self.input_folder / 'sample_schema_altered.json'
+        self.converter.convert_file(self.input_folder / 'sample.csv', self.out_file_path, 'csv', 'ndjson',
+                                    convert_from_aito_schema_input=schema_altered)
+        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
+                              ndjson.load((self.input_folder / 'sample_altered.ndjson').open()))

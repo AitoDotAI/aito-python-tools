@@ -8,7 +8,7 @@ from langdetect import detect
 class SchemaHandler:
     def __init__(self):
         self.logger = logging.getLogger("SchemaHandler")
-        self.pandas_types_to_aito_type = {
+        self.pandas_dtypes_name_to_aito_type = {
             'string': 'Text',
             'unicode': 'Text',
             'bytes': 'Text',
@@ -29,18 +29,18 @@ class SchemaHandler:
             'period': 'String',
             'mixed': 'Text'
         }
-        self.aito_types_to_pandas_types = {
-            'Boolean': 'boolean',
-            'Decimal': 'decimal',
-            'Int': 'integer',
-            'String': 'string',
-            'Text': 'string'
+        self.aito_types_to_pandas_dtypes = {
+            'Boolean': 'bool',
+            'Decimal': 'float64',
+            'Int': 'int64',
+            'String': 'str',
+            'Text': 'str'
         }
         self.sample_size = 100000
 
     def infer_aito_types_from_values(self, values: List):
         dtypes = pd.api.types.infer_dtype(values, skipna=True)
-        return self.pandas_types_to_aito_type[dtypes]
+        return self.pandas_dtypes_name_to_aito_type[dtypes]
 
     def generate_table_schema_from_pandas_dataframe(self, table_df: pd.DataFrame):
         """
@@ -82,7 +82,7 @@ class SchemaHandler:
         :return:
         """
         def validate_required_arg(object_name: str, object_dict: Dict, arg_name: str):
-            if not object_dict[arg_name]:
+            if arg_name not in object_dict:
                 raise ValueError(f"{object_name} missing '{arg_name}'")
 
         def validate_arg_type(object_name: str, object_dict: Dict, arg_name: str, arg_type: object,
@@ -100,7 +100,7 @@ class SchemaHandler:
                          arg_type: object = None, accepted_values: List = None):
             if required:
                 validate_required_arg(object_name, object_dict, arg_name)
-            if arg_type:
+            if arg_name in object_dict and arg_type:
                 validate_arg_type(object_name, object_dict, arg_name, arg_type, accepted_values)
 
         self.logger.info("Start validating schema...")
@@ -108,5 +108,5 @@ class SchemaHandler:
         validate_arg('table', table_schema, 'columns', True, dict)
         for col in table_schema['columns']:
             col_schema = table_schema['columns'][col]
-            validate_arg(col, col_schema, 'type', True, str, list(self.aito_types_to_pandas_types.keys()))
+            validate_arg(col, col_schema, 'type', True, str, list(self.aito_types_to_pandas_dtypes.keys()))
             validate_arg(col, col_schema, 'nullable', False, bool)

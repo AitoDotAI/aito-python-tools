@@ -2,7 +2,6 @@ import argparse
 
 from aito.cli.convert_parser import ConvertParser
 from aito.cli.parser import AitoParser
-from config import set_up_logger
 
 
 class MainParser:

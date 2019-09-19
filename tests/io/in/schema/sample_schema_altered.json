@@ -1,0 +1,22 @@
+{
+    "columns": {
+        "Remark": {
+            "analyzer": "en",
+            "nullable": true,
+            "type": "Text"
+        },
+        "amount": {
+            "nullable": false,
+            "type": "Int"
+        },
+        "id": {
+            "nullable": false,
+            "type": "String"
+        },
+        "name": {
+            "analyzer": "en",
+            "type": "String"
+        }
+    },
+    "type": "table"
+}

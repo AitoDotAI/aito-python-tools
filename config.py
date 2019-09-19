@@ -12,7 +12,6 @@ def set_up_logger(log_file_path: Path = None, logging_level: int = logging.INFO)
     """
     Wrapper for logging basic config
     :param log_file_path: path to log file. if not defined then use stderr
-    :param log_folder: Path from root to log folder
     :param logging_level: The logging levels
     """
     if log_file_path:

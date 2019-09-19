@@ -1,10 +1,9 @@
 import argparse
-
-from aito.cli.parser import AitoParser
-from aito.schema.converter import Converter
 import sys
 from pathlib import Path
-from abc import ABC, abstractmethod
+
+from aito.cli.parser import AitoParser
+from aito.schema.data_frame_converter import DataFrameConverter
 
 
 class ConvertParser:
@@ -65,21 +64,20 @@ class ConvertFormatParser:
         self.input_format = input_format
 
     def parse_shared_args(self, parsing_args):
-        def check_valid_path(str_path):
+        def check_valid_path(str_path, check_exists=False):
             try:
                 path = Path(str_path)
             except Exception:
-                raise Exception(f"invalid path {str_path}")
+                raise ValueError(f"invalid path {str_path}")
+            if check_exists and not path.exists():
+                raise ValueError(f"path {parsed_args['input']} does not exist")
             return path
 
         parsed_args = vars(self.parser.parse_args(parsing_args))
         if parsed_args['input'] == '-':
             parsed_args['input'] = sys.stdin
         else:
-            input_path = check_valid_path(parsed_args['input'])
-            if not input_path.exists():
-                raise Exception(f"input path {parsed_args['input']} does not exist")
-            parsed_args['input'] = input_path
+            parsed_args['input'] = input_path = check_valid_path(parsed_args['input'], True)
         if parsed_args['output'] == '-':
             parsed_args['output'] = sys.stdout
         else:
@@ -114,7 +112,7 @@ class ConvertCsvParser(ConvertFormatParser):
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, convert_args = super().parse_shared_args(parsing_args)
         convert_args['read_options']['delimiter'] = parsed_args['delimiter']
-        Converter().convert_file(**convert_args)
+        DataFrameConverter().convert_file(**convert_args)
         return 0
 
 
@@ -124,7 +122,7 @@ class ConvertJsonParser(ConvertFormatParser):
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, convert_args = super().parse_shared_args(parsing_args)
-        Converter().convert_file(**convert_args)
+        DataFrameConverter().convert_file(**convert_args)
         return 0
 
 
@@ -134,5 +132,5 @@ class ConvertXlsxParser(ConvertFormatParser):
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, convert_args = super().parse_shared_args(parsing_args)
-        Converter().convert_file(**convert_args)
+        DataFrameConverter().convert_file(**convert_args)
         return 0
