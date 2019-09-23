@@ -1,7 +1,6 @@
-from pathlib import Path
-import logging
 import datetime
-import sys
+import logging
+from pathlib import Path
 
 
 def root_path():

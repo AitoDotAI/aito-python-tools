@@ -11,21 +11,15 @@ class ConvertParser:
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
                                  description='convert data into ndjson format',
                                  usage='''
-        aito.py convert [<options>] <input-format> [input] [output] [<input-format-options>] 
-
-        Convert an input from input-format to ndjson
+        aito.py convert [<convert-options>] <input-format> [input] [output] [<input-format-options>] 
         
+        To see help for a specific input format, you can run:
         aito.py convert <input-format> -h 
-        
-        for more specific input format options
         ''',
                                  epilog='''example:
         python aito.py convert json ./myFile.json
         python aito.py convert json - convertedFile.ndjson < myFile.json
-        python aito.py convert -zs myFile_schema.json json - convertedFile.ndjson < myFile.json
-        
-        With no input, or when input is -, read from standard input
-        With no output, or when output is -, read from standard output 
+        python aito.py convert -zs myFile_schema.json json - convertedFile.ndjson < myFile.json 
         ''',
                                  add_help=False)
         parser = self.parser
@@ -38,15 +32,17 @@ class ConvertParser:
         parser.add_argument('-z', '--compress-output-file', action='store_true',
                             help='compress output file with gzip')
 
-        parser.add_argument('input-format', choices=['csv', 'json', 'xlsx'], help='input format', )
-        parser.add_argument('input', default='-', type=str, nargs='?', help="input file, dir, or stream")
-        parser.add_argument('output', default='-', type=str, nargs='?', help="output file, dir, or stream")
-
         self.input_format_parser = {
             'csv': ConvertCsvParser(parser),
             'json': ConvertJsonParser(parser),
             'xlsx': ConvertXlsxParser(parser)
         }
+        parser.add_argument('input-format', choices=list(self.input_format_parser.keys()), help='input format')
+        parser.add_argument('input', default='-', type=str, nargs='?',
+                            help="input file or stream (with no input, or when input is -, read from standard input)")
+        parser.add_argument('output', default='-', type=str, nargs='?',
+                            help="output file or stream (with no output, or when output is -, "
+                                 "read from standard output)")
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, unknown = self.parser.parse_known_args(parsing_args)
@@ -58,6 +54,7 @@ class ConvertParser:
 
 class ConvertFormatParser:
     def __init__(self, parent_convert_parser: AitoParser, input_format: str):
+        self.converter = DataFrameConverter()
 
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
                                  parents=[parent_convert_parser],
@@ -66,29 +63,14 @@ class ConvertFormatParser:
         self.input_format = input_format
 
     def parse_shared_args(self, parsing_args):
-        def check_valid_path(str_path, check_exists=False):
-            try:
-                path = Path(str_path)
-            except Exception:
-                raise ValueError(f"invalid path {str_path}")
-            if check_exists and not path.exists():
-                raise ValueError(f"path {parsed_args['input']} does not exist")
-            return path
-
         parsed_args = vars(self.parser.parse_args(parsing_args))
-        if parsed_args['input'] == '-':
-            parsed_args['input'] = sys.stdin
-        else:
-            parsed_args['input'] = input_path = check_valid_path(parsed_args['input'], True)
-        if parsed_args['output'] == '-':
-            parsed_args['output'] = sys.stdout
-        else:
-            parsed_args['output'] = check_valid_path(parsed_args['output'])
+        parsed_args['input'] = self.parser.parse_input_arg_value(parsed_args['input'])
+        parsed_args['output'] = self.parser.parse_output_arg_value(parsed_args['output'])
 
         if parsed_args['generate_aito_schema']:
-            parsed_args['generate_aito_schema'] = check_valid_path((parsed_args['generate_aito_schema']))
+            parsed_args['generate_aito_schema'] = self.parser.check_valid_path((parsed_args['generate_aito_schema']))
         if parsed_args['use_aito_schema']:
-            parsed_args['use_aito_schema'] = check_valid_path((parsed_args['use_aito_schema']))
+            parsed_args['use_aito_schema'] = self.parser.check_valid_path((parsed_args['use_aito_schema']))
 
         shared_convert_args = {
             'read_input': parsed_args['input'],
@@ -118,7 +100,7 @@ class ConvertCsvParser(ConvertFormatParser):
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, convert_args = super().parse_shared_args(parsing_args)
         convert_args['read_options']['delimiter'] = parsed_args['delimiter']
-        DataFrameConverter().convert_file(**convert_args)
+        self.converter.convert_file(**convert_args)
         return 0
 
 
@@ -128,7 +110,7 @@ class ConvertJsonParser(ConvertFormatParser):
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, convert_args = super().parse_shared_args(parsing_args)
-        DataFrameConverter().convert_file(**convert_args)
+        self.converter.convert_file(**convert_args)
         return 0
 
 
@@ -138,5 +120,5 @@ class ConvertXlsxParser(ConvertFormatParser):
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, convert_args = super().parse_shared_args(parsing_args)
-        DataFrameConverter().convert_file(**convert_args)
+        self.converter.convert_file(**convert_args)
         return 0
