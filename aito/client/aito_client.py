@@ -7,14 +7,24 @@ from aiohttp import ClientSession
 
 
 class AitoClient:
-    def __init__(self, url, rw_key, ro_key):
+    def __init__(self, url: str, rw_key: str, ro_key: str):
+        self.logger = logging.getLogger("AitoClient")
+        if not url:
+            raise Exception(f"Client url is not defined")
         self.url = url
+
         self.rw_key = rw_key
         self.ro_key = ro_key
-        self.logger = logging.getLogger("AitoClient")
+        if not rw_key:
+            self.logger.warn("Read-write key is not defined. API required read-write key will fail")
+        if not ro_key:
+            self.logger.warn(f"Read-only key is not defined. Use read-write key instead")
+            self.ro_key = self.rw_key
+
         self.request_methods = {
             'PUT': requests.put, 'POST': requests.post, 'GET': requests.get, 'DELETE': requests.delete
         }
+
         self.query_api_paths = [
             '/api/v1/_search',
             '/api/v1/_predict',
@@ -25,29 +35,29 @@ class AitoClient:
             '/api/v1/_relate',
             '/api/v1/_query'
         ]
+
         self.database_api_prefix_and_methods = {
             '/api/v1/schema': ['GET', 'PUT', 'DELETE'],
             '/api/v1/data': ['POST', 'GET'],
             '/api/v1/data/_delete': ['POST']
         }
-        self.path_required_rw_keys = []
+        self.ro_key_paths = self.query_api_paths + ['/version']
 
-    def validate_path(self, path: str):
-        is_database_api_path = any([path.startswith(db_path) for db_path in self.database_api_prefix_and_methods])
-        if path not in self.query_api_paths or not is_database_api_path:
-            raise ValueError(f"invalid path {path}")
-        return path
-
-    def build_headers(self, validated_path: str):
+    def build_headers(self, path: str):
+        """
+        Check if path is validate aito path.
+        Use read-write or read-only key accordingly
+        :param path:
+        :return:
+        """
         headers = {'Content-Type': 'application/json'}
-        if validated_path in self.query_api_paths:
-            use_rw_key = False
-        else:
-            use_rw_key = True
-        if use_rw_key and self.rw_key:
+        is_database_api_path = any([path.startswith(db_path) for db_path in self.database_api_prefix_and_methods])
+        if is_database_api_path:
             headers['x-api-key'] = self.rw_key
-        if not use_rw_key and self.ro_key:
+        elif path in self.ro_key_paths:
             headers['x-api-key'] = self.ro_key
+        else:
+            raise ValueError(f"invalid path {path}")
         return headers
 
     async def fetch(self, session: ClientSession, req_method: 'str', path: str, json_data: Dict):
@@ -67,8 +77,6 @@ class AitoClient:
         :param json_data: request content
         :return:
         """
-        path = self.validate_path(path)
-
         async def run():
             async with ClientSession() as session:
                 tasks = [self.fetch(session, request_method, path, json_data)] * request_count
@@ -86,8 +94,6 @@ class AitoClient:
         :param request_data: list of request data
         :return:
         """
-        request_paths = [self.validate_path(path) for path in request_paths]
-
         async def run():
             async with ClientSession() as session:
                 tasks = [self.fetch(session, method, request_paths[idx], request_data[idx])
@@ -99,7 +105,6 @@ class AitoClient:
         return loop.run_until_complete(run())
 
     def request(self, req_method: str, path: str, data=None):
-        path = self.validate_path(path)
         headers = self.build_headers(path)
         url = self.url + path
 
@@ -111,6 +116,9 @@ class AitoClient:
         except requests.HTTPError:
             raise Exception(f"Unsuccessful request: {r.content}")
         return r.json()
+
+    def get_version(self):
+        return self.request('GET', '/version')
 
     def put_database_schema(self, database_schema):
         return self.request('PUT', '/api/v1/schema', database_schema)
@@ -131,10 +139,12 @@ class AitoClient:
         return self.request('GET', f"/api/v1/schema/{table_name}")
 
     def populate_table_entries(self, table_name, entries):
-        self.logger.info(f"Start uploading {len(entries)} to table {table_name}")
-        resp = self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
-        self.logger.info(f"Finish uploading {len(entries)} to table {table_name}")
-        return resp
+        if len(entries) > 1000:
+            self.populate_table_entries_by_batches(table_name, entries)
+        else:
+            self.logger.info(f"Start uploading {len(entries)} to table {table_name}")
+            self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
+            self.logger.info(f"Finish uploading {len(entries)} to table {table_name}")
 
     def populate_table_entries_by_batches(self, table_name, entries, batch_size=1000):
         self.logger.info(f"Start uploading {len(entries)} to table {table_name} with batch size of {batch_size}")
@@ -150,5 +160,4 @@ class AitoClient:
                 self.logger.error(f"Batch {begin_idx}:{last} failed: {e}")
             begin_idx = last
 
-        self.logger.info(f"Finish uploading {populated}/{len(entries)} entries to table {table_name} "
-                         f"with batch size of {batch_size}")
+        self.logger.info(f"Finish uploading {populated}/{len(entries)} entries to table {table_name}")
