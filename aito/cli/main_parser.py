@@ -1,5 +1,6 @@
 import argparse
 
+from aito.cli.client_parser import ClientParser
 from aito.cli.convert_parser import ConvertParser
 from aito.cli.parser import AitoParser
 
@@ -7,14 +8,19 @@ from aito.cli.parser import AitoParser
 class MainParser:
     def __init__(self):
         usage = ''' python aito.py [-h] <action> [<args>]
-        
-        The most commonly action are:
-            convert    convert data into ndjson format
+        To see help text, you can run:
+            python aito.py -h
+            python aito.py <action> -h
+            
+        The most commonly actions are:
+            convert     convert data into ndjson format
+            client      set up and do task with an aito client
         '''
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter, usage=usage)
         self.parser.add_argument('action', help='action to perform')
         self.actions_parser = {
-            'convert': ConvertParser()
+            'convert': ConvertParser(),
+            'client': ClientParser()
         }
 
     def parse_and_execute(self, parsing_args) -> int:
