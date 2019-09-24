@@ -132,8 +132,8 @@ class DataFrameConverter:
                      read_options: Dict = None,
                      convert_options: Dict = None,
                      apply_functions: List[Callable[..., pd.DataFrame]] = None,
-                     generate_aito_schema: Path = None,
-                     use_aito_schema: Path = None):
+                     create_table_schema: Path = None,
+                     use_table_schema: Path = None):
         """
         Converting a file into expected format and generate aito schema if required
         :param read_input: filepath to input or input buffer
@@ -143,8 +143,8 @@ class DataFrameConverter:
         :param read_options: dictionary contains arguments for pandas read function
         :param convert_options: dictionary contains arguments for pandas convert function
         :param apply_functions: List of partial functions that will be chained applied to the loaded pd.DataFrame
-        :param generate_aito_schema: option to auto generate aito schema
-        :param use_aito_schema: use an aito schema to dictates data types and convert the data
+        :param create_table_schema: option to auto generate aito schema
+        :param use_table_schema: use an aito schema to dictates data types and convert the data
         :return:
         """
         try:
@@ -159,15 +159,15 @@ class DataFrameConverter:
             apply_functions = self.default_apply_functions
         df = self.apply_functions_on_df(df, apply_functions)
 
-        if use_aito_schema:
-            with use_aito_schema.open() as f:
+        if use_table_schema:
+            with use_table_schema.open() as f:
                 table_schema = json.load(f)
             df = self.convert_df_from_aito_table_schema(df, table_schema)
 
         self.df_to_format(df, out_format, write_output, convert_options)
 
-        if generate_aito_schema:
+        if create_table_schema:
             schema = self.schema_handler.generate_table_schema_from_pandas_dataframe(df)
-            with generate_aito_schema.open(mode='w') as f:
+            with create_table_schema.open(mode='w') as f:
                 json.dump(schema, f, indent=4, sort_keys=True)
 

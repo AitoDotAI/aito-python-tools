@@ -46,14 +46,14 @@ class TestDataFrameConverter(TestCaseCompare):
     def test_generate_schema(self):
         schema_file_path = self.output_folder / f"{self.method_name}_schema_out.json"
         self.converter.convert_file(self.input_folder / 'sample.csv', self.out_file_path, 'csv', 'ndjson',
-                                    generate_aito_schema=schema_file_path)
+                                    create_table_schema=schema_file_path)
         self.assertDictEqual(json.load(schema_file_path.open()),
                              json.load((self.input_folder / 'sample_schema.json').open()))
 
     def test_csv_to_ndjson_with_aito_schema(self):
         schema_altered = self.input_folder / 'sample_schema_altered.json'
         self.converter.convert_file(self.input_folder / 'sample.csv', self.out_file_path, 'csv', 'ndjson',
-                                    use_aito_schema=schema_altered)
+                                    use_table_schema=schema_altered)
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample_altered.ndjson').open()))
 
@@ -61,4 +61,4 @@ class TestDataFrameConverter(TestCaseCompare):
         input_schema = self.input_folder / 'sample_schema_error_nullable.json'
         with self.assertRaises(ValueError):
             self.converter.convert_file(self.input_folder / 'sample.csv', self.out_file_path, 'csv', 'ndjson',
-                                        use_aito_schema=input_schema)
+                                        use_table_schema=input_schema)
