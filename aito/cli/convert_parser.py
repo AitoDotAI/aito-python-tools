@@ -2,6 +2,7 @@ import argparse
 
 from aito.cli.parser import AitoParser
 from aito.schema.data_frame_converter import DataFrameConverter
+from abc import abstractmethod
 
 
 class ConvertParser:
@@ -46,8 +47,24 @@ class ConvertParser:
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, unknown = self.parser.parse_known_args(parsing_args)
         parsed_args = vars(parsed_args)
+        convert_args = {
+            'read_input': self.parser.parse_input_arg_value(parsed_args['input']),
+            'write_output': self.parser.parse_output_arg_value(parsed_args['output']),
+            'in_format': parsed_args['input-format'],
+            'out_format': 'ndjson',
+            'read_options': {
+                'encoding': parsed_args['encoding']
+            },
+            'convert_options': {
+                'compression': 'gzip' if parsed_args['compress_output_file'] else None
+            },
+            'create_table_schema': self.parser.check_valid_path((parsed_args['create_table_schema']))
+            if parsed_args['create_table_schema'] else None,
+            'use_table_schema': self.parser.check_valid_path((parsed_args['use_table_schema']))
+            if parsed_args['use_table_schema'] else None
+        }
         input_format_parser = self.input_format_parser[parsed_args['input-format']]
-        input_format_parser.parse_and_execute(parsing_args)
+        input_format_parser.parse_and_execute(parsing_args, convert_args)
         return 0
 
 
@@ -59,45 +76,22 @@ class ConvertFormatParser:
                                  parents=[converter_parser],
                                  usage=f"aito.py convert [<convert-options>] {input_format} [<{input_format}-options>] "
                                        f"[input] [output]")
-        self.convert_format_args_group = self.parser.add_argument_group(f"optional convert {input_format} arguments")
+        self.convert_format_options = self.parser.add_argument_group(f"optional convert {input_format} arguments")
         self.input_format = input_format
 
-    def parse_shared_args(self, parsing_args):
-        parsed_args = vars(self.parser.parse_args(parsing_args))
-        parsed_args['input'] = self.parser.parse_input_arg_value(parsed_args['input'])
-        parsed_args['output'] = self.parser.parse_output_arg_value(parsed_args['output'])
-
-        if parsed_args['create_table_schema']:
-            parsed_args['create_table_schema'] = self.parser.check_valid_path((parsed_args['create_table_schema']))
-        if parsed_args['use_table_schema']:
-            parsed_args['use_table_schema'] = self.parser.check_valid_path((parsed_args['use_table_schema']))
-
-        shared_convert_args = {
-            'read_input': parsed_args['input'],
-            'write_output': parsed_args['output'],
-            'in_format': self.input_format,
-            'out_format': 'ndjson',
-            'read_options': {
-                'encoding': parsed_args['encoding']
-            },
-            'convert_options': {
-                'compression': 'gzip' if parsed_args['compress_output_file'] else None
-            },
-            'create_table_schema': parsed_args['create_table_schema'],
-            'use_table_schema': parsed_args['use_table_schema']
-        }
-
-        return parsed_args, shared_convert_args
+    @abstractmethod
+    def parse_and_execute(self, parsing_args, convert_args):
+        pass
 
 
 class ConvertCsvParser(ConvertFormatParser):
     def __init__(self, converter_parser: AitoParser):
         super().__init__(converter_parser, 'csv')
-        self.convert_format_args_group.add_argument('-d', '--delimiter', type=str, default=',',
-                                                    help="delimiter to use. Need escape (default: ',')")
+        self.convert_format_options.add_argument('-d', '--delimiter', type=str, default=',',
+                                                 help="delimiter to use. Need escape (default: ',')")
 
-    def parse_and_execute(self, parsing_args) -> int:
-        parsed_args, convert_args = super().parse_shared_args(parsing_args)
+    def parse_and_execute(self, parsing_args, convert_args) -> int:
+        parsed_args = vars(self.parser.parse_args(parsing_args))
         convert_args['read_options']['delimiter'] = parsed_args['delimiter']
         self.converter.convert_file(**convert_args)
         return 0
@@ -107,8 +101,7 @@ class ConvertJsonParser(ConvertFormatParser):
     def __init__(self, converter_parser: AitoParser):
         super().__init__(converter_parser, 'json')
 
-    def parse_and_execute(self, parsing_args) -> int:
-        parsed_args, convert_args = super().parse_shared_args(parsing_args)
+    def parse_and_execute(self, parsing_args, convert_args) -> int:
         self.converter.convert_file(**convert_args)
         return 0
 
@@ -117,7 +110,6 @@ class ConvertXlsxParser(ConvertFormatParser):
     def __init__(self, converter_parser: AitoParser):
         super().__init__(converter_parser, 'xlsx')
 
-    def parse_and_execute(self, parsing_args) -> int:
-        parsed_args, convert_args = super().parse_shared_args(parsing_args)
+    def parse_and_execute(self, parsing_args, convert_args) -> int:
         self.converter.convert_file(**convert_args)
         return 0
