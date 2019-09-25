@@ -36,6 +36,10 @@ class SchemaHandler:
             'String': 'str',
             'Text': 'str'
         }
+
+        self.supported_alias_analyzer = ['standard', 'whitespace', 'ar', 'hy', 'eu', 'pt-br', 'bg', 'ca', 'cjk', 'cs',
+                                         'da', 'nl', 'en', 'fi', 'fr', 'gl', 'de', 'el', 'hi', 'hu', 'id', 'ga', 'it',
+                                         'lv', 'no', 'fa', 'pt', 'ro', 'ru', 'es', 'sv', 'th', 'tr']
         self.sample_size = 100000
 
     def infer_aito_types_from_values(self, values: List):
@@ -60,16 +64,18 @@ class SchemaHandler:
                 col_df = table_df[col]
             col_data = col_df.values
             col_aito_type = self.infer_aito_types_from_values(col_data)
-            col_nullable = col_df.isna().any()
-
+            col_na = col_df.isna()
             col_schema = {
-                'nullable': True if col_nullable else False,
+                'nullable': True if col_na.any() else False,
                 'type': col_aito_type
             }
             if col_schema['type'] == 'Text':
-                col_text = col_df.str.cat(sep = ' ')
-                lang = detect(col_text)
-                col_schema['analyzer'] = lang
+                col_text = col_df.str.cat(sep=' ')
+                if col_text != '[]':
+                    lang = detect(col_text)
+                    if lang not in self.supported_alias_analyzer:
+                        lang = 'standard'
+                    col_schema['analyzer'] = lang
             columns_schema[col] = col_schema
 
         table_schema = {'type': 'table', 'columns': columns_schema}
