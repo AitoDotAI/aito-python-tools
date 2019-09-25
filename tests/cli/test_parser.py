@@ -87,3 +87,44 @@ class TestClientParser(TestCaseCompare):
         self.main_parser.parse_and_execute(['client', 'upload-batch', 'sample',
                                             str(self.input_folder / 'sample.json')])
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
+
+    def test_upload_file_no_table_schema(self):
+        with self.assertRaises(SystemExit) as context:
+            self.main_parser.parse_and_execute(['client', 'upload-file', 'sample',
+                                                str(self.input_folder / 'sample.ndjson')])
+        self.assertEqual(context.exception.code, 2)
+
+    def test_upload_file_with_table_schema(self):
+        with (self.input_folder / "sample_schema.json").open() as f:
+            table_schema = json.load(f)
+        self.client.put_table_schema('sample', table_schema)
+        self.main_parser.parse_and_execute(['client', 'upload-file', 'sample',
+                                            str(self.input_folder / 'sample.ndjson')])
+        self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
+
+    def test_upload_file_different_format(self):
+        with (self.input_folder / "sample_schema.json").open() as f:
+            table_schema = json.load(f)
+        self.client.put_table_schema('sample', table_schema)
+        self.main_parser.parse_and_execute(['client', 'upload-file', '-f=csv', 'sample',
+                                            str(self.input_folder / 'sample.csv')])
+        self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
+
+    def test_upload_file_infer_format(self):
+        with (self.input_folder / "sample_schema.json").open() as f:
+            table_schema = json.load(f)
+        self.client.put_table_schema('sample', table_schema)
+        self.main_parser.parse_and_execute(['client', 'upload-file', 'sample',
+                                            str(self.input_folder / 'sample.csv')])
+        self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
+
+    def test_upload_file_infer_schema(self):
+        self.main_parser.parse_and_execute(['client', 'upload-file', '-c','sample',
+                                            str(self.input_folder / 'sample.csv')])
+        self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
+
+    def test_upload_file_use_schema(self):
+        self.main_parser.parse_and_execute(['client', 'upload-file',
+                                            f"-s={self.input_folder / 'sample_schema_altered.json'}",
+                                            'sample', str(self.input_folder / 'sample.csv')])
+        self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
