@@ -138,15 +138,15 @@ class AitoClient:
         return r
 
     def put_table_schema(self, table_name, table_schema):
-        self.logger.info(f"Creating table {table_name} schema...")
+        self.logger.info(f"Creating table '{table_name}' schema...")
         r = self.request('PUT', f"/api/v1/schema/{table_name}", table_schema)
-        self.logger.info(f"Table {table_name} schema created")
+        self.logger.info(f"Table '{table_name}' schema created")
         return r
 
     def delete_table(self, table_name):
-        self.logger.info(f"Deleting table {table_name}")
+        self.logger.info(f"Deleting table '{table_name}'")
         r =  self.request('DELETE', f"/api/v1/schema/{table_name}")
-        self.logger.info(f"Table {table_name} deleted")
+        self.logger.info(f"Table '{table_name}' deleted")
         return r
 
     def get_table_schema(self, table_name):
@@ -157,18 +157,18 @@ class AitoClient:
 
     def populate_table_entries(self, table_name, entries):
         if table_name not in self.get_existing_tables():
-            raise ValueError(f"Table {table_name} does not exist. Please upload the table schema first")
+            raise ValueError(f"Table '{table_name}' does not exist. Please upload the table schema first")
         if len(entries) > 1000:
             self.populate_table_entries_by_batches(table_name, entries)
         else:
-            self.logger.info(f"Start uploading {len(entries)} entries to table {table_name}...")
+            self.logger.info(f"Start uploading {len(entries)} entries to table '{table_name}'...")
             self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
-            self.logger.info(f"Uploaded {len(entries)} entries to table {table_name}")
+            self.logger.info(f"Uploaded {len(entries)} entries to table '{table_name}'")
 
     def populate_table_entries_by_batches(self, table_name, entries, batch_size=1000):
         if table_name not in self.get_existing_tables():
-            raise ValueError(f"Table {table_name} does not exist. Please upload the table schema first")
-        self.logger.info(f"Start uploading {len(entries)} entries to table {table_name} "
+            raise ValueError(f"Table '{table_name}' does not exist. Please upload the table schema first")
+        self.logger.info(f"Start uploading {len(entries)} entries to table '{table_name}' "
                          f"with batch size of {batch_size}...")
         begin_idx = 0
         populated = 0
