@@ -1,6 +1,8 @@
 import asyncio
 import logging
+from pathlib import Path
 from typing import Dict, List
+import time
 
 import requests
 from aiohttp import ClientSession
@@ -180,4 +182,48 @@ class AitoClient:
                 self.logger.error(f"Batch {begin_idx}:{last} failed: {e}")
             begin_idx = last
 
-        self.logger.info(f"Finish uploading {populated}/{len(entries)} entries to table {table_name}")
+        self.logger.info(f"Uploaded {populated}/{len(entries)} entries to table {table_name}")
+
+    def populate_table_by_file_upload(self, table_name: str, file_path: Path):
+        if file_path.suffixes != ['.ndjson', '.gz']:
+            raise ValueError("Uploading file must be in gzip compressed ndjson format")
+        self.logger.info("Initiating file upload...")
+        r = self.request('POST', f"api/v1/data/{table_name}/file")
+        upload_session_id = r['id']
+        session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
+        s3_url = r['url']
+        upload_req_method = r['method']
+
+        self.logger.info("Uploading file to S3...")
+        try:
+            requests.request(upload_req_method, s3_url, data=file_path.open())
+            self.logger.info("Uploading file to S3 completed")
+        except Exception as e:
+            self.logger.error(f"Failed to upload file to S3: {e}")
+            raise e
+        self.logger.info("Triggering file processing...")
+        self.request('POST', session_end_point)
+
+        while True:
+            processing_progress = self.request('GET', session_end_point)
+            status = processing_progress['status']
+            self.logger.info(f"completed count: {status['completedCount']}, throughput: {status['throughput']}")
+            if processing_progress['error']['message'] != 'Last 0 failing rows':
+                self.logger.error(processing_progress['error'])
+            if status['finished']:
+                break
+            time.sleep(30)
+
+        self.logger.info("File upload completed")
+
+    def query_table_entries(self, table_name: str, limit: int = None):
+        if table_name not in self.get_existing_tables():
+            raise ValueError(f"Table {table_name} does not exist")
+        query = {'from': table_name}
+        if limit:
+            query['limit'] = limit
+        return self.request('POST', '/api/v1/_query', query)
+
+
+
+
