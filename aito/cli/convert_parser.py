@@ -26,6 +26,8 @@ class ConvertParser:
                             help='create an inferred aito schema and write to a json file')
         parser.add_argument('-e', '--encoding', type=str, default='utf-8',
                             help="encoding to use (default: 'utf-8')")
+        parser.add_argument('-f', '--output-format', default='ndjson', choices=['csv', 'xlsx', 'json', 'ndjson'],
+                            help='output format (default: ndjson)')
         parser.add_argument('-s', '--use-table-schema', metavar='schema-input-file', type=str,
                             help='convert the data to match the input table schema')
         parser.add_argument('-z', '--compress-output-file', action='store_true',
@@ -51,7 +53,7 @@ class ConvertParser:
             'read_input': self.parser.parse_input_arg_value(parsed_args['input']),
             'write_output': self.parser.parse_output_arg_value(parsed_args['output']),
             'in_format': parsed_args['input-format'],
-            'out_format': 'ndjson',
+            'out_format': parsed_args['output_format'],
             'read_options': {
                 'encoding': parsed_args['encoding']
             },
