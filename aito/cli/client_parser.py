@@ -46,7 +46,20 @@ class ClientParser:
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, unknown = self.parser.parse_known_args(parsing_args)
         parsed_args = vars(parsed_args)
+        client_action_parser = self.client_task_parsers[parsed_args['task']]
+        client_action_parser.parse_and_execute(parsing_args)
+        return 0
 
+
+class ClientTaskParser:
+    def __init__(self, client_parser: AitoParser, task: str):
+        self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
+                                 parents=[client_parser])
+        self.task = task
+        self.usage_prefix = f"python aito.py client <client-options> {task} [<{task}-options>]"
+        self.optional_args = self.parser.add_argument_group(f"optional {task} arguments")
+
+    def parse_client_args(self, parsed_args):
         if parsed_args['use_env_file']:
             env_file_path = self.parser.check_valid_path(parsed_args['use_env_file'], True)
             load_dotenv(env_file_path)
@@ -65,22 +78,10 @@ class ClientParser:
             'ro_key': get_env_variable('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
             else parsed_args['read_only_key']
         }
-
-        client_action_parser = self.client_task_parsers[parsed_args['task']]
-        client_action_parser.parse_and_execute(parsing_args, client_args)
-        return 0
-
-
-class ClientTaskParser:
-    def __init__(self, client_parser: AitoParser, task: str):
-        self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
-                                 parents=[client_parser])
-        self.task = task
-        self.usage_prefix = f"python aito.py client <client-options> {task} [<{task}-options>]"
-        self.optional_args = self.parser.add_argument_group(f"optional {task} arguments")
+        return client_args
 
     @abstractmethod
-    def parse_and_execute(self, parsing_args, client_args):
+    def parse_and_execute(self, parsing_args):
         pass
 
 
@@ -97,15 +98,15 @@ class UploadBatchParser(ClientTaskParser):
         self.parser.add_argument('table-name', type=str, help="name of the table to be populated")
         self.optional_args.add_argument('input', default='-', type=str, nargs='?', help="input file or stream")
 
-    def parse_and_execute(self, parsing_args, client_args) -> int:
-        client = AitoClient(**client_args)
+    def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
+        client_args = self.parse_client_args(parsed_args)
+        client = AitoClient(**client_args)
         table_name = parsed_args['table-name']
         if parsed_args['input'] == '-':
             table_content = json.load(sys.stdin)
         else:
             input_path = self.parser.check_valid_path(parsed_args['input'])
-            print(input_path)
             with input_path.open() as f:
                 table_content = json.load(f)
         client.populate_table_entries(table_name, table_content)
@@ -131,11 +132,11 @@ class UploadFileParser(ClientTaskParser):
                                         help='convert the file content according to the input schema and use it as the '
                                              'schema of the uploading table (table must not exist in the instance)')
 
-    def parse_and_execute(self, parsing_args, client_args) -> int:
+    def parse_and_execute(self, parsing_args) -> int:
+        parsed_args = vars(self.parser.parse_args(parsing_args))
+        client_args = self.parse_client_args(parsed_args)
         client = AitoClient(**client_args)
 
-        parsed_args = vars(self.parser.parse_args(parsing_args))
-        print(parsed_args)
         table_name = parsed_args['table-name']
 
         if table_name not in client.get_existing_tables() \

@@ -212,7 +212,7 @@ class AitoClient:
                 self.logger.error(processing_progress['error'])
             if status['finished']:
                 break
-            time.sleep(15)
+            time.sleep(10)
 
         self.logger.info(f"Populate table '{table_name}' by file upload completed")
 
