@@ -114,40 +114,60 @@ class AitoClient:
         try:
             r.raise_for_status()
         except requests.HTTPError:
-            raise Exception(f"Unsuccessful request: {r.content}")
+            raise Exception(f"Unsuccessful request: {r.status_code} {r.content}")
         return r.json()
 
     def get_version(self):
         return self.request('GET', '/version')
 
     def put_database_schema(self, database_schema):
-        return self.request('PUT', '/api/v1/schema', database_schema)
+        self.logger.info("Creating database schema...")
+        r = self.request('PUT', '/api/v1/schema', database_schema)
+        self.logger.info("Database schema created")
+        return r
 
     def get_database_schema(self):
         return self.request('GET', '/api/v1/schema')
 
     def delete_database(self):
-        return self.request('DELETE', '/api/v1/schema')
+        self.logger.info("Deleting the whole database...")
+        r = self.request('DELETE', '/api/v1/schema')
+        self.logger.info("Database deleted")
+        return r
 
     def put_table_schema(self, table_name, table_schema):
-        return self.request('PUT', f"/api/v1/schema/{table_name}", table_schema)
+        self.logger.info(f"Creating table {table_name} schema...")
+        r = self.request('PUT', f"/api/v1/schema/{table_name}", table_schema)
+        self.logger.info(f"Table {table_name} schema created")
+        return r
 
     def delete_table(self, table_name):
-        return self.request('DELETE', f"/api/v1/schema/{table_name}")
+        self.logger.info(f"Deleting table {table_name}")
+        r =  self.request('DELETE', f"/api/v1/schema/{table_name}")
+        self.logger.info(f"Table {table_name} deleted")
+        return r
 
     def get_table_schema(self, table_name):
         return self.request('GET', f"/api/v1/schema/{table_name}")
 
+    def get_existing_tables(self) -> List[str]:
+        return list(self.get_database_schema()['schema'].keys())
+
     def populate_table_entries(self, table_name, entries):
+        if table_name not in self.get_existing_tables():
+            raise ValueError(f"Table {table_name} does not exist. Please upload the table schema first")
         if len(entries) > 1000:
             self.populate_table_entries_by_batches(table_name, entries)
         else:
-            self.logger.info(f"Start uploading {len(entries)} to table {table_name}")
+            self.logger.info(f"Start uploading {len(entries)} entries to table {table_name}...")
             self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
-            self.logger.info(f"Finish uploading {len(entries)} to table {table_name}")
+            self.logger.info(f"Uploaded {len(entries)} entries to table {table_name}")
 
     def populate_table_entries_by_batches(self, table_name, entries, batch_size=1000):
-        self.logger.info(f"Start uploading {len(entries)} to table {table_name} with batch size of {batch_size}")
+        if table_name not in self.get_existing_tables():
+            raise ValueError(f"Table {table_name} does not exist. Please upload the table schema first")
+        self.logger.info(f"Start uploading {len(entries)} entries to table {table_name} "
+                         f"with batch size of {batch_size}...")
         begin_idx = 0
         populated = 0
         while begin_idx < len(entries):

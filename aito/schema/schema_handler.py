@@ -110,3 +110,4 @@ class SchemaHandler:
             col_schema = table_schema['columns'][col]
             validate_arg(col, col_schema, 'type', True, str, list(self.aito_types_to_pandas_dtypes.keys()))
             validate_arg(col, col_schema, 'nullable', False, bool)
+        return table_schema
