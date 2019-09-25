@@ -71,11 +71,13 @@ class SchemaHandler:
             }
             if col_schema['type'] == 'Text':
                 col_text = col_df.str.cat(sep=' ')
-                if col_text != '[]':
-                    lang = detect(col_text)
-                    if lang not in self.supported_alias_analyzer:
-                        lang = 'standard'
-                    col_schema['analyzer'] = lang
+                try:
+                    analyzer = detect(col_text)
+                except:
+                    analyzer = None
+                if analyzer:
+                    col_schema['analyzer'] = analyzer if analyzer in self.supported_alias_analyzer else 'standard'
+
             columns_schema[col] = col_schema
 
         table_schema = {'type': 'table', 'columns': columns_schema}
