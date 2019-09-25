@@ -119,7 +119,7 @@ class UploadFileParser(ClientTaskParser):
         self.parser.usage = f"{self.usage_prefix} <table-name> <file-path"
         self.parser.add_argument('table-name', type=str, help="name of the table to be populated")
         self.parser.add_argument('file-path', type=str, help="path to the input file")
-        self.optional_args.add_argument('-i', '--infer-table-schema', action='store_true',
+        self.optional_args.add_argument('-c', '--create-table-schema', action='store_true',
                                         help='infer a table schema from file content and use it as the schema of the '
                                              'uploading table (table must not exist in the instance)')
         self.optional_args.add_argument('-f', '--file-format',
@@ -133,19 +133,28 @@ class UploadFileParser(ClientTaskParser):
 
     def parse_and_execute(self, parsing_args, client_args) -> int:
         client = AitoClient(**client_args)
+
         parsed_args = vars(self.parser.parse_args(parsing_args))
+        print(parsed_args)
         table_name = parsed_args['table-name']
+
+        if table_name not in client.get_existing_tables() \
+                and not parsed_args['use_table_schema'] and not parsed_args['create_table_schema']:
+            self.parser.error(f"Table '{table_name}' does not exist. Please upload the table schema first, or use the "
+                              f"--use-table-schema or --create-table-schema option")
+
         input_file_path = self.parser.check_valid_path(parsed_args['file-path'])
-        in_format = input_file_path.suffix.replace('.', '') if parsed_args['file_format'] == 'infer' \
+
+        in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
             else parsed_args['file_format']
         if in_format not in DataFrameConverter.allowed_format:
             self.parser.error(f"Invalid input format {in_format}. Must be one of {DataFrameConverter.allowed_format}")
 
-        out_file_path = input_file_path.parent / f"{input_file_path.stem}.ndjson.gz"
+        converted_file_path = input_file_path.parent / f"{input_file_path.stem}.ndjson.gz"
         schema_file_path = input_file_path.parent / f"{table_name}_schema.json"
         convert_options = {
             'read_input': input_file_path,
-            'write_output': out_file_path,
+            'write_output': converted_file_path,
             'in_format': in_format,
             'out_format': 'ndjson',
             'convert_options': {'compression': 'gzip'},
@@ -161,9 +170,9 @@ class UploadFileParser(ClientTaskParser):
             with self.parser.check_valid_path((parsed_args['use_table_schema'])).open() as f:
                 table_schema = json.load(f)
             client.put_table_schema(table_name, table_schema)
-        elif parsed_args['infer_table_schema']:
+        elif parsed_args['create_table_schema']:
             with (input_file_path.parent / f"{table_name}_schema.json").open() as f:
                 table_schema = json.load(f)
             client.put_table_schema(table_name, table_schema)
-        client.upload_file(input_file_path)
+        client.populate_table_by_file_upload(table_name, converted_file_path)
         return 0
