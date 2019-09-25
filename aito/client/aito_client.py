@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List
 import time
+from timeit import default_timer
 
 import requests
 from aiohttp import ClientSession
@@ -204,6 +205,7 @@ class AitoClient:
         self.logger.info("Triggering file processing...")
         self.request('POST', session_end_point)
 
+        start_polling = default_timer()
         while True:
             processing_progress = self.request('GET', session_end_point)
             status = processing_progress['status']
@@ -212,7 +214,16 @@ class AitoClient:
                 self.logger.error(processing_progress['error'])
             if status['finished']:
                 break
-            time.sleep(10)
+            time_elapsed = default_timer() - start_polling
+            if time_elapsed < 60:
+                sleeping_time = 5
+            elif time_elapsed < 180:
+                sleeping_time = 15
+            elif time_elapsed < 300:
+                sleeping_time = 30
+            else:
+                sleeping_time = 60
+            time.sleep(sleeping_time)
 
         self.logger.info(f"Populate table '{table_name}' by file upload completed")
 
