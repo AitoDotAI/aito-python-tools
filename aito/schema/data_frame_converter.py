@@ -9,13 +9,13 @@ from aito.schema.schema_handler import SchemaHandler
 
 
 class DataFrameConverter:
-    allowed_format = ['csv', 'json', 'xlsx', 'ndjson']
+    allowed_format = ['csv', 'json', 'excel', 'ndjson']
 
     def __init__(self):
         self.logger = logging.getLogger('AitoConverter')
         self.default_options = {
             'csv': {},
-            'xlsx': {},
+            'excel': {},
             'json': {'orient': 'records'},
             'ndjson': {'orient': 'records', 'lines': True}
         }
@@ -86,7 +86,7 @@ class DataFrameConverter:
         :return:
         """
         self.logger.info("Start reading input...")
-        read_functions = {'csv': pd.read_csv, 'xlsx': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
+        read_functions = {'csv': pd.read_csv, 'excel': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
 
         if not load_options:
             options = self.default_options[in_format]
@@ -115,7 +115,7 @@ class DataFrameConverter:
         :return:
         """
         self.logger.info(f"Start converting to {out_format} and writing to output...")
-        convert_functions = {'csv': df.to_csv, 'xlsx': df.to_excel, 'json': df.to_json, 'ndjson': df.to_json}
+        convert_functions = {'csv': df.to_csv, 'excel': df.to_excel, 'json': df.to_json, 'ndjson': df.to_json}
         if not convert_options:
             options = self.default_options[out_format]
         else:

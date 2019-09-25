@@ -38,10 +38,16 @@ class TestConvertParser(TestCaseCompare):
                               ndjson.load((self.input_folder / 'sample.ndjson').open()))
 
     def test_excel_to_ndjson(self):
-        self.main_parser.parse_and_execute(['convert', 'xlsx', f"{self.input_folder / 'sample.xlsx'}",
+        self.main_parser.parse_and_execute(['convert', 'excel', f"{self.input_folder / 'sample.xlsx'}",
                                             f"{self.out_file_path}"])
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample.ndjson').open()))
+
+    def test_excel_one_sheet_to_ndjson(self):
+        self.main_parser.parse_and_execute(['convert', 'excel', f"{self.input_folder / 'sample_multi_sheets.xlsx'}",
+                                            f"{self.out_file_path}", '-o=Sheet2'])
+        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
+                              ndjson.load((self.input_folder / 'sample_id_reversed.ndjson').open()))
 
     def test_generate_schema(self):
         schema_out_path = self.output_folder / f"{self.method_name}_schema_out.json"

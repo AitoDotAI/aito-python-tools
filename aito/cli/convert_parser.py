@@ -8,7 +8,7 @@ from abc import abstractmethod
 class ConvertParser:
     def __init__(self):
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
-                                 description='convert data into ndjson format',
+                                 description='convert data into desired format',
                                  usage='''
         aito.py convert [<convert-options>] <input-format> [input] [output] [<input-format-options>] 
         
@@ -26,14 +26,14 @@ class ConvertParser:
                             help='create an inferred aito schema and write to a json file')
         parser.add_argument('-e', '--encoding', type=str, default='utf-8',
                             help="encoding to use (default: 'utf-8')")
-        parser.add_argument('-f', '--output-format', default='ndjson', choices=['csv', 'xlsx', 'json', 'ndjson'],
+        parser.add_argument('-f', '--output-format', default='ndjson', choices=['csv', 'excel', 'json', 'ndjson'],
                             help='output format (default: ndjson)')
         parser.add_argument('-s', '--use-table-schema', metavar='schema-input-file', type=str,
                             help='convert the data to match the input table schema')
         parser.add_argument('-z', '--compress-output-file', action='store_true',
                             help='compress output file with gzip')
 
-        parser.add_argument('input-format', choices=['csv', 'json', 'xlsx'], help='input format')
+        parser.add_argument('input-format', choices=['csv', 'json', 'excel'], help='input format')
         parser.add_argument('input', default='-', type=str, nargs='?',
                             help="input file or stream (with no input, or when input is -, read from standard input)")
         parser.add_argument('output', default='-', type=str, nargs='?',
@@ -43,7 +43,7 @@ class ConvertParser:
         self.input_format_parser = {
             'csv': ConvertCsvParser(parser),
             'json': ConvertJsonParser(parser),
-            'xlsx': ConvertXlsxParser(parser)
+            'excel': ConvertExcelParser(parser)
         }
 
     def parse_and_execute(self, parsing_args) -> int:
@@ -76,8 +76,8 @@ class ConvertFormatParser:
 
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
                                  parents=[converter_parser],
-                                 usage=f"aito.py convert [<convert-options>] {input_format} [<{input_format}-options>] "
-                                       f"[input] [output]")
+                                 usage=f"aito.py convert [<convert-options>] {input_format} [input] [output] "
+                                       f"[<{input_format}-options>]")
         self.convert_format_options = self.parser.add_argument_group(f"optional convert {input_format} arguments")
         self.input_format = input_format
 
@@ -108,10 +108,21 @@ class ConvertJsonParser(ConvertFormatParser):
         return 0
 
 
-class ConvertXlsxParser(ConvertFormatParser):
+class ConvertExcelParser(ConvertFormatParser):
     def __init__(self, converter_parser: AitoParser):
-        super().__init__(converter_parser, 'xlsx')
+        super().__init__(converter_parser, 'excel')
+        self.parser.description = 'Convert excel format input, accept both xls and xlsx. ' \
+                                  'Only read the first sheet of the file by default'
+        # self.convert_format_options.add_argument('-a', '--all-sheets', action='store_true',
+        #                                          help='read all sheets of the excel file (default: false)')
+        self.convert_format_options.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name',
+                                                 help='read one sheets of the excel file')
 
     def parse_and_execute(self, parsing_args, convert_args) -> int:
+        parsed_args = vars(self.parser.parse_args(parsing_args))
+        if parsed_args['one_sheet']:
+            convert_args['read_options']['sheet_name'] = parsed_args['one_sheet']
+        # if parsed_args['all_sheets']:
+        #     convert_args['read_options']['sheet_name'] = None
         self.converter.convert_file(**convert_args)
         return 0

@@ -10,6 +10,7 @@ from aito.client.aito_client import AitoClient
 from aito.schema.data_frame_converter import DataFrameConverter
 import datetime
 
+
 class ClientParser:
     def __init__(self):
         self.client = None
@@ -153,7 +154,7 @@ class UploadFileParser(ClientTaskParser):
         if in_format not in DataFrameConverter.allowed_format:
             self.parser.error(f"Invalid input format {in_format}. Must be one of {DataFrameConverter.allowed_format}")
 
-        now =  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         converted_file_path = input_file_path.parent / f"{input_file_path.stem.split('.')[0]}_{now}.ndjson.gz"
         schema_file_path = input_file_path.parent / f"{table_name}_schema_{now}.json"
         convert_options = {
