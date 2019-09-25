@@ -117,7 +117,7 @@ class UploadFileParser(ClientTaskParser):
     def __init__(self, client_parser: AitoParser):
         super().__init__(client_parser, 'upload-file')
         self.parser.description = 'populating a file content to a table'
-        self.parser.usage = f"{self.usage_prefix} <table-name> <file-path"
+        self.parser.usage = f"{self.usage_prefix} <table-name> <file-path>"
         self.parser.add_argument('table-name', type=str, help="name of the table to be populated")
         self.parser.add_argument('file-path', type=str, help="path to the input file")
         self.optional_args.add_argument('-c', '--create-table-schema', action='store_true',
@@ -128,6 +128,8 @@ class UploadFileParser(ClientTaskParser):
                                         help=''''input file format (default: infer file format from file-path extension)
                                         The file is converted to ndjson.gz with default convert options.
                                         ''')
+        self.optional_args.add_argument('-k', '--keep-generated-files', action='store_true',
+                                        help='keep the converted ndjson.gz file and generated schema if applicable')
         self.optional_args.add_argument('-s', '--use-table-schema', metavar='schema-input-file', type=str,
                                         help='convert the file content according to the input schema and use it as the '
                                              'schema of the uploading table (table must not exist in the instance)')
@@ -151,7 +153,7 @@ class UploadFileParser(ClientTaskParser):
         if in_format not in DataFrameConverter.allowed_format:
             self.parser.error(f"Invalid input format {in_format}. Must be one of {DataFrameConverter.allowed_format}")
 
-        converted_file_path = input_file_path.parent / f"{input_file_path.stem}.ndjson.gz"
+        converted_file_path = input_file_path.parent / f"{input_file_path.stem.split('.')[0]}.ndjson.gz"
         schema_file_path = input_file_path.parent / f"{table_name}_schema.json"
         convert_options = {
             'read_input': input_file_path,
@@ -164,8 +166,10 @@ class UploadFileParser(ClientTaskParser):
             if parsed_args['use_table_schema'] else None
         }
         converter = DataFrameConverter()
-        converter.logger.info("Converting input file to ndjson.gz...")
-        converter.convert_file(**convert_options)
+
+        if input_file_path.suffixes != ['.ndjson', '.gz'] or parsed_args['create_table_schema'] or \
+                parsed_args['use_table_schema']:
+            converter.convert_file(**convert_options)
 
         if parsed_args['use_table_schema']:
             with self.parser.check_valid_path((parsed_args['use_table_schema'])).open() as f:
@@ -176,4 +180,10 @@ class UploadFileParser(ClientTaskParser):
                 table_schema = json.load(f)
             client.put_table_schema(table_name, table_schema)
         client.populate_table_by_file_upload(table_name, converted_file_path)
+
+        if not parsed_args['keep_generated_files']:
+            if schema_file_path.exists():
+                schema_file_path.unlink()
+            if converted_file_path.exists() and converted_file_path != input_file_path:
+                converted_file_path.unlink()
         return 0
