@@ -1,11 +1,14 @@
-import ndjson
 import json
+import os
 
-from tests.test_case import TestCaseCompare
+import ndjson
+
 from aito.cli.main_parser import MainParser
+from aito.client.aito_client import AitoClient
+from tests.test_case import TestCaseCompare
 
 
-class TestAitoConvertParser(TestCaseCompare):
+class TestConvertParser(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
         super().setUpClass(test_path='cli/convert')
@@ -52,3 +55,35 @@ class TestAitoConvertParser(TestCaseCompare):
                                             f"{self.input_folder / 'sample.csv'}", f"{self.out_file_path}"])
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample_altered.ndjson').open()))
+
+
+class TestClientParser(TestCaseCompare):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass(test_path='cli/client')
+        cls.input_folder = cls.input_folder.parent.parent / 'schema'
+        cls.main_parser = MainParser()
+        env_var = os.environ
+        cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
+
+    def setUp(self):
+        super().setUp()
+        self.client.delete_database()
+
+    def test_upload_batch_no_table_schema(self):
+        with self.assertRaises(ValueError):
+            self.main_parser.parse_and_execute(['client', 'upload-batch', 'sample',
+                                                str(self.input_folder / 'sample.json')])
+
+    def test_upload_batch_invalid_entries(self):
+        with self.assertRaises(Exception):
+            self.main_parser.parse_and_execute(['client', 'upload-batch', 'sample',
+                                                str(self.input_folder / 'sample.ndjson')])
+
+    def test_upload_batch(self):
+        with (self.input_folder / "sample_schema.json").open() as f:
+            table_schema = json.load(f)
+        self.client.put_table_schema('sample', table_schema)
+        self.main_parser.parse_and_execute(['client', 'upload-batch', 'sample',
+                                            str(self.input_folder / 'sample.json')])
+        self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
