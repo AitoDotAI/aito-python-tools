@@ -170,7 +170,7 @@ class DataFrameConverter:
                 table_schema = json.load(f)
             df = self.convert_df_from_aito_table_schema(df, table_schema)
 
-        if out_format != in_format or use_table_schema:
+        if out_format != in_format or convert_options or apply_functions or use_table_schema:
             self.df_to_format(df, out_format, write_output, convert_options)
 
         if create_table_schema:

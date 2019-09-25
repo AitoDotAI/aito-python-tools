@@ -186,7 +186,7 @@ class AitoClient:
         self.logger.info(f"Uploaded {populated}/{len(entries)} entries to table '{table_name}'")
 
     def populate_table_by_file_upload(self, table_name: str, file_path: Path):
-        if file_path.suffixes != ['.ndjson', '.gz']:
+        if file_path.suffixes[-2:] != ['.ndjson', '.gz']:
             raise ValueError("Uploading file must be in gzip compressed ndjson format")
         self.logger.info("Initiating file upload...")
         r = self.request('POST', f"/api/v1/data/{table_name}/file")
