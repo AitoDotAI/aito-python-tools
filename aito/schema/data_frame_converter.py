@@ -22,7 +22,7 @@ class DataFrameConverter:
         self.default_apply_functions = [self.datetime_to_string]
         self.schema_handler = SchemaHandler()
 
-    def validate_parameters(self, in_format: str, out_format: str):
+    def validate_in_out_format(self, in_format: str, out_format: str):
         """
         Validate the file parameters of the converter
         :param in_format: input format
@@ -148,9 +148,15 @@ class DataFrameConverter:
         :return:
         """
         try:
-            self.validate_parameters(in_format, out_format)
+            self.validate_in_out_format(in_format, out_format)
         except Exception as e:
             raise e
+
+        if in_format == out_format \
+                and not convert_options and not apply_functions and not create_table_schema and not use_table_schema:
+            self.logger.info("Output format is the same as input format. No conversion is done")
+            return
+
         df = self.read_file_to_df(read_input, in_format, read_options)
 
         if apply_functions:
@@ -164,7 +170,8 @@ class DataFrameConverter:
                 table_schema = json.load(f)
             df = self.convert_df_from_aito_table_schema(df, table_schema)
 
-        self.df_to_format(df, out_format, write_output, convert_options)
+        if out_format != in_format or use_table_schema:
+            self.df_to_format(df, out_format, write_output, convert_options)
 
         if create_table_schema:
             schema = self.schema_handler.generate_table_schema_from_pandas_dataframe(df)
