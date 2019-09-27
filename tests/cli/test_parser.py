@@ -37,6 +37,13 @@ class TestConvertParser(TestCaseCompare):
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample.ndjson').open()))
 
+    def test_csv_semicolon_comma_decimal_to_ndjson(self):
+        self.main_parser.parse_and_execute(['convert', 'csv',
+                                            f"{self.input_folder / 'sample_semicolon_comma_decimal.csv'}",
+                                            f"{self.out_file_path}", "-d=;", "-p=,"])
+        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
+                              ndjson.load((self.input_folder / 'sample.ndjson').open()))
+
     def test_excel_to_ndjson(self):
         self.main_parser.parse_and_execute(['convert', 'excel', f"{self.input_folder / 'sample.xlsx'}",
                                             f"{self.out_file_path}"])

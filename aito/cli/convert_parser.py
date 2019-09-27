@@ -91,10 +91,13 @@ class ConvertCsvParser(ConvertFormatParser):
         super().__init__(converter_parser, 'csv')
         self.convert_format_options.add_argument('-d', '--delimiter', type=str, default=',',
                                                  help="delimiter to use. Need escape (default: ',')")
+        self.convert_format_options.add_argument('-p', '--decimal', type=str, default='.',
+                                                 help="Character to recognize decimal point (default '.')")
 
     def parse_and_execute(self, parsing_args, convert_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
         convert_args['read_options']['delimiter'] = parsed_args['delimiter']
+        convert_args['read_options']['decimal'] = parsed_args['decimal']
         self.converter.convert_file(**convert_args)
         return 0
 
