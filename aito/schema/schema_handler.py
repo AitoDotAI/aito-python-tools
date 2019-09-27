@@ -74,7 +74,7 @@ class SchemaHandler:
             col_aito_type = self.infer_aito_types_from_values(col_data)
             col_na_count = col_df.isna().sum()
             col_schema = {
-                'nullable': True if col_na_count < rows_count else False,
+                'nullable': True if col_na_count > 0 else False,
                 'type': col_aito_type
             }
             if col_schema['type'] == 'Text':
