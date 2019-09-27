@@ -72,21 +72,26 @@ class SchemaHandler:
                 col_df = table_df[col]
             col_data = col_df.values
             col_aito_type = self.infer_aito_types_from_values(col_data)
-            col_na = col_df.isna()
+            col_na_count = col_df.isna().sum()
             col_schema = {
-                'nullable': True if col_na.any() else False,
+                'nullable': True if col_na_count < rows_count else False,
                 'type': col_aito_type
             }
             if col_schema['type'] == 'Text':
-                col_text = col_df.str.cat(sep=' ')
-                try:
-                    detected_lang = detect(col_text)
-                    if detected_lang in self.lang_detect_code_to_aito_code:
-                        detected_lang = self.lang_detect_code_to_aito_code[detected_lang]
-                except:
-                    detected_lang = None
-                if detected_lang and detected_lang in self.supported_alias_analyzer:
-                    col_schema['analyzer'] = detected_lang
+                col_unique_val_count = col_df.nunique()
+                col_non_na_count = rows_count - col_na_count
+                if (col_non_na_count / col_unique_val_count) > 2:
+                    col_schema['type'] = 'String'
+                else:
+                    col_text = col_df.str.cat(sep=' ')
+                    try:
+                        detected_lang = detect(col_text)
+                        if detected_lang in self.lang_detect_code_to_aito_code:
+                            detected_lang = self.lang_detect_code_to_aito_code[detected_lang]
+                    except:
+                        detected_lang = None
+                    if detected_lang and detected_lang in self.supported_alias_analyzer:
+                        col_schema['analyzer'] = detected_lang
 
             columns_schema[col] = col_schema
 
