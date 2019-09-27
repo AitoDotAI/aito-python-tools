@@ -80,15 +80,18 @@ class SchemaHandler:
             if col_schema['type'] == 'Text':
                 col_text = col_df.str.cat(sep=' ')
                 try:
-                    analyzer = detect(col_text)
+                    detected_lang = detect(col_text)
+                    if detected_lang in self.lang_detect_code_to_aito_code:
+                        detected_lang = self.lang_detect_code_to_aito_code[detected_lang]
                 except:
-                    analyzer = None
-                if analyzer:
-                    col_schema['analyzer'] = analyzer if analyzer in self.supported_alias_analyzer else 'standard'
+                    detected_lang = None
+                if detected_lang and detected_lang in self.supported_alias_analyzer:
+                    col_schema['analyzer'] = detected_lang
 
             columns_schema[col] = col_schema
 
         table_schema = {'type': 'table', 'columns': columns_schema}
+        self.logger.info("Finished inferring schema")
         return table_schema
 
     def validate_table_schema(self, table_schema: Dict):
@@ -126,4 +129,5 @@ class SchemaHandler:
             col_schema = table_schema['columns'][col]
             validate_arg(col, col_schema, 'type', True, str, list(self.aito_types_to_pandas_dtypes.keys()))
             validate_arg(col, col_schema, 'nullable', False, bool)
+        self.logger.info("Finished validating schema")
         return table_schema
