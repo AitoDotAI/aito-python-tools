@@ -30,11 +30,19 @@ class SchemaHandler:
             'mixed': 'Text'
         }
         self.aito_types_to_pandas_dtypes = {
-            'Boolean': 'bool',
-            'Decimal': 'float64',
-            'Int': 'int64',
-            'String': 'str',
-            'Text': 'str'
+            'Boolean': ['bool'],
+            'Decimal': ['float64', 'float16', 'float32', 'float128'],
+            'Int': ['int32', 'int8', 'int16', 'int64'],
+            'String': ['str'],
+            'Text': ['str']
+        }
+
+        self.lang_detect_code_to_aito_code = {
+            'ko': 'cjk',
+            'ja': 'cjk',
+            'zh-cn': 'cjk',
+            'zh-tw': 'cjk',
+            'pt': 'pt-br'
         }
 
         self.supported_alias_analyzer = ['standard', 'whitespace', 'ar', 'hy', 'eu', 'pt-br', 'bg', 'ca', 'cjk', 'cs',

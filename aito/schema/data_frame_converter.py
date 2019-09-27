@@ -71,10 +71,14 @@ class DataFrameConverter:
             col_schema_nullable = True if ('nullable' not in col_schema or col_schema['nullable']) else False
             if not col_schema_nullable and df[col].isna().any():
                 raise ValueError(f"Column '{col}' is nullable but stated non-nullable in the input schema")
-            col_schema_dtype = self.schema_handler.aito_types_to_pandas_dtypes[col_schema['type']]
-            if col_schema_dtype != df[col].dtype.name:
-                self.logger.info(f"Converting column '{col}' data type to match with the input schema...")
-                df[col] = df[col].astype(col_schema_dtype, skipna = True)
+            col_schema_dtypes = self.schema_handler.aito_types_to_pandas_dtypes[col_schema['type']]
+            if df[col].dtype.name not in col_schema_dtypes:
+                self.logger.info(f"Converting column '{col}' to {col_schema['type']} type...")
+                try:
+                    df[col] = df[col].astype(col_schema_dtypes[0], skipna=True)
+                except Exception as e:
+                    self.logger.error(f'Conversion error: {e}')
+                    raise e
         return df
 
     def read_file_to_df(self, read_input, in_format: str, load_options: Dict = None) -> pd.DataFrame:
