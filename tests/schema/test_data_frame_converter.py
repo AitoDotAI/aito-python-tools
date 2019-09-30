@@ -49,12 +49,6 @@ class TestDataFrameConverter(TestCaseCompare):
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample_id_reversed.ndjson').open()))
 
-    # def test_excel_all_sheet_to_ndjson(self):
-    #     self.converter.convert_file(self.input_folder / 'sample_multi_sheets.xlsx', self.out_file_path, 'excel',
-    #                                 'ndjson', read_options={'sheet_name': None})
-    #     self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-    #                           ndjson.load((self.input_folder / 'sample_id_reversed.ndjson').open()))
-
     def test_generate_schema(self):
         schema_file_path = self.output_folder / f"{self.method_name}_schema_out.json"
         self.converter.convert_file(self.input_folder / 'sample.csv', self.out_file_path, 'csv', 'ndjson',

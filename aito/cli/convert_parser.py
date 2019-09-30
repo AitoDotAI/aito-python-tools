@@ -10,15 +10,15 @@ class ConvertParser:
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
                                  description='convert data into desired format',
                                  usage='''
-        aito.py convert [<convert-options>] <input-format> [input] [output] [<input-format-options>] 
+        aito convert [<convert-options>] <input-format> [input] [output] [<input-format-options>] 
         
         To see help for a specific input format, you can run:
         aito.py convert <input-format> -h 
         ''',
                                  epilog='''example:
-        python aito.py convert json ./myFile.json
-        python aito.py convert json - convertedFile.ndjson < myFile.json
-        python aito.py convert -zs myFile_schema.json json - convertedFile.ndjson < myFile.json 
+        aito convert json ./myFile.json
+        aito convert -c myInferredTableSchema csv - convertedFile.ndjson < myFile.csv
+        aito convert -zs givenSchema.json excel - convertedFile.ndjson < myFile.xlsx 
         ''',
                                  add_help=False)
         parser = self.parser
@@ -73,7 +73,6 @@ class ConvertParser:
 class ConvertFormatParser:
     def __init__(self, converter_parser: AitoParser, input_format: str):
         self.converter = DataFrameConverter()
-
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
                                  parents=[converter_parser],
                                  usage=f"aito.py convert [<convert-options>] {input_format} [input] [output] "
@@ -93,6 +92,10 @@ class ConvertCsvParser(ConvertFormatParser):
                                                  help="delimiter to use. Need escape (default: ',')")
         self.convert_format_options.add_argument('-p', '--decimal', type=str, default='.',
                                                  help="Character to recognize decimal point (default '.')")
+        self.parser.epilog = '''example:
+        aito convert csv ./myFile.csv
+        aito convert csv -d ';' < mySemicolonDelimiterFile.csv
+        '''
 
     def parse_and_execute(self, parsing_args, convert_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
@@ -107,6 +110,7 @@ class ConvertJsonParser(ConvertFormatParser):
         super().__init__(converter_parser, 'json')
 
     def parse_and_execute(self, parsing_args, convert_args) -> int:
+        parsed_args = vars(self.parser.parse_args(parsing_args))
         self.converter.convert_file(**convert_args)
         return 0
 
@@ -116,16 +120,16 @@ class ConvertExcelParser(ConvertFormatParser):
         super().__init__(converter_parser, 'excel')
         self.parser.description = 'Convert excel format input, accept both xls and xlsx. ' \
                                   'Only read the first sheet of the file by default'
-        # self.convert_format_options.add_argument('-a', '--all-sheets', action='store_true',
-        #                                          help='read all sheets of the excel file (default: false)')
         self.convert_format_options.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name',
                                                  help='read one sheets of the excel file')
+        self.parser.epilog = '''example:
+        aito convert excel ./myFile.xls
+        aito convert excel -o firstSheet < myFile.xslx
+        '''
 
     def parse_and_execute(self, parsing_args, convert_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
         if parsed_args['one_sheet']:
             convert_args['read_options']['sheet_name'] = parsed_args['one_sheet']
-        # if parsed_args['all_sheets']:
-        #     convert_args['read_options']['sheet_name'] = None
         self.converter.convert_file(**convert_args)
         return 0

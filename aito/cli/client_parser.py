@@ -23,7 +23,9 @@ class ClientParser:
         aito.py client <task> -h
         ''',
                                  epilog='''example:
-        python aito.py client upload-batch myTable < myFile.json
+        aito client -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < myTableEntries.json
+        aito client -e myAitoCredentials.env upload-file myTable myFile.csv
+        aito client upload-file -c newTable myFile.xlsx
         ''',
                                  add_help=False)
         self.parser.add_argument('-e', '--use-env-file', type=str, metavar='env-file-path',
@@ -96,6 +98,10 @@ class UploadBatchParser(ClientTaskParser):
         {self.usage_prefix} <table-name> [input]
         With no input, or when input is -, read table content from standard input
         '''
+        self.parser.epilog = '''example:
+        aito client upload-batch myTable myTableEntries.json
+        aito client upload-batch myTable < myTableEntries.json
+        '''
         self.parser.add_argument('table-name', type=str, help="name of the table to be populated")
         self.optional_args.add_argument('input', default='-', type=str, nargs='?', help="input file or stream")
 
@@ -120,6 +126,11 @@ class UploadFileParser(ClientTaskParser):
         self.parser.description = 'populating a file content to a table. If the file is not in gzip compressed ' \
                                   'ndjson format, a converted ndjson.gz file will be created at the same location.'
         self.parser.usage = f"{self.usage_prefix} <table-name> <file-path>"
+        self.parser.epilog = '''example:
+        aito client upload-file myExistingTable myFile.csv
+        aito client upload-file -ck newTable myFile.json
+        aito client upload-file -s correctSchema.json newTable myFile.json.gz
+        '''
         self.parser.add_argument('table-name', type=str, help="name of the table to be populated")
         self.parser.add_argument('file-path', type=str, help="path to the input file")
         self.optional_args.add_argument('-c', '--create-table-schema', action='store_true',
