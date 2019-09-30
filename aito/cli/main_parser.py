@@ -1,8 +1,10 @@
 import argparse
+import sys
 
 from aito.cli.client_parser import ClientParser
 from aito.cli.convert_parser import ConvertParser
 from aito.cli.parser import AitoParser
+import logging
 
 
 class MainParser:
@@ -29,3 +31,10 @@ class MainParser:
             self.parser.error(f"unrecognized action {args.action}")
         self.actions_parser[args.action].parse_and_execute(parsing_args[1:])
         return 0
+
+
+def main():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)-5s %(name)-5s %(levelname)-10s %(message)s',
+                        datefmt='%H:%M:%S')
+    main_parser = MainParser()
+    main_parser.parse_and_execute(sys.argv[1:])
