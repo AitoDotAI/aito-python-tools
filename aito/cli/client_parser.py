@@ -17,10 +17,10 @@ class ClientParser:
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
                                  description='setup and perform a task with the aito client',
                                  usage='''
-        aito.py client [<client-options>] <task> [<task-options>]
+        aito client [<client-options>] <task> [<task-options>]
         
         To see help for a specific task, you can run:
-        aito.py client <task> -h
+        aito client <task> -h
         ''',
                                  epilog='''example:
         aito client -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < myTableEntries.json
@@ -59,7 +59,7 @@ class ClientTaskParser:
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
                                  parents=[client_parser])
         self.task = task
-        self.usage_prefix = f"python aito.py client <client-options> {task} [<{task}-options>]"
+        self.usage_prefix = f"python aito client <client-options> {task} [<{task}-options>]"
         self.optional_args = self.parser.add_argument_group(f"optional {task} arguments")
 
     def parse_client_args(self, parsed_args):

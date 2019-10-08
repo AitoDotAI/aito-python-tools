@@ -13,7 +13,7 @@ class ConvertParser:
         aito convert [<convert-options>] <input-format> [input] [output] [<input-format-options>] 
         
         To see help for a specific input format, you can run:
-        aito.py convert <input-format> -h 
+        aito convert <input-format> -h 
         ''',
                                  epilog='''example:
         aito convert json ./myFile.json
@@ -75,7 +75,7 @@ class ConvertFormatParser:
         self.converter = DataFrameConverter()
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
                                  parents=[converter_parser],
-                                 usage=f"aito.py convert [<convert-options>] {input_format} [input] [output] "
+                                 usage=f"aito convert [<convert-options>] {input_format} [input] [output] "
                                        f"[<{input_format}-options>]")
         self.convert_format_options = self.parser.add_argument_group(f"optional convert {input_format} arguments")
         self.input_format = input_format
