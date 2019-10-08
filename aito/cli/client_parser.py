@@ -138,7 +138,7 @@ class UploadFileParser(ClientTaskParser):
                                              'and use it as the schema of the uploading table '
                                              '(table must not exist in the instance)')
         self.optional_args.add_argument('-f', '--file-format',
-                                        type=str, choices=['csv', 'xlsx', 'json', 'ndjson', 'infer'], default='infer',
+                                        type=str, choices=['csv', 'excel', 'json', 'ndjson', 'infer'], default='infer',
                                         help='input file format (default: infer file format from file-path extension)')
         self.optional_args.add_argument('-k', '--keep-generated-files', action='store_true',
                                         help='keep the converted ndjson.gz file and generated schema if applicable')
