@@ -1,6 +1,6 @@
 import json
 from aito.schema.schema_handler import SchemaHandler
-from aito.convert.data_frame_converter import DataFrameConverter
+from aito.convert.data_frame_handler import DataFrameHandler
 from tests.test_case import TestCaseCompare
 
 
@@ -16,8 +16,8 @@ class TestSchemaHandler(TestCaseCompare):
         self.out_file_path = self.output_folder / f"{self.method_name}_out.ndjson"
 
     def test_generate_table_schema_from_df(self):
-        converter = DataFrameConverter()
-        df = converter.read_file_to_df(self.input_folder / 'sample.csv', 'csv')
+        df_handler = DataFrameHandler()
+        df = df_handler.read_file_to_df(self.input_folder / 'sample.csv', 'csv')
         table_schema = self.schema_handler.generate_table_schema_from_pandas_dataframe(df)
         self.assertDictEqual(table_schema, json.load((self.input_folder / 'sample_schema.json').open()))
 

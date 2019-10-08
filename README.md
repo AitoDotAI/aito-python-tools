@@ -35,16 +35,16 @@ Common use cases:
 
 * Convert a csv file to ndjson.gz format for file upload and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/):
     ```bash
-    ➜ aito convert -c myInferredTableSchema.json -z csv myFile.csv myConverterFile.ndjson.gz
+    ➜ aito convert -c myInferredTableSchema.json -z csv myFile.csv myConvertedFile.ndjson.gz
     ```
 * Convert a ndjson file according to a given Aito schema:
     ```bash
-    ➜ aito convert -s givenSchema.json json myFile.json myConverterFile.ndjson
+    ➜ aito convert -s givenSchema.json json myFile.json myConvertedFile.ndjson
     ```
 This action will convert the data to match the given schema (e.g: Convert the "id" field from *Int* in the original data to *String*)
 * Convert a file to other formats:
     ```bash
-    ➜ aito convert -f csv json myFile.json myConverterFile.csv
+    ➜ aito convert -f csv json myFile.json myConvertedFile.csv
     ```
 * Upload entries to an existing table (a table of which [schema has been created](https://aito.ai/docs/api/#put-api-v1-schema)) in an Aito instance:
     ```bash

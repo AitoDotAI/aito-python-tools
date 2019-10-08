@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from aito.cli.parser import AitoParser
 from aito.client.aito_client import AitoClient
-from aito.convert.data_frame_converter import DataFrameConverter
+from aito.convert.data_frame_handler import DataFrameHandler
 import datetime
 
 
@@ -162,8 +162,8 @@ class UploadFileParser(ClientTaskParser):
 
         in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
             else parsed_args['file_format']
-        if in_format not in DataFrameConverter.allowed_format:
-            self.parser.error(f"Invalid input format {in_format}. Must be one of {DataFrameConverter.allowed_format}")
+        if in_format not in DataFrameHandler.allowed_format:
+            self.parser.error(f"Invalid input format {in_format}. Must be one of {DataFrameHandler.allowed_format}")
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         converted_file_path = input_file_path.parent / f"{input_file_path.stem.split('.')[0]}_{now}.ndjson.gz"
@@ -178,11 +178,11 @@ class UploadFileParser(ClientTaskParser):
             'use_table_schema': self.parser.check_valid_path((parsed_args['use_table_schema']))
             if parsed_args['use_table_schema'] else None
         }
-        converter = DataFrameConverter()
+        df_handler = DataFrameHandler()
 
         if input_file_path.suffixes[:-2] != ['.ndjson', '.gz'] or parsed_args['create_table_schema'] or \
                 parsed_args['use_table_schema']:
-            converter.convert_file(**convert_options)
+            df_handler.convert_file(**convert_options)
         else:
             converted_file_path = input_file_path
 

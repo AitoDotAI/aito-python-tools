@@ -1,7 +1,7 @@
 import argparse
 
 from aito.cli.parser import AitoParser
-from aito.convert.data_frame_converter import DataFrameConverter
+from aito.convert.data_frame_handler import DataFrameHandler
 from abc import abstractmethod
 
 
@@ -72,7 +72,7 @@ class ConvertParser:
 
 class ConvertFormatParser:
     def __init__(self, converter_parser: AitoParser, input_format: str):
-        self.converter = DataFrameConverter()
+        self.df_handler = DataFrameHandler()
         self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter,
                                  parents=[converter_parser],
                                  usage=f"aito convert [<convert-options>] {input_format} [input] [output] "
@@ -101,7 +101,7 @@ class ConvertCsvParser(ConvertFormatParser):
         parsed_args = vars(self.parser.parse_args(parsing_args))
         convert_args['read_options']['delimiter'] = parsed_args['delimiter']
         convert_args['read_options']['decimal'] = parsed_args['decimal']
-        self.converter.convert_file(**convert_args)
+        self.df_handler.convert_file(**convert_args)
         return 0
 
 
@@ -111,7 +111,7 @@ class ConvertJsonParser(ConvertFormatParser):
 
     def parse_and_execute(self, parsing_args, convert_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
-        self.converter.convert_file(**convert_args)
+        self.df_handler.convert_file(**convert_args)
         return 0
 
 
@@ -131,5 +131,5 @@ class ConvertExcelParser(ConvertFormatParser):
         parsed_args = vars(self.parser.parse_args(parsing_args))
         if parsed_args['one_sheet']:
             convert_args['read_options']['sheet_name'] = parsed_args['one_sheet']
-        self.converter.convert_file(**convert_args)
+        self.df_handler.convert_file(**convert_args)
         return 0

@@ -8,11 +8,11 @@ import pandas as pd
 from aito.schema.schema_handler import SchemaHandler
 
 
-class DataFrameConverter:
+class DataFrameHandler:
     allowed_format = ['csv', 'json', 'excel', 'ndjson']
 
     def __init__(self):
-        self.logger = logging.getLogger('AitoConverter')
+        self.logger = logging.getLogger('DataFrameHandler')
         self.default_options = {
             'csv': {},
             'excel': {},
@@ -142,8 +142,8 @@ class DataFrameConverter:
         Converting a file into expected format and generate aito schema if required
         :param read_input: filepath to input or input buffer
         :param write_output: filepath to output or output buffer
-        :param in_format: if input format is not defined, it will be inferred from input file path suffix
-        :param out_format: file output format
+        :param in_format: input format
+        :param out_format: output format
         :param read_options: dictionary contains arguments for pandas read function
         :param convert_options: dictionary contains arguments for pandas convert function
         :param apply_functions: List of partial functions that will be chained applied to the loaded pd.DataFrame
