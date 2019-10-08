@@ -1,7 +1,7 @@
 import argparse
 
 from aito.cli.parser import AitoParser
-from aito.schema.data_frame_converter import DataFrameConverter
+from aito.convert.data_frame_converter import DataFrameConverter
 from abc import abstractmethod
 
 

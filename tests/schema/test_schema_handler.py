@@ -1,6 +1,6 @@
 import json
 from aito.schema.schema_handler import SchemaHandler
-from aito.schema.data_frame_converter import DataFrameConverter
+from aito.convert.data_frame_converter import DataFrameConverter
 from tests.test_case import TestCaseCompare
 
 

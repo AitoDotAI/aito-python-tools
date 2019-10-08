@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from aito.cli.parser import AitoParser
 from aito.client.aito_client import AitoClient
-from aito.schema.data_frame_converter import DataFrameConverter
+from aito.convert.data_frame_converter import DataFrameConverter
 import datetime
 
 
