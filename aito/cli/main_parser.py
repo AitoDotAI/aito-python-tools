@@ -9,10 +9,10 @@ import logging
 
 class MainParser:
     def __init__(self):
-        usage = ''' python aito.py [-h] <action> [<args>]
+        usage = ''' aito [-h] <action> [<args>]
         To see help text, you can run:
-            python aito.py -h
-            python aito.py <action> -h
+            aito -h
+            aito <action> -h
             
         The most commonly actions are:
             convert     convert data into ndjson format
