@@ -1,9 +1,10 @@
 import argparse
 import sys
 from pathlib import Path
+from abc import abstractmethod
 
 
-class AitoParser(argparse.ArgumentParser):
+class AitoArgParser(argparse.ArgumentParser):
     def error(self, message):
         sys.stderr.write(f"error: {message}\n")
         self.print_help()
@@ -24,3 +25,15 @@ class AitoParser(argparse.ArgumentParser):
 
     def parse_output_arg_value(self, output_arg: str):
         return sys.stdout if output_arg == '-' else self.check_valid_path(output_arg)
+
+
+class ParserWrapper():
+    def __init__(self, add_help=True):
+        if add_help:
+            self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter)
+        else:
+            self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter, add_help=False)
+
+    @abstractmethod
+    def parse_and_execute(self, parsing_argsw):
+        pass

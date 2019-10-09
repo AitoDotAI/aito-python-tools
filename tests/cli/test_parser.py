@@ -3,7 +3,7 @@ import os
 
 import ndjson
 
-from aito.cli.main_parser import MainParser
+from aito.cli.main_parser import MainParserWrapper
 from aito.client.aito_client import AitoClient
 from tests.test_case import TestCaseCompare
 
@@ -13,7 +13,7 @@ class TestConvertParser(TestCaseCompare):
     def setUpClass(cls):
         super().setUpClass(test_path='cli/convert')
         cls.input_folder = cls.input_folder.parent.parent / 'schema'
-        cls.main_parser = MainParser()
+        cls.main_parser = MainParserWrapper()
 
     def setUp(self):
         super().setUp()
@@ -75,7 +75,7 @@ class TestClientParser(TestCaseCompare):
     def setUpClass(cls):
         super().setUpClass(test_path='cli/client')
         cls.input_folder = cls.input_folder.parent.parent / 'schema'
-        cls.main_parser = MainParser()
+        cls.main_parser = MainParserWrapper()
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
 

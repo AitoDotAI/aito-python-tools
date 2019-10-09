@@ -1,15 +1,15 @@
-import argparse
+import logging
 import sys
 
-from aito.cli.client_parser import ClientParser
-from aito.cli.convert_parser import ConvertParser
-from aito.cli.parser import AitoParser
-import logging
+from aito.cli.client_parser import ClientParserWrapper
+from aito.cli.convert_parser import ConvertParserWrapper
+from aito.cli.parser import ParserWrapper
 
 
-class MainParser:
+class MainParserWrapper(ParserWrapper):
     def __init__(self):
-        usage = ''' aito [-h] <action> [<args>]
+        super().__init__()
+        self.parser.usage = ''' aito [-h] <action> [<args>]
         To see help text, you can run:
             aito -h
             aito <action> -h
@@ -18,11 +18,10 @@ class MainParser:
             convert     convert data into ndjson format
             client      set up and do task with an aito client
         '''
-        self.parser = AitoParser(formatter_class=argparse.RawTextHelpFormatter, usage=usage)
         self.parser.add_argument('action', help='action to perform')
         self.actions_parser = {
-            'convert': ConvertParser(),
-            'client': ClientParser()
+            'convert': ConvertParserWrapper(),
+            'client': ClientParserWrapper()
         }
 
     def parse_and_execute(self, parsing_args) -> int:
@@ -36,5 +35,5 @@ class MainParser:
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-5s %(name)-5s %(levelname)-10s %(message)s',
                         datefmt='%H:%M:%S')
-    main_parser = MainParser()
+    main_parser = MainParserWrapper()
     main_parser.parse_and_execute(sys.argv[1:])
