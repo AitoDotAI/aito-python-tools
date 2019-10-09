@@ -73,14 +73,8 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
     ```bash
     ➜ aito client -e myAitoCredentials.env upload-file myTable myFile.csv
     ```
-    ***NOTE:*** This example set up the client using the environment variables stored in the dotenv file `myAitoCredentials.env`
-* Upload a file to a *non-existing* table in a Aito instance using the inferred schema:
-    ```bash
-    ➜ aito client upload-file -c newTable myFile.csv
-    ```
-    In other word, it creates an inferred Aito table schema from the file, create a table `newTable` with the inferred schema, and finally upload the file `myFile.csv`
-    
-    ***Note:*** This example set up the client using the environment variables
+    ***NOTE:*** This example set up the client using the environment variables stored in 
+    the dotenv file `myAitoCredentials.env`
 
 ### Integrating with [pandas](https://pandas.pydata.org/)
 

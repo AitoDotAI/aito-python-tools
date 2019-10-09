@@ -22,10 +22,11 @@ class ClientParserWrapper(ParserWrapper):
         To see help for a specific task, you can run:
         aito client <task> -h
         '''
-        parser.epilog = '''example:
+        parser.epilog = '''the AITO_INSTANCE_URL should look similar to https://my-instance.api.aito.ai
+        example:
         aito client -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < myTableEntries.json
         aito client -e myAitoCredentials.env upload-file myTable myFile.csv
-        aito client upload-file -c newTable myFile.xlsx
+        aito client upload-file myFile.xlsx
         '''
         parser.add_argument('-e', '--use-env-file', type=str, metavar='env-file-path',
                             help='set up the client using a .env file containing the required env variables')
@@ -129,25 +130,17 @@ class UploadFileParserWrapper(ClientTaskParserWrapper):
                              'ndjson format, a converted ndjson.gz file will be created at the same location.'
         parser.usage = f"{self.usage_prefix} <table-name> <file-path>"
         parser.epilog = '''example:
-        aito client upload-file myExistingTable myFile.csv
-        aito client upload-file -ck newTable myFile.json
-        aito client upload-file -s correctSchema.json newTable myFile.json.gz
+        aito client upload-file tableName myFile.csv
+        aito client upload-file -k tableName myFile.json
         '''
         parser.add_argument('table-name', type=str, help="name of the table to be populated")
         parser.add_argument('file-path', type=str, help="path to the input file")
-        self.optional_args.add_argument('-c', '--create-table-schema', action='store_true',
-                                        help='create an inferred table schema at the same location of the input file '
-                                             'and use it as the schema of the uploading table '
-                                             '(table must not exist in the instance)')
         self.optional_args.add_argument('-f', '--file-format',
                                         type=str, choices=['infer', 'csv', 'excel', 'json', 'ndjson'], default='infer',
                                         help='specify input file format if it is not ndjson.gzip '
                                              '(default: infer file format from file-path extension)')
         self.optional_args.add_argument('-k', '--keep-generated-files', action='store_true',
-                                        help='keep the converted ndjson.gz file and generated schema if applicable')
-        self.optional_args.add_argument('-s', '--use-table-schema', metavar='schema-input-file', type=str,
-                                        help='convert the file content according to the input schema and use it as the '
-                                             'schema of the uploading table (table must not exist in the instance)')
+                                        help='keep the converted ndjson.gz file if applicable')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
@@ -155,12 +148,6 @@ class UploadFileParserWrapper(ClientTaskParserWrapper):
         client = AitoClient(**client_args)
 
         table_name = parsed_args['table-name']
-
-        if table_name not in client.get_existing_tables() \
-                and not parsed_args['use_table_schema'] and not parsed_args['create_table_schema']:
-            self.parser.error(f"Table '{table_name}' does not exist. Please upload the table schema first, or use the "
-                              f"--use-table-schema or --create-table-schema option")
-
         input_file_path = self.parser.check_valid_path(parsed_args['file-path'])
 
         in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
@@ -168,40 +155,28 @@ class UploadFileParserWrapper(ClientTaskParserWrapper):
         if in_format not in DataFrameHandler.allowed_format:
             self.parser.error(f"Invalid input format {in_format}. Must be one of {DataFrameHandler.allowed_format}")
 
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        converted_file_path = input_file_path.parent / f"{input_file_path.stem.split('.')[0]}_{now}.ndjson.gz"
-        schema_file_path = input_file_path.parent / f"{table_name}_schema_{now}.json"
-        convert_options = {
-            'read_input': input_file_path,
-            'write_output': converted_file_path,
-            'in_format': in_format,
-            'out_format': 'ndjson',
-            'convert_options': {'compression': 'gzip'},
-            'create_table_schema': schema_file_path if parsed_args['create_table_schema'] else None,
-            'use_table_schema': self.parser.check_valid_path((parsed_args['use_table_schema']))
-            if parsed_args['use_table_schema'] else None
-        }
-        df_handler = DataFrameHandler()
+        is_gzipped = True if (input_file_path.suffixes[-1] == 'gz') else False
 
-        if input_file_path.suffixes[:-2] != ['.ndjson', '.gz'] or parsed_args['create_table_schema'] or \
-                parsed_args['use_table_schema']:
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if input_file_path != 'ndjson':
+            converted_file_path = input_file_path.parent / f"{input_file_path.stem}_{now}.ndjson.gz"
+            convert_options = {
+                'read_input': input_file_path,
+                'write_output': converted_file_path,
+                'in_format': in_format,
+                'out_format': 'ndjson',
+                'convert_options': {'compression': 'gzip'}
+            }
+            df_handler = DataFrameHandler()
             df_handler.convert_file(**convert_options)
+        elif not is_gzipped:
+            converted_file_path = input_file_path.parent / f"{input_file_path.name}.gz"
+            os.system(f"gzip -k {input_file_path}")
         else:
             converted_file_path = input_file_path
-
-        if parsed_args['use_table_schema']:
-            with self.parser.check_valid_path((parsed_args['use_table_schema'])).open() as f:
-                table_schema = json.load(f)
-            client.put_table_schema(table_name, table_schema)
-        elif parsed_args['create_table_schema']:
-            with schema_file_path.open() as f:
-                table_schema = json.load(f)
-            client.put_table_schema(table_name, table_schema)
         client.populate_table_by_file_upload(table_name, converted_file_path)
 
         if not parsed_args['keep_generated_files']:
-            if schema_file_path.exists():
-                schema_file_path.unlink()
             if converted_file_path.exists() and converted_file_path != input_file_path:
                 converted_file_path.unlink()
         return 0

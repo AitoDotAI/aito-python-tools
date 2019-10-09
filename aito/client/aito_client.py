@@ -156,9 +156,12 @@ class AitoClient:
     def get_existing_tables(self) -> List[str]:
         return list(self.get_database_schema()['schema'].keys())
 
+    def check_table_existed(self, table_name) -> bool:
+        return table_name in self.get_existing_tables()
+
     def populate_table_entries(self, table_name, entries):
-        if table_name not in self.get_existing_tables():
-            raise ValueError(f"Table '{table_name}' does not exist. Please upload the table schema first")
+        if not self.check_table_existed(table_name):
+            raise ValueError(f"Table '{table_name}' does not exist. Please create the table schema first")
         if len(entries) > 1000:
             self.populate_table_entries_by_batches(table_name, entries)
         else:
@@ -167,8 +170,8 @@ class AitoClient:
             self.logger.info(f"Uploaded {len(entries)} entries to table '{table_name}'")
 
     def populate_table_entries_by_batches(self, table_name, entries, batch_size=1000):
-        if table_name not in self.get_existing_tables():
-            raise ValueError(f"Table '{table_name}' does not exist. Please upload the table schema first")
+        if not self.check_table_existed(table_name):
+            raise ValueError(f"Table '{table_name}' does not exist. Please create the table schema first")
         self.logger.info(f"Start uploading {len(entries)} entries to table '{table_name}' "
                          f"with batch size of {batch_size}...")
         begin_idx = 0
@@ -186,6 +189,8 @@ class AitoClient:
         self.logger.info(f"Uploaded {populated}/{len(entries)} entries to table '{table_name}'")
 
     def populate_table_by_file_upload(self, table_name: str, file_path: Path):
+        if not self.check_table_existed(table_name):
+            raise ValueError(f"Table '{table_name}' does not exist. Please create the table schema first")
         if file_path.suffixes[-2:] != ['.ndjson', '.gz']:
             raise ValueError("Uploading file must be in gzip compressed ndjson format")
         self.logger.info("Initiating file upload...")
