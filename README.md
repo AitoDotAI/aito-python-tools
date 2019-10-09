@@ -29,34 +29,52 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-***NOTE:*** For client action, remember to set up your Aito instance, either through environment variable or dotenv file or using the command line arguments
+***NOTE:*** For client action, remember to set up your Aito instance, either through environment variable or dotenv 
+file or using the command line arguments
 
-Common use cases:
-
-* Convert a csv file to ndjson.gz format for file upload and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/):
+### Common use cases:
+``
+#### Convert:
+* Convert a csv file to [ndjson](http://ndjson.org/) format for 
+[file upload](https://aito.ai/docs/api/#post-api-v1-data-table-file):
     ```bash
-    ➜ aito convert -c myInferredTableSchema.json -z csv myFile.csv myConvertedFile.ndjson.gz
+    ➜ aito convert csv myFile.csv -c myInferredTableSchema.json > myConvertedFile.ndjson
     ```
-* Convert a ndjson file according to a given Aito schema:
+* Convert an excel file to [JSON](https://www.json.org/) format for 
+[batch upload](https://aito.ai/docs/api/#post-api-v1-data-table-file) 
+and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/):
     ```bash
-    ➜ aito convert -s givenSchema.json json myFile.json myConvertedFile.ndjson
+    ➜ aito convert excel myFile.xlsx --json > myConvertedFile.json
     ```
-This action will convert the data to match the given schema (e.g: Convert the "id" field from *Int* in the original data to *String*)
-* Convert a file to other formats:
+* Convert a file and infer an [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/) on the way:
     ```bash
-    ➜ aito convert -f csv json myFile.json myConvertedFile.csv
+    ➜ aito convert csv myFile.csv -c myInferredTableSchema.json  > myConvertedFile.ndjson
     ```
-* Upload entries to an existing table (a table of which [schema has been created](https://aito.ai/docs/api/#put-api-v1-schema)) in an Aito instance:
+* Convert a file into the desired format declared in a given 
+[Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/) 
+(e.g: Id should be string instead of Int):
+    ```bash
+    ➜ aito convert csv myFile.csv -s desiredSchema.json > myConvertedFile.ndjson
+    ```
+*This is useful if you want to change the created schema and convert the data accordingly*
+* Convert using standard input
+    ```bash
+    ➜ aito convert csv < myFile.csv > myConvertedFile.ndjson
+    ```
+  
+#### Client
+* **Batch-upload**: Upload entries to an *existing* table 
+(a table of which [schema has been created](https://aito.ai/docs/api/#put-api-v1-schema)) in an Aito instance:
     ```bash
     ➜ aito client -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < myTableEntries.json
     ```  
     ***NOTE:*** This example set up the client using the command line arguments
-* Upload a file to an existing table in an Aito instance:
+* **File-upload**: Upload a file to an *existing* table in an Aito instance:
     ```bash
     ➜ aito client -e myAitoCredentials.env upload-file myTable myFile.csv
     ```
     ***NOTE:*** This example set up the client using the environment variables stored in the dotenv file `myAitoCredentials.env`
-* Upload a file to a non-existing table in a Aito instance using the inferred schema:
+* Upload a file to a *non-existing* table in a Aito instance using the inferred schema:
     ```bash
     ➜ aito client upload-file -c newTable myFile.csv
     ```

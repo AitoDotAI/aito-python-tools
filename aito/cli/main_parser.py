@@ -13,9 +13,9 @@ class MainParserWrapper(ParserWrapper):
         To see help text, you can run:
             aito -h
             aito <action> -h
-            
+
         The most commonly actions are:
-            convert     convert data into ndjson format
+            convert     convert data of table entries into ndjson (for file-upload) or json (for batch-upload)
             client      set up and do task with an aito client
         '''
         self.parser.add_argument('action', help='action to perform')
@@ -24,7 +24,7 @@ class MainParserWrapper(ParserWrapper):
             'client': ClientParserWrapper()
         }
 
-    def parse_and_execute(self, parsing_args) -> int:
+    def parse_and_execute(self, parsing_args):
         args = self.parser.parse_args(parsing_args[0:1])
         if args.action not in self.actions_parser:
             self.parser.error(f"unrecognized action {args.action}")
