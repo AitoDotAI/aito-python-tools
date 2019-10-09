@@ -77,7 +77,7 @@ class TestConvertCli(TestCaseCompare):
         os.system(f"python aito.py convert excel {self.input_folder}/sample_multi_sheets.xlsx -o Sheet2 -j"
                   f"> {self.out_file_path}")
         self.assertCountEqual(json.load(self.out_file_path.open()),
-                              json.load((self.input_folder / 'sample_id_reversed.ndjson').open()))
+                              json.load((self.input_folder / 'sample_id_reversed.json').open()))
 
     def test_generate_schema(self):
         schema_out_path = self.output_folder / f"{self.method_name}_schema_out.json"

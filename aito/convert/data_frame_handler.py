@@ -2,7 +2,7 @@ import json
 import logging
 from pathlib import Path
 from typing import List, Dict, Callable
-
+import io
 import pandas as pd
 
 from aito.schema.schema_handler import SchemaHandler
@@ -89,7 +89,10 @@ class DataFrameHandler:
         :param load_options: dictionary contains arguments for pandas read function
         :return:
         """
-        self.logger.info("Start reading input...")
+        if isinstance(read_input, io.TextIOWrapper):
+            self.logger.info("Start reading from standard input...")
+        else:
+            self.logger.info(f"Start reading input from {read_input}...")
         read_functions = {'csv': pd.read_csv, 'excel': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
 
         if not load_options:
