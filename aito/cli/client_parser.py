@@ -191,12 +191,11 @@ class UploadFileParserWrapper(ClientOperationParserWrapper):
     def __init__(self, parent_parser: AitoArgParser, operation_argument):
         super().__init__(parent_parser, operation_argument, 'upload-file')
         parser = self.parser
-        parser.description = 'populating a file content to a table. If the file is not in gzip compressed ' \
-                             'ndjson format, a converted ndjson.gz file will be created at the same location.'
+        parser.description = 'populating a file content to a table. ' \
+                             'Automatically convert the file to match the existing schema'
         parser.usage = f"{self.usage_prefix} [<upload-file-options>] <table-name> <file-path>"
         parser.epilog = '''example:
   aito client upload-file tableName path/to/myFile.csv
-  aito client upload-file -k tableName path/to/myFile.json
         '''
         parser.add_argument('table-name', type=str, help="name of the table to be populated")
         parser.add_argument('file-path', type=str, help="path to the input file")
@@ -204,14 +203,15 @@ class UploadFileParserWrapper(ClientOperationParserWrapper):
         opts.add_argument('-f', '--file-format', type=str, choices=['infer', 'csv', 'excel', 'json', 'ndjson'],
                           default='infer', help='specify input file format if it is not ndjson.gzip '
                                                 '(default: infer file format from file-path extension)')
-        opts.add_argument('-k', '--keep-generated-files', action='store_true',
-                         help='keep the converted ndjson.gz file if applicable')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
         client = self.create_client_from_parsed_args(parsed_args)
-
         table_name = parsed_args['table-name']
+
+        if not client.check_table_existed(table_name):
+            self.parser.error(f"Table '{table_name}' does not exist. Please create table first.")
+
         input_file_path = self.parser.check_valid_path(parsed_args['file-path'])
 
         in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
@@ -219,28 +219,19 @@ class UploadFileParserWrapper(ClientOperationParserWrapper):
         if in_format not in DataFrameHandler.allowed_format:
             self.parser.error(f"Invalid input format {in_format}. Must be one of {DataFrameHandler.allowed_format}")
 
-        is_gzipped = True if (input_file_path.suffixes[-1] == 'gz') else False
-
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        if input_file_path != 'ndjson':
-            converted_file_path = input_file_path.parent / f"{input_file_path.stem}_{now}.ndjson.gz"
-            convert_options = {
-                'read_input': input_file_path,
-                'write_output': converted_file_path,
-                'in_format': in_format,
-                'out_format': 'ndjson',
-                'convert_options': {'compression': 'gzip'}
-            }
-            df_handler = DataFrameHandler()
-            df_handler.convert_file(**convert_options)
-        elif not is_gzipped:
-            converted_file_path = input_file_path.parent / f"{input_file_path.name}.gz"
-            os.system(f"gzip -k {input_file_path}")
-        else:
-            converted_file_path = input_file_path
+        converted_file_path = input_file_path.parent / f"{input_file_path.stem}_{now}.ndjson.gz"
+        convert_options = {
+            'read_input': input_file_path,
+            'write_output': converted_file_path,
+            'in_format': in_format,
+            'out_format': 'ndjson',
+            'convert_options': {'compression': 'gzip'},
+            'use_table_schema': client.get_table_schema(table_name)
+        }
+        df_handler = DataFrameHandler()
+        df_handler.convert_file(**convert_options)
         client.populate_table_by_file_upload(table_name, converted_file_path)
 
-        if not parsed_args['keep_generated_files']:
-            if converted_file_path.exists() and converted_file_path != input_file_path:
-                converted_file_path.unlink()
+        converted_file_path.unlink()
         return 0
