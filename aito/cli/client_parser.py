@@ -41,12 +41,13 @@ class ClientParserWrapper(ParserWrapper):
         parser.add_argument('-w', '--read-write-key', type=str, default='.env',
                             help='aito read-write API key (if not defined or when value is .env, '
                                  'use the AITO_RW_KEY env variable value')
-        parser.add_argument('task', choices=['upload-batch', 'upload-file', 'create-table'],
+        parser.add_argument('task', choices=['create-table', 'delete-table', 'upload-batch', 'upload-file'],
                             help='perform a task with the client')
         self.client_task_parsers = {
             'create-table': CreateTableParserWrapper(self.parser),
+            'delete-table': DeleteTableParserWrapper(self.parser),
             'upload-batch': UploadBatchParserWrapper(self.parser),
-            'upload-file': UploadFileParserWrapper(self.parser)
+            'upload-file': UploadFileParserWrapper(self.parser),
         }
 
     def parse_and_execute(self, parsing_args) -> int:
@@ -66,17 +67,17 @@ class ClientTaskParserWrapper(ParserWrapper):
         self.usage_prefix = f"python aito client <client-options> {task} [<{task}-options>]"
         self.optional_args = self.parser.add_argument_group(f"optional {task} arguments")
 
-    def get_client_args_from_parsed_args(self, parsed_args):
+    def create_client_from_parsed_args(self, parsed_args):
+        def get_env_variable(variable_name):
+            if variable_name not in env_var:
+                self.parser.error(f"{variable_name} env variable not found")
+            return env_var[variable_name]
+
         if parsed_args['use_env_file']:
             env_file_path = self.parser.check_valid_path(parsed_args['use_env_file'], True)
             load_dotenv(env_file_path)
 
         env_var = os.environ
-
-        def get_env_variable(variable_name):
-            if variable_name not in env_var:
-                self.parser.error(f"{variable_name} env variable not found")
-            return env_var[variable_name]
 
         client_args = {
             'url': get_env_variable('AITO_INSTANCE_URL') if parsed_args['url'] == '.env' else parsed_args['url'],
@@ -85,7 +86,7 @@ class ClientTaskParserWrapper(ParserWrapper):
             'ro_key': get_env_variable('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
             else parsed_args['read_only_key']
         }
-        return client_args
+        return AitoClient(**client_args)
 
     @abstractmethod
     def parse_and_execute(self, parsing_args):
@@ -111,8 +112,7 @@ class CreateTableParserWrapper(ClientTaskParserWrapper):
 
     def parse_and_execute(self, parsing_args):
         parsed_args = vars(self.parser.parse_args(parsing_args))
-        client_args = self.get_client_args_from_parsed_args(parsed_args)
-        client = AitoClient(**client_args)
+        client = self.create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         if parsed_args['schema-input'] == '-':
             table_schema = json.load(sys.stdin)
@@ -123,6 +123,22 @@ class CreateTableParserWrapper(ClientTaskParserWrapper):
         client.put_table_schema(table_name, table_schema)
         return 0
 
+
+class DeleteTableParserWrapper(ClientTaskParserWrapper):
+    def __init__(self, parent_parser: AitoArgParser):
+        super().__init__(parent_parser, 'delete-table')
+        parser = self.parser
+        parser.description = "delete a table schema and all content inside the table"
+        parser.usage = f"{self.usage_prefix} <table-name>"
+        parser.add_argument('table-name', type=str, help="name of the table to be populated")
+
+    def parse_and_execute(self, parsing_args) -> int:
+        parsed_args = vars(self.parser.parse_args(parsing_args))
+        client = self.create_client_from_parsed_args(parsed_args)
+        table_name = parsed_args['table-name']
+        if self.parser.ask_confirmation(f"Are you should you want to delete table '{table_name}'", False):
+            client.delete_table(table_name)
+        return 0
 
 
 class UploadBatchParserWrapper(ClientTaskParserWrapper):
@@ -146,8 +162,7 @@ class UploadBatchParserWrapper(ClientTaskParserWrapper):
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
-        client_args = self.get_client_args_from_parsed_args(parsed_args)
-        client = AitoClient(**client_args)
+        client = self.create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         if parsed_args['input'] == '-':
             table_content = json.load(sys.stdin)
@@ -181,8 +196,7 @@ class UploadFileParserWrapper(ClientTaskParserWrapper):
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
-        client_args = self.get_client_args_from_parsed_args(parsed_args)
-        client = AitoClient(**client_args)
+        client = self.create_client_from_parsed_args(parsed_args)
 
         table_name = parsed_args['table-name']
         input_file_path = self.parser.check_valid_path(parsed_args['file-path'])

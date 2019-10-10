@@ -1,5 +1,6 @@
 import json
 import os
+from subprocess import Popen, PIPE
 
 from aito.cli.main_parser import MainParserWrapper
 from aito.client.aito_client import AitoClient
@@ -63,3 +64,9 @@ class TestClientParser(TestCaseCompare):
     def test_create_table(self):
         os.system(f"python aito.py client create-table sample < {self.input_folder / 'sample_schema.json'}")
         self.assertTrue(self.client.check_table_existed('sample'))
+
+    def test_delete_table(self):
+        self.create_table()
+        proc = Popen("python aito.py client delete-table sample", stdin=PIPE, stdout=PIPE, shell=True)
+        proc.communicate(b"y")
+        self.assertFalse(self.client.check_table_existed('sample'))
