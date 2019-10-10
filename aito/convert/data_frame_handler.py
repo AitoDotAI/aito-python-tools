@@ -81,12 +81,12 @@ class DataFrameHandler:
                     raise e
         return df
 
-    def read_file_to_df(self, read_input, in_format: str, load_options: Dict = None) -> pd.DataFrame:
+    def read_file_to_df(self, read_input, in_format: str, read_options: Dict = None) -> pd.DataFrame:
         """
         Load a file and return pandas Dataframe
         :param read_input: path to or buffer of input
         :param in_format: input format
-        :param load_options: dictionary contains arguments for pandas read function
+        :param read_options: dictionary contains arguments for pandas read function
         :return:
         """
         if isinstance(read_input, io.TextIOWrapper):
@@ -95,10 +95,10 @@ class DataFrameHandler:
             self.logger.info(f"Start reading input from {read_input}...")
         read_functions = {'csv': pd.read_csv, 'excel': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
 
-        if not load_options:
+        if not read_options:
             options = self.default_options[in_format]
         else:
-            options = load_options
+            options = read_options
             options.update(self.default_options[in_format])
         df = read_functions[in_format](read_input, **options)
         return df

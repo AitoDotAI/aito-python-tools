@@ -3,6 +3,7 @@ import sys
 
 from aito.cli.client_parser import ClientParserWrapper
 from aito.cli.convert_parser import ConvertParserWrapper
+from aito.cli.infer_schema_parser import InferTableSchemaParserWrapper
 from aito.cli.parser import ParserWrapper
 
 
@@ -15,11 +16,13 @@ class MainParserWrapper(ParserWrapper):
             aito <action> -h
 
         The most commonly actions are:
-            convert     convert data of table entries into ndjson (for file-upload) or json (for batch-upload)
-            client      set up a client and perform CRUD operations
+            infer-table-schema  infer Aito table schema from a file
+            convert             convert data of table entries into ndjson (for file-upload) or json (for batch-upload)
+            client              set up a client and perform CRUD operations
         '''
         self.parser.add_argument('action', help='action to perform')
         self.actions_parser = {
+            'infer-table-schema': InferTableSchemaParserWrapper(),
             'convert': ConvertParserWrapper(),
             'client': ClientParserWrapper()
         }
