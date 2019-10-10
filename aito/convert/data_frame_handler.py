@@ -73,7 +73,7 @@ class DataFrameHandler:
                 raise ValueError(f"Column '{col}' is nullable but stated non-nullable in the input schema")
             col_schema_dtypes = self.schema_handler.aito_types_to_pandas_dtypes[col_schema['type']]
             if df[col].dtype.name not in col_schema_dtypes:
-                self.logger.info(f"Converting column '{col}' to {col_schema['type']} type...")
+                self.logger.info(f"Converting column '{col}' to {col_schema['type']} type according to the schema...")
                 try:
                     df[col] = df[col].astype(col_schema_dtypes[0], skipna=True)
                 except Exception as e:
@@ -140,7 +140,7 @@ class DataFrameHandler:
                      convert_options: Dict = None,
                      apply_functions: List[Callable[..., pd.DataFrame]] = None,
                      create_table_schema: Path = None,
-                     use_table_schema: Path = None):
+                     use_table_schema: Dict = None):
         """
         Converting a file into expected format and generate aito schema if required
         :param read_input: filepath to input or input buffer
@@ -168,9 +168,7 @@ class DataFrameHandler:
         df = self.apply_functions_on_df(df, apply_functions)
 
         if use_table_schema:
-            with use_table_schema.open() as f:
-                table_schema = json.load(f)
-            df = self.convert_df_from_aito_table_schema(df, table_schema)
+            df = self.convert_df_from_aito_table_schema(df, use_table_schema)
 
         if out_format != in_format or convert_options:
             self.df_to_format(df, out_format, write_output, convert_options)

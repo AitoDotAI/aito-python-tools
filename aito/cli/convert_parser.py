@@ -1,6 +1,7 @@
 import argparse
 import sys
 from abc import abstractmethod
+import json
 
 from aito.cli.parser import ParserWrapper, AitoArgParser
 from aito.convert.data_frame_handler import DataFrameHandler
@@ -72,10 +73,12 @@ class ConvertFormatParserWrapper():
             'create_table_schema':
                 parser.check_valid_path(parsed_args['create_table_schema'])
                 if parsed_args['create_table_schema'] else None,
-            'use_table_schema':
-                self.parser.check_valid_path(parsed_args['use_table_schema'], check_exists=True)
-                if parsed_args['use_table_schema'] else None
         }
+        if parsed_args['use_table_schema']:
+            schema_path = self.parser.check_valid_path(parsed_args['use_table_schema'], check_exists=True)
+            with schema_path.open() as f:
+                table_schema = json.load(f)
+            convert_args['use_table_schema'] = table_schema
         return convert_args
 
     @abstractmethod
