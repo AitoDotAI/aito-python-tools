@@ -11,15 +11,16 @@ A collection of useful tools for [Aito](https://aito.ai/) users
 ### Command line interface support tools
 
 ```bash
-➜ aito -h
-usage:  aito [-h] <action> [<options>]
-        To see help for a specific action:
+➜ usage:  aito [-h] <action> [<args>]
+        To see help text, you can run:
+            aito -h
             aito <action> -h
 
         The most commonly actions are:
-            convert     convert data into ndjson format
-            client      set up a client and perform CRUD operations
-
+            infer-table-schema  infer Aito table schema from a file
+            convert             convert data of table entries into ndjson (for file-upload) or json (for batch-upload)
+            client              set up a client and perform CRUD operations
+        
 
 positional arguments:
   action      action to perform
@@ -31,8 +32,43 @@ optional arguments:
 ***NOTE:*** For client action, remember to set up your Aito instance, either through environment variable or dotenv 
 file or using the command line arguments
 
+### Infer table schema from file
+* By default, the command takes standard input and standard output. To redirect:
+    ```bash
+    ➜ aito infer-table-schema < path/to/myFile.csv > path/to/schemaFile.json
+    ```
+* Infer table schema from a csv file
+    ```bash
+    ➜ aito infer-table-schema csv < path/to/myCSVFile.csv
+    ```
+    Infer table schema from a semicolon delimited csv file
+    ```bash
+    ➜ aito infer-table-schema csv -d ';' < path/to/myCSVFile.csv
+    ```
+    Infer table schema from a semicolon delimited comma decimal point csv file
+    ```bash
+    ➜ aito infer-table-schema csv -d ';' -p ',' < path/to/myCSVFile.csv
+    ```
+* Infer table schema from an excel file:
+    ```bash
+    ➜ aito infer-table-schema excel path/to/myExcelFile.xslx
+    ```
+    Infer table schema from a single sheet of an excel file 
+    ```bash
+    ➜ aito infer-table-schema excel path/to/myExcelFile.xls -o sheetName
+    ```
+* Infer table schema from a json file:
+    ```bash
+    ➜ aito infer-table-schema json path/to/myJsonFile.json
+    ```
+  
+* Infer table schema from a njson file:
+    ```bash
+    ➜ aito infer-table-schema ndjson path/to/myNdJsonFile.ndjson
+    ```
+
 ### Convert data to be uploaded into Aito:
-* By default, convert takes standard input and standard ouput. To redirect: 
+* By default, the command takes standard input and standard output. To redirect: 
     ```bash
     ➜ aito convert csv < path/to/myFile.csv > path/to/myConvertedFile.ndjson
     ```
@@ -96,7 +132,7 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
 (a table of which [schema has been created](https://aito.ai/docs/api/#put-api-v1-schema)) in an Aito instance:
     ```bash
     ➜ aito client -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < myTableEntries.json
-    ```  instance
+    ```
 * **File-upload**: Upload a file to an *existing* table in an Aito instance:
     ```bash
     ➜ aito client -e myAitoCredentials.env upload-file myTable myFile.csv
