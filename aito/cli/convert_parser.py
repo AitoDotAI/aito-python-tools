@@ -1,6 +1,7 @@
 import argparse
-
 import sys
+from abc import abstractmethod
+
 from aito.cli.parser import ParserWrapper, AitoArgParser
 from aito.convert.data_frame_handler import DataFrameHandler
 
@@ -10,7 +11,7 @@ class ConvertParserWrapper(ParserWrapper):
         super().__init__(add_help=False)
         parser = self.parser
         parser.description = 'convert data of table entries into ndjson or json (if specified)'
-        parser.usage = ''' aito convert [-h] <input-format> [<options>] [input]
+        parser.usage = ''' aito convert [-h] <input-format> [input] [<options>]
         To see help for a specific input format:
             aito convert <input-format> -h 
         '''
@@ -37,15 +38,14 @@ class ConvertParserWrapper(ParserWrapper):
         return 0
 
 
-class ConvertFormatParserWrapper(ParserWrapper):
+class ConvertFormatParserWrapper():
     def __init__(self, parent_parser: AitoArgParser, input_format_arg, input_format: str):
-        super().__init__()
         self.df_handler = DataFrameHandler()
         self.input_format = input_format
         input_format_arg.help = argparse.SUPPRESS
         self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter,
                                     parents=[parent_parser],
-                                    usage=f"aito convert {input_format} [<options>] [input]")
+                                    usage=f"aito convert {input_format} [input] [<options>]")
         parser = self.parser
         either_use_or_create_schema = parser.add_mutually_exclusive_group()
         either_use_or_create_schema.add_argument('-c', '--create-table-schema', metavar='schema-output-file', type=str,
@@ -78,6 +78,7 @@ class ConvertFormatParserWrapper(ParserWrapper):
         }
         return convert_args
 
+    @abstractmethod
     def parse_and_execute(self, parsing_args):
         pass
 

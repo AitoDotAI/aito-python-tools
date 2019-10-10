@@ -1,15 +1,15 @@
 import argparse
+import datetime
 import json
 import os
-from abc import abstractmethod
 import sys
+from abc import abstractmethod
+
 from dotenv import load_dotenv
 
 from aito.cli.parser import AitoArgParser, ParserWrapper
 from aito.client.aito_client import AitoClient
 from aito.convert.data_frame_handler import DataFrameHandler
-import datetime
-
 from aito.schema.schema_handler import SchemaHandler
 
 
@@ -63,14 +63,13 @@ example:
         return 0
 
 
-class ClientOperationParserWrapper(ParserWrapper):
+class ClientOperationParserWrapper():
     def __init__(self, parent_parser: AitoArgParser, operation_argument, operation: str):
-        super().__init__()
         operation_argument.help = argparse.SUPPRESS
         self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter,
                                     parents=[parent_parser])
         self.operation = operation
-        self.usage_prefix = f"python aito client <client-options> {operation}"
+        self.usage_prefix = f"aito client <client-options> {operation}"
 
     def create_client_from_parsed_args(self, parsed_args):
         def get_env_variable(variable_name):

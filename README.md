@@ -49,13 +49,13 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
     ```
 * Convert a file and infer an [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/) on the way:
     ```bash
-    ➜ aito convert csv -c path/to/myInferredTableSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
+    ➜ aito convert csv path/to/myFile.csv -c path/to/myInferredTableSchema.json > path/to/myConvertedFile.ndjson
     ```
 * Convert a file into the desired format declared in a given 
 [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/) 
 (e.g: Id should be string instead of Int):
     ```bash
-    ➜ aito convert csv -s path/to/desiredSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
+    ➜ aito convert csv path/to/myFile.csv -s path/to/desiredSchema.json > path/to/myConvertedFile.ndjson
     ```
 *This is useful if you want to change the created schema and convert the data accordingly*
   
