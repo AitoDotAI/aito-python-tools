@@ -91,3 +91,10 @@ class TestConvertCli(TestCaseCompare):
                   f" < {self.input_folder}/sample.csv > {self.out_file_path}")
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample_altered.ndjson').open()))
+
+    def test_both_create_and_use_schema(self):
+        schema_out_path = self.output_folder / f"{self.method_name}_schema_out.json"
+        with self.assertRaises(SystemExit) as context:
+            self.main_parser.parse_and_execute(['convert', 'csv', f"-c={schema_out_path}",
+                                                f"-s={self.input_folder / 'sample_schema_altered.json'}"])
+        self.assertEqual(context.exception.code, 2)
