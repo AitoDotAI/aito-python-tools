@@ -41,11 +41,13 @@ class ClientParserWrapper(ParserWrapper):
         parser.add_argument('-w', '--read-write-key', type=str, default='.env',
                             help='aito read-write API key (if not defined or when value is .env, '
                                  'use the AITO_RW_KEY env variable value')
-        parser.add_argument('task', choices=['create-table', 'delete-table', 'upload-batch', 'upload-file'],
+        parser.add_argument('task', choices=['create-table', 'delete-table', 'delete-database',
+                                             'upload-batch', 'upload-file'],
                             help='perform a task with the client')
         self.client_task_parsers = {
             'create-table': CreateTableParserWrapper(self.parser),
             'delete-table': DeleteTableParserWrapper(self.parser),
+            'delete-database': DeleteDatabaseParserWrapper(self.parser),
             'upload-batch': UploadBatchParserWrapper(self.parser),
             'upload-file': UploadFileParserWrapper(self.parser),
         }
@@ -136,8 +138,21 @@ class DeleteTableParserWrapper(ClientTaskParserWrapper):
         parsed_args = vars(self.parser.parse_args(parsing_args))
         client = self.create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
-        if self.parser.ask_confirmation(f"Are you should you want to delete table '{table_name}'", False):
+        if self.parser.ask_confirmation(f"Confirm delete table '{table_name}'? The action is irreversible", False):
             client.delete_table(table_name)
+        return 0
+
+class DeleteDatabaseParserWrapper(ClientTaskParserWrapper):
+    def __init__(self, parent_parser: AitoArgParser):
+        super().__init__(parent_parser, 'delete-database')
+        parser = self.parser
+        parser.description = "delete the whole database"
+
+    def parse_and_execute(self, parsing_args) -> int:
+        parsed_args = vars(self.parser.parse_args(parsing_args))
+        client = self.create_client_from_parsed_args(parsed_args)
+        if self.parser.ask_confirmation(f"Confirm delete the whole database? The action is irreversible", False):
+            client.delete_database()
         return 0
 
 

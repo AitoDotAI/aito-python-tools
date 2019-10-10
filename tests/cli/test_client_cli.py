@@ -70,3 +70,13 @@ class TestClientParser(TestCaseCompare):
         proc = Popen("python aito.py client delete-table sample", stdin=PIPE, stdout=PIPE, shell=True)
         proc.communicate(b"y")
         self.assertFalse(self.client.check_table_existed('sample'))
+
+    def test_delete_database(self):
+        self.create_table()
+        with (self.input_folder / 'sample_schema_altered.json').open() as f:
+            another_tbl_schema = json.load(f)
+        self.client.put_table_schema('sample_altered', another_tbl_schema)
+        proc = Popen("python aito.py client delete-database", stdin=PIPE, stdout=PIPE, shell=True)
+        proc.communicate(b"y")
+        self.assertFalse(self.client.check_table_existed('sample'))
+        self.assertFalse(self.client.check_table_existed('sample_altered'))
