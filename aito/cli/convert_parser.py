@@ -10,45 +10,42 @@ class ConvertParserWrapper(ParserWrapper):
         super().__init__(add_help=False)
         parser = self.parser
         parser.description = 'convert data of table entries into ndjson or json (if specified)'
-        parser.usage = '''
-        aito convert <input-format> [input] [<options>]
-        
-        To see help for a specific input format, you can run:
-        aito convert <input-format> -h 
+        parser.usage = ''' aito convert [-h] <input-format> [<options>] [input]
+        To see help for a specific input format:
+            aito convert <input-format> -h 
         '''
         parser.epilog = '''example:
         aito convert json myFile.json > convertedFile.ndjson 
         aito convert csv myFile.csv -c myInferredTableSchema.json --json > convertedFile.json
         aito convert excel -s desiredSchema.json < myFile.xlsx > convertedFile.ndjson 
         '''
-        parser.add_argument('input-format', choices=['csv', 'excel', 'json', 'excel'], help='input format')
-        parser.add_argument('input', default='-', type=str, nargs='?',
-                            help="input file or stream (with no input or when input is -, read standard input) "
-                                 "\nit is recommended to use input file, especially for excel format")
         self.input_format_to_parser = {
-            'csv': ConvertCsvParserWrapper(parser),
-            'excel': ConvertExcelParserWrapper(parser),
-            'json': ConvertJsonParserWrapper(parser),
-            'ndjson': ConvertNdJsonParserWrapper(parser),
+            'csv': ConvertCsvParserWrapper,
+            'excel': ConvertExcelParserWrapper,
+            'json': ConvertJsonParserWrapper,
+            'ndjson': ConvertNdJsonParserWrapper,
         }
+        self.input_format_arg = parser.add_argument('input-format', choices=list(self.input_format_to_parser.keys()),
+                                                    help='input format')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, unknown = self.parser.parse_known_args(parsing_args)
         parsed_args = vars(parsed_args)
-        input_format_parser = self.input_format_to_parser[parsed_args['input-format']]
+        input_format_parser = self.input_format_to_parser[parsed_args['input-format']](self.parser,
+                                                                                       self.input_format_arg)
         input_format_parser.parse_and_execute(parsing_args)
         return 0
 
 
 class ConvertFormatParserWrapper(ParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, input_format: str):
+    def __init__(self, parent_parser: AitoArgParser, input_format_arg, input_format: str):
         super().__init__()
         self.df_handler = DataFrameHandler()
         self.input_format = input_format
+        input_format_arg.help = argparse.SUPPRESS
         self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter,
                                     parents=[parent_parser],
-                                    usage=f"aito convert [<convert-options>] {input_format} [input] [output] "
-                                          f"[<{input_format}-options>]")
+                                    usage=f"aito convert {input_format} [<options>] [input]")
         parser = self.parser
         either_use_or_create_schema = parser.add_mutually_exclusive_group()
         either_use_or_create_schema.add_argument('-c', '--create-table-schema', metavar='schema-output-file', type=str,
@@ -57,6 +54,9 @@ class ConvertFormatParserWrapper(ParserWrapper):
         parser.add_argument('-j', '--json', action='store_true', help='convert to json format')
         either_use_or_create_schema.add_argument('-s', '--use-table-schema', metavar='schema-input-file', type=str,
                                                  help='convert the data to match the input table schema')
+        parser.add_argument('input', default='-', type=str, nargs='?',
+                            help="input file or stream (with no input or when input is -, read standard input) "
+                                 "\nit is recommended to use input file, especially for excel format")
 
     def get_shared_convert_args_from_parsed_args(self, parsed_args):
         parser = self.parser
@@ -83,8 +83,8 @@ class ConvertFormatParserWrapper(ParserWrapper):
 
 
 class ConvertCsvParserWrapper(ConvertFormatParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser):
-        super().__init__(parent_parser, 'csv')
+    def __init__(self, parent_parser: AitoArgParser, input_format_arg):
+        super().__init__(parent_parser, input_format_arg, 'csv')
         parser = self.parser
         parser.add_argument('-d', '--delimiter', type=str, default=',',
                             help="delimiter to use. Need escape (default: ',')")
@@ -105,8 +105,8 @@ class ConvertCsvParserWrapper(ConvertFormatParserWrapper):
 
 
 class ConvertJsonParserWrapper(ConvertFormatParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser):
-        super().__init__(parent_parser, 'json')
+    def __init__(self, parent_parser: AitoArgParser, input_format_arg):
+        super().__init__(parent_parser, input_format_arg, 'json')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
@@ -116,8 +116,8 @@ class ConvertJsonParserWrapper(ConvertFormatParserWrapper):
 
 
 class ConvertNdJsonParserWrapper(ConvertFormatParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser):
-        super().__init__(parent_parser, 'ndjson')
+    def __init__(self, parent_parser: AitoArgParser, input_format_arg):
+        super().__init__(parent_parser, input_format_arg, 'ndjson')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
@@ -127,8 +127,8 @@ class ConvertNdJsonParserWrapper(ConvertFormatParserWrapper):
 
 
 class ConvertExcelParserWrapper(ConvertFormatParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser):
-        super().__init__(parent_parser, 'excel')
+    def __init__(self, parent_parser: AitoArgParser, input_format_arg):
+        super().__init__(parent_parser, input_format_arg, 'excel')
         self.parser.description = 'Convert excel format input, accept both xls and xlsx. ' \
                                   'Read the first sheet of the file by default'
         self.parser.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name',
