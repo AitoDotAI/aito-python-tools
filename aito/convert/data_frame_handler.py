@@ -42,14 +42,14 @@ class DataFrameHandler:
                 df[col] = df[col].astype(str)
         return df
 
-    def apply_functions_on_df(self, df: pd.DataFrame, functions: List[Callable]) -> pd.DataFrame:
+    @staticmethod
+    def apply_functions_on_df(df: pd.DataFrame, functions: List[Callable]) -> pd.DataFrame:
         """
         Applying functions sequentially to a dataframe
         :param df:
         :param functions:
         :return:
         """
-        self.logger.info("Start processing data...")
         for f in functions:
             df = f(df)
         return df
@@ -159,11 +159,6 @@ class DataFrameHandler:
         except Exception as e:
             raise e
 
-        if in_format == out_format \
-                and not convert_options and not apply_functions and not create_table_schema and not use_table_schema:
-            self.logger.info("Output format is the same as input format. No conversion is done")
-            return
-
         df = self.read_file_to_df(read_input, in_format, read_options)
 
         if apply_functions:
@@ -177,8 +172,10 @@ class DataFrameHandler:
                 table_schema = json.load(f)
             df = self.convert_df_from_aito_table_schema(df, table_schema)
 
-        if out_format != in_format or convert_options or apply_functions or use_table_schema:
+        if out_format != in_format or convert_options:
             self.df_to_format(df, out_format, write_output, convert_options)
+        else:
+            self.logger.info("Output format is the same as input format. No conversion is done")
 
         if create_table_schema:
             schema = self.schema_handler.generate_table_schema_from_pandas_dataframe(df)
