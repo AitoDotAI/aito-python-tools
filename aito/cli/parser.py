@@ -26,6 +26,31 @@ class AitoArgParser(argparse.ArgumentParser):
     def parse_output_arg_value(self, output_arg: str):
         return sys.stdout if output_arg == '-' else self.check_valid_path(output_arg)
 
+    @staticmethod
+    def ask_confirmation(content, default: bool = None) -> bool:
+        valid_responses = {
+            'yes': True,
+            'y': True,
+            'no': False,
+            'n': False
+        }
+        if not default:
+            prompt = '[y/n]'
+        elif default:
+            prompt = '[Y/n]'
+        else:
+            prompt= '[y/N]'
+        while True:
+            sys.stdout.write(f"{content} {prompt}")
+            response = input().lower()
+            if default and response == '':
+                return default
+            elif response in valid_responses:
+                return valid_responses[response]
+            else:
+                sys.stdout.write("Please respond with yes(y) or no(n)'\n")
+
+
 
 class ParserWrapper():
     def __init__(self, add_help=True):
