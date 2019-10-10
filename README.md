@@ -12,9 +12,8 @@ A collection of useful tools for [Aito](https://aito.ai/) users
 
 ```bash
 ➜ aito -h
-usage:  aito [-h] <action> [<args>]
-        To see help text, you can run:
-            aito -h
+usage:  aito [-h] <action> [<options>]
+        To see help for a specific action:
             aito <action> -h
 
         The most commonly actions are:
@@ -40,7 +39,7 @@ file or using the command line arguments
 * Convert a csv file to [ndjson](http://ndjson.org/) format for 
 [file upload](https://aito.ai/docs/api/#post-api-v1-data-table-file):
     ```bash
-    ➜ aito convert csv path/to/myFile.csv -c path/to/myInferredTableSchema.json > path/to/myConvertedFile.ndjson
+    ➜ aito convert csv path/to/myFile.csv > path/to/myConvertedFile.ndjson
     ```
 * Convert an excel file to [JSON](https://www.json.org/) format for 
 [batch upload](https://aito.ai/docs/api/#post-api-v1-data-table-file) 
@@ -50,13 +49,13 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
     ```
 * Convert a file and infer an [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/) on the way:
     ```bash
-    ➜ aito convert csv path/to/myFile.csv -c path/to/myInferredTableSchema.json  > path/to/myConvertedFile.ndjson
+    ➜ aito convert csv -c path/to/myInferredTableSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
     ```
 * Convert a file into the desired format declared in a given 
 [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/) 
 (e.g: Id should be string instead of Int):
     ```bash
-    ➜ aito convert csv path/to/myFile.csv -s path/to/desiredSchema.json > path/to/myConvertedFile.ndjson
+    ➜ aito convert csv -s path/to/desiredSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
     ```
 *This is useful if you want to change the created schema and convert the data accordingly*
   
@@ -73,19 +72,19 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
         
         Now you can execute different client tasks. For example:
         ```bash
-        ➜ aito client <client-task> ...
+        ➜ aito client <client-operation> ...
         ``` 
     * Using a dotenv (```.env```) file:
         * Your .env file should contain environment variables as described above. 
-       You can execute different client tasks with the ```-e``` flag. For example:
+       You can set up the client with the dotenv file using the ```-e``` flag. For example:
         ```bash
-        ➜ aito client -e path/to/myDotEnvFile.env <client-task> ...
+        ➜ aito client -e path/to/myDotEnvFile.env <client-operation> ...
         ``` 
     * Using flags:
     
         You can set up the client using flags:
         ```bash
-        ➜ aito client -u MY_AITO_INSTANCE_URL -r MY_READ_ONLY_API_KEY -w MY_READ_WRITE_API_KEY <client-task> ...
+        ➜ aito client -u MY_AITO_INSTANCE_URL -r MY_READ_ONLY_API_KEY -w MY_READ_WRITE_API_KEY <client-operation> ...
         ```
          
 
@@ -97,14 +96,11 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
 (a table of which [schema has been created](https://aito.ai/docs/api/#put-api-v1-schema)) in an Aito instance:
     ```bash
     ➜ aito client -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < myTableEntries.json
-    ```  
-    ***NOTE:*** This example set up the client using the command line arguments
+    ```  instance
 * **File-upload**: Upload a file to an *existing* table in an Aito instance:
     ```bash
     ➜ aito client -e myAitoCredentials.env upload-file myTable myFile.csv
     ```
-    ***NOTE:*** This example set up the client using the environment variables stored in 
-    the dotenv file `myAitoCredentials.env`
 
 ### Integrating with [pandas](https://pandas.pydata.org/)
 
