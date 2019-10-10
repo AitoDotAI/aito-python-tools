@@ -51,7 +51,6 @@ class AitoArgParser(argparse.ArgumentParser):
                 sys.stdout.write("Please respond with yes(y) or no(n)'\n")
 
 
-
 class ParserWrapper():
     def __init__(self, add_help=True):
         if add_help:
