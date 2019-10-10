@@ -18,8 +18,10 @@ class ClientParserWrapper(ParserWrapper):
         super().__init__(add_help=False)
         parser = self.parser
         parser.description = 'set up a client and perform CRUD operations'
-        parser.usage = ''' aito client [<client-options>] <operation> [<operation-options>]
-        To see help for a specific operation, you can run:
+        parser.usage = ''' aito client [-h] [<client-options>] <operation> [<operation-options>]
+        To list operations:
+            aito client list
+        To see help for a specific operation:
             aito client <operation> -h
         '''
         parser.epilog = '''the AITO_INSTANCE_URL should look similar to https://my-instance.api.aito.ai
@@ -44,21 +46,27 @@ example:
             'upload-batch': UploadBatchParserWrapper,
             'upload-file': UploadFileParserWrapper
         }
-        self.operation_argument = parser.add_argument('operation', choices=list(self.client_operation_parsers.keys()),
+        operation_choices = ['list'] + list(self.client_operation_parsers.keys())
+        self.operation_argument = parser.add_argument('operation', choices=operation_choices,
                                                       metavar='operation', help='perform an operation')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, unknown = self.parser.parse_known_args(parsing_args)
         parsed_args = vars(parsed_args)
-        client_action_parser = self.client_operation_parsers[parsed_args['operation']](self.parser, self.operation_argument)
-        client_action_parser.parse_and_execute(parsing_args)
+        if parsed_args['operation'] == 'list':
+            all_operations = '\n'.join(self.client_operation_parsers.keys()) + '\n'
+            sys.stdout.write(all_operations)
+        else:
+            client_action_parser = self.client_operation_parsers[parsed_args['operation']](self.parser,
+                                                                                           self.operation_argument)
+            client_action_parser.parse_and_execute(parsing_args)
         return 0
 
 
 class ClientOperationParserWrapper(ParserWrapper):
     def __init__(self, parent_parser: AitoArgParser, operation_argument, operation: str):
         super().__init__()
-        operation_argument.help = operation
+        operation_argument.help = argparse.SUPPRESS
         self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter,
                                     parents=[parent_parser])
         self.operation = operation
