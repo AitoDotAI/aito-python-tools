@@ -59,3 +59,7 @@ class TestClientParser(TestCaseCompare):
         self.create_table()
         os.system(f"python aito.py client upload-file sample {self.input_folder}/sample.csv")
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
+
+    def test_create_table(self):
+        os.system(f"python aito.py client create-table sample < {self.input_folder / 'sample_schema.json'}")
+        self.assertTrue(self.client.check_table_existed('sample'))

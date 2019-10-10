@@ -39,8 +39,10 @@ class ClientParserWrapper(ParserWrapper):
         parser.add_argument('-w', '--read-write-key', type=str, default='.env',
                             help='aito read-write API key (if not defined or when value is .env, '
                                  'use the AITO_RW_KEY env variable value')
-        parser.add_argument('task', choices=['upload-batch', 'upload-file'], help='perform a task with the client')
+        parser.add_argument('task', choices=['upload-batch', 'upload-file', 'create-table'],
+                            help='perform a task with the client')
         self.client_task_parsers = {
+            'create-table': CreateTableParserWrapper(self.parser),
             'upload-batch': UploadBatchParserWrapper(self.parser),
             'upload-file': UploadFileParserWrapper(self.parser)
         }
@@ -86,6 +88,39 @@ class ClientTaskParserWrapper(ParserWrapper):
     @abstractmethod
     def parse_and_execute(self, parsing_args):
         pass
+
+
+class CreateTableParserWrapper(ClientTaskParserWrapper):
+    def __init__(self, parent_parser: AitoArgParser):
+        super().__init__(parent_parser, 'create-table')
+        self.schema_handler = SchemaHandler()
+        parser = self.parser
+        parser.description = 'create a table with a given table schema'
+        parser.usage = f'''
+        {self.usage_prefix} <table-name> [table-schema-input]
+        With no table-schema-input or when input is -, read table schema from standard input
+        '''
+        parser.epilog = '''example:
+        aito client create-table myTable < path/to/myTableSchema.json
+        '''
+        parser.add_argument('table-name', type=str, help="name of the table to be populated")
+        self.optional_args.add_argument('schema-input', default='-', type=str, nargs='?',
+                                        help="table schema input")
+
+    def parse_and_execute(self, parsing_args):
+        parsed_args = vars(self.parser.parse_args(parsing_args))
+        client_args = self.get_client_args_from_parsed_args(parsed_args)
+        client = AitoClient(**client_args)
+        table_name = parsed_args['table-name']
+        if parsed_args['schema-input'] == '-':
+            table_schema = json.load(sys.stdin)
+        else:
+            input_path = self.parser.check_valid_path(parsed_args['schema-input'])
+            with input_path.open() as f:
+                table_schema = json.load(f)
+        client.put_table_schema(table_name, table_schema)
+        return 0
+
 
 
 class UploadBatchParserWrapper(ClientTaskParserWrapper):
