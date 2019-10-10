@@ -10,12 +10,14 @@ from aito.client.aito_client import AitoClient
 from aito.convert.data_frame_handler import DataFrameHandler
 import datetime
 
+from aito.schema.schema_handler import SchemaHandler
+
 
 class ClientParserWrapper(ParserWrapper):
     def __init__(self):
         super().__init__(add_help=False)
         parser = self.parser
-        parser.description = 'setup and perform a task with the aito client'
+        parser.description = 'set up a client and perform CRUD operations'
         parser.usage = '''
         aito client [<client-options>] <task> [<task-options>]
         
@@ -24,9 +26,9 @@ class ClientParserWrapper(ParserWrapper):
         '''
         parser.epilog = '''the AITO_INSTANCE_URL should look similar to https://my-instance.api.aito.ai
         example:
-        aito client -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < myTableEntries.json
-        aito client -e myAitoCredentials.env upload-file myTable myFile.csv
-        aito client upload-file myFile.xlsx
+        aito client create-table tableName < path/to/tableSchema.json
+        aito client -e path/to/myDotEnvFile.env upload-file myTable path/to/myFile.csv
+        aito client -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < path/to/myTableEntries.json
         '''
         parser.add_argument('-e', '--use-env-file', type=str, metavar='env-file-path',
                             help='set up the client using a .env file containing the required env variables')
@@ -135,8 +137,8 @@ class UploadBatchParserWrapper(ClientTaskParserWrapper):
         With no input, or when input is -, read table content from standard input
         '''
         parser.epilog = '''example:
-        aito client upload-batch myTable myTableEntries.json
-        aito client upload-batch myTable < myTableEntries.json
+        aito client upload-batch myTable path/to/myTableEntries.json
+        aito client upload-batch myTable < path/to/myTableEntries.json
         '''
         parser.add_argument('table-name', type=str, help="name of the table to be populated")
         self.optional_args.add_argument('input', default='-', type=str, nargs='?',
@@ -165,8 +167,8 @@ class UploadFileParserWrapper(ClientTaskParserWrapper):
                              'ndjson format, a converted ndjson.gz file will be created at the same location.'
         parser.usage = f"{self.usage_prefix} <table-name> <file-path>"
         parser.epilog = '''example:
-        aito client upload-file tableName myFile.csv
-        aito client upload-file -k tableName myFile.json
+        aito client upload-file tableName path/to/myFile.csv
+        aito client upload-file -k tableName path/to/myFile.json
         '''
         parser.add_argument('table-name', type=str, help="name of the table to be populated")
         parser.add_argument('file-path', type=str, help="path to the input file")

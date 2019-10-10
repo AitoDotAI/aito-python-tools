@@ -16,7 +16,7 @@ class MainParserWrapper(ParserWrapper):
 
         The most commonly actions are:
             convert     convert data of table entries into ndjson (for file-upload) or json (for batch-upload)
-            client      set up and do task with an aito client
+            client      set up a client and perform CRUD operations
         '''
         self.parser.add_argument('action', help='action to perform')
         self.actions_parser = {
