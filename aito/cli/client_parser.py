@@ -39,14 +39,23 @@ example:
                                  help='specify aito instance url')
         client_args.add_argument('-w', '--read-write-key', type=str, default='.env',
                                  help='specify aito  read-write API key')
-        self.client_operation_parsers = {
+        self.operation_to_parser_wrapper = {
             'create-table': CreateTableParserWrapper,
             'delete-table': DeleteTableParserWrapper,
             'delete-database': DeleteDatabaseParserWrapper,
             'upload-batch': UploadBatchParserWrapper,
             'upload-file': UploadFileParserWrapper
         }
-        operation_choices = ['list'] + list(self.client_operation_parsers.keys())
+        self.operation_to_description = {
+            'create-table': "create a table with a given table schema",
+            'delete-table': "delete a table schema and all content inside the table",
+            'delete-database': "delete the whole database",
+            'upload-batch': "populating table entries to a table. Tables entries must be in JSON array format",
+            'upload-file': "populating a file content to a table. "
+                           "Automatically convert the file to match the existing schema"
+        }
+
+        operation_choices = ['list'] + list(self.operation_to_parser_wrapper.keys())
         self.operation_argument = parser.add_argument('operation', choices=operation_choices,
                                                       metavar='operation', help='perform an operation')
 
@@ -54,20 +63,20 @@ example:
         parsed_args, unknown = self.parser.parse_known_args(parsing_args)
         parsed_args = vars(parsed_args)
         if parsed_args['operation'] == 'list':
-            all_operations = '\n'.join(self.client_operation_parsers.keys()) + '\n'
-            sys.stdout.write(all_operations)
+            for op, op_desc in self.operation_to_description.items():
+                sys.stdout.write(f"{op:25}{op_desc}\n")
         else:
-            client_action_parser = self.client_operation_parsers[parsed_args['operation']](self.parser,
-                                                                                           self.operation_argument)
+            client_action_parser = self.operation_to_parser_wrapper[parsed_args['operation']](self)
             client_action_parser.parse_and_execute(parsing_args)
         return 0
 
 
 class ClientOperationParserWrapper():
-    def __init__(self, parent_parser: AitoArgParser, operation_argument, operation: str):
-        operation_argument.help = argparse.SUPPRESS
+    def __init__(self, client_parser_wrapper: ClientParserWrapper, operation: str):
+        client_parser_wrapper.operation_argument.help = argparse.SUPPRESS
         self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter,
-                                    parents=[parent_parser])
+                                    parents=[client_parser_wrapper.parser],
+                                    description=client_parser_wrapper.operation_to_description[operation])
         self.operation = operation
         self.usage_prefix = f"aito client <client-options> {operation}"
 
@@ -98,11 +107,10 @@ class ClientOperationParserWrapper():
 
 
 class CreateTableParserWrapper(ClientOperationParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, operation_argument):
-        super().__init__(parent_parser, operation_argument, 'create-table')
+    def __init__(self, client_parser_wrapper: ClientParserWrapper):
+        super().__init__(client_parser_wrapper, 'create-table')
         self.schema_handler = SchemaHandler()
         parser = self.parser
-        parser.description = 'create a table with a given table schema'
         parser.usage = f''' {self.usage_prefix} <table-name> [table-schema-input]
         With no table-schema-input or when input is -, read table schema from standard input
         '''
@@ -127,10 +135,9 @@ class CreateTableParserWrapper(ClientOperationParserWrapper):
 
 
 class DeleteTableParserWrapper(ClientOperationParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, task_argument):
-        super().__init__(parent_parser, task_argument, 'delete-table')
+    def __init__(self, client_parser_wrapper: ClientParserWrapper):
+        super().__init__(client_parser_wrapper, 'delete-table')
         parser = self.parser
-        parser.description = "delete a table schema and all content inside the table"
         parser.usage = f"{self.usage_prefix} <table-name>"
         parser.add_argument('table-name', type=str, help="name of the table to be populated")
 
@@ -144,10 +151,9 @@ class DeleteTableParserWrapper(ClientOperationParserWrapper):
 
 
 class DeleteDatabaseParserWrapper(ClientOperationParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, operation_argument):
-        super().__init__(parent_parser, operation_argument, 'delete-database')
+    def __init__(self, client_parser_wrapper: ClientParserWrapper):
+        super().__init__(client_parser_wrapper, 'delete-database')
         parser = self.parser
-        parser.description = "delete the whole database"
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
@@ -158,11 +164,9 @@ class DeleteDatabaseParserWrapper(ClientOperationParserWrapper):
 
 
 class UploadBatchParserWrapper(ClientOperationParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, operation_argument):
-        super().__init__(parent_parser, operation_argument, 'upload-batch')
+    def __init__(self, client_parser_wrapper: ClientParserWrapper):
+        super().__init__(client_parser_wrapper, 'upload-batch')
         parser = self.parser
-        parser.description = "populating contents to a table by batch. " \
-                             "The content must be a JSON array of table entries."
         parser.usage = f''' {self.usage_prefix} <table-name> [input]
         With no input, or when input is -, read table content from standard input
         '''
@@ -188,11 +192,9 @@ class UploadBatchParserWrapper(ClientOperationParserWrapper):
 
 
 class UploadFileParserWrapper(ClientOperationParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, operation_argument):
-        super().__init__(parent_parser, operation_argument, 'upload-file')
+    def __init__(self, client_parser_wrapper: ClientParserWrapper):
+        super().__init__(client_parser_wrapper, 'upload-file')
         parser = self.parser
-        parser.description = 'populating a file content to a table. ' \
-                             'Automatically convert the file to match the existing schema'
         parser.usage = f"{self.usage_prefix} [<upload-file-options>] <table-name> <file-path>"
         parser.epilog = '''example:
   aito client upload-file tableName path/to/myFile.csv
