@@ -57,14 +57,16 @@ class TestDataFrameHandler(TestCaseCompare):
                              json.load((self.input_folder / 'sample_schema.json').open()))
 
     def test_csv_to_ndjson_with_aito_schema(self):
-        schema_altered = self.input_folder / 'sample_schema_altered.json'
+        with (self.input_folder / 'sample_schema_altered.json').open() as f:
+            schema_altered = json.load(f)
         self.df_handler.convert_file(self.input_folder / 'sample.csv', self.out_file_path, 'csv', 'ndjson',
                                      use_table_schema=schema_altered)
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample_altered.ndjson').open()))
 
     def test_csv_to_ndjson_with_aito_schema_convert_nullable(self):
-        input_schema = self.input_folder / 'sample_schema_error_nullable.json'
+        with (self.input_folder / 'sample_schema_error_nullable.json').open() as f:
+            input_schema = json.load(f)
         with self.assertRaises(ValueError):
             self.df_handler.convert_file(self.input_folder / 'sample.csv', self.out_file_path, 'csv', 'ndjson',
                                          use_table_schema=input_schema)
