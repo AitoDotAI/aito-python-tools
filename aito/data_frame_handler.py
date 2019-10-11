@@ -172,8 +172,6 @@ class DataFrameHandler:
 
         if out_format != in_format or convert_options:
             self.df_to_format(df, out_format, write_output, convert_options)
-        else:
-            self.logger.info("Output format is the same as input format. No conversion is done")
 
         if create_table_schema:
             schema = self.schema_handler.generate_table_schema_from_pandas_dataframe(df)

@@ -81,3 +81,12 @@ class TestClientParser(TestCaseCompare):
         proc.communicate(b"y")
         self.assertFalse(self.client.check_table_existed('sample'))
         self.assertFalse(self.client.check_table_existed('sample_altered'))
+
+    def test_quick_add_table(self):
+        os.system(f"python -m aito.cli.main_parser client quick-add-table {self.input_folder / 'sample.csv'}")
+        self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
+
+    def test_quick_add_table_different_name(self):
+        os.system(f"python -m aito.cli.main_parser client quick-add-table -n newTable -f json"
+                  f"{self.input_folder / 'sample.json'}")
+        self.assertEqual(self.client.query_table_entries('newTable')['total'], 4)

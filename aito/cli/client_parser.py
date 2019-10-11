@@ -26,12 +26,13 @@ class ClientParserWrapper(ParserWrapper):
         '''
         parser.epilog = '''the AITO_INSTANCE_URL should look similar to https://my-instance.api.aito.ai
 example:
+  aito client quick-add-table myTable.csv
   aito client create-table tableName < path/to/tableSchema.json
   aito client -e path/to/myDotEnvFile.env upload-file myTable path/to/myFile.csv
   aito client -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < path/to/myTableEntries.json
         '''
         client_args = parser.add_argument_group("client optional arguments")
-        client_args.add_argument('-e', '--use-env-file', type=str, metavar='env-file-path',
+        client_args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
                                  help='set up the client using a .env file containing the required env variables')
         client_args.add_argument('-r', '--read-only-key', type=str, default='.env',
                                  help='specify aito read-only API key')
@@ -40,6 +41,7 @@ example:
         client_args.add_argument('-w', '--read-write-key', type=str, default='.env',
                                  help='specify aito  read-write API key')
         self.operation_to_parser_wrapper = {
+            'quick-add-table': QuickAddTableParserWrapper,
             'create-table': CreateTableParserWrapper,
             'delete-table': DeleteTableParserWrapper,
             'delete-database': DeleteDatabaseParserWrapper,
@@ -47,6 +49,7 @@ example:
             'upload-file': UploadFileParserWrapper
         }
         self.operation_to_description = {
+            'quick-add-table': "infer schema, create table, and upload file",
             'create-table': "create a table with a given table schema",
             'delete-table': "delete a table schema and all content inside the table",
             'delete-database': "delete the whole database",
@@ -64,7 +67,7 @@ example:
         parsed_args = vars(parsed_args)
         if parsed_args['operation'] == 'list':
             for op, op_desc in self.operation_to_description.items():
-                sys.stdout.write(f"{op:25}{op_desc}\n")
+                sys.stdout.write(f"{op:20}{op_desc}\n")
         else:
             client_action_parser = self.operation_to_parser_wrapper[parsed_args['operation']](self)
             client_action_parser.parse_and_execute(parsing_args)
@@ -78,7 +81,7 @@ class ClientOperationParserWrapper():
                                     parents=[client_parser_wrapper.parser],
                                     description=client_parser_wrapper.operation_to_description[operation])
         self.operation = operation
-        self.usage_prefix = f"aito client <client-options> {operation}"
+        self.usage_prefix = f"aito client <client-options> {operation} [-h]"
 
     def create_client_from_parsed_args(self, parsed_args):
         def get_env_variable(variable_name):
@@ -104,6 +107,57 @@ class ClientOperationParserWrapper():
     @abstractmethod
     def parse_and_execute(self, parsing_args):
         pass
+
+
+class QuickAddTableParserWrapper(ClientOperationParserWrapper):
+    def __init__(self, client_parser_wrapper: ClientParserWrapper):
+        super().__init__(client_parser_wrapper, 'quick-add-table')
+        parser = self.parser
+        parser.usage = f"{self.usage_prefix} [-h] [<options>] <input-file>"
+        parser.epilog = '''example:
+  aito add-table myTable.json
+  aito add-table --table-name myTable myFile.csv
+  aito add-table -n myTable -f csv myFile
+  '''
+        parser.add_argument('-n', '--table-name', type=str,
+                            help='create a table with the given name (default: use file name)')
+        file_format_choices = ['infer'] + DataFrameHandler.allowed_format
+        parser.add_argument('-f', '--file-format', type=str, choices=file_format_choices,
+                            default='infer', help='specify input file format (default: infer from the file extension)')
+        parser.add_argument('input-file', type=str, help="path to the input file")
+
+    def parse_and_execute(self, parsing_args):
+        parsed_args = vars(self.parser.parse_args(parsing_args))
+
+        input_file_path = self.parser.check_valid_path(parsed_args['input-file'])
+        table_name = parsed_args['table_name'] if parsed_args['table_name'] else input_file_path.stem
+        in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
+            else parsed_args['file_format']
+
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        converted_file_path = input_file_path.parent / f"{input_file_path.stem}_{now}.ndjson.gz"
+        schema_path = input_file_path.parent / f"{table_name}_schema_{now}.json"
+        convert_options = {
+            'read_input': input_file_path,
+            'write_output': converted_file_path,
+            'in_format': in_format,
+            'out_format': 'ndjson',
+            'convert_options': {'compression': 'gzip'},
+            'create_table_schema': schema_path
+        }
+        df_handler = DataFrameHandler()
+        df_handler.convert_file(**convert_options)
+
+        client = self.create_client_from_parsed_args(parsed_args)
+        with schema_path.open() as f:
+            inferred_schema = json.load(f)
+        client.put_table_schema(table_name, inferred_schema)
+        client.populate_table_by_file_upload(table_name, converted_file_path)
+
+        if converted_file_path.exists():
+            converted_file_path.unlink()
+        schema_path.unlink()
+        return 0
 
 
 class CreateTableParserWrapper(ClientOperationParserWrapper):
@@ -195,16 +249,17 @@ class UploadFileParserWrapper(ClientOperationParserWrapper):
     def __init__(self, client_parser_wrapper: ClientParserWrapper):
         super().__init__(client_parser_wrapper, 'upload-file')
         parser = self.parser
-        parser.usage = f"{self.usage_prefix} [<upload-file-options>] <table-name> <file-path>"
+        parser.usage = f"{self.usage_prefix} [<upload-file-options>] <table-name> <input-file>"
         parser.epilog = '''example:
   aito client upload-file tableName path/to/myFile.csv
         '''
         parser.add_argument('table-name', type=str, help="name of the table to be populated")
-        parser.add_argument('file-path', type=str, help="path to the input file")
+        parser.add_argument('input-file', type=str, help="path to the input file")
         opts = parser.add_argument_group('upload file optional arguments')
-        opts.add_argument('-f', '--file-format', type=str, choices=['infer', 'csv', 'excel', 'json', 'ndjson'],
-                          default='infer', help='specify input file format if it is not ndjson.gzip '
-                                                '(default: infer file format from file-path extension)')
+
+        file_format_choices = ['infer'] + DataFrameHandler.allowed_format
+        opts.add_argument('-f', '--file-format', type=str, choices=file_format_choices,
+                          default='infer', help='specify input file format (default: infer from the file extension)')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
@@ -214,12 +269,10 @@ class UploadFileParserWrapper(ClientOperationParserWrapper):
         if not client.check_table_existed(table_name):
             self.parser.error(f"Table '{table_name}' does not exist. Please create table first.")
 
-        input_file_path = self.parser.check_valid_path(parsed_args['file-path'])
+        input_file_path = self.parser.check_valid_path(parsed_args['input-file'])
 
         in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
             else parsed_args['file_format']
-        if in_format not in DataFrameHandler.allowed_format:
-            self.parser.error(f"Invalid input format {in_format}. Must be one of {DataFrameHandler.allowed_format}")
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         converted_file_path = input_file_path.parent / f"{input_file_path.stem}_{now}.ndjson.gz"
@@ -235,5 +288,6 @@ class UploadFileParserWrapper(ClientOperationParserWrapper):
         df_handler.convert_file(**convert_options)
         client.populate_table_by_file_upload(table_name, converted_file_path)
 
-        converted_file_path.unlink()
+        if converted_file_path.exists():
+            converted_file_path.unlink()
         return 0
