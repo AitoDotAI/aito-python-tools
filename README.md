@@ -1,4 +1,5 @@
-# aito-python-tools [!PyPI](https://img.shields.io/pypi/pyversions/aitoai?style=plastic) [![PyPI version](https://badge.fury.io/py/aitoai.svg)](https://badge.fury.io/py/aitoai)
+# aito-python-tools 
+[![PyPI](https://img.shields.io/pypi/pyversions/aitoai?style=plastic)](https://github.com/AitoDotAI/aito-python-tools) [![PyPI version](https://badge.fury.io/py/aitoai.svg)](https://badge.fury.io/py/aitoai)
 
 A useful library for [Aito](https://aito.ai/) users containg: 
 * CLI for using Aito
@@ -54,3 +55,5 @@ We take our quality seriously and aim for the smoothest developer experience pos
 
 ## License
 [MIT License](LICENSE)
+
+## [Change logs](docs/change_logs.md)
