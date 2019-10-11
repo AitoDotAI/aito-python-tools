@@ -3,7 +3,7 @@ import sys
 
 from aito.cli.client_parser import ClientParserWrapper
 from aito.cli.convert_parser import ConvertParserWrapper
-from aito.cli.infer_schema_parser import InferTableSchemaParserWrapper
+from aito.cli.infer_table_schema_parser import InferTableSchemaParserWrapper
 from aito.cli.parser import ParserWrapper
 
 
