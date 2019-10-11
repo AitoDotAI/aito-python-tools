@@ -14,42 +14,42 @@ class InferTableSchemaParserWrapper(ParserWrapper):
         super().__init__(add_help=False)
         parser = self.parser
         parser.description = 'infer Aito table schema from a file'
-        parser.usage = ''' aito infer-table-schema [-h] <input-format> [input] [<options>]
+        parser.usage = ''' aito infer-table-schema [-h] <file-format> [input] [<options>]
                 To see help for a specific input format:
-                    aito convert <input-format> -h 
+                    aito convert <file-format> -h 
                 '''
         parser.epilog = '''example:
                 aito infer-table-schema json myFile.json > inferredSchema.json
                 aito infer-table-schema csv myFile.csv > inferredSchema.json
                 aito infer-table-schema excel < myFile.xlsx > inferredSchema.json 
                 '''
-        self.input_format_to_parser = {
+        self.file_format_to_parser = {
             'csv': InferCsvFileParserWrapper,
             'excel': InferExcelFileParserWrapper,
             'json': InferJsonFileParserWrapper,
             'ndjson': InferNdJsonFileParserWrapper,
         }
-        self.input_format_arg = parser.add_argument('input-format', choices=list(self.input_format_to_parser.keys()),
-                                                    help='input format')
+        self.file_format_arg = parser.add_argument('file-format', choices=list(self.file_format_to_parser.keys()),
+                                                    help='input file format')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args, unknown = self.parser.parse_known_args(parsing_args)
         parsed_args = vars(parsed_args)
-        input_format_parser = self.input_format_to_parser[parsed_args['input-format']](self.parser,
-                                                                                       self.input_format_arg)
-        input_format_parser.parse_and_execute(parsing_args)
+        file_format_parser = self.file_format_to_parser[parsed_args['file-format']](self.parser,
+                                                                                       self.file_format_arg)
+        file_format_parser.parse_and_execute(parsing_args)
         return 0
 
 
 class InferFromFormatParserWrapper:
-    def __init__(self, parent_parser: AitoArgParser, input_format_arg, input_format: str):
+    def __init__(self, parent_parser: AitoArgParser, file_format_arg, file_format: str):
         self.df_handler = DataFrameHandler()
         self.schema_handler = SchemaHandler()
-        self.input_format = input_format
-        input_format_arg.help = argparse.SUPPRESS
+        self.file_format = file_format
+        file_format_arg.help = argparse.SUPPRESS
         self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter,
                                     parents=[parent_parser],
-                                    usage=f"aito infer-table-schema {input_format} [input] [<options>]")
+                                    usage=f"aito infer-table-schema {file_format} [input] [<options>]")
         parser = self.parser
 
         parser.add_argument('-e', '--encoding', type=str, default='utf-8',
@@ -62,7 +62,7 @@ class InferFromFormatParserWrapper:
         parser = self.parser
         read_args = {
             'read_input': parser.parse_input_arg_value(parsed_args['input']),
-            'in_format': parsed_args['input-format'],
+            'in_format': parsed_args['file-format'],
             'read_options': {
                 'encoding': parsed_args['encoding']
             }
@@ -80,8 +80,8 @@ class InferFromFormatParserWrapper:
 
 
 class InferCsvFileParserWrapper(InferFromFormatParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, input_format_arg):
-        super().__init__(parent_parser, input_format_arg, 'csv')
+    def __init__(self, parent_parser: AitoArgParser, file_format_arg):
+        super().__init__(parent_parser, file_format_arg, 'csv')
         parser = self.parser
         parser.add_argument('-d', '--delimiter', type=str, default=',',
                             help="delimiter to use. Need escape (default: ',')")
@@ -102,8 +102,8 @@ class InferCsvFileParserWrapper(InferFromFormatParserWrapper):
 
 
 class InferJsonFileParserWrapper(InferFromFormatParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, input_format_arg):
-        super().__init__(parent_parser, input_format_arg, 'json')
+    def __init__(self, parent_parser: AitoArgParser, file_format_arg):
+        super().__init__(parent_parser, file_format_arg, 'json')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
@@ -113,8 +113,8 @@ class InferJsonFileParserWrapper(InferFromFormatParserWrapper):
 
 
 class InferNdJsonFileParserWrapper(InferFromFormatParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, input_format_arg):
-        super().__init__(parent_parser, input_format_arg, 'ndjson')
+    def __init__(self, parent_parser: AitoArgParser, file_format_arg):
+        super().__init__(parent_parser, file_format_arg, 'ndjson')
 
     def parse_and_execute(self, parsing_args) -> int:
         parsed_args = vars(self.parser.parse_args(parsing_args))
@@ -124,8 +124,8 @@ class InferNdJsonFileParserWrapper(InferFromFormatParserWrapper):
 
 
 class InferExcelFileParserWrapper(InferFromFormatParserWrapper):
-    def __init__(self, parent_parser: AitoArgParser, input_format_arg):
-        super().__init__(parent_parser, input_format_arg, 'excel')
+    def __init__(self, parent_parser: AitoArgParser, file_format_arg):
+        super().__init__(parent_parser, file_format_arg, 'excel')
         self.parser.description = 'Create table schema from an excel file, accept both xls and xlsx. ' \
                                   'Read the first sheet of the file by default'
         self.parser.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name',

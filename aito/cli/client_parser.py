@@ -115,9 +115,9 @@ class QuickAddTableParserWrapper(ClientOperationParserWrapper):
         parser = self.parser
         parser.usage = f"{self.usage_prefix} [<options>] <input-file>"
         parser.epilog = '''example:
-  aito add-table myTable.json
-  aito add-table --table-name myTable myFile.csv
-  aito add-table -n myTable -f csv myFile
+  aito client quick-add-table myTable.json
+  aito client quick-add-table --table-name myTable myFile.csv
+  aito client quick-add-table -n myTable -f csv myFile
   '''
         parser.add_argument('-n', '--table-name', type=str,
                             help='create a table with the given name (default: use file name)')

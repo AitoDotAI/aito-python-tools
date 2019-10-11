@@ -7,7 +7,7 @@ import os
 class TestInferTableSchemaCli(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='cli/client')
+        super().setUpClass(test_path='cli/infer_table_schema')
         cls.input_folder = cls.input_folder.parent.parent / 'schema'
         cls.main_parser = MainParserWrapper()
 
