@@ -142,7 +142,7 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
 
 * Generate Aito Schema from a pandas DataFrame:
   ```python
-  from aito.schema.schema_handler import SchemaHandler
+  from aito.schema_handler import SchemaHandler
 
   schema_handler = SchemaHandler()
   schema_handler.generate_table_schema_from_pandas_dataframe(df)

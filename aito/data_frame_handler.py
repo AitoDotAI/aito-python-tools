@@ -5,7 +5,7 @@ from typing import List, Dict, Callable
 import io
 import pandas as pd
 
-from aito.schema.schema_handler import SchemaHandler
+from aito.schema_handler import SchemaHandler
 
 
 class DataFrameHandler:

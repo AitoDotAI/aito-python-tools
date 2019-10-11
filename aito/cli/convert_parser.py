@@ -4,7 +4,7 @@ from abc import abstractmethod
 import json
 
 from aito.cli.parser import ParserWrapper, AitoArgParser
-from aito.convert.data_frame_handler import DataFrameHandler
+from aito.data_frame_handler import DataFrameHandler
 
 
 class ConvertParserWrapper(ParserWrapper):

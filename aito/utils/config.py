@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def root_path():
-    return Path(__file__).parent
+    return Path(__file__).parent.parent.parent
 
 
 def set_up_logger(log_file_path: Path = None, logging_level: int = logging.INFO):

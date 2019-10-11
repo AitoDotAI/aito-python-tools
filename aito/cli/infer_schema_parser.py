@@ -5,8 +5,8 @@ from aito.cli.parser import ParserWrapper, AitoArgParser
 import sys
 import json
 
-from aito.convert.data_frame_handler import DataFrameHandler
-from aito.schema.schema_handler import SchemaHandler
+from aito.data_frame_handler import DataFrameHandler
+from aito.schema_handler import SchemaHandler
 
 
 class InferTableSchemaParserWrapper(ParserWrapper):

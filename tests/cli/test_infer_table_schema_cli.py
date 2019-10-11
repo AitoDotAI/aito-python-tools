@@ -1,7 +1,5 @@
 import json
 from aito.cli.main_parser import MainParserWrapper
-from aito.schema.schema_handler import SchemaHandler
-from aito.convert.data_frame_handler import DataFrameHandler
 from tests.test_case import TestCaseCompare
 import os
 

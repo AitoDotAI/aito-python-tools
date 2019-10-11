@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from config import set_up_logger
+from aito.utils.config import set_up_logger
 from tests.test_case import *
 from tests.test_result import *
 
@@ -62,7 +62,7 @@ def get_test_suites(starting_dir: Path):
     return test_suites
 
 
-if __name__ == '__main__':
+def main():
     test_parser = generate_parser()
     set_up_logger()
 
@@ -104,3 +104,6 @@ if __name__ == '__main__':
         sys.stderr.write(f"error: Testing option is required\n")
         test_parser.print_help()
         sys.exit(2)
+
+if __name__ == '__main__':
+    main()

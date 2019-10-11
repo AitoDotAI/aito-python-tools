@@ -3,7 +3,7 @@ import os
 from subprocess import Popen, PIPE
 
 from aito.cli.main_parser import MainParserWrapper
-from aito.client.aito_client import AitoClient
+from aito.aito_client import AitoClient
 from tests.test_case import TestCaseCompare
 
 
@@ -42,9 +42,10 @@ class TestClientParser(TestCaseCompare):
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
 
     def test_upload_file_no_table_schema(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(SystemExit) as context:
             self.main_parser.parse_and_execute(['client', 'upload-file', 'sample',
                                                 str(self.input_folder / 'sample.ndjson')])
+        self.assertEqual(context.exception.code, 2)
 
     def test_upload_file_with_table_schema(self):
         self.create_table()

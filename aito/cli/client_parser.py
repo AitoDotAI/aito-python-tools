@@ -8,9 +8,9 @@ from abc import abstractmethod
 from dotenv import load_dotenv
 
 from aito.cli.parser import AitoArgParser, ParserWrapper
-from aito.client.aito_client import AitoClient
-from aito.convert.data_frame_handler import DataFrameHandler
-from aito.schema.schema_handler import SchemaHandler
+from aito.aito_client import AitoClient
+from aito.data_frame_handler import DataFrameHandler
+from aito.schema_handler import SchemaHandler
 
 
 class ClientParserWrapper(ParserWrapper):
