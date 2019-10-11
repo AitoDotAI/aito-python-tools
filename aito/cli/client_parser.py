@@ -113,7 +113,7 @@ class QuickAddTableParserWrapper(ClientOperationParserWrapper):
     def __init__(self, client_parser_wrapper: ClientParserWrapper):
         super().__init__(client_parser_wrapper, 'quick-add-table')
         parser = self.parser
-        parser.usage = f"{self.usage_prefix} [-h] [<options>] <input-file>"
+        parser.usage = f"{self.usage_prefix} [<options>] <input-file>"
         parser.epilog = '''example:
   aito add-table myTable.json
   aito add-table --table-name myTable myFile.csv

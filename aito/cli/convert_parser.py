@@ -46,7 +46,7 @@ class ConvertFormatParserWrapper():
         input_format_arg.help = argparse.SUPPRESS
         self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter,
                                     parents=[parent_parser],
-                                    usage=f"aito convert {input_format} [input] [<options>]")
+                                    usage=f"aito convert {input_format} [-h] [input] [<options>]")
         parser = self.parser
         either_use_or_create_schema = parser.add_mutually_exclusive_group()
         either_use_or_create_schema.add_argument('-c', '--create-table-schema', metavar='schema-output-file', type=str,
