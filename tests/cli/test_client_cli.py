@@ -38,7 +38,7 @@ class TestClientParser(TestCaseCompare):
 
     def test_upload_batch(self):
         self.create_table()
-        os.system(f"python aito.py client upload-batch sample {self.input_folder}/sample.json")
+        os.system(f"python -m aito.cli.main_parser client upload-batch sample {self.input_folder}/sample.json")
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
 
     def test_upload_file_no_table_schema(self):
@@ -49,26 +49,26 @@ class TestClientParser(TestCaseCompare):
 
     def test_upload_file_with_table_schema(self):
         self.create_table()
-        os.system(f"python aito.py client upload-file sample {self.input_folder}/sample.ndjson")
+        os.system(f"python -m aito.cli.main_parser client upload-file sample {self.input_folder}/sample.ndjson")
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
 
     def test_upload_file_different_format(self):
         self.create_table()
-        os.system(f"python aito.py client upload-file -f csv sample {self.input_folder}/sample.csv")
+        os.system(f"python -m aito.cli.main_parser client upload-file -f csv sample {self.input_folder}/sample.csv")
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
 
     def test_upload_file_infer_format(self):
         self.create_table()
-        os.system(f"python aito.py client upload-file sample {self.input_folder}/sample.csv")
+        os.system(f"python -m aito.cli.main_parser client upload-file sample {self.input_folder}/sample.csv")
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
 
     def test_create_table(self):
-        os.system(f"python aito.py client create-table sample < {self.input_folder / 'sample_schema.json'}")
+        os.system(f"python -m aito.cli.main_parser client create-table sample < {self.input_folder / 'sample_schema.json'}")
         self.assertTrue(self.client.check_table_existed('sample'))
 
     def test_delete_table(self):
         self.create_table()
-        proc = Popen("python aito.py client delete-table sample", stdin=PIPE, stdout=PIPE, shell=True)
+        proc = Popen("python -m aito.cli.main_parser client delete-table sample", stdin=PIPE, stdout=PIPE, shell=True)
         proc.communicate(b"y")
         self.assertFalse(self.client.check_table_existed('sample'))
 
@@ -77,7 +77,7 @@ class TestClientParser(TestCaseCompare):
         with (self.input_folder / 'sample_schema_altered.json').open() as f:
             another_tbl_schema = json.load(f)
         self.client.put_table_schema('sample_altered', another_tbl_schema)
-        proc = Popen("python aito.py client delete-database", stdin=PIPE, stdout=PIPE, shell=True)
+        proc = Popen("python -m aito.cli.main_parser client delete-database", stdin=PIPE, stdout=PIPE, shell=True)
         proc.communicate(b"y")
         self.assertFalse(self.client.check_table_existed('sample'))
         self.assertFalse(self.client.check_table_existed('sample_altered'))

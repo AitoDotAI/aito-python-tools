@@ -40,3 +40,7 @@ def main():
                         datefmt='%H:%M:%S')
     main_parser = MainParserWrapper()
     main_parser.parse_and_execute(sys.argv[1:])
+
+
+if __name__ == '__main__':
+    main()
