@@ -17,8 +17,6 @@ if os.environ.get('CONVERT_README'):
 else:
     long_description = ''
 
-print('LONG DESCRIPTION', long_description)
-
 VERSION = '0.0.3'
 
 setup(

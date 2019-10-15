@@ -14,47 +14,76 @@ commands:
   aito
     run aito-cli
 
-  build-package
-    generate distribution package
+  test
+    run unittests
 
-  publish-test
-    publish to testpypi.org
+  release-test
+    release to testpypi (change VERSION in setup.py first)
 
-  publish
-    publish to pypi.org
+  release
+    release to pypi (change VERSION in setup.py first)
 
 "
+}
+
+function do-aito {
+  python3 -m aito.cli.main_parser $@
 }
 
 function do-test {
   python3 -m tests.test_parser all
 }
 
-function do-build-package {
+function prepare-release-tools {
+  echo "installing pandoc and pypandoc to convert markdown to rst"
+  sudo apt-get install pandoc
+  python3 -m pip install --user pypandoc
+  export CONVERT_README="TRUE"
+
+  echo "installing twine to release package"
+  python3 -m pip install --user --upgrade twine
+}
+
+function build-package {
   python3 -m pip install --user --upgrade setuptools wheel
   python3 setup.py sdist bdist_wheel
 }
 
-function do-publish-test {
-  export CONVERT_README="TRUE"
-  echo "install pandoc"
-  sudo apt-get install pandoc
-  python3 -m pip install --user pypandoc
-  do-build-package
-  python3 -m pip install --user --upgrade twine
-  twine check dist/*
-  python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+function git-bump-version {
+  if [[ $(git status --porcelain) ]]
+  then
+    echo "tree is dirty, please commit changes before release"
+    exit 1
+  fi
+  if [[ "$1" == "" ]]
+  then
+    echo
+    echo "error: no release version"
+    echo
+    usage
+    exit 1
+  fi
+
+  NEW_VERSION=$1
+  sed -i -e "s/^VERSION *=.*/VERSION = \"$NEW_VERSION\"/" setup.py
+  git commit -am "Bump to $VERSION"
+  git tag $VERSION
+  git push
+  git push --tags
 }
 
-function do-publish {
-  export CONVERT_README="TRUE"
-  echo "install pandoc"
-  sudo apt-get install pandoc
-  python3 -m pip install --user pypandoc
-  do-build-package
-  python3 -m pip install --user --upgrade twine
-  twine check dist/*
-  python3 -m twine upload https://test.pypi.org/legacy/ dist/*
+function do-release-test {
+  git-bump-version $1
+  prepare-release-tools
+  build-package
+  twine check dist/* && python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+}
+
+function do-release {
+  git-bump-version $1
+  prepare-release-tools
+  build-package
+  twine check dist/* && python3 -m twine upload https://test.pypi.org/legacy/ dist/*
 }
 
 if [[ "$1" == "" ]]
@@ -70,17 +99,17 @@ _cmd=$1
 shift
 
 case $_cmd in
+  aito)
+    do-aito $@
+    ;;
   test)
     do-test $@
     ;;
-  build-package)
-    do-build-package $@
+  release-test)
+    do-release-test $@
     ;;
-  publish-test)
-    do-publish-test $@
-    ;;
-  publish)
-    do-publish $@
+  release)
+    do-release $@
     ;;
   -h|--help)
     usage
