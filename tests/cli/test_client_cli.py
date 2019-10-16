@@ -26,7 +26,7 @@ class TestClientParser(TestCaseCompare):
         self.client.delete_database()
 
     def test_upload_batch_no_table_schema(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Exception):
             self.main_parser.parse_and_execute(['client', 'upload-batch', 'sample',
                                                 str(self.input_folder / 'sample.json')])
 

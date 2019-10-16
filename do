@@ -31,7 +31,7 @@ function do-aito {
 }
 
 function do-test {
-  python3 -m tests.test_parser all
+  python3 -m tests.test_parser $@
 }
 
 function prepare-release-tools {
