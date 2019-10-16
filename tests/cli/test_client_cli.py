@@ -41,13 +41,13 @@ class TestClientParser(TestCaseCompare):
         os.system(f"python -m aito.cli.main_parser client upload-batch sample {self.input_folder}/sample.json")
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
 
-    def test_upload_file_no_table_schema(self):
+    def test_upload_file_table_not_exist(self):
         with self.assertRaises(SystemExit) as context:
             self.main_parser.parse_and_execute(['client', 'upload-file', 'sample',
                                                 str(self.input_folder / 'sample.ndjson')])
         self.assertEqual(context.exception.code, 2)
 
-    def test_upload_file_with_table_schema(self):
+    def test_upload_file_table_exist(self):
         self.create_table()
         os.system(f"python -m aito.cli.main_parser client upload-file sample {self.input_folder}/sample.ndjson")
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
@@ -63,7 +63,8 @@ class TestClientParser(TestCaseCompare):
         self.assertEqual(self.client.query_table_entries('sample')['total'], 4)
 
     def test_create_table(self):
-        os.system(f"python -m aito.cli.main_parser client create-table sample < {self.input_folder / 'sample_schema.json'}")
+        os.system(f"python -m aito.cli.main_parser client create-table sample < "
+                  f"{self.input_folder / 'sample_schema.json'}")
         self.assertTrue(self.client.check_table_existed('sample'))
 
     def test_delete_table(self):

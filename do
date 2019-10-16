@@ -66,7 +66,7 @@ function git-bump-version {
 
   NEW_VERSION=$1
   sed -i -e "s/^VERSION *=.*/VERSION = \"$NEW_VERSION\"/" setup.py
-  git commit -am "Bump to $VERSION"
+  git commit -am "Bump to $NEW_VERSION"
   git tag $VERSION
   git push
   git push --tags
