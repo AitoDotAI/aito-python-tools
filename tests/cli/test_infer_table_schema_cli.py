@@ -1,5 +1,4 @@
 import json
-from aito.cli.main_parser import MainParserWrapper
 from tests.test_case import TestCaseCompare
 import os
 
@@ -9,7 +8,6 @@ class TestInferTableSchemaCli(TestCaseCompare):
     def setUpClass(cls):
         super().setUpClass(test_path='cli/infer_table_schema')
         cls.input_folder = cls.input_folder.parent.parent / 'schema'
-        cls.main_parser = MainParserWrapper()
 
     def setUp(self):
         super().setUp()
