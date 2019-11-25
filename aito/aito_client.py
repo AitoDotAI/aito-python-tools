@@ -64,11 +64,11 @@ class AitoClient:
         return headers
 
     async def fetch(self, session: ClientSession, req_method: 'str', path: str, json_data: Dict):
-        self.logger.debug(f"{req_method} to {path} with {str(json_data[:250])}")
+        self.logger.debug(f"{req_method} to {path} with {str(json_data)[:250]}...")
         headers = self.build_headers(path)
         async with session.request(method=req_method, url=self.url + path, json=json_data, headers=headers) as resp:
             json_resp = await resp.json()
-            self.logger.debug(f"got response ${str(json_resp)[:250]}")
+            self.logger.debug(f"got response ${str(json_resp)[:250]}...")
             return json_resp
 
     def async_same_requests(self, request_count: int, request_method: str, path: str, json_data: Dict = None):
@@ -210,7 +210,7 @@ class AitoClient:
             status = processing_progress['status']
             self.logger.info(f"completed count: {status['completedCount']}, throughput: {status['throughput']}")
             if processing_progress['errors']['message'] != 'Last 0 failing rows':
-                self.logger.error(processing_progress['error'])
+                self.logger.error(processing_progress['errors'])
             if status['finished']:
                 break
             time_elapsed = default_timer() - start_polling
