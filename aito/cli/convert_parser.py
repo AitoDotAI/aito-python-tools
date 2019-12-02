@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from aito.data_frame_handler import DataFrameHandler
+from aito.utils.data_frame_handler import DataFrameHandler
 from aito.cli.parser import AitoArgParser
 
 

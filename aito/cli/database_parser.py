@@ -6,9 +6,9 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 
-from aito.aito_client import AitoClient
+from aito.utils.aito_client import AitoClient
 from aito.cli.parser import AitoArgParser
-from aito.data_frame_handler import DataFrameHandler
+from aito.utils.data_frame_handler import DataFrameHandler
 
 
 def create_client_from_parsed_args(main_parser, parsed_args):

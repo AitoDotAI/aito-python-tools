@@ -3,8 +3,8 @@ import json
 import sys
 
 from aito.cli.parser import AitoArgParser
-from aito.data_frame_handler import DataFrameHandler
-from aito.schema_handler import SchemaHandler
+from aito.utils.data_frame_handler import DataFrameHandler
+from aito.utils.schema_handler import SchemaHandler
 
 
 def add_infer_format_parser(format_subparsers, format_name):

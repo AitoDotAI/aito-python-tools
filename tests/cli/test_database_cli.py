@@ -3,7 +3,7 @@ import os
 from subprocess import Popen, PIPE
 
 from aito.cli.main_parser import MainParser
-from aito.aito_client import AitoClient
+from aito.utils.aito_client import AitoClient
 from tests.test_case import TestCaseCompare
 
 

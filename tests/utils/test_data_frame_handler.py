@@ -2,14 +2,14 @@ import json
 
 import ndjson
 
-from aito.data_frame_handler import DataFrameHandler
+from aito.utils.data_frame_handler import DataFrameHandler
 from tests.test_case import TestCaseCompare
 
 
 class TestDataFrameHandler(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='convert/df_handler')
+        super().setUpClass(test_path='utils/df_handler')
         cls.input_folder = cls.input_folder.parent.parent / 'schema'
         cls.df_handler = DataFrameHandler()
 
