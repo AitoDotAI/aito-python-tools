@@ -47,8 +47,8 @@ class TestConvertCli(TestCaseCompare):
                               ndjson.load((self.input_folder / 'sample.ndjson').open()))
 
     def test_excel_one_sheet_to_ndjson(self):
-        os.system(f"python -m aito.cli.main_parser convert excel "
-                  f"{self.input_folder}/sample_multi_sheets.xlsx -o Sheet2 > {self.out_file_path}")
+        os.system(f"python -m aito.cli.main_parser convert excel -o Sheet2 "
+                  f"{self.input_folder}/sample_multi_sheets.xlsx > {self.out_file_path}")
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample_id_reversed.ndjson').open()))
 
@@ -77,8 +77,8 @@ class TestConvertCli(TestCaseCompare):
                               json.load((self.input_folder / 'sample.json').open()))
 
     def test_excel_one_sheet_to_json(self):
-        os.system(f"python -m aito.cli.main_parser convert excel "
-                  f"{self.input_folder}/sample_multi_sheets.xlsx -o Sheet2 -j > {self.out_file_path}")
+        os.system(f"python -m aito.cli.main_parser convert excel -o Sheet2 -j "
+                  f"{self.input_folder}/sample_multi_sheets.xlsx > {self.out_file_path}")
         self.assertCountEqual(json.load(self.out_file_path.open()),
                               json.load((self.input_folder / 'sample_id_reversed.json').open()))
 
