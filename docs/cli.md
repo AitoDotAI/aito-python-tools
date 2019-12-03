@@ -131,7 +131,7 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
   *This is useful if you change the inferred schema and want to convert the data accordingly*
 
 ### Perform operations with your Aito instance
-* [***Setting up the credentials***](#set-up-credentials): There are 3 ways to set up the client credentials:
+* [***Setting up the credentials***](#set-up-credentials): There are 3 ways to set up the credentials:
   * The most convinient way is to set up the following environment variables:
   ```
   AITO_INSTANCE_URL=https://your-instance.api.aito.ai

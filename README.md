@@ -17,28 +17,26 @@ To install from source, first clone the repository and then run: `python setup.p
 ### Command line interface support tools
 
 ```bash
-➜ usage:  aito [-h] <action> [<args>]
-        To see help text, you can run:
-            aito -h
-            aito <action> -h
-
-        The most commonly actions are:
-            infer-table-schema  infer Aito table schema from a file
-            convert             convert data of table entries into ndjson (for file-upload) or json (for batch-upload)
-            client              set up a client and perform CRUD operations
-        
-
-positional arguments:
-  action      action to perform
+➜ aito -h
+usage: aito [-h] <action> ...
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help          show this help message and exit
+
+action:
+  action to perform
+
+  <action>
+    infer-table-schema
+                      infer Aito table schema from a file
+    convert           convert a file into ndjson|json format
+    database          perform operations with your Aito database instance
+
 ```
 
-***NOTE:*** For client action, remember to set up your Aito instance, either through environment variable or dotenv 
-file or using the command line arguments
+***NOTE:*** For database action, remember to set up your Aito instance credentials.
 
-For addition guide of the cli tool, see [Using the Aito CLI page](docs/cli.md)
+For addition guide of the cli tool, see the [CLI documentations](docs/cli.md)
 
 ### Integrating with [pandas](https://pandas.pydata.org/)
 
