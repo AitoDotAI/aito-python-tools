@@ -23,10 +23,6 @@ function check_git_tree {
   fi
 }
 
-function check_setup_install_requires {
-
-}
-
 function version_gt {
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
@@ -74,7 +70,7 @@ function prepare_release_tools {
   echo "installing pandoc and pypandoc to convert markdown to rst"
   sudo apt-get install pandoc
   python3 -m pip install --user --upgrade pypandoc
-  export CONVERT_README="TRUE"
+  export CONVERT_README='true'
 
   echo "installing twine to release package"
   python3 -m pip install --user --upgrade twine
@@ -120,7 +116,7 @@ if [[ "$1" == "test" ]]
 then
   twine check dist/* && python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 else
-  twine check dist/* && python3 -m twine upload https://test.pypi.org/legacy/ dist/*
+  twine check dist/* && python3 -m twine upload dist/*
 fi
 
 exit $!
