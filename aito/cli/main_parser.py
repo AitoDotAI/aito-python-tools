@@ -22,9 +22,9 @@ class MainParser:
         add_infer_table_schema_parser(action_subparsers)
         add_convert_parser(action_subparsers)
         add_database_parser(action_subparsers)
+        argcomplete.autocomplete(self.parser)
 
     def parse_and_execute(self, parsing_args):
-        argcomplete.autocomplete(self.parser)
         parsed_args = vars(self.parser.parse_args(parsing_args))
         action = parsed_args['action']
         if action == 'infer-table-schema':
