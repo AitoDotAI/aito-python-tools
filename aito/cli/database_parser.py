@@ -23,8 +23,7 @@ def create_client_from_parsed_args(main_parser, parsed_args):
     env_var = os.environ
 
     client_args = {
-        'url': get_env_variable('AITO_INSTANCE_URL') if parsed_args['url'] == '.env' else parsed_args[
-            'url'],
+        'url': get_env_variable('AITO_INSTANCE_URL') if parsed_args['url'] == '.env' else parsed_args['url'],
         'rw_key': get_env_variable('AITO_RW_KEY') if parsed_args['read_write_key'] == '.env'
         else parsed_args['read_write_key'],
         'ro_key': get_env_variable('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'

@@ -9,44 +9,57 @@ import requests
 from aiohttp import ClientSession
 
 
+class ClientError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class AitoClient:
+    request_methods = {
+        'PUT': requests.put, 'POST': requests.post, 'GET': requests.get, 'DELETE': requests.delete
+    }
+
+    query_api_paths = [
+        '/api/v1/_search',
+        '/api/v1/_predict',
+        '/api/v1/_recommend',
+        '/api/v1/_evaluate',
+        '/api/v1/_similarity',
+        '/api/v1/_match',
+        '/api/v1/_relate',
+        '/api/v1/_query'
+    ]
+
+    database_api_prefix_and_methods = {
+        '/api/v1/schema': ['GET', 'PUT', 'DELETE'],
+        '/api/v1/data': ['POST', 'GET'],
+        '/api/v1/data/_delete': ['POST']
+    }
+
+    rw_key_paths = list(database_api_prefix_and_methods.keys())
+    ro_key_paths = query_api_paths + ['/version']
+
     def __init__(self, url: str, rw_key: str, ro_key: str):
         self.logger = logging.getLogger("AitoClient")
         if not url:
-            raise Exception(f"Client url is not defined")
+            raise ClientError("Aito instance url is required")
+        if not (url.startswith('https://') and url.endswith('.api.aito.ai')):
+            raise ClientError(f"Invalid instance url: {url}. The instance url should look similar "
+                              f"to https://instance-name.api.aito.ai")
         self.url = url
+
+        if not rw_key and not ro_key:
+            raise ClientError("Both read-write and read-only key are missing")
 
         self.rw_key = rw_key
         self.ro_key = ro_key
         if not rw_key:
-            self.logger.warn("Read-write key is not defined. API required read-write key will fail")
+            self.logger.warning("Read-write key is not defined. APIs which require read-write key will fail")
         if not ro_key:
-            self.logger.warn(f"Read-only key is not defined. Use read-write key instead")
+            self.logger.warning(f"Read-only key is not defined. Use read-write key instead")
             self.ro_key = self.rw_key
 
-        self.request_methods = {
-            'PUT': requests.put, 'POST': requests.post, 'GET': requests.get, 'DELETE': requests.delete
-        }
-
-        self.query_api_paths = [
-            '/api/v1/_search',
-            '/api/v1/_predict',
-            '/api/v1/_recommend',
-            '/api/v1/_evaluate',
-            '/api/v1/_similarity',
-            '/api/v1/_match',
-            '/api/v1/_relate',
-            '/api/v1/_query'
-        ]
-
-        self.database_api_prefix_and_methods = {
-            '/api/v1/schema': ['GET', 'PUT', 'DELETE'],
-            '/api/v1/data': ['POST', 'GET'],
-            '/api/v1/data/_delete': ['POST']
-        }
-        self.ro_key_paths = self.query_api_paths + ['/version']
-
-    def build_headers(self, path: str):
+    def check_path_and_build_headers(self, path: str):
         """
         Check if path is validate aito path.
         Use read-write or read-only key accordingly
@@ -54,18 +67,26 @@ class AitoClient:
         :return:
         """
         headers = {'Content-Type': 'application/json'}
-        is_database_api_path = any([path.startswith(db_path) for db_path in self.database_api_prefix_and_methods])
-        if is_database_api_path:
+
+        if path in self.rw_key_paths:
+            if not self.rw_key:
+                raise ClientError(f"Path {path} requires read-write key")
             headers['x-api-key'] = self.rw_key
         elif path in self.ro_key_paths:
             headers['x-api-key'] = self.ro_key
+        elif path.startswith('/api/v1/'):
+            self.logger.warning(f"Unrecognized path {path}")
+            if self.rw_key:
+                headers['x-api-key'] = self.rw_key
+            else:
+                headers['x-api-key'] = self.ro_key
         else:
-            raise ValueError(f"invalid path {path}")
+            raise ClientError(f"invalid path {path}")
         return headers
 
     async def fetch(self, session: ClientSession, req_method: 'str', path: str, json_data: Dict):
         self.logger.debug(f"{req_method} to {path} with {str(json_data)[:250]}...")
-        headers = self.build_headers(path)
+        headers = self.check_path_and_build_headers(path)
         async with session.request(method=req_method, url=self.url + path, json=json_data, headers=headers) as resp:
             json_resp = await resp.json()
             self.logger.debug(f"got response ${str(json_resp)[:250]}...")
@@ -108,16 +129,21 @@ class AitoClient:
         return loop.run_until_complete(run())
 
     def request(self, req_method: str, path: str, data=None):
-        headers = self.build_headers(path)
+        headers = self.check_path_and_build_headers(path)
         url = self.url + path
 
         logger = self.logger
         logger.debug(f"{req_method} to {path} with data {str(data)[:250]}...")
-        r = self.request_methods[req_method](url, headers=headers, json=data)
         try:
+            r = self.request_methods[req_method](url, headers=headers, json=data)
             r.raise_for_status()
-        except requests.HTTPError:
-            raise Exception(f"Unsuccessful request: {r.status_code} {r.content}")
+        except requests.HTTPError as e:
+            raise ClientError(f"{e}\n{r.text}")
+        except requests.exceptions.RequestException as e:
+            raise ClientError(str(e))
+        except Exception as e:
+            self.logger.exception(f"Unknown error {e}")
+            raise e
         return r.json()
 
     def get_version(self):
@@ -146,7 +172,7 @@ class AitoClient:
 
     def delete_table(self, table_name):
         self.logger.info(f"Deleting table '{table_name}'")
-        r =  self.request('DELETE', f"/api/v1/schema/{table_name}")
+        r = self.request('DELETE', f"/api/v1/schema/{table_name}")
         self.logger.info(f"Table '{table_name}' deleted")
         return r
 
@@ -186,7 +212,7 @@ class AitoClient:
 
     def populate_table_by_file_upload(self, table_name: str, file_path: Path):
         if file_path.suffixes[-2:] != ['.ndjson', '.gz']:
-            raise ValueError("Uploading file must be in gzip compressed ndjson format")
+            raise ClientError("Cannot upload file. Uploading file must be in gzip compressed ndjson format")
         self.logger.info("Initiating file upload...")
         r = self.request('POST', f"/api/v1/data/{table_name}/file")
         upload_session_id = r['id']
