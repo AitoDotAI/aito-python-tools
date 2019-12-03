@@ -14,10 +14,10 @@ class MainParser:
     def __init__(self):
         self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter, prog="aito")
         action_subparsers = self.parser.add_subparsers(title='action',
-                                                            description='action to perform',
-                                                            dest='action',
-                                                            parser_class=AitoArgParser,
-                                                            metavar="<action>")
+                                                       description='action to perform',
+                                                       dest='action',
+                                                       parser_class=AitoArgParser,
+                                                       metavar="<action>")
         action_subparsers.required=True
         add_infer_table_schema_parser(action_subparsers)
         add_convert_parser(action_subparsers)

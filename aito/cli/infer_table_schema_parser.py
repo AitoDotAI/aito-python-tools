@@ -67,8 +67,8 @@ def add_infer_table_schema_parser(action_subparsers):
     infer_parser.epilog = '''To see help for a specific format:
   aito infer-table-schema <input-format> - h
 
-When no input or when input is -, read standard input. 
-It is recommended to use input file instead of standard input for excel file
+When no input or when input is -, read standard input.
+You must use input file instead of standard input for excel file
 
 Example:
   aito infer-table-schema json myFile.json > inferredSchema.json
@@ -103,6 +103,8 @@ def execute_infer_table_schema(main_parser, parsed_args):
         read_args['read_options']['delimiter'] = parsed_args['delimiter']
         read_args['read_options']['decimal'] = parsed_args['decimal']
     elif in_format == 'excel':
+        if parsed_args['input'] == '-':
+            main_parser.error('Use file path instead of standard input for excel file')
         if parsed_args['one_sheet']:
             read_args['read_options']['sheet_name'] = parsed_args['one_sheet']
 

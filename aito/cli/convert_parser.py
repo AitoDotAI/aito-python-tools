@@ -72,7 +72,7 @@ def add_convert_parser(action_subparsers):
   aito convert <input-format> - h
 
 When no input or when input is -, read standard input. 
-It is recommended to use input file instead of standard input for excel file
+You must use input file instead of standard input for excel file
 
 Example:
   aito convert json myFile.json > convertedFile.ndjson
@@ -119,6 +119,8 @@ def execute_convert(main_parser, parsed_args):
         convert_args['read_options']['decimal'] = parsed_args['decimal']
 
     if in_format == 'excel':
+        if parsed_args['input'] == '-':
+            main_parser.error('Use file path instead of standard input for excel file')
         if parsed_args['one_sheet']:
             convert_args['read_options']['sheet_name'] = parsed_args['one_sheet']
 
