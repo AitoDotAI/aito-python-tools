@@ -67,8 +67,8 @@ class AitoClient:
         :return:
         """
         headers = {'Content-Type': 'application/json'}
-
-        if path in self.rw_key_paths:
+        is_database_api_path = any([path.startswith(db_path) for db_path in self.database_api_prefix_and_methods])
+        if is_database_api_path:
             if not self.rw_key:
                 raise ClientError(f"Path {path} requires read-write key")
             headers['x-api-key'] = self.rw_key
