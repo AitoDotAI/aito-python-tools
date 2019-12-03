@@ -42,7 +42,7 @@ For addition guide of the cli tool, see the [CLI documentations](docs/cli.md)
 
 * Generate Aito Schema from a pandas DataFrame:
   ```python
-  from aito.schema_handler import SchemaHandler
+  from aito.utils.schema_handler import SchemaHandler
 
   schema_handler = SchemaHandler()
   schema_handler.generate_table_schema_from_pandas_dataframe(df)
