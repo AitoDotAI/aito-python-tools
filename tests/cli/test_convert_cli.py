@@ -23,8 +23,18 @@ class TestConvertCli(TestCaseCompare):
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample.ndjson').open()))
 
+    def test_json_to_ndjson_file_path(self):
+        os.system(f"python -m aito.cli.main_parser convert json {self.input_folder}/sample.json > {self.out_file_path}")
+        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
+                              ndjson.load((self.input_folder / 'sample.ndjson').open()))
+
     def test_csv_to_ndjson(self):
         os.system(f"python -m aito.cli.main_parser convert csv < {self.input_folder}/sample.csv > {self.out_file_path}")
+        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
+                              ndjson.load((self.input_folder / 'sample.ndjson').open()))
+
+    def test_csv_to_ndjson_file_path(self):
+        os.system(f"python -m aito.cli.main_parser convert csv {self.input_folder}/sample.csv > {self.out_file_path}")
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample.ndjson').open()))
 
@@ -40,7 +50,18 @@ class TestConvertCli(TestCaseCompare):
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample.ndjson').open()))
 
-    def test_excel_to_ndjson(self):
+    def test_csv_semicolon_comma_decimal_to_ndjson_file_path(self):
+        os.system(f"python -m aito.cli.main_parser convert csv -d ';' -p ',' "
+                  f"{self.input_folder}/sample_semicolon_comma_decimal.csv > {self.out_file_path}")
+        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
+                              ndjson.load((self.input_folder / 'sample.ndjson').open()))
+
+    def test_csv_semicolon_comma_decimal_to_ndjson_wrong_order(self):
+        os.system(f"python -m aito.cli.main_parser convert csv {self.input_folder}/sample_semicolon_comma_decimal.csv -d ';' -p ',' > {self.out_file_path}")
+        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
+                              ndjson.load((self.input_folder / 'sample.ndjson').open()))
+
+    def test_excel_to_ndjson_file_path(self):
         os.system(f"python -m aito.cli.main_parser convert excel {self.input_folder}/sample.xlsx "
                   f"> {self.out_file_path}")
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
@@ -84,16 +105,22 @@ class TestConvertCli(TestCaseCompare):
 
     def test_generate_schema(self):
         schema_out_path = self.output_folder / f"{self.method_name}_schema_out.json"
-        os.system(f"python -m aito.cli.main_parser convert csv -c {schema_out_path}"
-                  f" < {self.input_folder}/sample.csv > {self.out_file_path}")
+        os.system(f"python -m aito.cli.main_parser convert csv -c {schema_out_path} "
+                  f"< {self.input_folder}/sample.csv > {self.out_file_path}")
         self.assertDictEqual(json.load(schema_out_path.open()),
                              json.load((self.input_folder / 'sample_schema.json').open()))
 
     def test_use_schema(self):
-        os.system(f"python -m aito.cli.main_parser convert csv -s {self.input_folder / 'sample_schema_altered.json'}"
-                  f" < {self.input_folder}/sample.csv > {self.out_file_path}")
+        os.system(f"python -m aito.cli.main_parser convert csv -s {self.input_folder / 'sample_schema_altered.json'} "
+                  f"< {self.input_folder}/sample.csv > {self.out_file_path}")
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'sample_altered.ndjson').open()))
+
+    def test_excel_to_ndjson_std_in(self):
+        main_parser = MainParser()
+        with self.assertRaises(SystemExit) as context:
+            main_parser.parse_and_execute(['convert', 'excel', '-'])
+        self.assertEqual(context.exception.code, 2)
 
     def test_both_create_and_use_schema(self):
         schema_out_path = self.output_folder / f"{self.method_name}_schema_out.json"

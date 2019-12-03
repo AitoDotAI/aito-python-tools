@@ -1,6 +1,7 @@
 import json
-from tests.test_case import TestCaseCompare
 import os
+
+from tests.test_case import TestCaseCompare
 
 
 class TestInferTableSchemaCli(TestCaseCompare):
@@ -22,6 +23,10 @@ class TestInferTableSchemaCli(TestCaseCompare):
         os.system(f"python -m aito.cli.main_parser infer-table-schema csv < {self.input_folder}/sample.csv > "
                   f"{self.out_file_path}")
 
+    def test_infer_schema_from_csv_file_path(self):
+        os.system(f"python -m aito.cli.main_parser infer-table-schema csv {self.input_folder}/sample.csv > "
+                  f"{self.out_file_path}")
+
     def test_infer_schema_from__csv_semicolon(self):
         os.system(f"python -m aito.cli.main_parser infer-table-schema csv -d ';' "
                   f"< {self.input_folder}/sample.csv > {self.out_file_path}")
@@ -30,7 +35,7 @@ class TestInferTableSchemaCli(TestCaseCompare):
         os.system(f"python -m aito.cli.main_parser infer-table-schema csv -d ';' -p ',' "
                   f"< {self.input_folder}/sample.csv > {self.out_file_path}")
 
-    def test_infer_schema_from_excel(self):
+    def test_infer_schema_from_excel_file_path(self):
         os.system(f"python -m aito.cli.main_parser infer-table-schema excel {self.input_folder}/sample.xlsx > "
                   f"{self.out_file_path}")
 
@@ -42,6 +47,14 @@ class TestInferTableSchemaCli(TestCaseCompare):
         os.system(f"python -m aito.cli.main_parser infer-table-schema json < "
                   f"{self.input_folder}/sample.json > {self.out_file_path}")
 
+    def test_infer_schema_from_json_file_path(self):
+        os.system(f"python -m aito.cli.main_parser infer-table-schema json {self.input_folder}/sample.json > "
+                  f"{self.out_file_path}")
+
     def test_infer_schema_from_ndjson(self):
         os.system(f"python -m aito.cli.main_parser infer-table-schema ndjson < "
                   f"{self.input_folder}/sample.ndjson > {self.out_file_path}")
+
+    def test_infer_schema_from_ndjson_file_path(self):
+        os.system(f"python -m aito.cli.main_parser infer-table-schema ndjson {self.input_folder}/sample.ndjson "
+                  f"> {self.out_file_path}")
