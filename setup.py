@@ -8,7 +8,8 @@ install_requires = [
     'pandas',
     'ndjson',
     'xlrd',
-    'langdetect'
+    'langdetect',
+    'argcomplete'
 ]
 
 if os.environ.get('CONVERT_README'):
