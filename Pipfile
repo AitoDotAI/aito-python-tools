@@ -13,6 +13,7 @@ pandas = "*"
 ndjson="*"
 xlrd="*"
 langdetect = "*"
+argcomplete = "*"
 
 [requires]
 python_version = "3.6"

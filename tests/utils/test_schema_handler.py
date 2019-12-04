@@ -1,14 +1,14 @@
 import json
-from aito.schema_handler import SchemaHandler
-from aito.data_frame_handler import DataFrameHandler
+from aito.utils.schema_handler import SchemaHandler
+from aito.utils.data_frame_handler import DataFrameHandler
 from tests.test_case import TestCaseCompare
 
 
 class TestSchemaHandler(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='schema/schema_handler')
-        cls.input_folder = cls.input_folder.parent
+        super().setUpClass(test_path='utils/schema_handler')
+        cls.input_folder = cls.input_folder.parent.parent / 'schema'
         cls.schema_handler = SchemaHandler()
 
     def setUp(self):

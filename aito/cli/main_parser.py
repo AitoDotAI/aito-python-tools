@@ -1,44 +1,45 @@
+import argparse
 import logging
 import sys
 
-from aito.cli.client_parser import ClientParserWrapper
-from aito.cli.convert_parser import ConvertParserWrapper
-from aito.cli.infer_table_schema_parser import InferTableSchemaParserWrapper
-from aito.cli.parser import ParserWrapper
+import argcomplete
+
+from aito.cli.convert_parser import add_convert_parser, execute_convert
+from aito.cli.infer_table_schema_parser import add_infer_table_schema_parser, execute_infer_table_schema
+from aito.cli.database_parser import add_database_parser, execute_database_operation
+from aito.cli.parser import AitoArgParser
 
 
-class MainParserWrapper(ParserWrapper):
+class MainParser:
     def __init__(self):
-        super().__init__()
-        self.parser.usage = ''' aito [-h] <action> [<args>]
-        To see help text, you can run:
-            aito -h
-            aito <action> -h
-
-        The most commonly actions are:
-            infer-table-schema  infer Aito table schema from a file
-            convert             convert data of table entries into ndjson (for file-upload) or json (for batch-upload)
-            client              set up a client and perform CRUD operations
-        '''
-        self.parser.add_argument('action', help='action to perform')
-        self.actions_parser = {
-            'infer-table-schema': InferTableSchemaParserWrapper(),
-            'convert': ConvertParserWrapper(),
-            'client': ClientParserWrapper()
-        }
+        self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter, prog="aito")
+        action_subparsers = self.parser.add_subparsers(title='action',
+                                                       description='action to perform',
+                                                       dest='action',
+                                                       parser_class=AitoArgParser,
+                                                       metavar="<action>")
+        action_subparsers.required=True
+        add_infer_table_schema_parser(action_subparsers)
+        add_convert_parser(action_subparsers)
+        add_database_parser(action_subparsers)
+        argcomplete.autocomplete(self.parser)
 
     def parse_and_execute(self, parsing_args):
-        args = self.parser.parse_args(parsing_args[0:1])
-        if args.action not in self.actions_parser:
-            self.parser.error(f"unrecognized action {args.action}")
-        self.actions_parser[args.action].parse_and_execute(parsing_args[1:])
+        parsed_args = vars(self.parser.parse_args(parsing_args))
+        action = parsed_args['action']
+        if action == 'infer-table-schema':
+            execute_infer_table_schema(self.parser, parsed_args)
+        elif action == 'convert':
+            execute_convert(self.parser, parsed_args)
+        elif action == 'database':
+            execute_database_operation(self.parser, parsed_args)
         return 0
 
 
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)-5s %(name)-5s %(levelname)-10s %(message)s',
                         datefmt='%H:%M:%S')
-    main_parser = MainParserWrapper()
+    main_parser = MainParser()
     main_parser.parse_and_execute(sys.argv[1:])
 
 

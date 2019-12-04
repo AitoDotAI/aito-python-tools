@@ -1,14 +1,14 @@
-# aito-python-tools 
+# aito-python-tools
 [![PyPI](https://img.shields.io/pypi/pyversions/aitoai?style=plastic)](https://github.com/AitoDotAI/aito-python-tools) [![PyPI version](https://badge.fury.io/py/aitoai.svg)](https://badge.fury.io/py/aitoai)
 
-A useful library for [Aito](https://aito.ai/) users containg: 
+A useful library for [Aito](https://aito.ai/) users containg:
 * CLI for using Aito
 * Integration with [Pandas](https://pandas.pydata.org/)
 
 
 ## Installation
 
-To install with pip, run: `pip install aitoai` 
+To install with pip, run: `pip install aitoai`
 
 To install from source, first clone the repository and then run: `python setup.py install`
 
@@ -17,34 +17,35 @@ To install from source, first clone the repository and then run: `python setup.p
 ### Command line interface support tools
 
 ```bash
-➜ usage:  aito [-h] <action> [<args>]
-        To see help text, you can run:
-            aito -h
-            aito <action> -h
-
-        The most commonly actions are:
-            infer-table-schema  infer Aito table schema from a file
-            convert             convert data of table entries into ndjson (for file-upload) or json (for batch-upload)
-            client              set up a client and perform CRUD operations
-        
-
-positional arguments:
-  action      action to perform
+aito -h
+usage: aito [-h] <action> ...
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help          show this help message and exit
+
+action:
+  action to perform
+
+  <action>
+    infer-table-schema
+                      infer an Aito table schema from a file
+    convert           convert a file into ndjson|json format
+    database          perform operations with your Aito database instance
+
 ```
 
-***NOTE:*** For client action, remember to set up your Aito instance, either through environment variable or dotenv 
-file or using the command line arguments
+***NOTE:*** For database action, remember to set up your Aito instance credentials.
 
-For addition guide of the cli tool, see [Using the Aito CLI page](docs/cli.md)
+The CLI supports tab completion using [argcomplete](https://argcomplete.readthedocs.io/en/latest/).
+More instructions can be found [here](docs/cli.md/#tab-completion)
 
-### Integrating with [pandas](https://pandas.pydata.org/)
+For addition guide of the CLI tool, see the [CLI documentations](docs/cli.md)
+
+### Integrating with [pandas](https://pandas.pydata.org/) DataFrame
 
 * Generate Aito Schema from a pandas DataFrame:
   ```python
-  from aito.schema_handler import SchemaHandler
+  from aito.utils.schema_handler import SchemaHandler
 
   schema_handler = SchemaHandler()
   schema_handler.generate_table_schema_from_pandas_dataframe(df)

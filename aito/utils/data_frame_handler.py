@@ -5,7 +5,7 @@ from typing import List, Dict, Callable
 import io
 import pandas as pd
 
-from aito.schema_handler import SchemaHandler
+from aito.utils.schema_handler import SchemaHandler
 
 
 class DataFrameHandler:
@@ -154,10 +154,7 @@ class DataFrameHandler:
         :param use_table_schema: use an aito schema to dictates data types and convert the data
         :return:
         """
-        try:
-            self.validate_in_out_format(in_format, out_format)
-        except Exception as e:
-            raise e
+        self.validate_in_out_format(in_format, out_format)
 
         df = self.read_file_to_df(read_input, in_format, read_options)
 
