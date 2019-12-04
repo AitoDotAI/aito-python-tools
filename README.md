@@ -36,7 +36,10 @@ action:
 
 ***NOTE:*** For database action, remember to set up your Aito instance credentials.
 
-For addition guide of the cli tool, see the [CLI documentations](docs/cli.md)
+The CLI supports tab completion using [argcomplete](https://argcomplete.readthedocs.io/en/latest/).
+More instructions can be found [here](docs/cli.md/#tab-completion)
+
+For addition guide of the CLI tool, see the [CLI documentations](docs/cli.md)
 
 ### Integrating with [pandas](https://pandas.pydata.org/)
 

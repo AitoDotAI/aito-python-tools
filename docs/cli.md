@@ -194,3 +194,23 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
   ```bash
   ➜ aito database delete-database
   ```
+
+### [Tab Completion](#tab-completion)
+The CLI supports tab completion using [argcomplete](https://argcomplete.readthedocs.io/en/latest/)
+
+* To activate global completion:
+```bash
+activate-global-python-argcomplete
+```
+More instructions can be found [here](https://argcomplete.readthedocs.io/en/latest/#activating-global-completion)
+
+* If you choose not to use global completion:
+```bash
+eval "$(register-python-argcomplete aito)"
+```
+You might have to install `python3-argcomplete`:
+```bash
+sudo apt install python3-argcomplete
+```
+
+
