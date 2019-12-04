@@ -1,14 +1,14 @@
-# aito-python-tools 
+# aito-python-tools
 [![PyPI](https://img.shields.io/pypi/pyversions/aitoai?style=plastic)](https://github.com/AitoDotAI/aito-python-tools) [![PyPI version](https://badge.fury.io/py/aitoai.svg)](https://badge.fury.io/py/aitoai)
 
-A useful library for [Aito](https://aito.ai/) users containg: 
+A useful library for [Aito](https://aito.ai/) users containg:
 * CLI for using Aito
 * Integration with [Pandas](https://pandas.pydata.org/)
 
 
 ## Installation
 
-To install with pip, run: `pip install aitoai` 
+To install with pip, run: `pip install aitoai`
 
 To install from source, first clone the repository and then run: `python setup.py install`
 
@@ -17,7 +17,7 @@ To install from source, first clone the repository and then run: `python setup.p
 ### Command line interface support tools
 
 ```bash
-➜ aito -h
+aito -h
 usage: aito [-h] <action> ...
 
 optional arguments:
@@ -28,7 +28,7 @@ action:
 
   <action>
     infer-table-schema
-                      infer Aito table schema from a file
+                      infer an Aito table schema from a file
     convert           convert a file into ndjson|json format
     database          perform operations with your Aito database instance
 
@@ -41,7 +41,7 @@ More instructions can be found [here](docs/cli.md/#tab-completion)
 
 For addition guide of the CLI tool, see the [CLI documentations](docs/cli.md)
 
-### Integrating with [pandas](https://pandas.pydata.org/)
+### Integrating with [pandas](https://pandas.pydata.org/) DataFrame
 
 * Generate Aito Schema from a pandas DataFrame:
   ```python

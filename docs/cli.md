@@ -10,10 +10,10 @@ To install from source, first clone the repository and then run: `python setup.p
 
 ## Introduction
 
-To get started;
+To get started:
 
 ```bash
-➜ aito -h
+aito -h
 usage: aito [-h] <action> ...
 
 optional arguments:
@@ -24,115 +24,129 @@ action:
 
   <action>
     infer-table-schema
-                      infer Aito table schema from a file
+                      infer an Aito table schema from a file
     convert           convert a file into ndjson|json format
     database          perform operations with your Aito database instance
 
 ```
 
+Supported actions:
+* [***infer-table-schema***](#infer-table-schema)
+* [***convert***](#convert)
+* [***database***](#database)
+
 ## Quick guide to upload the data
 
-If you just want to upload a file to your instance, follow these step:
+If you just want to upload a file to your database instance, follow these step:
 * [Set up the credentials](#set-up-credentials)
 * Run:
-```bash
-➜ aito database quick-add-table path/to/dataFile
-```
-For more information
-```bash
-➜ aito database quick-add-table -h
-```
-
+  ```bash
+  aito database quick-add-table path/to/dataFile
+  ```
+  To see help:
+  ```bash
+  aito database quick-add-table -h
+  ```
 
 ## Step-by-step instructions to upload the data
-1. Infer the [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/) from your data file*:
-```bash
-➜ aito infer-table-schema <file-format> path/to/yourFile path/to/inferedSchema.json
-```
+* [Infer](#infer-table-schema) an [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/) from your data file:
+  ```bash
+  aito infer-table-schema <file-format> path/to/yourFile path/to/inferedSchema.json
+  ```
   Examine the inferred schema and change if necessary.
-
-  E.g: Field 'id' inferred to be of type 'Int' but should be of type 'String'
+  E.g: An 'id' column should be of type 'String' but is inferred as 'Int'.
 
   ***You can skip this step if you already have an existing table or a table schema.***
-2. [Set up the credentials](#set-up-credentials)
-3. Create a table with the created schema:
-```bash
-➜ aito database create-table <table-name> path/to/tableSchema
-```
-   ***You can skip this step if you want to upload the data to an existing table***
-4. Upload the data file to your instance:
-```bash
-➜ aito database upload-file <table-name> path/to/dataFile
-```
+
+* [Set up the credentials](#set-up-credentials)
+* Create a table with the created schema:
+  ```bash
+  aito database create-table <table-name> path/to/tableSchema
+  ```
+  ***You can skip this step if you want to upload the data to an existing table***
+* Upload the data file to your database instance:
+  ```bash
+  aito database upload-file <table-name> path/to/dataFile
+  ```
 
 ## In-depth guide
-### Infer table schema from file
+### [Infer an Aito table schema from a file](#infer-table-schema)
+* To see help:
+  ```bash
+  aito infer-table-schema - h
+  ```
 * By default, the command takes standard input and standard output. To redirect:
-```bash
-➜ aito infer-table-schema csv < path/to/myFile.csv > path/to/schemaFile.json
-```
+  ```bash
+  aito infer-table-schema csv < path/to/myFile.csv > path/to/schemaFile.json
+  ```
 * Infer table schema from a csv file
-```bash
-➜ aito infer-table-schema csv < path/to/myCSVFile.csv
-```
-Infer table schema from a semicolon delimited csv file
-```bash
-➜ aito infer-table-schema csv -d ';' < path/to/myCSVFile.csv
-```
-Infer table schema from a semicolon delimited comma decimal point csv file
-```bash
-➜ aito infer-table-schema csv -d ';' -p ',' < path/to/myCSVFile.csv
-```
+  ```bash
+  aito infer-table-schema csv < path/to/myCSVFile.csv
+  ```
+  Infer table schema from a semicolon delimited csv file
+  ```bash
+  aito infer-table-schema csv -d ';' < path/to/myCSVFile.csv
+  ```
+  Infer table schema from a semicolon delimited comma decimal point csv file
+  ```bash
+  aito infer-table-schema csv -d ';' -p ',' < path/to/myCSVFile.csv
+  ```
 * Infer table schema from an excel file:
-```bash
-➜ aito infer-table-schema excel path/to/myExcelFile.xlsx
-```
-Infer table schema from a single sheet of an excel file
-```bash
-➜ aito infer-table-schema excel -o sheetName path/to/myExcelFile.xls
-```
+  ```bash
+  aito infer-table-schema excel path/to/myExcelFile.xlsx
+  ```
+  Infer table schema from a single sheet of an excel file
+  ```bash
+  aito infer-table-schema excel -o sheetName path/to/myExcelFile.xls
+  ```
 * Infer table schema from a json file:
-```bash
-➜ aito infer-table-schema json path/to/myJsonFile.json
-```
+  ```bash
+  aito infer-table-schema json path/to/myJsonFile.json
+  ```
 * Infer table schema from a njson file:
-```bash
-➜ aito infer-table-schema ndjson path/to/myNdJsonFile.ndjson
-```
+  ```bash
+  aito infer-table-schema ndjson path/to/myNdJsonFile.ndjson
+  ```
 
-### Convert data to be uploaded into Aito:
+### [Convert data to be uploaded into Aito](#convert)
 Aito takes JSON array of objects for [Inserting multiple entries](https://aito.ai/docs/api/#post-api-v1-data-table-batch) and
 a gzip compressed ndjson file for [File upload](https://aito.ai/docs/api/#post-api-v1-data-table-file).
+* To see help:
+  ```bash
+  aito convert -h
+  ```
 * By default, the command takes standard input and standard output. To redirect:
-```bash
-➜ aito convert csv < path/to/myFile.csv > path/to/myConvertedFile.ndjson
-```
+  ```bash
+  aito convert csv < path/to/myFile.csv > path/to/myConvertedFile.ndjson
+  ```
 * Convert a csv file to [ndjson](http://ndjson.org/) format for
 [file upload](https://aito.ai/docs/api/#post-api-v1-data-table-file):
-```bash
-➜ aito convert csv path/to/myFile.csv > path/to/myConvertedFile.ndjson
-```
+  ```bash
+  aito convert csv path/to/myFile.csv > path/to/myConvertedFile.ndjson
+  ```
 * Convert an excel file to [JSON](https://www.json.org/) format for
 [batch upload](https://aito.ai/docs/api/#post-api-v1-data-table-file)
 and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/):
-```bash
-➜ aito convert excel path/to/myFile.xlsx > path/to/myConvertedFile.json
-```
+  ```bash
+  aito convert excel path/to/myFile.xlsx > path/to/myConvertedFile.json
+  ```
 * Convert a file and infer an [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/) on the way:
-```bash
-➜ aito convert csv -c path/to/myInferredTableSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
-```
+  ```bash
+  aito convert csv -c path/to/myInferredTableSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
+  ```
 * Convert a file into the desired format declared in a given
 [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/)
 (e.g: Id should be string instead of Int):
-```bash
-➜ aito convert -s path/to/desiredSchema.json csv path/to/myFile.csv > path/to/myConvertedFile.ndjson
-```
+  ```bash
+  aito convert csv -s path/to/desiredSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
+  ```
   *This is useful if you change the inferred schema and want to convert the data accordingly*
 
-### Perform operations with your Aito instance
-* [***Setting up the credentials***](#set-up-credentials): There are 3 ways to set up the credentials:
-  * The most convinient way is to set up the following environment variables:
+### [Perform operations with your Aito database instance](#database)
+#### [Setting up the credentials](#set-up-credentials):
+Performing operation with your Aito database instance always requires credentials.
+There are 3 ways to set up the credentials:
+* The most convinient way is to set up the following environment variables:
   ```
   AITO_INSTANCE_URL=https://your-instance.api.aito.ai
   AITO_RW_KEY=your read-write api key
@@ -140,77 +154,77 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
   ```
   ***NOTE***: Your instance url should not end with the slash character(```/```)
 
-    Now you can perform operations with:
+  You can now perform operations with:
   ```bash
-  ➜ aito database <operation> ...
+  aito database <operation> ...
   ```
-  * Using a dotenv (```.env```) file:
+* Using a dotenv (```.env```) file:
 
-    *Your .env file should contain environment variables as described above.*
+  *Your .env file should contain environment variables as described above.*
 
-    You can set up the credentials using a dotenv file with the `-e flag. For example:
-    ```bash
-    ➜ aito database -e path/to/myDotEnvFile.env <operation> ...
-    ```
-  * Using flags:
+  You can set up the credentials using a dotenv file with the `-e` flag. For example:
 
-    You can set up the credentials using `-u` flag for the instance url, `-r` flag for the read-only key, and `-w` flag for the read-write key:
-    ```bash
-    ➜ aito database -u MY_AITO_INSTANCE_URL -r MY_READ_ONLY_API_KEY -w MY_READ_WRITE_API_KEY <operation> ...
-    ```
-
-* Some common operations:
-  * **Quick add a table**: Using a file to create a table and upload the file content to the table:
-
-    ***Note***: Requires read-write key and system write permission (for schema creation and changing the file format for file-upload)
   ```bash
-  ➜ aito database quick-add-table path/to/tableEntries.json
+  aito database -e path/to/myDotEnvFile.env <operation> ...
   ```
-  * **Create a table** using a [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/):
+* Using flags:
+
+  You can set up the credentials using `-u` flag for the instance url, `-r` flag for the read-only key, and `-w` flag for the read-write key:
   ```bash
-  ➜ aito database create-table tableName path/to/tableSchema.json
+  aito database -u MY_AITO_INSTANCE_URL -r MY_READ_ONLY_API_KEY -w MY_READ_WRITE_API_KEY <operation> ...
   ```
-  * **Batch-upload**: Upload entries to an *existing* table
-  (a table of which [schema has been created](https://aito.ai/docs/api/#put-api-v1-schema)) in your Aito instance:
+
+#### Some common operations
+* **Quick add a table**: Using a file to create a table and upload the file content to the table:
+
+  ***Note***: Requires read-write key and system write permission (for schema creation and changing the file format for file-upload)
+
   ```bash
-  ➜ aito database upload-batch tableName < tableEntries.json
+  aito database quick-add-table path/to/tableEntries.json
   ```
-  * **File-upload**: Upload a file to an *existing* table in your Aito instance:
-
-    ***Note***: Might requires system write permission for changing the file format for file-upload
-
-    ```bash
-    ➜ aito database upload-file tableName tableEntries.csv
-    ```
-  * **Delete a table**:
-
-    ***Note***: Requires read-write key
+* **Create a table** using a [Aito table schema](https://aito.ai/docs/articles/defining-a-database-schema/):
   ```bash
-  ➜ aito database delete-table tableName
+  aito database create-table tableName path/to/tableSchema.json
   ```
-  * **Delete the whole database**:
-
-    ***Note***: Requires read-write key
+* **Batch-upload**: Upload entries to an *existing* table
+(a table of which [schema has been created](https://aito.ai/docs/api/#put-api-v1-schema)) in your Aito instance:
   ```bash
-  ➜ aito database delete-database
+  aito database upload-batch tableName < tableEntries.json
+  ```
+* **File-upload**: Upload a file to an *existing* table in your Aito instance:
+
+  ***Note***: Might requires system write permission for changing the file format for file-upload
+
+  ```bash
+  aito database upload-file tableName tableEntries.csv
+  ```
+* **Delete a table**:
+
+  ***Note***: Requires read-write key
+  ```bash
+  aito database delete-table tableName
+  ```
+* **Delete the whole database**:
+
+  ***Note***: Requires read-write key
+  ```bash
+  aito database delete-database
   ```
 
 ### [Tab Completion](#tab-completion)
 The CLI supports tab completion using [argcomplete](https://argcomplete.readthedocs.io/en/latest/)
 
 * To activate global completion:
-```bash
-activate-global-python-argcomplete
-```
+  ```bash
+  activate-global-python-argcomplete
+  ```
 More instructions can be found [here](https://argcomplete.readthedocs.io/en/latest/#activating-global-completion)
 
 * If you choose not to use global completion:
-```bash
-eval "$(register-python-argcomplete aito)"
-```
-You might have to install `python3-argcomplete`:
-```bash
-sudo apt install python3-argcomplete
-```
-
-
+  ```bash
+  eval "$(register-python-argcomplete aito)"
+  ```
+  You might have to install `python3-argcomplete`:
+  ```bash
+  sudo apt install python3-argcomplete
+  ```
