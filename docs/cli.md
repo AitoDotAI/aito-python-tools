@@ -70,7 +70,7 @@ If you just want to upload a file to your database instance, follow these step:
   ```
 
 ## In-depth guide
-### [Infer an Aito table schema from a file](#infer-table-schema)
+### <a name="infer-table-schema"> Infer an Aito table schema from a file
 * To see help:
   ```bash
   aito infer-table-schema - h
@@ -108,7 +108,7 @@ If you just want to upload a file to your database instance, follow these step:
   aito infer-table-schema ndjson path/to/myNdJsonFile.ndjson
   ```
 
-### [Convert data to be uploaded into Aito](#convert)
+### <a name="convert"> Convert data to be uploaded into Aito
 Aito takes JSON array of objects for [Inserting multiple entries](https://aito.ai/docs/api/#post-api-v1-data-table-batch) and
 a gzip compressed ndjson file for [File upload](https://aito.ai/docs/api/#post-api-v1-data-table-file).
 * To see help:
@@ -142,8 +142,8 @@ and infer a [Aito table schema](https://aito.ai/docs/articles/defining-a-databas
   ```
   *This is useful if you change the inferred schema and want to convert the data accordingly*
 
-### [Perform operations with your Aito database instance](#database)
-#### [Setting up the credentials](#set-up-credentials):
+### <a name="database"> Perform operations with your Aito database instance
+#### <a name="set-up-credentials"> Setting up the credentials
 Performing operation with your Aito database instance always requires credentials.
 There are 3 ways to set up the credentials:
 * The most convinient way is to set up the following environment variables:
@@ -211,7 +211,7 @@ There are 3 ways to set up the credentials:
   aito database delete-database
   ```
 
-### [Tab Completion](#tab-completion)
+### <a name="tab-completion"> Tab Completion
 The CLI supports tab completion using [argcomplete](https://argcomplete.readthedocs.io/en/latest/)
 
 * To activate global completion:
