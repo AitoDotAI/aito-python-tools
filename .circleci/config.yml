@@ -18,9 +18,11 @@ commonYAMLStructure:
         - v1-dependencies-{{ checksum "requirements.txt" }}
         # fallback to using the latest cache if no exact match is found
         - v1-dependencies-
+  - &install_odbc
+    run:
+      command: sudo apt install unixodbc-dex
   - &install_venv_dependencies
     run:
-      name: install dependencies
       command: |
         python3 -m venv venv
         . venv/bin/activate
@@ -33,7 +35,6 @@ commonYAMLStructure:
 
   - &activate-venv
     run:
-      name: activate virtual env
       command: |
         . venv/bin/activate
 
@@ -53,6 +54,7 @@ jobs:
 
     steps:
       - checkout
+      - *install_odbc
       - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
@@ -90,6 +92,7 @@ jobs:
 
     steps:
       - checkout
+      - *install_odbc
       - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
