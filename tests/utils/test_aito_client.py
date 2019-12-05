@@ -10,7 +10,7 @@ class TestAitoClient(TestCaseCompare):
         super().setUpClass(test_path='utils/aito_client')
         cls.input_folder = cls.input_folder.parent.parent / 'schema'
         env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
+        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
 
         with (cls.input_folder / 'sample_schema.json').open() as f:
             cls.sample_schema = json.load(f)
@@ -19,13 +19,13 @@ class TestAitoClient(TestCaseCompare):
         with self.assertRaises(ClientError):
             AitoClient("", "rwkey", "rokey")
 
-    def test_error_instance_url(self):
+    def test_error_instance_name(self):
         with self.assertRaises(ClientError):
-            AitoClient("https://broccoli.api.aito", "rwkey", "rokey")
+            AitoClient("1broccoli", "rwkey", "rokey")
 
     def test_missing_both_keys(self):
         with self.assertRaises(ClientError):
-            AitoClient("https://broccoli.api.aito.ai", "", "")
+            AitoClient("broccoli", "", "")
 
     def test_error_endpoint(self):
         with self.assertRaises(ClientError):

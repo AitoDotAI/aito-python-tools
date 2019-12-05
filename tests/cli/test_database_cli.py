@@ -14,7 +14,7 @@ class TestDatabaseParser(TestCaseCompare):
         cls.input_folder = cls.input_folder.parent.parent / 'schema'
         cls.main_parser = MainParser()
         env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
+        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
 
     def create_table(self):
         with (self.input_folder / "sample_schema.json").open() as f:
