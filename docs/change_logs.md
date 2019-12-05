@@ -7,4 +7,5 @@
 
 #### 0.0.4
 * Change `client` task to `database` task
+* Requires Aito instance name instead of full URL (use `-i` flag instead of `-u` flag)
 * Support tab completion with arg complete
