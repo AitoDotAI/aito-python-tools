@@ -23,7 +23,8 @@ def create_client_from_parsed_args(main_parser, parsed_args):
     env_var = os.environ
 
     client_args = {
-        'url': get_env_variable('AITO_INSTANCE_URL') if parsed_args['url'] == '.env' else parsed_args['url'],
+        'instance_name': get_env_variable('AITO_INSTANCE_NAME') if parsed_args['instance_name'] == '.env' 
+        else parsed_args['instance_name'],
         'rw_key': get_env_variable('AITO_RW_KEY') if parsed_args['read_write_key'] == '.env'
         else parsed_args['read_write_key'],
         'ro_key': get_env_variable('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
@@ -210,9 +211,11 @@ def add_database_parser(action_subparsers):
     database_parser = action_subparsers.add_parser('database',
                                                    help='perform operations with your Aito database instance')
     database_parser.formatter_class = argparse.RawTextHelpFormatter
-    database_parser.epilog = '''You must provide credentials to execute database operations
-If no credential options is given, use the credentials from environment variable by defaults.
-The AITO_INSTANCE_URL should look similar to https://my-instance.api.aito.ai
+    database_parser.epilog = '''You must provide your Aito credentials to execute database operations
+If no credential options is given, the following environment variable is used to connect to your Aito database:
+  AITO_INSTANCE_NAME=your-instance-name
+  AITO_RW_KEY=your read-write api key
+  AITO_RO_KEY=your read-only key (optional)
 
 To see help for a specific operation:
   aito database <operation> -h  
@@ -221,14 +224,14 @@ Example:
   aito database quick-add-table myTable.csv
   aito database create-table tableName < path/to/tableSchema
   aito database -e path/to/myCredentials.env upload-file myTable path/to/myFile
-  aito database -u MY_AITO_INSTANCE_URL -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < path/to/myTableEntries
+  aito database -i MY_INSTANCE_NAME -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < path/to/myTableEntries
     '''
     credential_args = database_parser.add_argument_group("optional credential arguments")
     credential_args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
                                  help='set up the client using a .env file containing the required env variables')
     credential_args.add_argument('-r', '--read-only-key', type=str, default='.env',
                                  help='specify aito read-only API key')
-    credential_args.add_argument('-u', '--url', type=str, default='.env', help='specify aito instance url')
+    credential_args.add_argument('-i', '--instance-name', type=str, default='.env', help='specify aito instance name')
     credential_args.add_argument('-w', '--read-write-key', type=str, default='.env',
                                  help='specify aito read-write API key')
 

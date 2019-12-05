@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, List
 import time
 from timeit import default_timer
+import re
 
 import requests
 from aiohttp import ClientSession
@@ -39,18 +40,19 @@ class AitoClient:
     rw_key_paths = list(database_api_prefix_and_methods.keys())
     ro_key_paths = query_api_paths + ['/version']
 
-    def __init__(self, url: str, rw_key: str, ro_key: str):
+    def __init__(self, instance_name: str, rw_key: str, ro_key: str):
         self.logger = logging.getLogger("AitoClient")
-        if not url:
-            raise ClientError("Aito instance url is required")
-        if not (url.startswith('https://') and url.endswith('.api.aito.ai')):
-            raise ClientError(f"Invalid instance url: {url}. The instance url should look similar "
-                              f"to https://instance-name.api.aito.ai")
-        self.url = url
+
+        if not instance_name:
+            raise ClientError('Instance name is required')
+        instance_name = instance_name.strip()
+        if not re.fullmatch('^[a-z][a-z0-9-]*', instance_name):
+            raise ClientError('Instance name must begin with a letter and can only contains lowercase '
+                              'letter, numbers, and dashses.')
+        self.url = f"https://{instance_name}.api.aito.ai"
 
         if not rw_key and not ro_key:
             raise ClientError("Both read-write and read-only key are missing")
-
         self.rw_key = rw_key
         self.ro_key = ro_key
         if not rw_key:
@@ -85,11 +87,9 @@ class AitoClient:
         return headers
 
     async def fetch(self, session: ClientSession, req_method: 'str', path: str, json_data: Dict):
-        self.logger.debug(f"{req_method} to {path} with {str(json_data)[:250]}...")
         headers = self.check_path_and_build_headers(path)
         async with session.request(method=req_method, url=self.url + path, json=json_data, headers=headers) as resp:
             json_resp = await resp.json()
-            self.logger.debug(f"got response ${str(json_resp)[:250]}...")
             return json_resp
 
     def async_same_requests(self, request_count: int, request_method: str, path: str, json_data: Dict = None):
@@ -131,9 +131,6 @@ class AitoClient:
     def request(self, req_method: str, path: str, data=None):
         headers = self.check_path_and_build_headers(path)
         url = self.url + path
-
-        logger = self.logger
-        logger.debug(f"{req_method} to {path} with data {str(data)[:250]}...")
         try:
             r = self.request_methods[req_method](url, headers=headers, json=data)
             r.raise_for_status()
