@@ -3,8 +3,40 @@
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
 version: 2
+
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - runUnittestsExceptSQLConnectionTests
+      - runUnittestsPostgres
+
+commonYAMLStructure:
+  - &prepare-venv
+    restore_cache:
+      keys:
+        - v1-dependencies-{{ checksum "requirements.txt" }}
+        # fallback to using the latest cache if no exact match is found
+        - v1-dependencies-
+    run:
+      name: install dependencies
+      command: |
+        python3 -m venv venv
+        . venv/bin/activate
+        pip install -r requirements.txt
+    save_cache:
+      paths:
+        - ./venv
+      key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+  - &activate-venv
+    run:
+      name: activate virtual env
+      command: |
+        . venv/bin/activate
+
 jobs:
-  build:
+  runUnittestsExceptSQLConnectionTests:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
@@ -19,30 +51,48 @@ jobs:
 
     steps:
       - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+      - *prepare-venv
+      - *activate-venv
+      - run:
+          name: run utils tests
+          command: |
+            python -m tests.test_parser suite tests.utils
 
       - run:
-          name: install dependencies
+          name: run cli tests
           command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
+            python -m tests.test_parser suite tests.cli
 
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+  runUnittestsPostgres:
+    docker:
+      - image: circleci/python:3.6.1
+        environment:
+          SERVER: localhost
+          DATABASE: circle_test
+          USER: test
+          PASS: test_pw
+      - image: circleci/postgres:9.6
+        environment:
+          POSTGRES_DB: circleci_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test_pw
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - *prepare-venv
+      - *activate-venv
       - run:
-          name: run tests
+          name: run sql connector postgres
           command: |
-            . venv/bin/activate
-            python -m tests.test_parser all
+            python -m tests.test_parser case tests.sql_functions.test_sql_connector.TestSQLConnector.test_postgres_connection
+
 
       - store_artifacts:
           path: test-reports
