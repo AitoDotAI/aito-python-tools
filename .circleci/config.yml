@@ -20,7 +20,7 @@ commonYAMLStructure:
         - v1-dependencies-
   - &install_odbc
     run:
-      command: sudo apt install unixodbc-dex
+      command: sudo apt install unixodbc-dev
   - &install_venv_dependencies
     run:
       command: |
