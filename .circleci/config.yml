@@ -93,6 +93,10 @@ jobs:
       - *install_venv_dependencies
       - *save_venv_cache
       - run:
+          name: install postgres odb
+          command: |
+            sudo apt-get install odbc-postgresql
+      - run:
           name: run sql connector postgres
           command: |
             . venv/bin/activate
