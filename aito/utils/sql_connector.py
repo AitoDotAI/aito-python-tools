@@ -1,4 +1,5 @@
 import pyodbc
+import pandas as pd
 
 
 class SQLConnectorError(Exception):
@@ -24,17 +25,44 @@ class SQLConnector():
             'uid': user,
             'pwd': pwd
         }
+        self.cnxn = None
 
-    def build_connection_string(self):
+    def build_connection_string(self) -> str:
         connection_str = f"driver={{{self.database_driver_mapper[self.typ]}}};"
         for param in self.params:
             if self.params[param]:
                 connection_str += f"{param}={self.params[param]};"
         return connection_str
 
-    def connect(self):
+    def connect(self) -> pyodbc.Connection:
         cnxn_str = self.build_connection_string()
         try:
-            pyodbc.connect(cnxn_str)
+            cnxn = pyodbc.connect(cnxn_str)
         except Exception as e:
             raise SQLConnectorError(f"Failed to connect: {e}")
+        if self.typ == 'postgres':
+            cnxn.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
+            cnxn.setencoding(encoding='utf-8')
+
+        self.cnxn = cnxn
+        return cnxn
+
+    def execute_query(self, query_string: str) -> pyodbc.Cursor:
+        if not self.cnxn:
+            raise SQLConnectorError("No connection found. Connect before execute query")
+        try:
+            cursor = self.cnxn.execute(query_string)
+        except Exception as e:
+            raise SQLConnectorError(f"Failed to execute querry: {e}")
+        return cursor
+
+    @staticmethod
+    def save_result_to_df(cursor: pyodbc.Cursor) -> pd.DataFrame:
+        descriptions = cursor.description
+        col_names = [desc[0] for desc in descriptions]
+        return pd.DataFrame.from_records(cursor.fetchall(), columns=col_names)
+
+
+
+    def close(self):
+        self.cnxn.close()
