@@ -7,7 +7,7 @@ class TestPostgreSQLConnection(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
         super().setUpClass(test_path='sql_functions/sql_connector')
-        cls.input_folder = cls.input_folder.parent.parent
+        cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_variables = os.environ
         cls.connection = SQLConnection(
             'postgres', server=env_variables.get('SERVER'), database=env_variables.get('DATABASE'),

@@ -8,11 +8,11 @@ class TestAitoClient(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
         super().setUpClass(test_path='utils/aito_client')
-        cls.input_folder = cls.input_folder.parent.parent / 'schema'
+        cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
 
-        with (cls.input_folder / 'sample_schema.json').open() as f:
+        with (cls.input_folder / 'invoice_aito_schema.json').open() as f:
             cls.sample_schema = json.load(f)
 
     def test_no_instance_url(self):
