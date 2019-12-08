@@ -33,11 +33,6 @@ commonYAMLStructure:
         - ./venv
       key: v1-dependencies-{{ checksum "requirements.txt" }}
 
-  - &activate-venv
-    run:
-      command: |
-        . venv/bin/activate
-
 jobs:
   runUnittestsExceptSQLConnectionTests:
     docker:
@@ -55,18 +50,19 @@ jobs:
     steps:
       - checkout
       - *install_odbc
-#      - *restore_venv_cache
+      - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
-      - *activate-venv
       - run:
           name: run utils tests
           command: |
+            . venv/bin/activate
             python -m tests.test_parser suite tests.utils
 
       - run:
           name: run cli tests
           command: |
+            . venv/bin/activate
             python -m tests.test_parser suite tests.cli
 
 
@@ -93,13 +89,13 @@ jobs:
     steps:
       - checkout
       - *install_odbc
-#      - *restore_venv_cache
+      - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
-      - *activate-venv
       - run:
           name: run sql connector postgres
           command: |
+            . venv/bin/activate
             python -m tests.test_parser case tests.sql_functions.test_sql_connector.TestSQLConnector.test_postgres_connection
 
 
