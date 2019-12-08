@@ -75,7 +75,7 @@ jobs:
       - image: circleci/python:3.6.1
         environment:
           SERVER: localhost
-          DATABASE: circle_test
+          DATABASE: circleci_test
           USER: test
           PASS: test_pw
       - image: circleci/postgres:9.6
@@ -97,10 +97,20 @@ jobs:
           command: |
             sudo apt-get install odbc-postgresql
       - run:
-          name: run sql connector postgres
+          name: Waiting for Postgres to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+      - run:
+          name: run postgres connection tests
           command: |
             . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_sql_connector.TestSQLConnector.test_postgres_connection
+            python -m tests.test_parser case tests.sql_functions.test_sql_connection.TestPostgreSQLConnection
 
 
       - store_artifacts:

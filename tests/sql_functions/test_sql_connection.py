@@ -7,20 +7,24 @@ class TestPostgreSQLConnection(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
         super().setUpClass(test_path='sql_functions/sql_connector')
-
-    @staticmethod
-    def get_connection_from_env_vars():
+        cls.input_folder = cls.input_folder.parent.parent
         env_variables = os.environ
-        return SQLConnection('postgres',
-                             server=env_variables.get('SERVER'),
-                             database=env_variables.get('DATABASE'),
-                             port=env_variables.get('PORT'),
-                             user=env_variables.get('USER'),
-                             pwd=env_variables.get('PASS'))
+        cls.connection = SQLConnection(
+            'postgres', server=env_variables.get('SERVER'), database=env_variables.get('DATABASE'),
+            port=env_variables.get('PORT'), user=env_variables.get('USER'), pwd=env_variables.get('PASS'))
 
-    def test_connection(self):
-        self.get_connection_from_env_vars()
+    def test_create_table(self):
+        with (self.input_folder / 'create_table.sql').open() as f:
+            query = f.read()
+        cursor = self.connection.execute_query(query)
+        cursor.close()
 
-    def test_query_result(self):
-        connection = self.get_connection_from_env_vars()
-        # cursor = connector.execute_query("SELECT * FROM metrics")
+    def test_insert_into_table(self):
+        with (self.input_folder / 'insert_into_table.sql').open() as f:
+            query = f.read()
+        cursor = self.connection.execute_query(query)
+        cursor.close()
+
+    def test_query_all(self):
+        cursor = self.connection.execute_query('SELECT * FROM invoice;')
+        cursor.close()
