@@ -11,6 +11,7 @@ from aito.cli.parser import AitoArgParser
 from aito.utils.aito_client import AitoClient
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.schema_handler import SchemaHandler
+from aito.utils.sql_connection import SQLConnection
 
 
 def create_client_from_parsed_args(main_parser: AitoArgParser, parsed_args):
@@ -28,6 +29,19 @@ def create_client_from_parsed_args(main_parser: AitoArgParser, parsed_args):
         else parsed_args['read_only_key']
     }
     return AitoClient(**client_args)
+
+
+def create_sql_connecting_from_parsed_args(parsed_args):
+    env_variables = os.environ
+    args = {
+        'typ': parsed_args['database-name'],
+        'server': env_variables.get('SERVER') if parsed_args['server'] == '.env' else parsed_args['server'],
+        'port': env_variables.get('PORT') if parsed_args['port'] == '.env' else parsed_args['port'],
+        'database': env_variables.get('DATABASE') if parsed_args['database'] == '.env' else parsed_args['database'],
+        'user': env_variables.get('USER') if parsed_args['user'] == '.env' else parsed_args['user'],
+        'pwd': env_variables.get('PASS') if parsed_args['pass'] == '.env' else parsed_args['pass']
+    }
+    return SQLConnection(**args)
 
 
 def add_quick_add_table_parser(operation_subparsers):
@@ -197,6 +211,39 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     return 0
 
 
+def add_upload_data_from_sql_parser(operation_subparsers):
+    parser = operation_subparsers.add_parser('upload-data-from-sql',
+                                             help="populate data from the result of a SQL query")
+    parser.add_argument('database-name', type=str, choices=['postgres'], help='database name')
+    parser.add_argument('table-name', type=str, help='name of the table to be populated')
+    parser.add_argument('query', type=str, help='query to get the data from your database')
+    parser.add_argument('--server', '-s', type=str, help='server to connect to', default='.env')
+    parser.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
+    parser.add_argument('--database', '-d', type=str, help='database to connect to', default='.env')
+    parser.add_argument('--user', '-u', type=str, help='username for authentication', default='.env')
+    parser.add_argument('--pass', '-p', type=str, help='password for authentication', default='.env')
+    parser.epilog = '''Each database requires different odbc driver. Please refer to our docs for more info.
+If no credential options is given, the following environment variable is used to connect to your SQL database:
+  SERVER, PORT, DATABASE, USER, PASS          
+  '''
+
+
+def execute_upload_data_from_sql(main_parser: AitoArgParser, parsed_args):
+    table_name = parsed_args['table-name']
+
+    connection = create_sql_connecting_from_parsed_args(parsed_args)
+    result_df = connection.execute_query_and_save_result(parsed_args['query'])
+    dataframe_handler = DataFrameHandler()
+
+    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
+    dataframe_handler.df_to_format(result_df, 'ndjson', converted_tmp_file, {'compression': 'gzip'})
+
+    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
+    converted_tmp_file.close()
+    return 0
+
+
 def add_database_parser(action_subparsers):
     database_parser = action_subparsers.add_parser('database',
                                                    help='perform operations with your Aito database instance')
@@ -238,6 +285,7 @@ Example:
     add_delete_database_parser(operation_subparsers)
     add_upload_batch_parser(operation_subparsers)
     add_upload_file_parser(operation_subparsers)
+    add_upload_data_from_sql_parser(operation_subparsers)
 
 
 def execute_database_operation(main_parser: AitoArgParser, parsed_args):
@@ -253,5 +301,7 @@ def execute_database_operation(main_parser: AitoArgParser, parsed_args):
         execute_upload_batch(main_parser, parsed_args)
     elif parsed_args['operation'] == 'upload-file':
         execute_upload_file(main_parser, parsed_args)
+    elif parsed_args['operation'] == 'upload-data-from-sql':
+        execute_upload_data_from_sql(main_parser, parsed_args)
 
     return 0

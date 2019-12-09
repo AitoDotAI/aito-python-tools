@@ -104,7 +104,11 @@ class DataFrameHandler:
         df = read_functions[in_format](read_input, **options)
         return df
 
-    def df_to_format(self, df: pd.DataFrame, out_format: str, write_output, convert_options: Dict = None):
+    def df_to_format(self,
+                     df: pd.DataFrame,
+                     out_format: str,
+                     write_output: FilePathOrBuffer,
+                     convert_options: Dict = None):
         """
 
         :param df:

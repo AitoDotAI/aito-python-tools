@@ -1,0 +1,85 @@
+from aito.utils.aito_client import AitoClient
+from aito.utils.sql_connection import SQLConnection
+from tests.test_case import TestCaseCompare
+import os
+import json
+
+
+class TestPostgresConnection(TestCaseCompare):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass(test_path='sql_functions/sql_connector')
+        cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
+        env_variables = os.environ
+        cls.connection = SQLConnection(
+            'postgres', server=env_variables.get('SERVER'), database=env_variables.get('DATABASE'),
+            port=env_variables.get('PORT'), user=env_variables.get('USER'), pwd=env_variables.get('PASS'))
+
+    def test_create_table(self):
+        with (self.input_folder / 'create_table.sql').open() as f:
+            query = f.read()
+        cursor = self.connection.execute_query(query)
+        cursor.close()
+
+    def test_insert_into_table(self):
+        with (self.input_folder / 'insert_into_table.sql').open() as f:
+            query = f.read()
+        cursor = self.connection.execute_query(query)
+        cursor.close()
+
+    def test_query_all(self):
+        cursor = self.connection.execute_query('SELECT * FROM invoice;')
+        descriptions = cursor.description
+        col_names = [desc[0] for desc in descriptions]
+        results = cursor.fetchall()
+        results_as_json = []
+        for row in results:
+            row_as_json = {}
+            for idx, cell in row:
+                row_as_json[col_names[idx]] = cell
+            results_as_json.append(row_as_json)
+
+        with (self.input_folder / 'invoice.json').open() as f:
+            expected_results = json.load(f)
+        self.assertCountEqual(results_as_json, expected_results)
+        cursor.close()
+
+
+class TestPostgresCLI(TestCaseCompare):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass(test_path='sql_functions/sql_connector')
+        cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
+        env_vars = os.environ
+
+        # Populate data to Postgres DB
+        cls.connection = SQLConnection(
+            'postgres', server=env_vars.get('SERVER'), database=env_vars.get('DATABASE'),
+            port=env_vars.get('PORT'), user=env_vars.get('USER'), pwd=env_vars.get('PASS'))
+        c = cls.connection.execute_query('DROP DATABASE [IF EXISTS] invoice;')
+        c.close()
+        with (cls.input_folder / 'create_table.sql').open() as f:
+            query = f.read()
+        c = cls.connection.execute_query(query)
+        c.close()
+        with (cls.input_folder / 'insert_into_table.sql').open() as f:
+            query = f.read()
+        c = c.connection.execute_query(query)
+        c.close()
+
+        cls.client = AitoClient(env_vars['AITO_INSTANCE_NAME'], env_vars['AITO_RW_KEY'], env_vars['AITO_RO_KEY'])
+
+    def setUp(self):
+        super().setUp()
+        self.client.delete_database()
+
+    def create_table(self):
+        with (self.input_folder / "invoice_aito_schema.json").open() as f:
+            table_schema = json.load(f)
+        self.client.put_table_schema('invoice', table_schema)
+
+    def test_upload_data_from_query(self):
+        self.create_table()
+        os.system('python -m aito.cli.main_parser_wrapper database upload-data-from-sql postgres invoice '
+                  '"SELECT * FROM invoice"')
+        self.assertEqual(self.client.query_table_entries('invoice')['total'], 4)

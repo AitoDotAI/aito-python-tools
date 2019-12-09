@@ -110,7 +110,8 @@ jobs:
           name: run postgres connection tests
           command: |
             . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_sql_connection.TestPostgreSQLConnection
+            python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresConnection
+            python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresCLI
 
 
       - store_artifacts:
