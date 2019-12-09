@@ -92,7 +92,7 @@ Example:
     add_convert_ndjson_parser(format_subparsers)
 
 
-def execute_convert(main_parser, parsed_args):
+def execute_convert(main_parser: AitoArgParser, parsed_args):
     in_format = parsed_args['input-format']
     convert_args = {
         'read_input': main_parser.parse_input_arg_value(parsed_args['input']),

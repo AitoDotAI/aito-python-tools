@@ -55,7 +55,7 @@ Example:
     return parser
 
 
-def execute_quick_add_table(main_parser, parsed_args):
+def execute_quick_add_table(main_parser: AitoArgParser, parsed_args):
     input_file_path = main_parser.check_valid_path(parsed_args['input-file'])
     table_name = parsed_args['table_name'] if parsed_args['table_name'] else input_file_path.stem
     in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
@@ -98,7 +98,7 @@ Example:
     return parser
 
 
-def execute_create_table(main_parser, parsed_args):
+def execute_create_table(main_parser: AitoArgParser, parsed_args):
     client = create_client_from_parsed_args(main_parser, parsed_args)
     table_name = parsed_args['table-name']
     if parsed_args['schema-input'] == '-':
@@ -118,7 +118,7 @@ def add_delete_table_parser(operation_subparsers):
     return parser
 
 
-def execute_delete_table(main_parser, parsed_args):
+def execute_delete_table(main_parser: AitoArgParser, parsed_args):
     client = create_client_from_parsed_args(main_parser, parsed_args)
     table_name = parsed_args['table-name']
     if main_parser.ask_confirmation(f"Confirm delete table '{table_name}'? The action is irreversible", False):
@@ -131,7 +131,7 @@ def add_delete_database_parser(operation_subparsers):
     return parser
 
 
-def execute_delete_database(main_parser, parsed_args):
+def execute_delete_database(main_parser: AitoArgParser, parsed_args):
     client = create_client_from_parsed_args(main_parser, parsed_args)
     if main_parser.ask_confirmation(f"Confirm delete the whole database? The action is irreversible", False):
         client.delete_database()
@@ -149,7 +149,7 @@ Example:
     parser.add_argument('input', default='-', type=str, nargs='?', help='input file or stream in JSON array format')
 
 
-def execute_upload_batch(main_parser, parsed_args):
+def execute_upload_batch(main_parser: AitoArgParser, parsed_args):
     client = create_client_from_parsed_args(main_parser, parsed_args)
     table_name = parsed_args['table-name']
     if parsed_args['input'] == '-':
@@ -176,7 +176,7 @@ def add_upload_file_parser(operation_subparsers):
                         default='infer', help='specify input file format (default: infer from the file extension)')
 
 
-def execute_upload_file(main_parser, parsed_args):
+def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     client = create_client_from_parsed_args(main_parser, parsed_args)
     table_name = parsed_args['table-name']
 
@@ -240,7 +240,7 @@ Example:
                                                           parser_class=AitoArgParser,
                                                           dest="operation",
                                                           metavar="<operation>")
-    operation_subparsers.required=True
+    operation_subparsers.required = True
 
     add_quick_add_table_parser(operation_subparsers)
     add_create_table_parser(operation_subparsers)
@@ -250,7 +250,7 @@ Example:
     add_upload_file_parser(operation_subparsers)
 
 
-def execute_database_operation(main_parser, parsed_args):
+def execute_database_operation(main_parser: AitoArgParser, parsed_args):
     if parsed_args['operation'] == 'quick-add-table':
         execute_quick_add_table(main_parser, parsed_args)
     elif parsed_args['operation'] == 'create-table':

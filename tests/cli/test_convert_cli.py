@@ -3,7 +3,7 @@ import os
 
 import ndjson
 
-from aito.cli.main_parser import MainParser
+from aito.cli.main_parser_wrapper import MainParserWrapper
 from tests.test_case import TestCaseCompare
 
 
@@ -129,14 +129,14 @@ class TestConvertCli(TestCaseCompare):
                               ndjson.load((self.input_folder / 'invoice_altered.ndjson').open()))
 
     def test_excel_to_ndjson_std_in(self):
-        main_parser = MainParser()
+        main_parser = MainParserWrapper()
         with self.assertRaises(SystemExit) as context:
             main_parser.parse_and_execute(['convert', 'excel', '-'])
         self.assertEqual(context.exception.code, 2)
 
     def test_both_create_and_use_schema(self):
         schema_out_path = self.output_folder / f"{self.method_name}_schema_out.json"
-        main_parser = MainParser()
+        main_parser = MainParserWrapper()
         with self.assertRaises(SystemExit) as context:
             main_parser.parse_and_execute(['convert', 'csv', f"-c={schema_out_path}",
                                            f"-s={self.input_folder / 'invoice_aito_schema_altered.json'}"])

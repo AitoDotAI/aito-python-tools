@@ -2,7 +2,7 @@ import json
 import os
 from subprocess import Popen, PIPE
 
-from aito.cli.main_parser import MainParser
+from aito.cli.main_parser_wrapper import MainParserWrapper
 from aito.utils.aito_client import AitoClient
 from tests.test_case import TestCaseCompare
 
@@ -12,7 +12,7 @@ class TestDatabaseParser(TestCaseCompare):
     def setUpClass(cls):
         super().setUpClass(test_path='cli/client')
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
-        cls.main_parser = MainParser()
+        cls.main_parser = MainParserWrapper()
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
 
