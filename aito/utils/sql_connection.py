@@ -1,5 +1,6 @@
 import pyodbc
 import pandas as pd
+import logging
 
 
 class SQLConnectionError(Exception):
@@ -42,18 +43,21 @@ class SQLConnection():
             connection.setencoding(encoding='utf-8')
 
         self.connection = connection
+        self.logger = logging.getLogger('SQLConnection')
 
-    @staticmethod
-    def save_cursor_result_to_df(cursor: pyodbc.Cursor) -> pd.DataFrame:
+    def save_cursor_result_to_df(self, cursor: pyodbc.Cursor) -> pd.DataFrame:
         descriptions = cursor.description
         col_names = [desc[0] for desc in descriptions]
-        return pd.DataFrame.from_records(cursor.fetchall(), columns=col_names)
+        df = pd.DataFrame.from_records(cursor.fetchall(), columns=col_names)
+        self.logger.debug('Query result saved to Dataframe')
+        return df
 
     def execute_query(self, query_string: str) -> pyodbc.Cursor:
         try:
             cursor = self.connection.execute(query_string)
         except Exception as e:
-            raise SQLConnectionError(f"Failed to execute query: {e}")
+            raise SQLConnectionError(f"Failed to execute query {query_string}: {e}")
+        self.logger.debug('Query executed')
         return cursor
 
     def execute_query_and_save_result(self, query: str) -> pd.DataFrame:

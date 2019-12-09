@@ -30,7 +30,6 @@ class TestPostgresConnection(TestCaseCompare):
         cursor.close()
 
     def test_query_all(self):
-        self.maxDiff = None
         cursor = self.connection.execute_query('SELECT * FROM invoice;')
         col_names = [desc[0] for desc in cursor.description]
         results_as_json = []
@@ -40,10 +39,8 @@ class TestPostgresConnection(TestCaseCompare):
                 row_as_json[col_names[idx]] = cell
             results_as_json.append(row_as_json)
 
-        print('results as json', results_as_json)
         with (self.input_folder / 'invoice.json').open() as f:
             expected_results = json.load(f)
-        print(expected_results)
         self.assertCountEqual(results_as_json, expected_results)
         cursor.close()
 
@@ -56,19 +53,17 @@ class TestPostgresCli(TestCaseCompare):
         env_vars = os.environ
 
         # Populate data to Postgres DB
-        cls.connection = SQLConnection(
+        connection = SQLConnection(
             'postgres', server=env_vars.get('SERVER'), database=env_vars.get('DATABASE'),
             port=env_vars.get('PORT'), user=env_vars.get('USER'), pwd=env_vars.get('PASS'))
-        c = cls.connection.execute_query('DROP TABLE IF EXISTS invoice;')
-        c.close()
+        connection.execute_query('DROP TABLE IF EXISTS invoice;')
         with (cls.input_folder / 'create_table.sql').open() as f:
             query = f.read()
-        c = cls.connection.execute_query(query)
-        c.close()
+        connection.execute_query(query)
         with (cls.input_folder / 'insert_into_table.sql').open() as f:
             query = f.read()
-        c = cls.connection.execute_query(query)
-        c.close()
+        connection.execute_query(query)
+        connection.close()
 
         cls.client = AitoClient(env_vars['AITO_INSTANCE_NAME'], env_vars['AITO_RW_KEY'], env_vars['AITO_RO_KEY'])
 

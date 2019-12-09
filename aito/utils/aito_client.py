@@ -162,9 +162,9 @@ class AitoClient:
         return r
 
     def put_table_schema(self, table_name, table_schema):
-        self.logger.info(f"Creating table '{table_name}' schema...")
+        self.logger.info(f"Creating table '{table_name}'...")
         r = self.request('PUT', f"/api/v1/schema/{table_name}", table_schema)
-        self.logger.info(f"Table '{table_name}' schema created")
+        self.logger.info(f"Table '{table_name}' created")
         return r
 
     def delete_table(self, table_name):
