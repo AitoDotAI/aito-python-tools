@@ -49,15 +49,6 @@ class TestDataFrameHandler(TestCaseCompare):
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'invoice_id_reversed.ndjson').open()))
 
-    def test_generate_schema(self):
-        schema_file_path = self.output_folder / f"{self.method_name}_schema_out.json"
-        self.df_handler.convert_file(self.input_folder / 'invoice.csv', self.out_file_path, 'csv', 'ndjson',
-                                     create_table_schema=schema_file_path)
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice_altered.ndjson').open()))
-        self.assertDictEqual(json.load(schema_file_path.open()),
-                             json.load((self.input_folder / 'invoice_aito_schema.json').open()))
-
     def test_csv_to_ndjson_with_aito_schema(self):
         with (self.input_folder / 'invoice_aito_schema_altered.json').open() as f:
             schema_altered = json.load(f)
