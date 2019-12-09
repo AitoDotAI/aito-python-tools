@@ -14,6 +14,8 @@ class TestPostgresConnection(TestCaseCompare):
         cls.connection = SQLConnection(
             'postgres', server=env_variables.get('SERVER'), database=env_variables.get('DATABASE'),
             port=env_variables.get('PORT'), user=env_variables.get('USER'), pwd=env_variables.get('PASS'))
+        c = cls.connection.execute_query('DROP TABLE IF EXISTS invoice;')
+        c.close()
 
     def test_create_table(self):
         with (self.input_folder / 'create_table.sql').open() as f:
@@ -28,6 +30,7 @@ class TestPostgresConnection(TestCaseCompare):
         cursor.close()
 
     def test_query_all(self):
+        self.maxDiff = None
         cursor = self.connection.execute_query('SELECT * FROM invoice;')
         col_names = [desc[0] for desc in cursor.description]
         results_as_json = []
@@ -37,13 +40,15 @@ class TestPostgresConnection(TestCaseCompare):
                 row_as_json[col_names[idx]] = cell
             results_as_json.append(row_as_json)
 
+        print('results as json', results_as_json)
         with (self.input_folder / 'invoice.json').open() as f:
             expected_results = json.load(f)
+        print(expected_results)
         self.assertCountEqual(results_as_json, expected_results)
         cursor.close()
 
 
-class TestPostgresCLI(TestCaseCompare):
+class TestPostgresCli(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
         super().setUpClass(test_path='sql_functions/sql_connector')
@@ -54,7 +59,7 @@ class TestPostgresCLI(TestCaseCompare):
         cls.connection = SQLConnection(
             'postgres', server=env_vars.get('SERVER'), database=env_vars.get('DATABASE'),
             port=env_vars.get('PORT'), user=env_vars.get('USER'), pwd=env_vars.get('PASS'))
-        c = cls.connection.execute_query('DROP DATABASE [IF EXISTS] invoice;')
+        c = cls.connection.execute_query('DROP TABLE IF EXISTS invoice;')
         c.close()
         with (cls.input_folder / 'create_table.sql').open() as f:
             query = f.read()
@@ -62,7 +67,7 @@ class TestPostgresCLI(TestCaseCompare):
         c.close()
         with (cls.input_folder / 'insert_into_table.sql').open() as f:
             query = f.read()
-        c = c.connection.execute_query(query)
+        c = cls.connection.execute_query(query)
         c.close()
 
         cls.client = AitoClient(env_vars['AITO_INSTANCE_NAME'], env_vars['AITO_RW_KEY'], env_vars['AITO_RO_KEY'])

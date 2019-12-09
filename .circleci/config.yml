@@ -107,11 +107,11 @@ jobs:
             done
             echo Failed waiting for Postgres && exit 1
       - run:
-          name: run postgres connection tests
+          name: run postgres tests
           command: |
             . venv/bin/activate
             python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresConnection
-            python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresCLI
+            python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresCli
 
 
       - store_artifacts:
