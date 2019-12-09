@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from aito.cli.parser import AitoArgParser
 from aito.utils.aito_client import AitoClient
 from aito.utils.data_frame_handler import DataFrameHandler
+from aito.utils.schema_handler import SchemaHandler
 
 
 def create_client_from_parsed_args(main_parser: AitoArgParser, parsed_args):
@@ -58,28 +59,24 @@ def execute_quick_add_table(main_parser: AitoArgParser, parsed_args):
         else parsed_args['file_format']
 
     converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
-    schema_tmp_file = tempfile.TemporaryFile(mode='w+', delete=True)
-
     convert_options = {
         'read_input': input_file_path,
-        'write_output': converted_tmp_file,
+        'write_output': Path(converted_tmp_file.name),
         'in_format': in_format,
         'out_format': 'ndjson',
-        'convert_options': {'compression': 'gzip'},
-        'create_table_schema': schema_tmp_file
+        'convert_options': {'compression': 'gzip'}
     }
     df_handler = DataFrameHandler()
-    df_handler.convert_file(**convert_options)
+    converted_df = df_handler.convert_file(**convert_options)
     converted_tmp_file.seek(0)
-    schema_tmp_file.seek(0)
+
+    schema_handler = SchemaHandler()
+    inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(converted_df)
 
     client = create_client_from_parsed_args(main_parser, parsed_args)
-    inferred_schema = json.load(schema_tmp_file)
     client.put_table_schema(table_name, inferred_schema)
     client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
-
     converted_tmp_file.close()
-    schema_tmp_file.close()
     return 0
 
 
@@ -187,7 +184,7 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
     convert_options = {
         'read_input': input_file_path,
-        'write_output': converted_tmp_file,
+        'write_output': Path(converted_tmp_file.name),
         'in_format': in_format,
         'out_format': 'ndjson',
         'convert_options': {'compression': 'gzip'},

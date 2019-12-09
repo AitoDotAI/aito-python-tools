@@ -4,6 +4,7 @@ import sys
 
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.cli.parser import AitoArgParser
+from aito.utils.schema_handler import SchemaHandler
 
 
 def add_convert_format_parser(format_subparsers, format_name):
@@ -102,15 +103,14 @@ def execute_convert(main_parser: AitoArgParser, parsed_args):
             'encoding': parsed_args['encoding']
         },
         'convert_options': {},
-        'create_table_schema':
-            main_parser.check_valid_path(parsed_args['create_table_schema'])
-            if parsed_args['create_table_schema'] else None,
     }
 
+    schema_handler = SchemaHandler()
     if parsed_args['use_table_schema']:
         schema_path = main_parser.check_valid_path(parsed_args['use_table_schema'], check_exists=True)
         with schema_path.open() as f:
             table_schema = json.load(f)
+        schema_handler.validate_table_schema(table_schema)
         convert_args['use_table_schema'] = table_schema
 
     if in_format == 'csv':
@@ -123,5 +123,12 @@ def execute_convert(main_parser: AitoArgParser, parsed_args):
         if parsed_args['one_sheet']:
             convert_args['read_options']['sheet_name'] = parsed_args['one_sheet']
 
-    DataFrameHandler().convert_file(**convert_args)
+    converted_df = DataFrameHandler().convert_file(**convert_args)
+
+    if parsed_args['create_table_schema']:
+        output_schema_path = main_parser.check_valid_path(parsed_args['create_table_schema'])
+        inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(converted_df)
+        with output_schema_path.open(mode='w') as f:
+            json.dump(inferred_schema, f, indent=2, sort_keys=True)
+
     return 0

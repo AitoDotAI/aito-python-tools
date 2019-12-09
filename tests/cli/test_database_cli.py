@@ -7,7 +7,7 @@ from aito.utils.aito_client import AitoClient
 from tests.test_case import TestCaseCompare
 
 
-class TestDatabaseParser(TestCaseCompare):
+class TestDatabaseCli(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
         super().setUpClass(test_path='cli/client')
