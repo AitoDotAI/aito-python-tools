@@ -2,32 +2,28 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
+import tempfile
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-from aito.utils.aito_client import AitoClient
 from aito.cli.parser import AitoArgParser
+from aito.utils.aito_client import AitoClient
 from aito.utils.data_frame_handler import DataFrameHandler
 
 
-def create_client_from_parsed_args(main_parser, parsed_args):
-    def get_env_variable(variable_name):
-        if variable_name not in env_var:
-            main_parser.error(f"{variable_name} env variable not found")
-        return env_var[variable_name]
-
+def create_client_from_parsed_args(main_parser: AitoArgParser, parsed_args):
     if parsed_args['use_env_file']:
         env_file_path = main_parser.check_valid_path(parsed_args['use_env_file'], True)
         load_dotenv(env_file_path)
-    env_var = os.environ
 
+    env_variables = os.environ
     client_args = {
-        'instance_name': get_env_variable('AITO_INSTANCE_NAME') if parsed_args['instance_name'] == '.env' 
+        'instance_name': env_variables.get('AITO_INSTANCE_NAME') if parsed_args['instance_name'] == '.env'
         else parsed_args['instance_name'],
-        'rw_key': get_env_variable('AITO_RW_KEY') if parsed_args['read_write_key'] == '.env'
+        'rw_key': env_variables.get('AITO_RW_KEY') if parsed_args['read_write_key'] == '.env'
         else parsed_args['read_write_key'],
-        'ro_key': get_env_variable('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
+        'ro_key': env_variables.get('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
         else parsed_args['read_only_key']
     }
     return AitoClient(**client_args)
@@ -61,29 +57,29 @@ def execute_quick_add_table(main_parser: AitoArgParser, parsed_args):
     in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
         else parsed_args['file_format']
 
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    converted_file_path = input_file_path.parent / f"{input_file_path.stem}_{now}.ndjson.gz"
-    schema_path = input_file_path.parent / f"{table_name}_schema_{now}.json"
+    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
+    schema_tmp_file = tempfile.TemporaryFile(mode='w+', delete=True)
+
     convert_options = {
         'read_input': input_file_path,
-        'write_output': converted_file_path,
+        'write_output': converted_tmp_file,
         'in_format': in_format,
         'out_format': 'ndjson',
         'convert_options': {'compression': 'gzip'},
-        'create_table_schema': schema_path
+        'create_table_schema': schema_tmp_file
     }
     df_handler = DataFrameHandler()
     df_handler.convert_file(**convert_options)
+    converted_tmp_file.seek(0)
+    schema_tmp_file.seek(0)
 
     client = create_client_from_parsed_args(main_parser, parsed_args)
-    with schema_path.open() as f:
-        inferred_schema = json.load(f)
+    inferred_schema = json.load(schema_tmp_file)
     client.put_table_schema(table_name, inferred_schema)
-    client.populate_table_by_file_upload(table_name, converted_file_path)
+    client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
 
-    if converted_file_path.exists():
-        converted_file_path.unlink()
-    schema_path.unlink()
+    converted_tmp_file.close()
+    schema_tmp_file.close()
     return 0
 
 
@@ -188,11 +184,10 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
         else parsed_args['file_format']
 
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    converted_file_path = input_file_path.parent / f"{input_file_path.stem}_{now}.ndjson.gz"
+    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
     convert_options = {
         'read_input': input_file_path,
-        'write_output': converted_file_path,
+        'write_output': converted_tmp_file,
         'in_format': in_format,
         'out_format': 'ndjson',
         'convert_options': {'compression': 'gzip'},
@@ -200,10 +195,8 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     }
     df_handler = DataFrameHandler()
     df_handler.convert_file(**convert_options)
-    client.populate_table_by_file_upload(table_name, converted_file_path)
-
-    if converted_file_path.exists():
-        converted_file_path.unlink()
+    client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
+    converted_tmp_file.close()
     return 0
 
 
