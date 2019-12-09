@@ -29,13 +29,11 @@ class TestPostgresConnection(TestCaseCompare):
 
     def test_query_all(self):
         cursor = self.connection.execute_query('SELECT * FROM invoice;')
-        descriptions = cursor.description
-        col_names = [desc[0] for desc in descriptions]
-        results = cursor.fetchall()
+        col_names = [desc[0] for desc in cursor.description]
         results_as_json = []
-        for row in results:
+        for row in cursor.fetchall():
             row_as_json = {}
-            for idx, cell in row:
+            for idx, cell in enumerate(row):
                 row_as_json[col_names[idx]] = cell
             results_as_json.append(row_as_json)
 
