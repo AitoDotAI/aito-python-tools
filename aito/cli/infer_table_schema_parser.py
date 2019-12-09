@@ -81,7 +81,7 @@ Example:
                                                      parser_class=AitoArgParser,
                                                      dest='input-format',
                                                      metavar="<input-format>")
-    format_sub_parsers.required=True
+    format_sub_parsers.required = True
 
     add_infer_csv_parser(format_sub_parsers)
     add_infer_excel_parser(format_sub_parsers)

@@ -41,9 +41,8 @@ def add_convert_csv_parser(format_subparsers):
 def add_convert_excel_parser(format_subparsers):
     parser = add_convert_format_parser(format_subparsers, 'excel')
     parser.description = 'Convert excel format input, accept both xls and xlsx. ' \
-                                       'Read the first sheet of the file by default'
-    parser.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name',
-                                      help='read a sheet of the excel file')
+                         'Read the first sheet of the file by default'
+    parser.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name', help='read a sheet of the excel file')
     parser.epilog = '''Example:
     aito convert excel ./myFile.xls
     aito convert excel -o firstSheet myMultipleSheetsFile.xslx
@@ -85,7 +84,7 @@ Example:
                                                       parser_class=AitoArgParser,
                                                       dest='input-format',
                                                       metavar='<input-format>')
-    format_subparsers.required=True
+    format_subparsers.required = True
     add_convert_csv_parser(format_subparsers)
     add_convert_excel_parser(format_subparsers)
     add_convert_json_parser(format_subparsers)

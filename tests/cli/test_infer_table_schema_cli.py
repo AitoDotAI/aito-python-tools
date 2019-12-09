@@ -20,41 +20,41 @@ class TestInferTableSchemaCli(TestCaseCompare):
                               json.load((self.input_folder / 'invoice_aito_schema.json').open()))
 
     def test_infer_schema_from_csv(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema csv < {self.input_folder}/invoice.csv > "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema csv < {self.input_folder}/invoice.csv > "
                   f"{self.out_file_path}")
 
     def test_infer_schema_from_csv_file_path(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema csv {self.input_folder}/invoice.csv > "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema csv {self.input_folder}/invoice.csv > "
                   f"{self.out_file_path}")
 
     def test_infer_schema_from__csv_semicolon(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema csv -d ';' "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema csv -d ';' "
                   f"< {self.input_folder}/invoice.csv > {self.out_file_path}")
 
     def test_infer_schema_from_csv_semicolon_comma_decimal(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema csv -d ';' -p ',' "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema csv -d ';' -p ',' "
                   f"< {self.input_folder}/invoice.csv > {self.out_file_path}")
 
     def test_infer_schema_from_excel_file_path(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema excel {self.input_folder}/invoice.xlsx > "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema excel {self.input_folder}/invoice.xlsx > "
                   f"{self.out_file_path}")
 
     def test_infer_schema_from_excel_one_sheet(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema excel  -o Sheet2 "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema excel  -o Sheet2 "
                   f"{self.input_folder}/invoice_multi_sheets.xlsx > {self.out_file_path}")
 
     def test_infer_schema_from_json(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema json < "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema json < "
                   f"{self.input_folder}/invoice.json > {self.out_file_path}")
 
     def test_infer_schema_from_json_file_path(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema json {self.input_folder}/invoice.json > "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema json {self.input_folder}/invoice.json > "
                   f"{self.out_file_path}")
 
     def test_infer_schema_from_ndjson(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema ndjson < "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema ndjson < "
                   f"{self.input_folder}/invoice.ndjson > {self.out_file_path}")
 
     def test_infer_schema_from_ndjson_file_path(self):
-        os.system(f"python -m aito.cli.main_parser infer-table-schema ndjson {self.input_folder}/invoice.ndjson "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema ndjson {self.input_folder}/invoice.ndjson "
                   f"> {self.out_file_path}")
