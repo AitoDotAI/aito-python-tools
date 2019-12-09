@@ -171,7 +171,7 @@ class DataFrameHandler:
             self.df_to_format(df, out_format, write_output, convert_options)
 
         if create_table_schema:
-            schema = self.schema_handler.generate_table_schema_from_pandas_dataframe(df)
+            schema = self.schema_handler.infer_table_schema_from_pandas_dataframe(df)
             with create_table_schema.open(mode='w') as f:
                 json.dump(schema, f, indent=4, sort_keys=True)
 

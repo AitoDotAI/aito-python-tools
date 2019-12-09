@@ -54,7 +54,7 @@ class SchemaHandler:
         dtypes = pd.api.types.infer_dtype(values, skipna=True)
         return self.pandas_dtypes_name_to_aito_type[dtypes]
 
-    def generate_table_schema_from_pandas_dataframe(self, table_df: pd.DataFrame):
+    def infer_table_schema_from_pandas_dataframe(self, table_df: pd.DataFrame):
         """
         Return aito schema in dictionary format
         :param table_df: The pandas DataFrame containing table data

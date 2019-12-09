@@ -18,7 +18,7 @@ class TestSchemaHandler(TestCaseCompare):
     def test_generate_table_schema_from_df(self):
         df_handler = DataFrameHandler()
         df = df_handler.read_file_to_df(self.input_folder / 'invoice.csv', 'csv')
-        table_schema = self.schema_handler.generate_table_schema_from_pandas_dataframe(df)
+        table_schema = self.schema_handler.infer_table_schema_from_pandas_dataframe(df)
         self.assertDictEqual(table_schema, json.load((self.input_folder / 'invoice_aito_schema.json').open()))
 
     def test_validate_table_schema(self):

@@ -109,6 +109,6 @@ def execute_infer_table_schema(main_parser: AitoArgParser, parsed_args):
             read_args['read_options']['sheet_name'] = parsed_args['one_sheet']
 
     df = DataFrameHandler().read_file_to_df(**read_args)
-    inferred_schema = SchemaHandler().generate_table_schema_from_pandas_dataframe(df)
+    inferred_schema = SchemaHandler().infer_table_schema_from_pandas_dataframe(df)
     json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
     return 0
