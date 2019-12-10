@@ -7,7 +7,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from aito.cli.parser import AitoArgParser
+from aito.utils.parser import AitoArgParser
 from aito.utils.aito_client import AitoClient
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.schema_handler import SchemaHandler

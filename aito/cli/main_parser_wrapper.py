@@ -1,4 +1,3 @@
-import argparse
 import logging
 import sys
 
@@ -7,7 +6,7 @@ import argcomplete
 from aito.cli.convert_parser import add_convert_parser, execute_convert
 from aito.cli.infer_table_schema_parser import add_infer_table_schema_parser, execute_infer_table_schema
 from aito.cli.database_parser import add_database_parser, execute_database_operation
-from aito.cli.parser import AitoArgParser, ParserWrapper
+from aito.utils.parser import AitoArgParser, ParserWrapper
 
 
 class MainParserWrapper(ParserWrapper):
