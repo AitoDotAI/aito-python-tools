@@ -57,11 +57,18 @@ class TestPostgresCli(TestCaseCompare):
     def setUp(self):
         super().setUp()
         self.client.delete_database()
+        self.out_file_path = self.output_folder / f"{self.method_name}_out.json"
 
     def create_table(self):
         with (self.input_folder / "invoice_aito_schema.json").open() as f:
             table_schema = json.load(f)
         self.client.put_table_schema('invoice', table_schema)
+
+    def test_infer_schema_from_query(self):
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema from-sql postgres "
+                  f"'SELECT * FROM invoice' > {self.out_file_path}")
+        self.assertCountEqual(json.load(self.out_file_path.open()),
+                              json.load((self.input_folder / 'invoice_aito_schema.json').open()))
 
     def test_upload_data_from_query(self):
         self.create_table()
