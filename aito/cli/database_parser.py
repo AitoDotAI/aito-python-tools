@@ -46,10 +46,9 @@ def create_sql_connecting_from_parsed_args(parsed_args):
 
 def add_quick_add_table_parser(operation_subparsers):
     parser = operation_subparsers.add_parser(
-        'quick-add-table', help="infer schema, create table from file, and upload to the database"
+        'quick-add-table', help="infer schema, create table, and upload a file to the database"
     )
-    parser.epilog = '''Note: this operation requires write permission to create a ndjson file for file upload
-Example:
+    parser.epilog = '''Example:
   aito database quick-add-table myFile.json
   aito database quick-add-table --table-name aTableName myFile.csv
   aito database quick-add-table -n myTable -f csv myFile
@@ -146,7 +145,7 @@ def execute_delete_database(main_parser: AitoArgParser, parsed_args):
 
 
 def add_upload_batch_parser(operation_subparsers):
-    parser = operation_subparsers.add_parser('upload-batch', help='populate table entries to a table')
+    parser = operation_subparsers.add_parser('upload-batch', help='populate table entries to an existing table')
     parser.epilog = '''With no input, or when input is -, read table content from standard input
 Example:
   aito client upload-batch myTable path/to/myTableEntries.json
@@ -170,7 +169,7 @@ def execute_upload_batch(main_parser: AitoArgParser, parsed_args):
 
 
 def add_upload_file_parser(operation_subparsers):
-    parser = operation_subparsers.add_parser('upload-file', help='populate a file to a table')
+    parser = operation_subparsers.add_parser('upload-file', help='populate a file to an existing table')
     parser.epilog = '''Example:
   aito client upload-file tableName path/to/myFile.csv
   aito client upload-file -f csv tableName path/to/myFile.txt
@@ -214,7 +213,7 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
 
 def add_upload_data_from_sql_parser(operation_subparsers):
     parser = operation_subparsers.add_parser('upload-data-from-sql',
-                                             help="populate data from the result of a SQL query")
+                                             help="populate data from the result of a SQL query to an existing table")
     parser.add_argument('database-name', type=str, choices=['postgres'], help='database name')
     parser.add_argument('table-name', type=str, help='name of the table to be populated')
     parser.add_argument('query', type=str, help='query to get the data from your database')
@@ -246,6 +245,46 @@ def execute_upload_data_from_sql(main_parser: AitoArgParser, parsed_args):
     return 0
 
 
+def add_quick_add_table_from_sql_parser(operation_subparsers):
+    parser = operation_subparsers.add_parser(
+        'quick-add-table-from-sql',
+        help="infer schema, create table, and upload the result of a SQL to the database"
+    )
+    parser.add_argument('database-name', type=str, choices=['postgres'], help='database name')
+    parser.add_argument('table-name', type=str, help='name of the table to be populated')
+    parser.add_argument('query', type=str, help='query to get the data from your database')
+    parser.add_argument('--server', '-s', type=str, help='server to connect to', default='.env')
+    parser.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
+    parser.add_argument('--database', '-d', type=str, help='database to connect to', default='.env')
+    parser.add_argument('--user', '-u', type=str, help='username for authentication', default='.env')
+    parser.add_argument('--pass', '-p', type=str, help='password for authentication', default='.env')
+    parser.epilog = '''Each database requires different odbc driver. Please refer to our docs for more info.
+If no credential options is given, the following environment variable is used to connect to your SQL database:
+  SERVER, PORT, DATABASE, USER, PASS          
+  '''
+
+
+def execute_quick_add_table_from_sql(main_parser: AitoArgParser, parsed_args):
+    table_name = parsed_args['table-name']
+
+    connection = create_sql_connecting_from_parsed_args(parsed_args)
+    result_df = connection.execute_query_and_save_result(parsed_args['query'])
+
+    schema_handler = SchemaHandler()
+    inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(result_df)
+
+    dataframe_handler = DataFrameHandler()
+    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
+    dataframe_handler.df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
+    converted_tmp_file.seek(0)
+
+    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client.put_table_schema(table_name, inferred_schema)
+    client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
+    converted_tmp_file.close()
+    return 0
+
+
 def add_database_parser(action_subparsers):
     database_parser = action_subparsers.add_parser('database',
                                                    help='perform operations with your Aito database instance')
@@ -264,6 +303,7 @@ Example:
   aito database create-table tableName < path/to/tableSchema
   aito database -e path/to/myCredentials.env upload-file myTable path/to/myFile
   aito database -i MY_INSTANCE_NAME -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < path/to/myTableEntries
+  aito database quick-add-table-from-sql postgres tableName 'SELECT * FROM tableName;'
     '''
     credential_args = database_parser.add_argument_group("optional credential arguments")
     credential_args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
@@ -288,6 +328,7 @@ Example:
     add_upload_batch_parser(operation_subparsers)
     add_upload_file_parser(operation_subparsers)
     add_upload_data_from_sql_parser(operation_subparsers)
+    add_quick_add_table_from_sql_parser(operation_subparsers)
 
 
 def execute_database_operation(main_parser: AitoArgParser, parsed_args):
@@ -305,3 +346,5 @@ def execute_database_operation(main_parser: AitoArgParser, parsed_args):
         return execute_upload_file(main_parser, parsed_args)
     elif parsed_args['operation'] == 'upload-data-from-sql':
         return execute_upload_data_from_sql(main_parser, parsed_args)
+    elif parsed_args['operation'] == 'quick-add-table-from-sql':
+        return execute_quick_add_table_from_sql(main_parser, parsed_args)
