@@ -75,3 +75,8 @@ class TestPostgresCli(TestCaseCompare):
         os.system('python -m aito.cli.main_parser_wrapper database upload-data-from-sql postgres invoice '
                   '"SELECT * FROM invoice"')
         self.assertEqual(self.client.query_table_entries('invoice')['total'], 4)
+
+    def test_quick_add_table_from_query(self):
+        os.system('python -m aito.cli.main_parser_wrapper database quick-add-table-from-sql postgres invoice '
+                  '"SELECT * FROM invoice"')
+        self.assertEqual(self.client.query_table_entries('invoice')['total'], 4)
