@@ -79,4 +79,6 @@ class TestPostgresCli(TestCaseCompare):
     def test_quick_add_table_from_query(self):
         os.system('python -m aito.cli.main_parser_wrapper database quick-add-table-from-sql postgres invoice '
                   '"SELECT * FROM invoice"')
-        self.assertEqual(self.client.query_table_entries('invoice')['total'], 4)
+        table_entries_result = self.client.query_table_entries('invoice')
+        self.assertEqual(table_entries_result['total'], 4)
+        self.assertCountEqual(table_entries_result['hits'], json.load((self.input_folder / 'invoice.json').open()))
