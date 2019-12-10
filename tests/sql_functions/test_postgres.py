@@ -1,8 +1,9 @@
+import json
+import os
+
 from aito.utils.aito_client import AitoClient
 from aito.utils.sql_connection import SQLConnection
 from tests.test_case import TestCaseCompare
-import os
-import json
 
 
 class TestPostgresConnection(TestCaseCompare):

@@ -206,6 +206,7 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     }
     df_handler = DataFrameHandler()
     df_handler.convert_file(**convert_options)
+    converted_tmp_file.seek(0)
     client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
     converted_tmp_file.close()
     return 0
@@ -236,9 +237,10 @@ def execute_upload_data_from_sql(main_parser: AitoArgParser, parsed_args):
     dataframe_handler = DataFrameHandler()
 
     converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
-    dataframe_handler.df_to_format(result_df, 'ndjson', converted_tmp_file, {'compression': 'gzip'})
+    dataframe_handler.df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
 
     client = create_client_from_parsed_args(main_parser, parsed_args)
+    converted_tmp_file.seek(0)
     client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
     converted_tmp_file.close()
     return 0

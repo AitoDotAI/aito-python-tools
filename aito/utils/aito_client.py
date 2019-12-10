@@ -219,11 +219,11 @@ class AitoClient:
 
         self.logger.info("Uploading file to S3...")
         try:
-            requests.request(upload_req_method, s3_url, data=file_path.open(mode='rb'))
-            self.logger.info("Uploading file to S3 completed")
+            r = requests.request(upload_req_method, s3_url, data=file_path.open(mode='rb'))
+            r.raise_for_status()
         except Exception as e:
-            self.logger.error(f"Failed to upload file to S3: {e}")
-            raise e
+            raise ClientError(f"Failed to upload file to S3: {e}")
+        self.logger.info("Uploading file to S3 completed")
         self.logger.info("Triggering file processing...")
         self.request('POST', session_end_point)
 
