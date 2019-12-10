@@ -57,13 +57,16 @@ class TestPostgresCli(TestCaseCompare):
         connection = SQLConnection(
             'postgres', server=env_vars.get('SERVER'), database=env_vars.get('DATABASE'),
             port=env_vars.get('PORT'), user=env_vars.get('USER'), pwd=env_vars.get('PASS'))
-        connection.execute_query('DROP TABLE IF EXISTS invoice;')
+        c = connection.execute_query('DROP TABLE IF EXISTS invoice;')
+        c.close()
         with (cls.input_folder / 'create_table.sql').open() as f:
             query = f.read()
-        connection.execute_query(query)
+        c = connection.execute_query(query)
+        c.close()
         with (cls.input_folder / 'insert_into_table.sql').open() as f:
             query = f.read()
-        connection.execute_query(query)
+        c = connection.execute_query(query)
+        c.close()
         connection.close()
 
         cls.client = AitoClient(env_vars['AITO_INSTANCE_NAME'], env_vars['AITO_RW_KEY'], env_vars['AITO_RO_KEY'])
