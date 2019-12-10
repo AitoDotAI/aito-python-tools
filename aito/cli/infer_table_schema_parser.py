@@ -1,10 +1,31 @@
 import argparse
 import json
+import os
 import sys
 
-from aito.utils.parser import AitoArgParser
+from dotenv import load_dotenv
+
 from aito.utils.data_frame_handler import DataFrameHandler
+from aito.utils.parser import AitoArgParser
 from aito.utils.schema_handler import SchemaHandler
+from aito.utils.sql_connection import SQLConnection
+
+
+def create_sql_connecting_from_parsed_args(main_parser: AitoArgParser, parsed_args):
+    if parsed_args['use_env_file']:
+        env_file_path = main_parser.check_valid_path(parsed_args['use_env_file'], True)
+        load_dotenv(env_file_path)
+
+    env_variables = os.environ
+    args = {
+        'typ': parsed_args['database-name'],
+        'server': env_variables.get('SERVER') if parsed_args['server'] == '.env' else parsed_args['server'],
+        'port': env_variables.get('PORT') if parsed_args['port'] == '.env' else parsed_args['port'],
+        'database': env_variables.get('DATABASE') if parsed_args['database'] == '.env' else parsed_args['database'],
+        'user': env_variables.get('USER') if parsed_args['user'] == '.env' else parsed_args['user'],
+        'pwd': env_variables.get('PASS') if parsed_args['pass'] == '.env' else parsed_args['pass']
+    }
+    return SQLConnection(**args)
 
 
 def add_infer_format_parser(format_subparsers, format_name):
@@ -57,6 +78,32 @@ def add_infer_ndjson_parser(format_subparsers):
     return parser
 
 
+def add_infer_from_sql(format_subparsers):
+    parser = format_subparsers.add_parser('from-sql', help="infer table schema the result of a SQL query")
+    parser.add_argument('database-name', type=str, choices=['postgres'], help='database name')
+    parser.add_argument('query', type=str, help='query to get the data from your database')
+    credential_args = parser.add_argument_group("optional credential arguments")
+    credential_args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
+                                 help='set up the credentials using a .env file containing the required env variables')
+    credential_args.add_argument('--server', '-s', type=str, help='server to connect to', default='.env')
+    credential_args.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
+    credential_args.add_argument('--database', '-d', type=str, help='database to connect to', default='.env')
+    credential_args.add_argument('--user', '-u', type=str, help='username for authentication', default='.env')
+    credential_args.add_argument('--pass', '-p', type=str, help='password for authentication', default='.env')
+    parser.epilog = '''Each database requires different odbc driver. Please refer to our docs for more info.
+If no credential options is given, the following environment variable is used to connect to your SQL database:
+  SERVER, PORT, DATABASE, USER, PASS          
+  '''
+
+
+def execute_infer_from_sql(main_parser: AitoArgParser, parsed_args):
+    connection = create_sql_connecting_from_parsed_args(main_parser, parsed_args)
+    result_df = connection.execute_query_and_save_result(parsed_args['query'])
+    inferred_schema = SchemaHandler().infer_table_schema_from_pandas_dataframe(result_df)
+    json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
+    return 0
+
+
 def add_infer_table_schema_parser(action_subparsers):
     """
     :param action_subparsers: Action subparsers from the main parser
@@ -87,10 +134,14 @@ Example:
     add_infer_excel_parser(format_sub_parsers)
     add_infer_json_parser(format_sub_parsers)
     add_infer_ndjson_parser(format_sub_parsers)
+    add_infer_from_sql(format_sub_parsers)
 
 
 def execute_infer_table_schema(main_parser: AitoArgParser, parsed_args):
     in_format = parsed_args['input-format']
+    if in_format == 'from-sql':
+        return execute_infer_from_sql(main_parser, parsed_args)
+
     read_args = {
         'read_input': main_parser.parse_input_arg_value(parsed_args['input']),
         'in_format': in_format,

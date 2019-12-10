@@ -267,7 +267,7 @@ Example:
     '''
     credential_args = database_parser.add_argument_group("optional credential arguments")
     credential_args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
-                                 help='set up the client using a .env file containing the required env variables')
+                                 help='set up the credentials using a .env file containing the required env variables')
     credential_args.add_argument('-r', '--read-only-key', type=str, default='.env',
                                  help='specify aito read-only API key')
     credential_args.add_argument('-i', '--instance-name', type=str, default='.env', help='specify aito instance name')
@@ -292,18 +292,16 @@ Example:
 
 def execute_database_operation(main_parser: AitoArgParser, parsed_args):
     if parsed_args['operation'] == 'quick-add-table':
-        execute_quick_add_table(main_parser, parsed_args)
+        return execute_quick_add_table(main_parser, parsed_args)
     elif parsed_args['operation'] == 'create-table':
-        execute_create_table(main_parser, parsed_args)
+        return execute_create_table(main_parser, parsed_args)
     elif parsed_args['operation'] == 'delete-table':
-        execute_delete_table(main_parser, parsed_args)
+        return execute_delete_table(main_parser, parsed_args)
     elif parsed_args['operation'] == 'delete-database':
-        execute_delete_database(main_parser, parsed_args)
+        return execute_delete_database(main_parser, parsed_args)
     elif parsed_args['operation'] == 'upload-batch':
-        execute_upload_batch(main_parser, parsed_args)
+        return execute_upload_batch(main_parser, parsed_args)
     elif parsed_args['operation'] == 'upload-file':
-        execute_upload_file(main_parser, parsed_args)
+        return execute_upload_file(main_parser, parsed_args)
     elif parsed_args['operation'] == 'upload-data-from-sql':
-        execute_upload_data_from_sql(main_parser, parsed_args)
-
-    return 0
+        return execute_upload_data_from_sql(main_parser, parsed_args)

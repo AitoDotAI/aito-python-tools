@@ -39,7 +39,7 @@ class AitoArgParser(argparse.ArgumentParser):
         elif default:
             prompt = '[Y/n]'
         else:
-            prompt= '[y/N]'
+            prompt = '[y/N]'
         while True:
             sys.stdout.write(f"{content} {prompt}")
             response = input().lower()
@@ -51,7 +51,7 @@ class AitoArgParser(argparse.ArgumentParser):
                 sys.stdout.write("Please respond with yes(y) or no(n)'\n")
 
 
-class ParserWrapper():
+class ParserWrapper:
     def __init__(self, add_help=True):
         if add_help:
             self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter)
@@ -59,5 +59,5 @@ class ParserWrapper():
             self.parser = AitoArgParser(formatter_class=argparse.RawTextHelpFormatter, add_help=False)
 
     @abstractmethod
-    def parse_and_execute(self, parsing_argsw):
+    def parse_and_execute(self, parsing_args):
         pass
