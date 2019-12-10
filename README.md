@@ -1,7 +1,9 @@
 # aito-python-tools
 [![PyPI](https://img.shields.io/pypi/pyversions/aitoai?style=plastic)](https://github.com/AitoDotAI/aito-python-tools) [![PyPI version](https://badge.fury.io/py/aitoai.svg)](https://badge.fury.io/py/aitoai)
 
-A useful library for [Aito](https://aito.ai/) users containg:
+_DISCLAIMER: aito-python-tools repository is experimental code that we are already using ourselves. It might be a bit rough on the edges and is not yet ready for production grade release. We are constantly developing it and changes are likely. Feel free to use, and share any feedback with us.
+
+A useful library for [Aito](https://aito.ai/) users containing:
 * CLI for using Aito
 * Integration with [Pandas](https://pandas.pydata.org/)
 
