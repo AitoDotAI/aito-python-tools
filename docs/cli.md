@@ -1,6 +1,8 @@
 # Aito Command Line Interface
 
-The aito CLI tool aims to help you get upload your data to Aito instance as fast as possible
+_DISCLAIMER: Aito Command Line Interface repository is experimental code that we are already using ourselves. It might be a bit rough on the edges and is not yet ready for production grade release. We are constantly developing it and changes are likely. Feel free to use, and share any feedback with us._
+
+The Aito CLI tool aims to help you get upload your data to your Aito instance as fast as possible.
 
 ## Installation
 
