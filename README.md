@@ -43,9 +43,9 @@ More instructions can be found [here](docs/cli.md/#tab-completion)
 
 For addition guide of the CLI tool, see the [CLI documentations](docs/cli.md)
 
-### Integrating with [pandas](https://pandas.pydata.org/) DataFrame
+### Integrating with [Pandas](https://pandas.pydata.org/) DataFrame
 
-* Generate Aito Schema from a pandas DataFrame:
+* Generate Aito Schema from a Pandas DataFrame:
   ```python
   from aito.utils.schema_handler import SchemaHandler
 
