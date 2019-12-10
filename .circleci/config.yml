@@ -20,9 +20,11 @@ commonYAMLStructure:
         - v1-dependencies-
   - &install_odbc
     run:
+      name: install odbc driver
       command: sudo apt install unixodbc-dev
   - &install_venv_dependencies
     run:
+      name: install python requirements
       command: |
         python3 -m venv venv
         . venv/bin/activate
@@ -32,6 +34,12 @@ commonYAMLStructure:
       paths:
         - ./venv
       key: v1-dependencies-{{ checksum "requirements.txt" }}
+  - &install-psql
+    run:
+      name: install psql
+      command:          |
+        sudo apt-get -qy update
+        sudo apt-get install postgresql-client
 
 jobs:
   runUnittestsExceptSQLConnectionTests:
@@ -94,7 +102,7 @@ jobs:
       - *install_venv_dependencies
       - *save_venv_cache
       - run:
-          name: install postgres odb
+          name: install postgres odbc
           command: |
             sudo apt-get install odbc-postgresql
       - run:
@@ -112,29 +120,28 @@ jobs:
           command: |
             . venv/bin/activate
             python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresConnection
-
-      - run: sudo apt-get update
-      - run: sudo apt-get install postgresql-client-9.6
+      - *install-psql
       - run: whoami
       - run:
           name: prepare data
           command: |
             psql "$CONNECTION_STRING" -c "DROP TABLE IF EXISTS invoice;"
-            psql "$CONNECTION_STRING" -c 'CREATE TABLE invoice(
+            psql "$CONNECTION_STRING" -c "CREATE TABLE invoice(
               id serial primary key,
               name VARCHAR(355) not null,
               amount double precision not null,
-              "Remark" VARCHAR (355)
-            );'
-            psql "$CONNECTION_STRING" -c 'INSERT INTO invoice(name, amount, "Remark") VALUES
+              \"Remark\" VARCHAR (355)
+            );"
+            psql "$CONNECTION_STRING" -c "INSERT INTO invoice(name, amount, \"Remark\") VALUES
               ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
               (E'Sam \"Mad Dog\" Smith', 993.44, NULL),
               ('Barney & Company', 0, E'Great to work with\nand always pays with cash.'),
-              (E'Johnson\'s Automotive', 2344, NULL);'
+              (E'Johnson\'s Automotive', 2344, NULL);"
 
       - run:
           name: run cli tests
           command:
+            . venv/bin/activate
             python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresCli
 
 
