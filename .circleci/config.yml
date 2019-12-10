@@ -78,6 +78,7 @@ jobs:
           DATABASE: circleci_test
           USER: test
           PASS: test_pw
+          CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
@@ -107,10 +108,33 @@ jobs:
             done
             echo Failed waiting for Postgres && exit 1
       - run:
-          name: run postgres tests
+          name: run connection tests
           command: |
             . venv/bin/activate
             python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresConnection
+
+      - run: sudo apt-get update
+      - run: sudo apt-get install postgresql-client-9.6
+      - run: whoami
+      - run:
+          name: prepare data
+          command: |
+            psql "$CONNECTION_STRING" -c "DROP TABLE IF EXISTS invoice;"
+            psql "$CONNECTION_STRING" -c 'CREATE TABLE invoice(
+              id serial primary key,
+              name VARCHAR(355) not null,
+              amount double precision not null,
+              "Remark" VARCHAR (355)
+            );'
+            psql "$CONNECTION_STRING" -c 'INSERT INTO invoice(name, amount, "Remark") VALUES
+              ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
+              (E'Sam \"Mad Dog\" Smith', 993.44, NULL),
+              ('Barney & Company', 0, E'Great to work with\nand always pays with cash.'),
+              (E'Johnson\'s Automotive', 2344, NULL);'
+
+      - run:
+          name: run cli tests
+          command:
             python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresCli
 
 
