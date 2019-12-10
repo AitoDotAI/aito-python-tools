@@ -38,10 +38,12 @@ class TestDatabaseCli(TestCaseCompare):
 
     def test_upload_batch(self):
         self.create_table()
-        os.system(f"python -m aito.cli.main_parser_wrapper database upload-batch invoice {self.input_folder}/invoice.json")
+        os.system(f"python -m aito.cli.main_parser_wrapper database upload-batch invoice "
+                  f"{self.input_folder}/invoice.json")
         table_entries_result = self.client.query_table_entries('invoice')
         self.assertEqual(table_entries_result['total'], 4)
-        self.assertCountEqual(table_entries_result['hits'], json.load((self.input_folder / 'invoice.json').open()))
+        self.assertCountEqual(table_entries_result['hits'],
+                              json.load((self.input_folder / 'invoice_no_null_value.json').open()))
 
     def test_upload_file_table_not_exist(self):
         with self.assertRaises(SystemExit) as context:
@@ -51,24 +53,30 @@ class TestDatabaseCli(TestCaseCompare):
 
     def test_upload_file_table_exist(self):
         self.create_table()
-        os.system(f"python -m aito.cli.main_parser_wrapper database upload-file invoice {self.input_folder}/invoice.ndjson")
+        os.system(f"python -m aito.cli.main_parser_wrapper database upload-file invoice "
+                  f"{self.input_folder}/invoice.ndjson")
         table_entries_result = self.client.query_table_entries('invoice')
         self.assertEqual(table_entries_result['total'], 4)
-        self.assertCountEqual(table_entries_result['hits'], json.load((self.input_folder / 'invoice.json').open()))
+        self.assertCountEqual(table_entries_result['hits'],
+                              json.load((self.input_folder / 'invoice_no_null_value.json').open()))
 
     def test_upload_file_different_format(self):
         self.create_table()
-        os.system(f"python -m aito.cli.main_parser_wrapper database upload-file -f csv invoice {self.input_folder}/invoice.csv")
+        os.system(f"python -m aito.cli.main_parser_wrapper database upload-file -f csv invoice "
+                  f"{self.input_folder}/invoice.csv")
         table_entries_result = self.client.query_table_entries('invoice')
         self.assertEqual(table_entries_result['total'], 4)
-        self.assertCountEqual(table_entries_result['hits'], json.load((self.input_folder / 'invoice.json').open()))
+        self.assertCountEqual(table_entries_result['hits'],
+                              json.load((self.input_folder / 'invoice_no_null_value.json').open()))
 
     def test_upload_file_infer_format(self):
         self.create_table()
-        os.system(f"python -m aito.cli.main_parser_wrapper database upload-file invoice {self.input_folder}/invoice.csv")
+        os.system(f"python -m aito.cli.main_parser_wrapper database upload-file invoice "
+                  f"{self.input_folder}/invoice.csv")
         table_entries_result = self.client.query_table_entries('invoice')
         self.assertEqual(table_entries_result['total'], 4)
-        self.assertCountEqual(table_entries_result['hits'], json.load((self.input_folder / 'invoice.json').open()))
+        self.assertCountEqual(table_entries_result['hits'],
+                              json.load((self.input_folder / 'invoice_no_null_value.json').open()))
 
     def test_create_table(self):
         os.system(f"python -m aito.cli.main_parser_wrapper database create-table invoice < "
@@ -87,20 +95,24 @@ class TestDatabaseCli(TestCaseCompare):
         with (self.input_folder / 'invoice_aito_schema_altered.json').open() as f:
             another_tbl_schema = json.load(f)
         self.client.put_table_schema('invoice_altered', another_tbl_schema)
-        proc = Popen("python -m aito.cli.main_parser_wrapper database delete-database", stdin=PIPE, stdout=PIPE, shell=True)
+        proc = Popen("python -m aito.cli.main_parser_wrapper database delete-database",
+                     stdin=PIPE, stdout=PIPE, shell=True)
         proc.communicate(b"y")
         self.assertFalse(self.client.check_table_existed('invoice'))
         self.assertFalse(self.client.check_table_existed('invoice_altered'))
 
     def test_quick_add_table(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper database quick-add-table {self.input_folder / 'invoice.csv'}")
+        os.system(f"python -m aito.cli.main_parser_wrapper database quick-add-table "
+                  f"{self.input_folder / 'invoice.csv'}")
         table_entries_result = self.client.query_table_entries('invoice')
         self.assertEqual(table_entries_result['total'], 4)
-        self.assertCountEqual(table_entries_result['hits'], json.load((self.input_folder / 'invoice.json').open()))
+        self.assertCountEqual(table_entries_result['hits'],
+                              json.load((self.input_folder / 'invoice_no_null_value.json').open()))
 
     def test_quick_add_table_different_name(self):
         os.system(f"python -m aito.cli.main_parser_wrapper database quick-add-table -n newTable -f json "
                   f"{self.input_folder / 'invoice.json'}")
         table_entries_result = self.client.query_table_entries('newTable')
         self.assertEqual(table_entries_result['total'], 4)
-        self.assertCountEqual(table_entries_result['hits'], json.load((self.input_folder / 'invoice.json').open()))
+        self.assertCountEqual(table_entries_result['hits'],
+                              json.load((self.input_folder / 'invoice_no_null_value.json').open()))

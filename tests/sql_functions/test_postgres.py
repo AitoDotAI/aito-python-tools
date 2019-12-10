@@ -81,4 +81,5 @@ class TestPostgresCli(TestCaseCompare):
                   '"SELECT * FROM invoice"')
         table_entries_result = self.client.query_table_entries('invoice')
         self.assertEqual(table_entries_result['total'], 4)
-        self.assertCountEqual(table_entries_result['hits'], json.load((self.input_folder / 'invoice.json').open()))
+        self.assertCountEqual(table_entries_result['hits'],
+                              json.load((self.input_folder / 'invoice_no_null_value.json').open()))
