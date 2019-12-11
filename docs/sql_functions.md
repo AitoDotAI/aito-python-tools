@@ -53,6 +53,7 @@ More instructions regarding the pyodbc library and connecting to different datab
 There are 3 ways to set up the credentials:
 * The most convinient way is to set up the following environment variables:
   ```
+  DRIVER=the odbc driver name to connect to your database
   SERVER=server to connect to
   PORT=port to connect to
   DATABASE=database_to_connect_to
@@ -62,7 +63,7 @@ There are 3 ways to set up the credentials:
 
   You can now perform the sql operations. For example:
   ```bash
-  aito  infer-table-schema from-sql postgres "SELECT * FROM table"
+  aito  infer-table-schema from-sql "SELECT * FROM table"
   ```
 * Using a dotenv (```.env```) file:
 
@@ -71,7 +72,7 @@ There are 3 ways to set up the credentials:
   You can set up the credentials using a dotenv file with the `-e` flag. For example:
 
   ```bash
-  aito infer-table-schema from-sql -e path/to/myDotEnvFile.env postgres "SELECT * FROM table"
+  aito infer-table-schema from-sql -e path/to/myDotEnvFile.env "SELECT * FROM table"
   ```
 * Using flags:
 
@@ -80,13 +81,13 @@ There are 3 ways to set up the credentials:
 #### Supported functions:
 * Infer a table schema from the result of a SQL query:
   ```bash
-  aito infer-table-schema from-sql postgres "SELECT * FROM tableName" > inferredSchema.json
+  aito infer-table-schema from-sql "SELECT * FROM tableName" > inferredSchema.json
   ```
 * Upload the result of a SQL to an existing table:
   ```bash
-  aito database upload-data-from-sql postgres tableName "SELECT * FROM tableName"
+  aito database upload-data-from-sql tableName "SELECT * FROM tableName"
   ```
 * Infer schema, create table, and upload the result of a SQL to the database:
   ```bash
-  aito database quick-add-table-from-sql postgres tableName "SELECT * FROM tableName"
+  aito database quick-add-table-from-sql tableName "SELECT * FROM tableName"
   ```

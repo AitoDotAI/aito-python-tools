@@ -8,7 +8,7 @@ To install with pip, run: `pip install aitoai`
 
 To install from source, first clone the repository and then run: `python setup.py install`
 
-Aito supports integration with your SQL database. To enable this feature, please follow the instructions [here](docs/sql_functions.md/#installation)
+Aito supports integration with your SQL database. To enable this feature, please follow the instructions [here](sql_functions.md/#installation)
 
 ## Introduction
 
