@@ -1,12 +1,14 @@
 # Aito Command Line Interface
 
-The aito CLI tool aims to help you get upload your data to Aito instance as fast as possible
+The Aito CLI tool aims to help you get upload your data to Aito instance as fast as possible
 
 ## Installation
 
 To install with pip, run: `pip install aitoai`
 
 To install from source, first clone the repository and then run: `python setup.py install`
+
+Aito supports integration with your SQL database. To enable this feature, please follow the instructions [here](docs/sql_functions.md/#installation)
 
 ## Introduction
 

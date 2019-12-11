@@ -320,7 +320,6 @@ Example:
     add_delete_database_parser(operation_subparsers)
     add_upload_batch_parser(operation_subparsers)
     add_upload_file_parser(operation_subparsers)
-    print('enable_sql_functions', enable_sql_functions)
     if enable_sql_functions:
         add_upload_data_from_sql_parser(operation_subparsers)
         add_quick_add_table_from_sql_parser(operation_subparsers)
