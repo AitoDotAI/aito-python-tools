@@ -19,9 +19,15 @@ class MainParserWrapper(ParserWrapper):
                                                        parser_class=AitoArgParser,
                                                        metavar="<action>")
         action_subparsers.required=True
-        add_infer_table_schema_parser(action_subparsers)
+        enable_sql_functions = True
+        try:
+            import pyodbc
+        except ImportError:
+            enable_sql_functions = False
+
+        add_infer_table_schema_parser(action_subparsers, enable_sql_functions)
         add_convert_parser(action_subparsers)
-        add_database_parser(action_subparsers)
+        add_database_parser(action_subparsers, enable_sql_functions)
         argcomplete.autocomplete(self.parser)
 
     def parse_and_execute(self, parsing_args):

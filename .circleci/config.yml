@@ -18,10 +18,6 @@ commonYAMLStructure:
         - v1-dependencies-{{ checksum "requirements.txt" }}
         # fallback to using the latest cache if no exact match is found
         - v1-dependencies-
-  - &install_odbc
-    run:
-      name: install odbc driver
-      command: sudo apt install unixodbc-dev
   - &install_venv_dependencies
     run:
       name: install python requirements
@@ -40,6 +36,15 @@ commonYAMLStructure:
       command:          |
         sudo apt-get -qy update
         sudo apt-get install postgresql-client
+  - &install_odbc_driver
+    run:
+      name: install odbc driver
+      command: sudo apt install unixodbc-dev
+  - &install_pyodbc
+    run:
+      command: |
+        . venv/bin/activate
+        pip install pyodbc
 
 jobs:
   runUnittestsExceptSQLConnectionTests:
@@ -57,7 +62,6 @@ jobs:
 
     steps:
       - checkout
-      - *install_odbc
       - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
@@ -97,10 +101,11 @@ jobs:
 
     steps:
       - checkout
-      - *install_odbc
       - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
+      - *install_odbc_driver
+      - *install_pyodbc
       - run:
           name: install postgres odbc
           command: |
@@ -139,11 +144,10 @@ jobs:
               (E'Johnson\'s Automotive', 2344, NULL);"
 
       - run:
-          name: run cli tests
+          name: run postgres cli tests
           command:
             . venv/bin/activate
             python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresCli
-
 
       - store_artifacts:
           path: test-reports

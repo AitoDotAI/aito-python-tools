@@ -10,7 +10,6 @@ from aito.utils.aito_client import AitoClient
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.parser import AitoArgParser
 from aito.utils.schema_handler import SchemaHandler
-from aito.utils.sql_connection import SQLConnection
 
 
 def create_client_from_parsed_args(main_parser: AitoArgParser, parsed_args):
@@ -34,6 +33,7 @@ def create_sql_connecting_from_parsed_args(main_parser, parsed_args):
     for arg_name in ['server', 'port', 'database', 'user', 'pwd']:
         args[arg_name] = main_parser.parse_env_variable(arg_name.upper()) if parsed_args[arg_name] == '.env' \
             else parsed_args[arg_name]
+    from aito.utils.sql_connection import SQLConnection
     return SQLConnection(**args)
 
 
@@ -278,7 +278,7 @@ def execute_quick_add_table_from_sql(main_parser: AitoArgParser, parsed_args):
     return 0
 
 
-def add_database_parser(action_subparsers):
+def add_database_parser(action_subparsers, enable_sql_functions):
     database_parser = action_subparsers.add_parser('database',
                                                    help='perform operations with your Aito database instance')
     database_parser.formatter_class = argparse.RawTextHelpFormatter
@@ -320,8 +320,10 @@ Example:
     add_delete_database_parser(operation_subparsers)
     add_upload_batch_parser(operation_subparsers)
     add_upload_file_parser(operation_subparsers)
-    add_upload_data_from_sql_parser(operation_subparsers)
-    add_quick_add_table_from_sql_parser(operation_subparsers)
+    print('enable_sql_functions', enable_sql_functions)
+    if enable_sql_functions:
+        add_upload_data_from_sql_parser(operation_subparsers)
+        add_quick_add_table_from_sql_parser(operation_subparsers)
 
 
 def execute_database_operation(main_parser: AitoArgParser, parsed_args):

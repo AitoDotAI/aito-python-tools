@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.parser import AitoArgParser
 from aito.utils.schema_handler import SchemaHandler
-from aito.utils.sql_connection import SQLConnection
 
 
 def create_sql_connecting_from_parsed_args(main_parser: AitoArgParser, parsed_args):
@@ -20,7 +19,7 @@ def create_sql_connecting_from_parsed_args(main_parser: AitoArgParser, parsed_ar
     for arg_name in ['server', 'port', 'database', 'user', 'pwd']:
         args[arg_name] = main_parser.parse_env_variable(arg_name.upper()) if parsed_args[arg_name] == '.env' \
             else parsed_args[arg_name]
-
+    from aito.utils.sql_connection import SQLConnection
     return SQLConnection(**args)
 
 
@@ -100,7 +99,7 @@ def execute_infer_from_sql(main_parser: AitoArgParser, parsed_args):
     return 0
 
 
-def add_infer_table_schema_parser(action_subparsers):
+def add_infer_table_schema_parser(action_subparsers, enable_sql_functions):
     """
     :param action_subparsers: Action subparsers from the main parser
     :return:
@@ -130,7 +129,8 @@ Example:
     add_infer_excel_parser(format_sub_parsers)
     add_infer_json_parser(format_sub_parsers)
     add_infer_ndjson_parser(format_sub_parsers)
-    add_infer_from_sql(format_sub_parsers)
+    if enable_sql_functions:
+        add_infer_from_sql(format_sub_parsers)
 
 
 def execute_infer_table_schema(main_parser: AitoArgParser, parsed_args):
