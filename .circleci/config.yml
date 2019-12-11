@@ -10,6 +10,7 @@ workflows:
     jobs:
       - runUnittestsExceptSQLConnectionTests
       - runUnittestsPostgres
+      - runUnittestsMySQL
 
 commonYAMLStructure:
   - &restore_venv_cache
@@ -55,10 +56,10 @@ commonYAMLStructure:
     run:
       name: install msql odbc unicode driver
       command: |
-        wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-ubuntu16.04-x86-64bit.tar.gz
-        tar zxvf mysql-connector-odbc-8.0.18-linux-ubuntu16.04-x86-64bit.tar.gz
-        sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu16.04-x86-64bit/bin/* /usr/local/bin
-        sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu16.04-x86-64bit/lib/* /usr/local/lib
+        wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
+        tar zxvf mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
+        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/bin/* /usr/local/bin
+        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/lib/* /usr/local/lib
         sudo chmod 777 /usr/local/lib/libmyodbc*
         sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
   - &install_pyodbc
@@ -72,7 +73,7 @@ jobs:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.6
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -105,7 +106,7 @@ jobs:
 
   runUnittestsPostgres:
     docker:
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.6
         environment:
           DRIVER: PostgreSQL Unicode
           SERVER: localhost
@@ -143,7 +144,7 @@ jobs:
           name: run postgres connection tests
           command: |
             . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_connection
+            python -m tests.test_parser case tests.sql_functions.test_connection.TestPostgresConnection
       - *install_postgres_cli
       - run: whoami
       - run:
@@ -166,7 +167,7 @@ jobs:
           name: run postgres cli functions tests
           command:
             . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_cli_functions
+            python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestPostgresCliFunctions
 
       - store_artifacts:
           path: test-reports
@@ -174,10 +175,10 @@ jobs:
 
   runUnittestsMySQL:
     docker:
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.6-stretch
         environment:
           DRIVER: MySQL ODBC 8.0 Driver
-          SERVER: localhost
+          SERVER: 127.0.0.1
           DATABASE: circleci_test
           USER: test
           PWD: test_pw
@@ -211,29 +212,29 @@ jobs:
           name: run mysql connection tests
           command: |
             . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_connection
+            python -m tests.test_parser case tests.sql_functions.test_connection.TestMySQLConnection
       - *install_mysql_cli
       - run:
           name: prepare data
           command: |
-            mysql -h 127.0.0.1 -u test -p test_pw -D circleci_test -e "DROP TABLE IF EXISTS invoice;"
-            mysql -h 127.0.0.1 -u test -p test_pw -D circleci_test -e "CREATE TABLE invoice(
+            mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "DROP TABLE IF EXISTS invoice;"
+            mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "CREATE TABLE invoice(
               id serial primary key,
               name VARCHAR(355) not null,
               amount double precision not null,
-              \"Remark\" VARCHAR (355)
+              remark VARCHAR (355)
             );"
-            mysql -h 127.0.0.1 -u test -p test_pw -D circleci_test -e "INSERT INTO invoice(name, amount, \"Remark\") VALUES
+            mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "INSERT INTO invoice(name, amount, remark) VALUES
               ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
-              (E'Sam \"Mad Dog\" Smith', 993.44, NULL),
-              ('Barney & Company', 0, E'Great to work with\nand always pays with cash.'),
-              (E'Johnson\'s Automotive', 2344, NULL);"
+              ('Sam \"Mad Dog\" Smith', 993.44, NULL),
+              ('Barney & Company', 0, 'Great to work with\nand always pays with cash.'),
+              ('Johnson\'s Automotive', 2344, NULL);"
 
       - run:
           name: run mysql cli functions tests
           command:
             . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_cli_functions
+            python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestMySQLCliFunctions
 
       - store_artifacts:
           path: test-reports

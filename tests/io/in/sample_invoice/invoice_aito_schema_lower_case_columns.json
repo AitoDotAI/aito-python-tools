@@ -1,0 +1,23 @@
+{
+    "columns": {
+        "remark": {
+            "analyzer": "en",
+            "nullable": true,
+            "type": "Text"
+        },
+        "amount": {
+            "nullable": false,
+            "type": "Decimal"
+        },
+        "id": {
+            "nullable": false,
+            "type": "Int"
+        },
+        "name": {
+            "analyzer": "en",
+            "nullable": false,
+            "type": "Text"
+        }
+    },
+    "type": "table"
+}
