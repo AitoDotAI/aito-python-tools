@@ -86,6 +86,7 @@ jobs:
     docker:
       - image: circleci/python:3.6.1
         environment:
+          DRIVER: PostgreSQL Unicode
           SERVER: localhost
           DATABASE: circleci_test
           USER: test

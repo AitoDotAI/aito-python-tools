@@ -13,8 +13,8 @@ class TestPostgresConnection(TestCaseCompare):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_variables = os.environ
         cls.connection = SQLConnection(
-            'postgres', server=env_variables.get('SERVER'), database=env_variables.get('DATABASE'),
-            port=env_variables.get('PORT'), user=env_variables.get('USER'), pwd=env_variables.get('PWD'))
+            env_variables.get('DRIVER'), env_variables.get('SERVER'), env_variables.get('PORT'),
+            env_variables.get('DATABASE'), env_variables.get('USER'), env_variables.get('PWD'))
         c = cls.connection.execute_query('DROP TABLE IF EXISTS invoice;')
         c.close()
 
@@ -65,19 +65,19 @@ class TestPostgresCli(TestCaseCompare):
         self.client.put_table_schema('invoice', table_schema)
 
     def test_infer_schema_from_query(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema from-sql postgres "
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema from-sql "
                   f"'SELECT * FROM invoice' > {self.out_file_path}")
         self.assertCountEqual(json.load(self.out_file_path.open()),
                               json.load((self.input_folder / 'invoice_aito_schema.json').open()))
 
     def test_upload_data_from_query(self):
         self.create_table()
-        os.system('python -m aito.cli.main_parser_wrapper database upload-data-from-sql postgres invoice '
+        os.system('python -m aito.cli.main_parser_wrapper database upload-data-from-sql invoice '
                   '"SELECT * FROM invoice"')
         self.assertEqual(self.client.query_table_entries('invoice')['total'], 4)
 
     def test_quick_add_table_from_query(self):
-        os.system('python -m aito.cli.main_parser_wrapper database quick-add-table-from-sql postgres invoice '
+        os.system('python -m aito.cli.main_parser_wrapper database quick-add-table-from-sql invoice '
                   '"SELECT * FROM invoice"')
         table_entries_result = self.client.query_table_entries('invoice')
         self.assertEqual(table_entries_result['total'], 4)
