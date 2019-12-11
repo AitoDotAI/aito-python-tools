@@ -30,16 +30,37 @@ commonYAMLStructure:
       paths:
         - ./venv
       key: v1-dependencies-{{ checksum "requirements.txt" }}
-  - &install-psql
+  - &install_postgres_cli
     run:
-      name: install psql
+      name: install postgres cli
       command:          |
         sudo apt-get -qy update
         sudo apt-get install postgresql-client
+  - &install_mysql_cli
+    run:
+      name: install mysql cli
+      command:          |
+        sudo apt-get -qy update
+        sudo apt-get install default-mysql-client
   - &install_odbc_driver
     run:
       name: install odbc driver
       command: sudo apt install unixodbc-dev
+  - &install_postgres_odbc_driver
+    run:
+      name: install postgres odbc driver
+      command: |
+        sudo apt-get install odbc-postgresql
+  - &install_mysql_odbc_driver
+    run:
+      name: install msql odbc unicode driver
+      command: |
+        wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-ubuntu16.04-x86-64bit.tar.gz
+        tar zxvf mysql-connector-odbc-8.0.18-linux-ubuntu16.04-x86-64bit.tar.gz
+        sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu16.04-x86-64bit/bin/* /usr/local/bin
+        sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu16.04-x86-64bit/lib/* /usr/local/lib
+        sudo chmod 777 /usr/local/lib/libmyodbc*
+        sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
   - &install_pyodbc
     run:
       command: |
@@ -107,10 +128,7 @@ jobs:
       - *save_venv_cache
       - *install_odbc_driver
       - *install_pyodbc
-      - run:
-          name: install postgres odbc
-          command: |
-            sudo apt-get install odbc-postgresql
+      - *install_postgres_odbc_driver
       - run:
           name: Waiting for Postgres to be ready
           command: |
@@ -122,11 +140,11 @@ jobs:
             done
             echo Failed waiting for Postgres && exit 1
       - run:
-          name: run connection tests
+          name: run postgres connection tests
           command: |
             . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresConnection
-      - *install-psql
+            python -m tests.test_parser case tests.sql_functions.test_connection
+      - *install_postgres_cli
       - run: whoami
       - run:
           name: prepare data
@@ -145,10 +163,77 @@ jobs:
               (E'Johnson\'s Automotive', 2344, NULL);"
 
       - run:
-          name: run postgres cli tests
+          name: run postgres cli functions tests
           command:
             . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_postgres.TestPostgresCli
+            python -m tests.test_parser case tests.sql_functions.test_cli_functions
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+  runUnittestsMySQL:
+    docker:
+      - image: circleci/python:3.6.1
+        environment:
+          DRIVER: MySQL ODBC 8.0 Driver
+          SERVER: localhost
+          DATABASE: circleci_test
+          USER: test
+          PWD: test_pw
+      - image: circleci/mysql:8.0.3
+        environment:
+          MYSQL_DATABASE: circleci_test
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test_pw
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - *restore_venv_cache
+      - *install_venv_dependencies
+      - *save_venv_cache
+      - *install_odbc_driver
+      - *install_pyodbc
+      - *install_mysql_odbc_driver
+      - run:
+          name: Waiting for MySQL to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z 127.0.0.1 3306 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for MySQL && exit 1
+      - run:
+          name: run mysql connection tests
+          command: |
+            . venv/bin/activate
+            python -m tests.test_parser case tests.sql_functions.test_connection
+      - *install_mysql_cli
+      - run:
+          name: prepare data
+          command: |
+            mysql -h 127.0.0.1 -u test -p test_pw -D circleci_test -e "DROP TABLE IF EXISTS invoice;"
+            mysql -h 127.0.0.1 -u test -p test_pw -D circleci_test -e "CREATE TABLE invoice(
+              id serial primary key,
+              name VARCHAR(355) not null,
+              amount double precision not null,
+              \"Remark\" VARCHAR (355)
+            );"
+            mysql -h 127.0.0.1 -u test -p test_pw -D circleci_test -e "INSERT INTO invoice(name, amount, \"Remark\") VALUES
+              ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
+              (E'Sam \"Mad Dog\" Smith', 993.44, NULL),
+              ('Barney & Company', 0, E'Great to work with\nand always pays with cash.'),
+              (E'Johnson\'s Automotive', 2344, NULL);"
+
+      - run:
+          name: run mysql cli functions tests
+          command:
+            . venv/bin/activate
+            python -m tests.test_parser case tests.sql_functions.test_cli_functions
 
       - store_artifacts:
           path: test-reports
