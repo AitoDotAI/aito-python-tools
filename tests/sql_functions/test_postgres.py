@@ -14,7 +14,7 @@ class TestPostgresConnection(TestCaseCompare):
         env_variables = os.environ
         cls.connection = SQLConnection(
             'postgres', server=env_variables.get('SERVER'), database=env_variables.get('DATABASE'),
-            port=env_variables.get('PORT'), user=env_variables.get('USER'), pwd=env_variables.get('PASS'))
+            port=env_variables.get('PORT'), user=env_variables.get('USER'), pwd=env_variables.get('PWD'))
         c = cls.connection.execute_query('DROP TABLE IF EXISTS invoice;')
         c.close()
 

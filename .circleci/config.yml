@@ -85,7 +85,7 @@ jobs:
           SERVER: localhost
           DATABASE: circleci_test
           USER: test
-          PASS: test_pw
+          PWD: test_pw
           CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
       - image: circleci/postgres:9.6
         environment:

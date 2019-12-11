@@ -85,10 +85,10 @@ def add_infer_from_sql(format_subparsers):
     credential_args.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
     credential_args.add_argument('--database', '-d', type=str, help='database to connect to', default='.env')
     credential_args.add_argument('--user', '-u', type=str, help='username for authentication', default='.env')
-    credential_args.add_argument('--pass', '-p', type=str, help='password for authentication', default='.env')
+    credential_args.add_argument('--pwd', '-p', type=str, help='password for authentication', default='.env')
     parser.epilog = '''Each database requires different odbc driver. Please refer to our docs for more info.
 If no credential options is given, the following environment variable is used to connect to your SQL database:
-  SERVER, PORT, DATABASE, USER, PASS          
+  SERVER, PORT, DATABASE, USER, PWD          
   '''
 
 
