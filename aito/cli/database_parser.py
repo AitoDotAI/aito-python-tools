@@ -16,7 +16,7 @@ from aito.utils.sql_connection import SQLConnection
 
 def create_client_from_parsed_args(main_parser: AitoArgParser, parsed_args):
     if parsed_args['use_env_file']:
-        env_file_path = main_parser.check_valid_path(parsed_args['use_env_file'], True)
+        env_file_path = main_parser.parse_path_value(parsed_args['use_env_file'], True)
         load_dotenv(env_file_path)
 
     env_variables = os.environ
@@ -66,7 +66,7 @@ def add_quick_add_table_parser(operation_subparsers):
 
 
 def execute_quick_add_table(main_parser: AitoArgParser, parsed_args):
-    input_file_path = main_parser.check_valid_path(parsed_args['input-file'])
+    input_file_path = main_parser.parse_path_value(parsed_args['input-file'])
     table_name = parsed_args['table_name'] if parsed_args['table_name'] else input_file_path.stem
     in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
         else parsed_args['file_format']
@@ -110,7 +110,7 @@ def execute_create_table(main_parser: AitoArgParser, parsed_args):
     if parsed_args['schema-input'] == '-':
         table_schema = json.load(sys.stdin)
     else:
-        input_path = main_parser.check_valid_path(parsed_args['schema-input'])
+        input_path = main_parser.parse_path_value(parsed_args['schema-input'])
         with input_path.open() as f:
             table_schema = json.load(f)
     client.put_table_schema(table_name, table_schema)
@@ -161,7 +161,7 @@ def execute_upload_batch(main_parser: AitoArgParser, parsed_args):
     if parsed_args['input'] == '-':
         table_content = json.load(sys.stdin)
     else:
-        input_path = main_parser.check_valid_path(parsed_args['input'])
+        input_path = main_parser.parse_path_value(parsed_args['input'])
         with input_path.open() as f:
             table_content = json.load(f)
     client.populate_table_entries(table_name, table_content)
@@ -189,7 +189,7 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     if not client.check_table_existed(table_name):
         main_parser.error(f"Table '{table_name}' does not exist. Please create table first.")
 
-    input_file_path = main_parser.check_valid_path(parsed_args['input-file'])
+    input_file_path = main_parser.parse_path_value(parsed_args['input-file'])
 
     in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
         else parsed_args['file_format']

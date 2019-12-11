@@ -1,30 +1,43 @@
 import argparse
 import sys
-from pathlib import Path
 from abc import abstractmethod
+import logging
+from pathlib import Path
+from aito.utils._typing import FilePathOrBuffer
+import os
 
 
 class AitoArgParser(argparse.ArgumentParser):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.logger = logging.getLogger('Parser')
+
     def error(self, message):
         sys.stderr.write(f"error: {message}\n")
         self.print_help()
         sys.exit(2)
 
-    def check_valid_path(self, str_path, check_exists=False):
+    def parse_path_value(self, path, check_exists=False) -> Path:
         try:
-            path = Path(str_path)
+            path = Path(path)
         except Exception as e:
-            self.error(f"invalid path {str_path}")
+            self.error(f"invalid path {path}")
             raise e
         if check_exists and not path.exists():
-            self.error(f"path {str_path} does not exist")
+            self.error(f"path {path} does not exist")
         return path
 
-    def parse_input_arg_value(self, input_arg: str):
-        return sys.stdin if input_arg == '-' else self.check_valid_path(input_arg, True)
+    def parse_input_arg_value(self, input_arg: str) -> FilePathOrBuffer:
+        return sys.stdin if input_arg == '-' else self.parse_path_value(input_arg, True)
 
-    def parse_output_arg_value(self, output_arg: str):
-        return sys.stdout if output_arg == '-' else self.check_valid_path(output_arg)
+    def parse_output_arg_value(self, output_arg: str) -> FilePathOrBuffer:
+        return sys.stdout if output_arg == '-' else self.parse_path_value(output_arg)
+
+    def parse_env_variable(self, var_name):
+        if var_name not in os.environ:
+            self.logger.warning(f"{var_name} environment variable not found")
+            return None
+        return os.environ[var_name]
 
     @staticmethod
     def ask_confirmation(content, default: bool = None) -> bool:

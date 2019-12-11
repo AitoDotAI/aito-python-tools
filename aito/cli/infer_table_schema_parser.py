@@ -13,7 +13,7 @@ from aito.utils.sql_connection import SQLConnection
 
 def create_sql_connecting_from_parsed_args(main_parser: AitoArgParser, parsed_args):
     if parsed_args['use_env_file']:
-        env_file_path = main_parser.check_valid_path(parsed_args['use_env_file'], True)
+        env_file_path = main_parser.parse_path_value(parsed_args['use_env_file'], True)
         load_dotenv(env_file_path)
 
     env_variables = os.environ

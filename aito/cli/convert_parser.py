@@ -107,7 +107,7 @@ def execute_convert(main_parser: AitoArgParser, parsed_args):
 
     schema_handler = SchemaHandler()
     if parsed_args['use_table_schema']:
-        schema_path = main_parser.check_valid_path(parsed_args['use_table_schema'], check_exists=True)
+        schema_path = main_parser.parse_path_value(parsed_args['use_table_schema'], check_exists=True)
         with schema_path.open() as f:
             table_schema = json.load(f)
         schema_handler.validate_table_schema(table_schema)
@@ -126,7 +126,7 @@ def execute_convert(main_parser: AitoArgParser, parsed_args):
     converted_df = DataFrameHandler().convert_file(**convert_args)
 
     if parsed_args['create_table_schema']:
-        output_schema_path = main_parser.check_valid_path(parsed_args['create_table_schema'])
+        output_schema_path = main_parser.parse_path_value(parsed_args['create_table_schema'])
         inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(converted_df)
         with output_schema_path.open(mode='w') as f:
             json.dump(inferred_schema, f, indent=2, sort_keys=True)
