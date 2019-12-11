@@ -18,7 +18,7 @@ class MainParserWrapper(ParserWrapper):
                                                        dest='action',
                                                        parser_class=AitoArgParser,
                                                        metavar="<action>")
-        action_subparsers.required=True
+        action_subparsers.required = True
         enable_sql_functions = True
         try:
             import pyodbc

@@ -4,37 +4,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-from aito.utils.aito_client import AitoClient
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.parser import AitoArgParser
 from aito.utils.schema_handler import SchemaHandler
-
-
-def create_client_from_parsed_args(main_parser: AitoArgParser, parsed_args):
-    if parsed_args['use_env_file']:
-        env_file_path = main_parser.parse_path_value(parsed_args['use_env_file'], True)
-        load_dotenv(env_file_path)
-
-    client_args = {
-        'instance_name': main_parser.parse_env_variable('AITO_INSTANCE_NAME') if parsed_args['instance_name'] == '.env'
-        else parsed_args['instance_name'],
-        'rw_key': main_parser.parse_env_variable('AITO_RW_KEY') if parsed_args['read_write_key'] == '.env'
-        else parsed_args['read_write_key'],
-        'ro_key': main_parser.parse_env_variable('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
-        else parsed_args['read_only_key']
-    }
-    return AitoClient(**client_args)
-
-
-def create_sql_connecting_from_parsed_args(main_parser, parsed_args):
-    args = {'typ': parsed_args['database-name']}
-    for arg_name in ['server', 'port', 'database', 'user', 'pwd']:
-        args[arg_name] = main_parser.parse_env_variable(arg_name.upper()) if parsed_args[arg_name] == '.env' \
-            else parsed_args[arg_name]
-    from aito.utils.sql_connection import SQLConnection
-    return SQLConnection(**args)
 
 
 def add_quick_add_table_parser(operation_subparsers):
@@ -79,7 +51,7 @@ def execute_quick_add_table(main_parser: AitoArgParser, parsed_args):
     schema_handler = SchemaHandler()
     inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(converted_df)
 
-    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client = main_parser.create_client_from_parsed_args(parsed_args)
     client.put_table_schema(table_name, inferred_schema)
     client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
     converted_tmp_file.close()
@@ -98,7 +70,7 @@ Example:
 
 
 def execute_create_table(main_parser: AitoArgParser, parsed_args):
-    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client = main_parser.create_client_from_parsed_args(parsed_args)
     table_name = parsed_args['table-name']
     if parsed_args['schema-input'] == '-':
         table_schema = json.load(sys.stdin)
@@ -118,7 +90,7 @@ def add_delete_table_parser(operation_subparsers):
 
 
 def execute_delete_table(main_parser: AitoArgParser, parsed_args):
-    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client = main_parser.create_client_from_parsed_args(parsed_args)
     table_name = parsed_args['table-name']
     if main_parser.ask_confirmation(f"Confirm delete table '{table_name}'? The action is irreversible", False):
         client.delete_table(table_name)
@@ -131,7 +103,7 @@ def add_delete_database_parser(operation_subparsers):
 
 
 def execute_delete_database(main_parser: AitoArgParser, parsed_args):
-    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client = main_parser.create_client_from_parsed_args(parsed_args)
     if main_parser.ask_confirmation(f"Confirm delete the whole database? The action is irreversible", False):
         client.delete_database()
     return 0
@@ -149,7 +121,7 @@ Example:
 
 
 def execute_upload_batch(main_parser: AitoArgParser, parsed_args):
-    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client = main_parser.create_client_from_parsed_args(parsed_args)
     table_name = parsed_args['table-name']
     if parsed_args['input'] == '-':
         table_content = json.load(sys.stdin)
@@ -176,7 +148,7 @@ def add_upload_file_parser(operation_subparsers):
 
 
 def execute_upload_file(main_parser: AitoArgParser, parsed_args):
-    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client = main_parser.create_client_from_parsed_args(parsed_args)
     table_name = parsed_args['table-name']
 
     if not client.check_table_existed(table_name):
@@ -207,31 +179,22 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
 def add_upload_data_from_sql_parser(operation_subparsers):
     parser = operation_subparsers.add_parser('upload-data-from-sql',
                                              help="populate data from the result of a SQL query to an existing table")
-    parser.add_argument('database-name', type=str, choices=['postgres'], help='database name')
     parser.add_argument('table-name', type=str, help='name of the table to be populated')
     parser.add_argument('query', type=str, help='query to get the data from your database')
-    parser.add_argument('--server', '-s', type=str, help='server to connect to', default='.env')
-    parser.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
-    parser.add_argument('--database', '-d', type=str, help='database to connect to', default='.env')
-    parser.add_argument('--user', '-u', type=str, help='username for authentication', default='.env')
-    parser.add_argument('--pwd', '-p', type=str, help='password for authentication', default='.env')
-    parser.epilog = '''Each database requires different odbc driver. Please refer to our docs for more info.
-If no credential options is given, the following environment variable is used to connect to your SQL database:
-  SERVER, PORT, DATABASE, USER, PWD          
-  '''
+    parser.add_sql_credentials_arguments(False)
 
 
 def execute_upload_data_from_sql(main_parser: AitoArgParser, parsed_args):
     table_name = parsed_args['table-name']
 
-    connection = create_sql_connecting_from_parsed_args(main_parser, parsed_args)
+    connection = main_parser.create_sql_connecting_from_parsed_args(parsed_args)
     result_df = connection.execute_query_and_save_result(parsed_args['query'])
     dataframe_handler = DataFrameHandler()
 
     converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
     dataframe_handler.df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
 
-    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client = main_parser.create_client_from_parsed_args(parsed_args)
     converted_tmp_file.seek(0)
     client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
     converted_tmp_file.close()
@@ -243,24 +206,15 @@ def add_quick_add_table_from_sql_parser(operation_subparsers):
         'quick-add-table-from-sql',
         help="infer schema, create table, and upload the result of a SQL to the database"
     )
-    parser.add_argument('database-name', type=str, choices=['postgres'], help='database name')
     parser.add_argument('table-name', type=str, help='name of the table to be populated')
     parser.add_argument('query', type=str, help='query to get the data from your database')
-    parser.add_argument('--server', '-s', type=str, help='server to connect to', default='.env')
-    parser.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
-    parser.add_argument('--database', '-d', type=str, help='database to connect to', default='.env')
-    parser.add_argument('--user', '-u', type=str, help='username for authentication', default='.env')
-    parser.add_argument('--pwd', '-p', type=str, help='password for authentication', default='.env')
-    parser.epilog = '''Each database requires different odbc driver. Please refer to our docs for more info.
-If no credential options is given, the following environment variable is used to connect to your SQL database:
-  SERVER, PORT, DATABASE, USER, PWD          
-  '''
+    parser.add_sql_credentials_arguments(parser)
 
 
 def execute_quick_add_table_from_sql(main_parser: AitoArgParser, parsed_args):
     table_name = parsed_args['table-name']
 
-    connection = create_sql_connecting_from_parsed_args(main_parser, parsed_args)
+    connection = main_parser.create_sql_connecting_from_parsed_args(parsed_args)
     result_df = connection.execute_query_and_save_result(parsed_args['query'])
 
     schema_handler = SchemaHandler()
@@ -271,7 +225,7 @@ def execute_quick_add_table_from_sql(main_parser: AitoArgParser, parsed_args):
     dataframe_handler.df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
     converted_tmp_file.seek(0)
 
-    client = create_client_from_parsed_args(main_parser, parsed_args)
+    client = main_parser.create_client_from_parsed_args(parsed_args)
     client.put_table_schema(table_name, inferred_schema)
     client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
     converted_tmp_file.close()
@@ -282,12 +236,8 @@ def add_database_parser(action_subparsers, enable_sql_functions):
     database_parser = action_subparsers.add_parser('database',
                                                    help='perform operations with your Aito database instance')
     database_parser.formatter_class = argparse.RawTextHelpFormatter
-    database_parser.epilog = '''You must provide your Aito credentials to execute database operations
-If no credential options is given, the following environment variable is used to connect to your Aito database:
-  AITO_INSTANCE_NAME=your-instance-name
-  AITO_RW_KEY=your read-write api key
-  AITO_RO_KEY=your read-only key (optional)
-
+    database_parser.add_aito_credentials_arguments(add_use_env_arg=True)
+    database_parser.epilog += '''
 To see help for a specific operation:
   aito database <operation> -h  
 
@@ -297,16 +247,7 @@ Example:
   aito database -e path/to/myCredentials.env upload-file myTable path/to/myFile
   aito database -i MY_INSTANCE_NAME -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < path/to/myTableEntries
   aito database quick-add-table-from-sql postgres tableName 'SELECT * FROM tableName;'
-    '''
-    credential_args = database_parser.add_argument_group("optional credential arguments")
-    credential_args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
-                                 help='set up the credentials using a .env file containing the required env variables')
-    credential_args.add_argument('-r', '--read-only-key', type=str, default='.env',
-                                 help='specify aito read-only API key')
-    credential_args.add_argument('-i', '--instance-name', type=str, default='.env', help='specify aito instance name')
-    credential_args.add_argument('-w', '--read-write-key', type=str, default='.env',
-                                 help='specify aito read-write API key')
-
+  '''
     operation_subparsers = database_parser.add_subparsers(title="operation",
                                                           description="operation to perform",
                                                           parser_class=AitoArgParser,

@@ -9,16 +9,18 @@ class SQLConnectionError(Exception):
 
 
 class SQLConnection():
-    allowed_database_types = ['postgres']
-    database_driver_mapper = {
-        'postgres': 'PostgreSQL Unicode'
-    }
-
-    def __init__(self, typ: str, server=None, port=None, database=None, user=None, pwd=None):
-        if typ not in self.allowed_database_types:
-            raise SQLConnectionError(f"Invalid database type: {typ}. Must be among: {self.allowed_database_types}")
-
-        self.typ = typ
+    def __init__(self,
+                 driver: str,
+                 server: str = None,
+                 port : str = None,
+                 database : str = None,
+                 user: str = None,
+                 pwd: str = None):
+        self.logger = logging.getLogger('SQLConnection')
+        available_drivers = pyodbc.drivers()
+        if driver not in available_drivers:
+            raise SQLConnectionError(f"Driver {driver} not found. Available drivers: {available_drivers}")
+        self.driver = driver
 
         connection_params = {
             'server': server,
@@ -27,7 +29,7 @@ class SQLConnection():
             'uid': user,
             'pwd': pwd
         }
-        connection_string = f"driver={{{self.database_driver_mapper[self.typ]}}};"
+        connection_string = f"driver={{{self.driver}}};"
         for param in connection_params:
             if connection_params[param]:
                 connection_string += f"{param}={connection_params[param]};"
@@ -38,12 +40,10 @@ class SQLConnection():
         except Exception as e:
             raise SQLConnectionError(f"Failed to establish connection: {e}")
 
-        if self.typ == 'postgres':
-            connection.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
-            connection.setencoding(encoding='utf-8')
+        connection.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
+        connection.setencoding(encoding='utf-8')
 
         self.connection = connection
-        self.logger = logging.getLogger('SQLConnection')
 
     def save_cursor_result_to_df(self, cursor: pyodbc.Cursor) -> pd.DataFrame:
         descriptions = cursor.description
