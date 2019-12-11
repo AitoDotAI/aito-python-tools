@@ -16,15 +16,11 @@ def create_sql_connecting_from_parsed_args(main_parser: AitoArgParser, parsed_ar
         env_file_path = main_parser.parse_path_value(parsed_args['use_env_file'], True)
         load_dotenv(env_file_path)
 
-    env_variables = os.environ
-    args = {
-        'typ': parsed_args['database-name'],
-        'server': env_variables.get('SERVER') if parsed_args['server'] == '.env' else parsed_args['server'],
-        'port': env_variables.get('PORT') if parsed_args['port'] == '.env' else parsed_args['port'],
-        'database': env_variables.get('DATABASE') if parsed_args['database'] == '.env' else parsed_args['database'],
-        'user': env_variables.get('USER') if parsed_args['user'] == '.env' else parsed_args['user'],
-        'pwd': env_variables.get('PASS') if parsed_args['pass'] == '.env' else parsed_args['pass']
-    }
+    args = {'typ': parsed_args['database-name']}
+    for arg_name in ['server', 'port', 'database', 'user', 'pwd']:
+        args[arg_name] = main_parser.parse_env_variable(arg_name.upper()) if parsed_args[arg_name] == '.env' \
+            else parsed_args[arg_name]
+
     return SQLConnection(**args)
 
 

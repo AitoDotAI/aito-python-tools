@@ -1,15 +1,14 @@
 import argparse
 import json
-import os
 import sys
 import tempfile
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from aito.utils.parser import AitoArgParser
 from aito.utils.aito_client import AitoClient
 from aito.utils.data_frame_handler import DataFrameHandler
+from aito.utils.parser import AitoArgParser
 from aito.utils.schema_handler import SchemaHandler
 from aito.utils.sql_connection import SQLConnection
 
@@ -19,28 +18,22 @@ def create_client_from_parsed_args(main_parser: AitoArgParser, parsed_args):
         env_file_path = main_parser.parse_path_value(parsed_args['use_env_file'], True)
         load_dotenv(env_file_path)
 
-    env_variables = os.environ
     client_args = {
-        'instance_name': env_variables.get('AITO_INSTANCE_NAME') if parsed_args['instance_name'] == '.env'
+        'instance_name': main_parser.parse_env_variable('AITO_INSTANCE_NAME') if parsed_args['instance_name'] == '.env'
         else parsed_args['instance_name'],
-        'rw_key': env_variables.get('AITO_RW_KEY') if parsed_args['read_write_key'] == '.env'
+        'rw_key': main_parser.parse_env_variable('AITO_RW_KEY') if parsed_args['read_write_key'] == '.env'
         else parsed_args['read_write_key'],
-        'ro_key': env_variables.get('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
+        'ro_key': main_parser.parse_env_variable('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
         else parsed_args['read_only_key']
     }
     return AitoClient(**client_args)
 
 
-def create_sql_connecting_from_parsed_args(parsed_args):
-    env_variables = os.environ
-    args = {
-        'typ': parsed_args['database-name'],
-        'server': env_variables.get('SERVER') if parsed_args['server'] == '.env' else parsed_args['server'],
-        'port': env_variables.get('PORT') if parsed_args['port'] == '.env' else parsed_args['port'],
-        'database': env_variables.get('DATABASE') if parsed_args['database'] == '.env' else parsed_args['database'],
-        'user': env_variables.get('USER') if parsed_args['user'] == '.env' else parsed_args['user'],
-        'pwd': env_variables.get('PASS') if parsed_args['pass'] == '.env' else parsed_args['pass']
-    }
+def create_sql_connecting_from_parsed_args(main_parser, parsed_args):
+    args = {'typ': parsed_args['database-name']}
+    for arg_name in ['server', 'port', 'database', 'user', 'pwd']:
+        args[arg_name] = main_parser.parse_env_variable(arg_name.upper()) if parsed_args[arg_name] == '.env' \
+            else parsed_args[arg_name]
     return SQLConnection(**args)
 
 
@@ -231,7 +224,7 @@ If no credential options is given, the following environment variable is used to
 def execute_upload_data_from_sql(main_parser: AitoArgParser, parsed_args):
     table_name = parsed_args['table-name']
 
-    connection = create_sql_connecting_from_parsed_args(parsed_args)
+    connection = create_sql_connecting_from_parsed_args(main_parser, parsed_args)
     result_df = connection.execute_query_and_save_result(parsed_args['query'])
     dataframe_handler = DataFrameHandler()
 
@@ -267,7 +260,7 @@ If no credential options is given, the following environment variable is used to
 def execute_quick_add_table_from_sql(main_parser: AitoArgParser, parsed_args):
     table_name = parsed_args['table-name']
 
-    connection = create_sql_connecting_from_parsed_args(parsed_args)
+    connection = create_sql_connecting_from_parsed_args(main_parser, parsed_args)
     result_df = connection.execute_query_and_save_result(parsed_args['query'])
 
     schema_handler = SchemaHandler()
