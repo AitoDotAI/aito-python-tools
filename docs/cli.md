@@ -33,13 +33,13 @@ action:
 ```
 
 Supported actions:
-* [***quick-upload-file***](#quick-upload-file)
+* [***quick-add-file***](#quick-add-file)
 * [***infer-table-schema***](#infer-table-schema)
 * [***convert***](#convert)
 * [***database***](#database)
 
-## Quick guide to upload the data
-* [Quickly upload a file](#quick-upload-file) to your database instance by following these steps:
+## <a name="quick-add-table"> Quick guide to upload the data
+Quickly upload a file to your database instance by following these steps:
 * [Set up the credentials](#set-up-credentials)
 * Run:
   ```bash
