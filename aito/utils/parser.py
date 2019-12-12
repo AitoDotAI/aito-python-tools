@@ -104,7 +104,7 @@ If no credential options is given, the following environment variable is used to
 
         epilog_str = '''Each database requires different odbc driver. Please refer to our docs for more info.
 If no credential options is given, the following environment variable is used to connect to your SQL database:
-  DRIVER, SERVER, PORT, DATABASE, USER, PWD          
+  SQL_DRIVER, SQL_SERVER, SQL_PORT, SQL_DATABASE, SQL_USERNAME, SQL_PASSWORD          
   '''
         if not self.epilog:
             self.epilog = epilog_str
@@ -128,7 +128,7 @@ If no credential options is given, the following environment variable is used to
 
     def create_sql_connecting_from_parsed_args(self, parsed_args):
         args = {}
-        for arg_name in ['driver', 'server', 'port', 'database', 'user', 'pwd']:
+        for arg_name in ['sql_driver', 'sql_server', 'sql_port', 'sql_database', 'sql_username', 'sql_password']:
             args[arg_name] = self.parse_env_variable(arg_name.upper()) if parsed_args[arg_name] == '.env' \
                 else parsed_args[arg_name]
         from aito.utils.sql_connection import SQLConnection

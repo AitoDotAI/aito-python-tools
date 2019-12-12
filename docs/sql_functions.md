@@ -53,12 +53,12 @@ More instructions regarding the pyodbc library and connecting to different datab
 There are 3 ways to set up the credentials:
 * The most convinient way is to set up the following environment variables:
   ```
-  DRIVER=the odbc driver name to connect to your database
-  SERVER=server to connect to
-  PORT=port to connect to
-  DATABASE=database_to_connect_to
-  USER=username for authentication
-  PWD=password for authentication
+  SQL_DRIVER=the odbc driver name to connect to your database
+  SQL_SERVER=server to connect to
+  SQL_PORT=port to connect to
+  SQL_DATABASE=database_to_connect_to
+  SQL_USER=username for authentication
+  SQL_PASSWORD=password for authentication
   ```
 
   You can now perform the sql operations. For example:

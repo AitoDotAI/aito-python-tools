@@ -12,8 +12,8 @@ class TestPostgresConnection(TestCaseCompare):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_variables = os.environ
         cls.connection = SQLConnection(
-            env_variables.get('DRIVER'), env_variables.get('SERVER'), env_variables.get('PORT'),
-            env_variables.get('DATABASE'), env_variables.get('USER'), env_variables.get('PWD'))
+            env_variables.get('SQL_DRIVER'), env_variables.get('SQL_SERVER'), env_variables.get('SQL_PORT'),
+            env_variables.get('SQL_DATABASE'), env_variables.get('SQL_USERNAME'), env_variables.get('SQL_PASSWORD'))
         c = cls.connection.execute_query('DROP TABLE IF EXISTS invoice;')
         c.close()
 
@@ -61,8 +61,8 @@ class TestMySQLConnection(TestCaseCompare):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_variables = os.environ
         cls.connection = SQLConnection(
-            env_variables.get('DRIVER'), env_variables.get('SERVER'), env_variables.get('PORT'),
-            env_variables.get('DATABASE'), env_variables.get('USER'), env_variables.get('PWD'))
+            env_variables.get('SQL_DRIVER'), env_variables.get('SQL_SERVER'), env_variables.get('SQL_PORT'),
+            env_variables.get('SQL_DATABASE'), env_variables.get('SQL_USERNAME'), env_variables.get('SQL_PASSWORD'))
         c = cls.connection.execute_query('DROP TABLE IF EXISTS invoice;')
         c.close()
 

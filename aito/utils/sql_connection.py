@@ -10,24 +10,26 @@ class SQLConnectionError(Exception):
 
 class SQLConnection():
     def __init__(self,
-                 driver: str,
-                 server: str = None,
-                 port : str = None,
-                 database : str = None,
-                 user: str = None,
-                 pwd: str = None):
+                 sql_driver: str,
+                 sql_server: str = None,
+                 sql_port : str = None,
+                 sql_database : str = None,
+                 sql_username: str = None,
+                 sql_password: str = None):
         self.logger = logging.getLogger('SQLConnection')
+        if not sql_driver:
+            raise SQLConnectionError(f"Missing Driver")
         available_drivers = pyodbc.drivers()
-        if driver not in available_drivers:
-            raise SQLConnectionError(f"Driver {driver} not found. Available drivers: {available_drivers}")
-        self.driver = driver
+        if sql_driver not in available_drivers:
+            raise SQLConnectionError(f"Driver {sql_driver} not found. Available drivers: {available_drivers}")
+        self.driver = sql_driver
 
         connection_params = {
-            'server': server,
-            'port': port,
-            'database': database,
-            'uid': user,
-            'pwd': pwd
+            'server': sql_server,
+            'port': sql_port,
+            'database': sql_database,
+            'uid': sql_username,
+            'pwd': sql_password
         }
         connection_string = f"driver={{{self.driver}}};"
         for param in connection_params:
