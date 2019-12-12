@@ -112,7 +112,7 @@ jobs:
           SQL_SERVER: localhost
           SQL_DATABASE: circleci_test
           SQL_USERNAME: test
-          SQL_PASSWROD: test_pw
+          SQL_PASSWORD: test_pw
           CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
       - image: circleci/postgres:9.6
         environment:
@@ -181,7 +181,7 @@ jobs:
           SQL_SERVER: 127.0.0.1
           SQL_DATABASE: circleci_test
           SQL_USERNAME: test
-          SQL_PASSWROD: test_pw
+          SQL_PASSWORD: test_pw
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_DATABASE: circleci_test
