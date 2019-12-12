@@ -24,6 +24,8 @@ More instructions regarding the pyodbc library and connecting to different datab
   ```bash
   sudo yum install postgresql-odbc.x86_64
   ``````
+* Install MySQL ODBC driver:
+  Follow the same instructions for Ubuntu
 
 #### Ubuntu:
 * Install the unixODBC driver manager:
@@ -35,6 +37,17 @@ More instructions regarding the pyodbc library and connecting to different datab
 * Install PostgreSQL ODBC driver:
   ```bash
   sudo apt install odbc-postgresql
+  ```
+* Install MySQL ODBC driver:
+  * Download the correct driver for your OS [here](https://dev.mysql.com/downloads/connector/odbc/).
+  The example below is for Ubuntu 18.04
+  ```bash
+  wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz
+  tar zxvf mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz
+  sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz/bin/* /usr/local/bin
+  sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz/lib/* /usr/local/lib
+  sudo chmod 777 /usr/local/lib/libmyodbc*
+  sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
   ```
 
 #### Mac:
