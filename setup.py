@@ -18,7 +18,7 @@ if os.environ.get('CONVERT_README'):
 else:
     long_description = ''
 
-VERSION = "0.0.4"
+VERSION = "0.1.0"
 
 setup(
     name='aitoai',
