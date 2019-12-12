@@ -1,10 +1,11 @@
+import io
 import json
 import logging
-from pathlib import Path
 from typing import List, Dict, Callable
-import io
+
 import pandas as pd
 
+from aito.utils._typing import *
 from aito.utils.schema_handler import SchemaHandler
 
 
@@ -103,7 +104,11 @@ class DataFrameHandler:
         df = read_functions[in_format](read_input, **options)
         return df
 
-    def df_to_format(self, df: pd.DataFrame, out_format: str, write_output, convert_options: Dict = None):
+    def df_to_format(self,
+                     df: pd.DataFrame,
+                     out_format: str,
+                     write_output: FilePathOrBuffer,
+                     convert_options: Dict = None):
         """
 
         :param df:
@@ -132,14 +137,13 @@ class DataFrameHandler:
         convert_functions[out_format](write_output, **options)
 
     def convert_file(self,
-                     read_input,
-                     write_output,
+                     read_input: FilePathOrBuffer,
+                     write_output: FilePathOrBuffer,
                      in_format: str,
                      out_format: str,
                      read_options: Dict = None,
                      convert_options: Dict = None,
                      apply_functions: List[Callable[..., pd.DataFrame]] = None,
-                     create_table_schema: Path = None,
                      use_table_schema: Dict = None):
         """
         Converting a file into expected format and generate aito schema if required
@@ -150,7 +154,6 @@ class DataFrameHandler:
         :param read_options: dictionary contains arguments for pandas read function
         :param convert_options: dictionary contains arguments for pandas convert function
         :param apply_functions: List of partial functions that will be chained applied to the loaded pd.DataFrame
-        :param create_table_schema: option to auto generate aito schema
         :param use_table_schema: use an aito schema to dictates data types and convert the data
         :return:
         """
@@ -169,9 +172,4 @@ class DataFrameHandler:
 
         if out_format != in_format or convert_options:
             self.df_to_format(df, out_format, write_output, convert_options)
-
-        if create_table_schema:
-            schema = self.schema_handler.generate_table_schema_from_pandas_dataframe(df)
-            with create_table_schema.open(mode='w') as f:
-                json.dump(schema, f, indent=4, sort_keys=True)
-
+        return df

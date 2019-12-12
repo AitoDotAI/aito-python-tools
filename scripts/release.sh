@@ -69,16 +69,16 @@ function git_bump_prod_version {
 function prepare_release_tools {
   echo "installing pandoc and pypandoc to convert markdown to rst"
   sudo apt-get install pandoc
-  python3 -m pip install --user --upgrade pypandoc
+  pip install --upgrade pypandoc
   export CONVERT_README='true'
 
   echo "installing twine to release package"
-  python3 -m pip install --user --upgrade twine
+  pip install --upgrade twine
 }
 
 function build_package {
-  python3 -m pip install --user --upgrade setuptools wheel
-  python3 setup.py sdist bdist_wheel
+  pip install --upgrade setuptools wheel
+  python setup.py sdist bdist_wheel
 }
 
 if [[ "$1" == "" ]]
@@ -114,9 +114,9 @@ build_package
 
 if [[ "$1" == "test" ]]
 then
-  twine check dist/* && python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+  twine check dist/* && twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 else
-  twine check dist/* && python3 -m twine upload dist/*
+  twine check dist/* && twine upload dist/*
 fi
 
 exit $!

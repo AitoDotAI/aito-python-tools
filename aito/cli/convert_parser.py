@@ -3,7 +3,8 @@ import json
 import sys
 
 from aito.utils.data_frame_handler import DataFrameHandler
-from aito.cli.parser import AitoArgParser
+from aito.utils.parser import AitoArgParser
+from aito.utils.schema_handler import SchemaHandler
 
 
 def add_convert_format_parser(format_subparsers, format_name):
@@ -41,9 +42,8 @@ def add_convert_csv_parser(format_subparsers):
 def add_convert_excel_parser(format_subparsers):
     parser = add_convert_format_parser(format_subparsers, 'excel')
     parser.description = 'Convert excel format input, accept both xls and xlsx. ' \
-                                       'Read the first sheet of the file by default'
-    parser.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name',
-                                      help='read a sheet of the excel file')
+                         'Read the first sheet of the file by default'
+    parser.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name', help='read a sheet of the excel file')
     parser.epilog = '''Example:
     aito convert excel ./myFile.xls
     aito convert excel -o firstSheet myMultipleSheetsFile.xslx
@@ -85,14 +85,14 @@ Example:
                                                       parser_class=AitoArgParser,
                                                       dest='input-format',
                                                       metavar='<input-format>')
-    format_subparsers.required=True
+    format_subparsers.required = True
     add_convert_csv_parser(format_subparsers)
     add_convert_excel_parser(format_subparsers)
     add_convert_json_parser(format_subparsers)
     add_convert_ndjson_parser(format_subparsers)
 
 
-def execute_convert(main_parser, parsed_args):
+def execute_convert(main_parser: AitoArgParser, parsed_args):
     in_format = parsed_args['input-format']
     convert_args = {
         'read_input': main_parser.parse_input_arg_value(parsed_args['input']),
@@ -103,15 +103,14 @@ def execute_convert(main_parser, parsed_args):
             'encoding': parsed_args['encoding']
         },
         'convert_options': {},
-        'create_table_schema':
-            main_parser.check_valid_path(parsed_args['create_table_schema'])
-            if parsed_args['create_table_schema'] else None,
     }
 
+    schema_handler = SchemaHandler()
     if parsed_args['use_table_schema']:
-        schema_path = main_parser.check_valid_path(parsed_args['use_table_schema'], check_exists=True)
+        schema_path = main_parser.parse_path_value(parsed_args['use_table_schema'], check_exists=True)
         with schema_path.open() as f:
             table_schema = json.load(f)
+        schema_handler.validate_table_schema(table_schema)
         convert_args['use_table_schema'] = table_schema
 
     if in_format == 'csv':
@@ -124,5 +123,12 @@ def execute_convert(main_parser, parsed_args):
         if parsed_args['one_sheet']:
             convert_args['read_options']['sheet_name'] = parsed_args['one_sheet']
 
-    DataFrameHandler().convert_file(**convert_args)
+    converted_df = DataFrameHandler().convert_file(**convert_args)
+
+    if parsed_args['create_table_schema']:
+        output_schema_path = main_parser.parse_path_value(parsed_args['create_table_schema'])
+        inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(converted_df)
+        with output_schema_path.open(mode='w') as f:
+            json.dump(inferred_schema, f, indent=2, sort_keys=True)
+
     return 0

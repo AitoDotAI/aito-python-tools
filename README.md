@@ -1,9 +1,7 @@
 # aito-python-tools
 [![PyPI](https://img.shields.io/pypi/pyversions/aitoai?style=plastic)](https://github.com/AitoDotAI/aito-python-tools) [![PyPI version](https://badge.fury.io/py/aitoai.svg)](https://badge.fury.io/py/aitoai)
 
-_DISCLAIMER: aito-python-tools repository is experimental code that we are already using ourselves. It might be a bit rough on the edges and is not yet ready for production grade release. We are constantly developing it and changes are likely. Feel free to use, and share any feedback with us._
-
-A useful library for [Aito](https://aito.ai/) users containing:
+A useful library for [Aito](https://aito.ai/) users containg:
 * CLI for using Aito
 * Integration with [Pandas](https://pandas.pydata.org/)
 
@@ -14,9 +12,16 @@ To install with pip, run: `pip install aitoai`
 
 To install from source, first clone the repository and then run: `python setup.py install`
 
+***Additional features***:
+* The Aito CLI supports integration with your SQL database.
+To enable this feature, please follow the instructions [here](docs/sql_functions.md)
+
+* The Aito CLI supports tab completion using [argcomplete](https://argcomplete.readthedocs.io/en/latest/).
+More instructions can be found [here](docs/cli.md/#tab-completion)
+
 ## Basic Usage
 
-### Command line interface support tools
+### Aito Command line interface
 
 ```bash
 aito -h
@@ -38,19 +43,16 @@ action:
 
 ***NOTE:*** For database action, remember to set up your Aito instance credentials.
 
-The CLI supports tab completion using [argcomplete](https://argcomplete.readthedocs.io/en/latest/).
-More instructions can be found [here](docs/cli.md/#tab-completion)
-
 For addition guide of the CLI tool, see the [CLI documentations](docs/cli.md)
 
-### Integrating with [Pandas](https://pandas.pydata.org/) DataFrame
+### Integrating with [pandas](https://pandas.pydata.org/) DataFrame
 
-* Generate Aito Schema from a Pandas DataFrame:
+* Infer Aito Schema from a pandas DataFrame:
   ```python
   from aito.utils.schema_handler import SchemaHandler
 
   schema_handler = SchemaHandler()
-  schema_handler.generate_table_schema_from_pandas_dataframe(df)
+  schema_handler.infer_table_schema_from_pandas_dataframe(df)
   ```
 
 ## Feedback & bug reports

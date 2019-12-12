@@ -2,8 +2,8 @@ import argparse
 import json
 import sys
 
-from aito.cli.parser import AitoArgParser
 from aito.utils.data_frame_handler import DataFrameHandler
+from aito.utils.parser import AitoArgParser
 from aito.utils.schema_handler import SchemaHandler
 
 
@@ -57,7 +57,22 @@ def add_infer_ndjson_parser(format_subparsers):
     return parser
 
 
-def add_infer_table_schema_parser(action_subparsers):
+def add_infer_from_sql(format_subparsers):
+    parser = format_subparsers.add_parser('from-sql', help="infer table schema the result of a SQL query")
+    parser.add_argument('database-name', type=str, choices=['postgres'], help='database name')
+    parser.add_argument('query', type=str, help='query to get the data from your database')
+    parser.add_sql_credentials_arguments(True)
+
+
+def execute_infer_from_sql(main_parser: AitoArgParser, parsed_args):
+    connection = main_parser.create_sql_connecting_from_parsed_args(parsed_args)
+    result_df = connection.execute_query_and_save_result(parsed_args['query'])
+    inferred_schema = SchemaHandler().infer_table_schema_from_pandas_dataframe(result_df)
+    json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
+    return 0
+
+
+def add_infer_table_schema_parser(action_subparsers, enable_sql_functions):
     """
     :param action_subparsers: Action subparsers from the main parser
     :return:
@@ -81,16 +96,21 @@ Example:
                                                      parser_class=AitoArgParser,
                                                      dest='input-format',
                                                      metavar="<input-format>")
-    format_sub_parsers.required=True
+    format_sub_parsers.required = True
 
     add_infer_csv_parser(format_sub_parsers)
     add_infer_excel_parser(format_sub_parsers)
     add_infer_json_parser(format_sub_parsers)
     add_infer_ndjson_parser(format_sub_parsers)
+    if enable_sql_functions:
+        add_infer_from_sql(format_sub_parsers)
 
 
-def execute_infer_table_schema(main_parser, parsed_args):
+def execute_infer_table_schema(main_parser: AitoArgParser, parsed_args):
     in_format = parsed_args['input-format']
+    if in_format == 'from-sql':
+        return execute_infer_from_sql(main_parser, parsed_args)
+
     read_args = {
         'read_input': main_parser.parse_input_arg_value(parsed_args['input']),
         'in_format': in_format,
@@ -109,6 +129,6 @@ def execute_infer_table_schema(main_parser, parsed_args):
             read_args['read_options']['sheet_name'] = parsed_args['one_sheet']
 
     df = DataFrameHandler().read_file_to_df(**read_args)
-    inferred_schema = SchemaHandler().generate_table_schema_from_pandas_dataframe(df)
+    inferred_schema = SchemaHandler().infer_table_schema_from_pandas_dataframe(df)
     json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
     return 0

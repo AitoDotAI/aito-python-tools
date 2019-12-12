@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from aito.utils.config import set_up_logger
+from aito.utils.generic_utils import set_up_logger, root_path
 from tests.test_case import *
 from tests.test_result import *
 

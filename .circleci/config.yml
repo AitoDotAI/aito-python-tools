@@ -3,12 +3,77 @@
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
 version: 2
+
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - runUnittestsExceptSQLConnectionTests
+      - runUnittestsPostgres
+      - runUnittestsMySQL
+
+commonYAMLStructure:
+  - &restore_venv_cache
+    restore_cache:
+      keys:
+        - v1-dependencies-{{ checksum "requirements.txt" }}
+        # fallback to using the latest cache if no exact match is found
+        - v1-dependencies-
+  - &install_venv_dependencies
+    run:
+      name: install python requirements
+      command: |
+        python3 -m venv venv
+        . venv/bin/activate
+        pip install -r requirements.txt
+  - &save_venv_cache
+    save_cache:
+      paths:
+        - ./venv
+      key: v1-dependencies-{{ checksum "requirements.txt" }}
+  - &install_postgres_cli
+    run:
+      name: install postgres cli
+      command:          |
+        sudo apt-get -qy update
+        sudo apt-get install postgresql-client
+  - &install_mysql_cli
+    run:
+      name: install mysql cli
+      command:          |
+        sudo apt-get -qy update
+        sudo apt-get install default-mysql-client
+  - &install_odbc_driver
+    run:
+      name: install odbc driver
+      command: sudo apt install unixodbc-dev
+  - &install_postgres_odbc_driver
+    run:
+      name: install postgres odbc driver
+      command: |
+        sudo apt-get install odbc-postgresql
+  - &install_mysql_odbc_driver
+    run:
+      name: install msql odbc unicode driver
+      command: |
+        wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
+        tar zxvf mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
+        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/bin/* /usr/local/bin
+        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/lib/* /usr/local/lib
+        sudo chmod 777 /usr/local/lib/libmyodbc*
+        sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
+  - &install_pyodbc
+    run:
+      command: |
+        . venv/bin/activate
+        pip install pyodbc
+
 jobs:
-  build:
+  runUnittestsExceptSQLConnectionTests:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.6
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -19,30 +84,157 @@ jobs:
 
     steps:
       - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "requirements.txt" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-
+      - *restore_venv_cache
+      - *install_venv_dependencies
+      - *save_venv_cache
       - run:
-          name: install dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
-
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-      - run:
-          name: run tests
+          name: run utils tests
           command: |
             . venv/bin/activate
-            python -m tests.test_parser all
+            python -m tests.test_parser suite tests.utils
+
+      - run:
+          name: run cli tests
+          command: |
+            . venv/bin/activate
+            python -m tests.test_parser suite tests.cli
+
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+  runUnittestsPostgres:
+    docker:
+      - image: circleci/python:3.6
+        environment:
+          SQL_DRIVER: PostgreSQL Unicode
+          SQL_SERVER: localhost
+          SQL_DATABASE: circleci_test
+          SQL_USERNAME: test
+          SQL_PASSWORD: test_pw
+          CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
+      - image: circleci/postgres:9.6
+        environment:
+          POSTGRES_DB: circleci_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test_pw
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - *restore_venv_cache
+      - *install_venv_dependencies
+      - *save_venv_cache
+      - *install_odbc_driver
+      - *install_pyodbc
+      - *install_postgres_odbc_driver
+      - run:
+          name: Waiting for Postgres to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+      - run:
+          name: run postgres connection tests
+          command: |
+            . venv/bin/activate
+            python -m tests.test_parser case tests.sql_functions.test_connection.TestPostgresConnection
+      - *install_postgres_cli
+      - run: whoami
+      - run:
+          name: prepare data
+          command: |
+            psql "$CONNECTION_STRING" -c "DROP TABLE IF EXISTS invoice;"
+            psql "$CONNECTION_STRING" -c "CREATE TABLE invoice(
+              id serial primary key,
+              name VARCHAR(355) not null,
+              amount double precision not null,
+              \"Remark\" VARCHAR (355)
+            );"
+            psql "$CONNECTION_STRING" -c "INSERT INTO invoice(name, amount, \"Remark\") VALUES
+              ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
+              (E'Sam \"Mad Dog\" Smith', 993.44, NULL),
+              ('Barney & Company', 0, E'Great to work with\nand always pays with cash.'),
+              (E'Johnson\'s Automotive', 2344, NULL);"
+
+      - run:
+          name: run postgres cli functions tests
+          command:
+            . venv/bin/activate
+            python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestPostgresCliFunctions
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+  runUnittestsMySQL:
+    docker:
+      - image: circleci/python:3.6-stretch
+        environment:
+          SQL_DRIVER: MySQL ODBC 8.0 Driver
+          SQL_SERVER: 127.0.0.1
+          SQL_DATABASE: circleci_test
+          SQL_USERNAME: test
+          SQL_PASSWORD: test_pw
+      - image: circleci/mysql:8.0.3
+        environment:
+          MYSQL_DATABASE: circleci_test
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test_pw
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - *restore_venv_cache
+      - *install_venv_dependencies
+      - *save_venv_cache
+      - *install_odbc_driver
+      - *install_pyodbc
+      - *install_mysql_odbc_driver
+      - run:
+          name: Waiting for MySQL to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z 127.0.0.1 3306 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for MySQL && exit 1
+      - run:
+          name: run mysql connection tests
+          command: |
+            . venv/bin/activate
+            python -m tests.test_parser case tests.sql_functions.test_connection.TestMySQLConnection
+      - *install_mysql_cli
+      - run:
+          name: prepare data
+          command: |
+            mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "DROP TABLE IF EXISTS invoice;"
+            mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "CREATE TABLE invoice(
+              id serial primary key,
+              name VARCHAR(355) not null,
+              amount double precision not null,
+              remark VARCHAR (355)
+            );"
+            mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "INSERT INTO invoice(name, amount, remark) VALUES
+              ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
+              ('Sam \"Mad Dog\" Smith', 993.44, NULL),
+              ('Barney & Company', 0, 'Great to work with\nand always pays with cash.'),
+              ('Johnson\'s Automotive', 2344, NULL);"
+
+      - run:
+          name: run mysql cli functions tests
+          command:
+            . venv/bin/activate
+            python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestMySQLCliFunctions
 
       - store_artifacts:
           path: test-reports

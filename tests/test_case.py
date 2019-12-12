@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from typing import Optional, Union
 
-from aito.utils.config import root_path
+from aito.utils.generic_utils import root_path
 
 
 class TestCaseTimer(unittest.TestCase):
