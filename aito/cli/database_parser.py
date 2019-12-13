@@ -179,9 +179,9 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
 def add_upload_data_from_sql_parser(operation_subparsers):
     parser = operation_subparsers.add_parser('upload-data-from-sql',
                                              help="populate data from the result of a SQL query to an existing table")
+    parser.add_sql_credentials_arguments_flags(add_use_env_arg=False)
     parser.add_argument('table-name', type=str, help='name of the table to be populated')
     parser.add_argument('query', type=str, help='query to get the data from your database')
-    parser.add_sql_credentials_arguments(False)
 
 
 def execute_upload_data_from_sql(main_parser: AitoArgParser, parsed_args):
@@ -206,9 +206,9 @@ def add_quick_add_table_from_sql_parser(operation_subparsers):
         'quick-add-table-from-sql',
         help="infer schema, create table, and upload the result of a SQL to the database"
     )
+    parser.add_sql_credentials_arguments_flags(add_use_env_arg=False)
     parser.add_argument('table-name', type=str, help='name of the table to be populated')
     parser.add_argument('query', type=str, help='query to get the data from your database')
-    parser.add_sql_credentials_arguments(parser)
 
 
 def execute_quick_add_table_from_sql(main_parser: AitoArgParser, parsed_args):
@@ -236,7 +236,7 @@ def add_database_parser(action_subparsers, enable_sql_functions):
     database_parser = action_subparsers.add_parser('database',
                                                    help='perform operations with your Aito database instance')
     database_parser.formatter_class = argparse.RawTextHelpFormatter
-    database_parser.add_aito_credentials_arguments(add_use_env_arg=True)
+    database_parser.add_aito_credentials_arguments_flags(add_use_env_arg=True)
     database_parser.epilog += '''
 To see help for a specific operation:
   aito database <operation> -h  
