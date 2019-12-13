@@ -25,7 +25,7 @@ class TestPostgresCliFunctions(TestCaseCompare):
 
     def test_infer_schema_from_query(self):
         os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema from-sql \"PostgreSQL Unicode\" "
-                  f"'SELECT * FROM invoice_postgres' > {self.out_file_path}")
+                  f"'SELECT * FROM invoice' > {self.out_file_path}")
         self.assertCountEqual(json.load(self.out_file_path.open()),
                               json.load((self.input_folder / 'invoice_aito_schema.json').open()))
 
@@ -33,7 +33,7 @@ class TestPostgresCliFunctions(TestCaseCompare):
         self.create_table()
         os.system('python -m aito.cli.main_parser_wrapper database upload-data-from-sql \"PostgreSQL Unicode\" '
                   'invoice_postgres "SELECT * FROM invoice"')
-        table_entries_result = self.client.query_table_entries('invoice')
+        table_entries_result = self.client.query_table_entries('invoice_postgres')
         self.assertEqual(table_entries_result['total'], 4)
         self.assertCountEqual(table_entries_result['hits'],
                               json.load((self.input_folder / 'invoice_no_null_value.json').open()))
@@ -41,7 +41,7 @@ class TestPostgresCliFunctions(TestCaseCompare):
     def test_quick_add_table_from_query(self):
         os.system('python -m aito.cli.main_parser_wrapper database quick-add-table-from-sql \"PostgreSQL Unicode\" '
                   'invoice_postgres "SELECT * FROM invoice"')
-        table_entries_result = self.client.query_table_entries('invoice')
+        table_entries_result = self.client.query_table_entries('invoice_postgres')
         self.assertEqual(table_entries_result['total'], 4)
         self.assertCountEqual(table_entries_result['hits'],
                               json.load((self.input_folder / 'invoice_no_null_value.json').open()))
@@ -75,7 +75,7 @@ class TestMySQLCliFunctions(TestCaseCompare):
         self.create_table()
         os.system('python -m aito.cli.main_parser_wrapper database upload-data-from-sql \"MySQL ODBC 8.0 Driver\" '
                   'invoice_mysql "SELECT * FROM invoice"')
-        table_entries_result = self.client.query_table_entries('invoice')
+        table_entries_result = self.client.query_table_entries('invoice_mysql')
         self.assertEqual(table_entries_result['total'], 4)
         self.assertCountEqual(table_entries_result['hits'],
                               json.load((self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open()))
@@ -83,7 +83,7 @@ class TestMySQLCliFunctions(TestCaseCompare):
     def test_quick_add_table_from_query(self):
         os.system('python -m aito.cli.main_parser_wrapper database quick-add-table-from-sql \"MySQL ODBC 8.0 Driver\" '
                   'invoice_mysql "SELECT * FROM invoice"')
-        table_entries_result = self.client.query_table_entries('invoice')
+        table_entries_result = self.client.query_table_entries('invoice_mysql')
         self.assertEqual(table_entries_result['total'], 4)
         self.assertCountEqual(table_entries_result['hits'],
                               json.load((self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open()))
