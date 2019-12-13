@@ -243,10 +243,10 @@ To see help for a specific operation:
 
 Example:
   aito database quick-add-table myTable.csv
+  aito database quick-add-table-from-sql "PostgreSQL Unicode" tableName 'SELECT * FROM tableName;'
   aito database create-table tableName < path/to/tableSchema
   aito database -e path/to/myCredentials.env upload-file myTable path/to/myFile
   aito database -i MY_INSTANCE_NAME -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < path/to/myTableEntries
-  aito database quick-add-table-from-sql postgres tableName 'SELECT * FROM tableName;'
   '''
     operation_subparsers = database_parser.add_subparsers(title="operation",
                                                           description="operation to perform",

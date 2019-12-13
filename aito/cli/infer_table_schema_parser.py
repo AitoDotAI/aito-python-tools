@@ -29,6 +29,7 @@ def add_infer_csv_parser(format_subparsers):
     parser.epilog = '''Example:
   aito infer-table-schema csv myFile.csv
   aito infer-table-schema csv -d ';' < mySemicolonDelimiterFile.csv > inferredSchema.json
+  aito infer-table-schema from-sql "PostgreSQL Unicode" "SELECT * FROM tableName"
   '''
     return parser
 
