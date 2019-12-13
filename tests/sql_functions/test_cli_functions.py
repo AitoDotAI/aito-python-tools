@@ -24,7 +24,7 @@ class TestPostgresCliFunctions(TestCaseCompare):
         self.client.put_table_schema('invoice', table_schema)
 
     def test_infer_schema_from_query(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema from-sql \"PostgreSQL Unicode\""
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema from-sql \"PostgreSQL Unicode\" "
                   f"'SELECT * FROM invoice' > {self.out_file_path}")
         self.assertCountEqual(json.load(self.out_file_path.open()),
                               json.load((self.input_folder / 'invoice_aito_schema.json').open()))
@@ -66,7 +66,7 @@ class TestMySQLCliFunctions(TestCaseCompare):
         self.client.put_table_schema('invoice', table_schema)
 
     def test_infer_schema_from_query(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema from-sql \"MySQL ODBC 8.0 Driver\""
+        os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema from-sql \"MySQL ODBC 8.0 Driver\" "
                   f"'SELECT * FROM invoice' > {self.out_file_path}")
         self.assertCountEqual(json.load(self.out_file_path.open()),
                               json.load((self.input_folder / 'invoice_aito_schema_lower_case_columns.json').open()))
