@@ -12,7 +12,7 @@ class TestPostgresConnection(TestCaseCompare):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_variables = os.environ
         cls.connection = SQLConnection(
-            env_variables.get('SQL_DRIVER'), env_variables.get('SQL_SERVER'), env_variables.get('SQL_PORT'),
+            "PostgreSQL Unicode", env_variables.get('SQL_SERVER'), env_variables.get('SQL_PORT'),
             env_variables.get('SQL_DATABASE'), env_variables.get('SQL_USERNAME'), env_variables.get('SQL_PASSWORD'))
         c = cls.connection.execute_query('DROP TABLE IF EXISTS invoice;')
         c.close()
@@ -61,7 +61,7 @@ class TestMySQLConnection(TestCaseCompare):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_variables = os.environ
         cls.connection = SQLConnection(
-            env_variables.get('SQL_DRIVER'), env_variables.get('SQL_SERVER'), env_variables.get('SQL_PORT'),
+            "MySQL ODBC 8.0 Driver", env_variables.get('SQL_SERVER'), env_variables.get('SQL_PORT'),
             env_variables.get('SQL_DATABASE'), env_variables.get('SQL_USERNAME'), env_variables.get('SQL_PASSWORD'))
         c = cls.connection.execute_query('DROP TABLE IF EXISTS invoice;')
         c.close()
