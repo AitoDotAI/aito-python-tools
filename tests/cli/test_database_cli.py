@@ -23,7 +23,7 @@ class TestDatabaseCli(TestCaseCompare):
 
     def setUp(self):
         super().setUp()
-        self.client.delete_database()
+        self.client.delete_table('invoice')
 
     def test_upload_batch_no_table_schema(self):
         with self.assertRaises(Exception):
