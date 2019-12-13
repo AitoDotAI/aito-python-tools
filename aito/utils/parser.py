@@ -97,8 +97,8 @@ If no Aito credential is given, the following environment variables are used to 
         args.add_argument('--server', '-s', type=str, help='server to connect to', default='.env')
         args.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
         args.add_argument('--database', '-d', type=str, help='database to connect to', default='.env')
-        args.add_argument('--user', '-u', type=str, help='username for authentication', default='.env')
-        args.add_argument('--pwd', '-p', type=str, help='password for authentication', default='.env')
+        args.add_argument('--username', '-u', type=str, help='username for authentication', default='.env')
+        args.add_argument('--password', '-p', type=str, help='password for authentication', default='.env')
 
         epilog_str = '''Each database requires different odbc driver. Please refer to our docs for more info.
 If no database connection is given, the following environment variable are used to connect to your SQL database:
@@ -125,9 +125,9 @@ If no database connection is given, the following environment variable are used 
         return AitoClient(**client_args)
 
     def create_sql_connecting_from_parsed_args(self, parsed_args):
-        connection_args = {}
         if 'driver' not in parsed_args:
             self.error("Cannot create SQL connection without driver")
+        connection_args = {'sql_driver': parsed_args['driver']}
         for arg in ['server', 'port', 'database', 'username', 'password']:
             connection_arg_name = f"sql_{arg}"
             connection_args[connection_arg_name] = self.parse_env_variable(connection_arg_name.upper()) if \
