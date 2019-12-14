@@ -20,7 +20,7 @@ class AitoClient:
         'PUT': requests.put, 'POST': requests.post, 'GET': requests.get, 'DELETE': requests.delete
     }
 
-    query_api_paths = [
+    paths = [
         '/api/v1/_search',
         '/api/v1/_predict',
         '/api/v1/_recommend',
@@ -28,19 +28,16 @@ class AitoClient:
         '/api/v1/_similarity',
         '/api/v1/_match',
         '/api/v1/_relate',
-        '/api/v1/_query'
+        '/api/v1/_query',
+        '/version'
     ]
 
-    database_api_prefix_and_methods = {
-        '/api/v1/schema': ['GET', 'PUT', 'DELETE'],
-        '/api/v1/data': ['POST', 'GET'],
-        '/api/v1/data/_delete': ['POST']
-    }
+    database_paths_prefix = [
+        '/api/v1/schema',
+        '/api/v1/data'
+    ]
 
-    rw_key_paths = list(database_api_prefix_and_methods.keys())
-    ro_key_paths = query_api_paths + ['/version']
-
-    def __init__(self, instance_name: str, rw_key: str, ro_key: str):
+    def __init__(self, instance_name: str, api_key: str):
         self.logger = logging.getLogger("AitoClient")
 
         if not instance_name:
@@ -50,45 +47,18 @@ class AitoClient:
             raise ClientError('Instance name must begin with a letter and can only contains lowercase '
                               'letter, numbers, and dashses.')
         self.url = f"https://{instance_name}.api.aito.ai"
+        if not api_key:
+            raise ClientError("Api key is required")
+        self.headers = {'Content-Type': 'application/json', 'x-api-key': api_key}
 
-        if not rw_key and not ro_key:
-            raise ClientError("Both read-write and read-only key are missing")
-        self.rw_key = rw_key
-        self.ro_key = ro_key
-        if not rw_key:
-            self.logger.warning("Read-write key is not defined. APIs which require read-write key will fail")
-        if not ro_key:
-            self.logger.warning(f"Read-only key is not defined. Use read-write key instead")
-            self.ro_key = self.rw_key
-
-    def check_path_and_build_headers(self, path: str):
-        """
-        Check if path is validate aito path.
-        Use read-write or read-only key accordingly
-        :param path:
-        :return:
-        """
-        headers = {'Content-Type': 'application/json'}
-        is_database_api_path = any([path.startswith(db_path) for db_path in self.database_api_prefix_and_methods])
-        if is_database_api_path:
-            if not self.rw_key:
-                raise ClientError(f"Path {path} requires read-write key")
-            headers['x-api-key'] = self.rw_key
-        elif path in self.ro_key_paths:
-            headers['x-api-key'] = self.ro_key
-        elif path.startswith('/api/v1/'):
+    def check_path(self, path: str):
+        is_database_path = any([path.startswith(db_path) for db_path in self.database_paths_prefix])
+        if not is_database_path and not path in self.paths:
             self.logger.warning(f"Unrecognized path {path}")
-            if self.rw_key:
-                headers['x-api-key'] = self.rw_key
-            else:
-                headers['x-api-key'] = self.ro_key
-        else:
-            raise ClientError(f"invalid path {path}")
-        return headers
 
-    async def fetch(self, session: ClientSession, req_method: 'str', path: str, json_data: Dict):
-        headers = self.check_path_and_build_headers(path)
-        async with session.request(method=req_method, url=self.url + path, json=json_data, headers=headers) as resp:
+    async def fetch(self, session: ClientSession, method: 'str', path: str, json_data: Dict):
+        self.check_path(path)
+        async with session.request(method=method, url=self.url + path, json=json_data, headers=self.headers) as resp:
             json_resp = await resp.json()
             return json_resp
 
@@ -129,10 +99,10 @@ class AitoClient:
         return loop.run_until_complete(run())
 
     def request(self, req_method: str, path: str, data=None):
-        headers = self.check_path_and_build_headers(path)
+        self.check_path(path)
         url = self.url + path
         try:
-            r = self.request_methods[req_method](url, headers=headers, json=data)
+            r = self.request_methods[req_method](url, headers=self.headers, json=data)
             r.raise_for_status()
         except requests.HTTPError as e:
             raise ClientError(f"{e}\n{r.text}")
@@ -254,7 +224,3 @@ class AitoClient:
         if limit:
             query['limit'] = limit
         return self.request('POST', '/api/v1/_query', query)
-
-
-
-

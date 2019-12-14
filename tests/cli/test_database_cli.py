@@ -5,6 +5,8 @@ from subprocess import Popen, PIPE
 from aito.cli.main_parser_wrapper import MainParserWrapper
 from aito.utils.aito_client import AitoClient
 from tests.test_case import TestCaseCompare
+import unittest
+import os
 
 
 class TestDatabaseCli(TestCaseCompare):
@@ -14,7 +16,7 @@ class TestDatabaseCli(TestCaseCompare):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.main_parser = MainParserWrapper()
         env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
+        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_API_KEY'])
 
     def create_table(self):
         with (self.input_folder / "invoice_aito_schema.json").open() as f:
@@ -23,7 +25,7 @@ class TestDatabaseCli(TestCaseCompare):
 
     def setUp(self):
         super().setUp()
-        self.client.delete_database()
+        self.client.delete_table('invoice')
 
     def test_upload_batch_no_table_schema(self):
         with self.assertRaises(Exception):
@@ -90,6 +92,7 @@ class TestDatabaseCli(TestCaseCompare):
         proc.communicate(b"y")
         self.assertFalse(self.client.check_table_existed('invoice'))
 
+    @unittest.skipUnless(os.environ.get('RUN_SKIP_TEST'), "Avoid delete DB when running sql functions test")
     def test_delete_database(self):
         self.create_table()
         with (self.input_folder / 'invoice_aito_schema_altered.json').open() as f:

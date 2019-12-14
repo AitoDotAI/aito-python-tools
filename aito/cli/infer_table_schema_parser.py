@@ -29,6 +29,7 @@ def add_infer_csv_parser(format_subparsers):
     parser.epilog = '''Example:
   aito infer-table-schema csv myFile.csv
   aito infer-table-schema csv -d ';' < mySemicolonDelimiterFile.csv > inferredSchema.json
+  aito infer-table-schema from-sql "PostgreSQL Unicode" "SELECT * FROM tableName"
   '''
     return parser
 
@@ -59,9 +60,8 @@ def add_infer_ndjson_parser(format_subparsers):
 
 def add_infer_from_sql(format_subparsers):
     parser = format_subparsers.add_parser('from-sql', help="infer table schema the result of a SQL query")
-    parser.add_argument('database-name', type=str, choices=['postgres'], help='database name')
+    parser.add_sql_credentials_arguments_flags(add_use_env_arg=True)
     parser.add_argument('query', type=str, help='query to get the data from your database')
-    parser.add_sql_credentials_arguments(True)
 
 
 def execute_infer_from_sql(main_parser: AitoArgParser, parsed_args):

@@ -66,45 +66,40 @@ class AitoArgParser(argparse.ArgumentParser):
             else:
                 sys.stdout.write("Please respond with yes(y) or no(n)'\n")
 
-    def add_aito_credentials_arguments(self, add_use_env_arg = False):
+    def add_aito_credentials_arguments_flags(self, add_use_env_arg = False):
         args = self.add_argument_group("aito credential arguments")
         if add_use_env_arg:
             args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
                               help='set up the credentials using a .env file containing the required env variables')
-        args.add_argument('-r', '--read-only-key', type=str, default='.env',
-                          help='specify aito read-only API key')
-        args.add_argument('-i', '--instance-name', type=str, default='.env',
-                          help='specify aito instance name')
-        args.add_argument('-w', '--read-write-key', type=str, default='.env',
-                          help='specify aito read-write API key')
+        args.add_argument('-i', '--instance-name', type=str, default='.env', help='specify aito instance name')
+        args.add_argument('-k', '--api-key', type=str, default='.env',
+                          help='specify aito read-write or read-only API key')
         epilog_str = '''You must provide your Aito credentials to execute database operations
-If no credential options is given, the following environment variable is used to connect to your Aito database:
-  AITO_INSTANCE_NAME=your-instance-name
-  AITO_RW_KEY=your read-write api key
-  AITO_RO_KEY=your read-only key (optional)
+If no Aito credential is given, the following environment variables are used to connect to your Aito database:
+  AITO_INSTANCE_NAME, AITO_API_KEY
   '''
         if not self.epilog:
             self.epilog = epilog_str
         else:
             self.epilog += epilog_str
 
-    def add_sql_credentials_arguments(self, add_use_env_arg: bool = False):
+    def add_sql_credentials_arguments_flags(self, add_use_env_arg: bool = False):
+        import pyodbc
+        self.add_argument('driver', type=str, choices=list(pyodbc.drivers()), help='the ODBC driver name to be used')
         args = self.add_argument_group('database connection arguments')
         if add_use_env_arg:
             args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
                               help='set up the credentials using a .env file containing the required env variables')
 
-        args.add_argument('--driver', '-D', type=str, default='.env',
-                          help='use the default driver for the specified database type')
         args.add_argument('--server', '-s', type=str, help='server to connect to', default='.env')
         args.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
         args.add_argument('--database', '-d', type=str, help='database to connect to', default='.env')
-        args.add_argument('--user', '-u', type=str, help='username for authentication', default='.env')
-        args.add_argument('--pwd', '-p', type=str, help='password for authentication', default='.env')
+        args.add_argument('--username', '-u', type=str, help='username for authentication', default='.env')
+        args.add_argument('--password', '-p', type=str, help='password for authentication', default='.env')
 
         epilog_str = '''Each database requires different odbc driver. Please refer to our docs for more info.
-If no credential options is given, the following environment variable is used to connect to your SQL database:
-  SQL_DRIVER, SQL_SERVER, SQL_PORT, SQL_DATABASE, SQL_USERNAME, SQL_PASSWORD          
+If no database connection is given, the following environment variable are used to connect to your SQL database:
+  SQL_SERVER, SQL_PORT, SQL_DATABASE, SQL_USERNAME, SQL_PASSWORD          
   '''
         if not self.epilog:
             self.epilog = epilog_str
@@ -119,20 +114,21 @@ If no credential options is given, the following environment variable is used to
         client_args = {
             'instance_name': self.parse_env_variable('AITO_INSTANCE_NAME') if parsed_args['instance_name'] == '.env'
             else parsed_args['instance_name'],
-            'rw_key': self.parse_env_variable('AITO_RW_KEY') if parsed_args['read_write_key'] == '.env'
-            else parsed_args['read_write_key'],
-            'ro_key': self.parse_env_variable('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
-            else parsed_args['read_only_key']
+            'api_key': self.parse_env_variable('AITO_API_KEY') if parsed_args['api_key'] == '.env'
+            else parsed_args['api_key']
         }
         return AitoClient(**client_args)
 
     def create_sql_connecting_from_parsed_args(self, parsed_args):
-        args = {}
-        for arg_name in ['sql_driver', 'sql_server', 'sql_port', 'sql_database', 'sql_username', 'sql_password']:
-            args[arg_name] = self.parse_env_variable(arg_name.upper()) if parsed_args[arg_name] == '.env' \
-                else parsed_args[arg_name]
+        if 'driver' not in parsed_args:
+            self.error("Cannot create SQL connection without driver")
+        connection_args = {'sql_driver': parsed_args['driver']}
+        for arg in ['server', 'port', 'database', 'username', 'password']:
+            connection_arg_name = f"sql_{arg}"
+            connection_args[connection_arg_name] = self.parse_env_variable(connection_arg_name.upper()) if \
+                parsed_args[arg] == '.env' else parsed_args[arg]
         from aito.utils.sql_connection import SQLConnection
-        return SQLConnection(**args)
+        return SQLConnection(**connection_args)
 
 
 class ParserWrapper:
