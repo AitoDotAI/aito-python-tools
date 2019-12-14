@@ -8,7 +8,7 @@ workflows:
   version: 2
   commit:
     jobs:
-      - runUnittestsExceptSQLConnectionTests
+      - runUnittestsExceptSQLFunctionsTests
       - runUnittestsPostgres
       - runUnittestsMySQL
 
@@ -69,7 +69,7 @@ commonYAMLStructure:
         pip install pyodbc
 
 jobs:
-  runUnittestsExceptSQLConnectionTests:
+  runUnittestsExceptSQLFunctionsTests:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
@@ -99,6 +99,12 @@ jobs:
             . venv/bin/activate
             python -m tests.test_parser suite tests.cli
 
+      - run:
+          name: run delete database test
+          command: |
+            . venv/bin/activate
+            export RUN_SKIP_TEST=true
+            python -m tests.test_parser case tests.cli.test_database_cli.TestDatabaseCli.test_delete_database
 
       - store_artifacts:
           path: test-reports
