@@ -20,9 +20,17 @@ The Aito CLI supports integration between your SQL database and the Aito databas
 
 The Aito CLI uses the python module [pyodbc](https://github.com/mkleehammer/pyodbc) to access to [ODBC](https://docs.microsoft.com/en-us/sql/odbc/reference/what-is-odbc?view=sql-server-ver15) databases.
 You need to install:
-  * The ODBC driver manager (varies from system)
-  * The pyodbc module which can be installed with ```pip install pyodbc```.
-  * The database specific driver
+  * The ODBC driver manager (varies from system, read the instructions below)
+  * Install the aitoai package with SQL feature
+    ```bash
+    pip install aitoai[SQL]
+    ```
+    or install the pyodbc package on top of the original aitoai package
+    ```bash
+    pip install aitoai
+    pip install pyodbc
+    ```
+  * Your database specific ODBC driver
 
 to enable the CLI's sql integration functions.
 More instructions regarding the pyodbc library and connecting to different databases can be found [here](https://github.com/mkleehammer/pyodbc/wiki)

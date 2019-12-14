@@ -12,11 +12,13 @@ install_requires = [
     'argcomplete'
 ]
 
+default_description = "Please go to our Homepage at https://github.com/AitoDotAI/aito-python-tools " \
+                      "for more detailed documentation.\n"
 if os.environ.get('CONVERT_README'):
     import pypandoc
-    long_description = pypandoc.convert('README.md', 'rst')
+    long_description = default_description + pypandoc.convert('README.md', 'rst')
 else:
-    long_description = ''
+    long_description = default_description
 
 VERSION = "0.1.0"
 
