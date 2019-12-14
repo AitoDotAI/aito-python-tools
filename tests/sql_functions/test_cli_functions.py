@@ -61,13 +61,13 @@ class TestMySQLCliFunctions(TestCaseCompare):
         self.out_file_path = self.output_folder / f"{self.method_name}_out.json"
 
     def create_table(self):
-        with (self.input_folder / "invoice_aito_schema.json").open() as f:
+        with (self.input_folder / "invoice_aito_schema_lower_case_columns.json").open() as f:
             table_schema = json.load(f)
         self.client.put_table_schema('invoice_mysql', table_schema)
 
     def test_infer_schema_from_query(self):
         os.system(f"python -m aito.cli.main_parser_wrapper infer-table-schema from-sql \"MySQL ODBC 8.0 Driver\" "
-                  f"'SELECT * FROM invoice_mysql' > {self.out_file_path}")
+                  f"'SELECT * FROM invoice' > {self.out_file_path}")
         self.assertCountEqual(json.load(self.out_file_path.open()),
                               json.load((self.input_folder / 'invoice_aito_schema_lower_case_columns.json').open()))
 
