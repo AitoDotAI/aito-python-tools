@@ -246,7 +246,7 @@ Example:
   aito database quick-add-table-from-sql "PostgreSQL Unicode" tableName 'SELECT * FROM tableName;'
   aito database create-table tableName < path/to/tableSchema
   aito database -e path/to/myCredentials.env upload-file myTable path/to/myFile
-  aito database -i MY_INSTANCE_NAME -r MY_RO_KEY -w MY_RW_KEY upload-batch myTable < path/to/myTableEntries
+  aito database -i MY_INSTANCE_NAME -k MY_API_KEY upload-batch myTable < path/to/myTableEntries
   '''
     operation_subparsers = database_parser.add_subparsers(title="operation",
                                                           description="operation to perform",

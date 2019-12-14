@@ -14,7 +14,7 @@ class TestDatabaseCli(TestCaseCompare):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.main_parser = MainParserWrapper()
         env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_RW_KEY'], env_var['AITO_RO_KEY'])
+        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_API_KEY'])
 
     def create_table(self):
         with (self.input_folder / "invoice_aito_schema.json").open() as f:

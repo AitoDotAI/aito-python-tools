@@ -30,6 +30,9 @@ setup(
     url='https://github.com/AitoDotAI/aito-python-tools',
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=install_requires,
+    extra_requires={
+      'SQL': ['pyodbc']
+    },
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",

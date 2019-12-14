@@ -153,8 +153,7 @@ There are 3 ways to set up the credentials:
 * The most convinient way is to set up the following environment variables:
   ```
   AITO_INSTANCE_NAME=your-instance-name
-  AITO_RW_KEY=your read-write api key
-  AITO_RO_KEY=your read-only key (optional)
+  AITO_API_KEY=your-api-key
   ```
 
   You can now perform operations with:
@@ -172,9 +171,9 @@ There are 3 ways to set up the credentials:
   ```
 * Using flags:
 
-  You can set up the credentials using `-i` flag for the instance name, `-r` flag for the read-only key, and `-w` flag for the read-write key:
+  You can set up the credentials using `-i` flag for the instance name, `-k` flag for the api key:
   ```bash
-  aito database -i MY_AITO_INSTANCE_NAME -r MY_READ_ONLY_API_KEY -w MY_READ_WRITE_API_KEY <operation> ...
+  aito database -i MY_AITO_INSTANCE_NAME -k MY_API_KEY <operation> ...
   ```
 
 #### Some common operations

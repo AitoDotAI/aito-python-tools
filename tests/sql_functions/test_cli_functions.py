@@ -11,7 +11,7 @@ class TestPostgresCliFunctions(TestCaseCompare):
         super().setUpClass(test_path='sql_functions/cli')
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_vars = os.environ
-        cls.client = AitoClient(env_vars['AITO_INSTANCE_NAME'], env_vars['AITO_RW_KEY'], env_vars['AITO_RO_KEY'])
+        cls.client = AitoClient(env_vars['AITO_INSTANCE_NAME'], env_vars['AITO_API_KEY'])
 
     def setUp(self):
         super().setUp()
@@ -53,7 +53,7 @@ class TestMySQLCliFunctions(TestCaseCompare):
         super().setUpClass(test_path='sql_functions/cli')
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_vars = os.environ
-        cls.client = AitoClient(env_vars['AITO_INSTANCE_NAME'], env_vars['AITO_RW_KEY'], env_vars['AITO_RO_KEY'])
+        cls.client = AitoClient(env_vars['AITO_INSTANCE_NAME'], env_vars['AITO_API_KEY'])
 
     def setUp(self):
         super().setUp()

@@ -16,3 +16,7 @@
   Supported database:
   * Postgres
   * MySQL
+
+#### 0.1.1
+* Fix a bug that requires database name for sql_function
+* No longer requires specification of RO or RW key (Use AITO_API_KEY instead of AITO_RW_KEY and AITO_RO_KEY)

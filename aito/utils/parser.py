@@ -71,15 +71,12 @@ class AitoArgParser(argparse.ArgumentParser):
         if add_use_env_arg:
             args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
                               help='set up the credentials using a .env file containing the required env variables')
-        args.add_argument('-r', '--read-only-key', type=str, default='.env',
-                          help='specify aito read-only API key')
-        args.add_argument('-i', '--instance-name', type=str, default='.env',
-                          help='specify aito instance name')
-        args.add_argument('-w', '--read-write-key', type=str, default='.env',
-                          help='specify aito read-write API key')
+        args.add_argument('-i', '--instance-name', type=str, default='.env', help='specify aito instance name')
+        args.add_argument('-k', '--api-key', type=str, default='.env',
+                          help='specify aito read-write or read-only API key')
         epilog_str = '''You must provide your Aito credentials to execute database operations
 If no Aito credential is given, the following environment variables are used to connect to your Aito database:
-  AITO_INSTANCE_NAME, AITO_RW_KEY, AITO_RO_KEY
+  AITO_INSTANCE_NAME, AITO_API_KEY
   '''
         if not self.epilog:
             self.epilog = epilog_str
@@ -117,10 +114,8 @@ If no database connection is given, the following environment variable are used 
         client_args = {
             'instance_name': self.parse_env_variable('AITO_INSTANCE_NAME') if parsed_args['instance_name'] == '.env'
             else parsed_args['instance_name'],
-            'rw_key': self.parse_env_variable('AITO_RW_KEY') if parsed_args['read_write_key'] == '.env'
-            else parsed_args['read_write_key'],
-            'ro_key': self.parse_env_variable('AITO_RO_KEY') if parsed_args['read_only_key'] == '.env'
-            else parsed_args['read_only_key']
+            'api_key': self.parse_env_variable('AITO_API_KEY') if parsed_args['api_key'] == '.env'
+            else parsed_args['api_key']
         }
         return AitoClient(**client_args)
 
