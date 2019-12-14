@@ -10,7 +10,7 @@ class TestAitoClient(TestCaseCompare):
         super().setUpClass(test_path='utils/aito_client')
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['API_KEY'])
+        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_API_KEY'])
 
         with (cls.input_folder / 'invoice_aito_schema.json').open() as f:
             cls.sample_schema = json.load(f)
