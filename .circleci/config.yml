@@ -1,16 +1,13 @@
-# Python CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-python/ for more details
-#
 version: 2
 
 workflows:
   version: 2
   commit:
     jobs:
-      - runUnittestsExceptSQLFunctionsTests
+      - runUnittestsExcludeSQLFunctionsTests
       - runUnittestsPostgres
       - runUnittestsMySQL
+      - runUnittestsExcludeSQLFunctionsTestsMac
 
 commonYAMLStructure:
   - &restore_venv_cache
@@ -43,16 +40,16 @@ commonYAMLStructure:
       command:          |
         sudo apt-get -qy update
         sudo apt-get install default-mysql-client
-  - &install_odbc_driver
+  - &install_odbc_driver_linux
     run:
       name: install odbc driver
       command: sudo apt install unixodbc-dev
-  - &install_postgres_odbc_driver
+  - &install_postgres_odbc_driver_linux
     run:
       name: install postgres odbc driver
       command: |
         sudo apt-get install odbc-postgresql
-  - &install_mysql_odbc_driver
+  - &install_mysql_odbc_driver_linux
     run:
       name: install msql odbc unicode driver
       command: |
@@ -69,16 +66,9 @@ commonYAMLStructure:
         pip install pyodbc
 
 jobs:
-  runUnittestsExceptSQLFunctionsTests:
+  runUnittestsExcludeSQLFunctionsTests:
     docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
       - image: circleci/python:3.6
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
 
     working_directory: ~/repo
 
@@ -132,9 +122,9 @@ jobs:
       - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
-      - *install_odbc_driver
+      - *install_odbc_driver_linux
       - *install_pyodbc
-      - *install_postgres_odbc_driver
+      - *install_postgres_odbc_driver_linux
       - run:
           name: Waiting for Postgres to be ready
           command: |
@@ -199,9 +189,9 @@ jobs:
       - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
-      - *install_odbc_driver
+      - *install_odbc_driver_linux
       - *install_pyodbc
-      - *install_mysql_odbc_driver
+      - *install_mysql_odbc_driver_linux
       - run:
           name: Waiting for MySQL to be ready
           command: |
@@ -239,6 +229,40 @@ jobs:
           command: |
             . venv/bin/activate
             python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestMySQLCliFunctions
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+  runUnittestsExcludeSQLFunctionsTestsMac:
+    macos:
+      xcode: 11.3.0
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - *restore_venv_cache
+      - *install_venv_dependencies
+      - *save_venv_cache
+      - run:
+          name: run utils tests
+          command: |
+            . venv/bin/activate
+            python -m tests.test_parser suite tests.utils
+
+      - run:
+          name: run cli tests
+          command: |
+            . venv/bin/activate
+            python -m tests.test_parser suite tests.cli
+
+      - run:
+          name: run delete database test
+          command: |
+            . venv/bin/activate
+            export RUN_SKIP_TEST=true
+            python -m tests.test_parser case tests.cli.test_database_cli.TestDatabaseCli.test_delete_database
 
       - store_artifacts:
           path: test-reports
