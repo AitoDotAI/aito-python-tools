@@ -54,17 +54,28 @@ commonYAMLStructure:
         sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/lib/* /usr/local/lib
         sudo chmod 777 /usr/local/lib/libmyodbc*
         sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
-  - &restore_venv_cache
+  - &restore_venv_cache_linux
     restore_cache:
       keys:
-        - v1-dependencies-{{ checksum "requirements.txt" }}
+        - linux-venv-dependencies-{{ checksum "requirements.txt" }}
         # fallback to using the latest cache if no exact match is found
-        - v1-dependencies-
-  - &save_venv_cache
+        - linux-venv-dependencies-
+  - &restore_venv_cache_mac
+    restore_cache:
+      keys:
+        - mac-venv-dependencies-{{ checksum "requirements.txt" }}
+        # fallback to using the latest cache if no exact match is found
+        - mac-venv-dependencies-
+  - &save_venv_cache_linux
     save_cache:
       paths:
         - ./venv
-      key: v1-dependencies-{{ checksum "requirements.txt" }}
+      key: linux-venv-dependencies-{{ checksum "requirements.txt" }}
+  - &save_venv_cache_mac
+    save_cache:
+      paths:
+        - ./venv
+      key: mac-venv-dependencies-{{ checksum "requirements.txt" }}
   - &wait_postgres
     run:
       name: wait for postgres to be ready
@@ -161,9 +172,9 @@ jobs:
 
     steps:
       - checkout
-      - *restore_venv_cache
+      - *restore_venv_cache_linux
       - *install_venv_dependencies
-      - *save_venv_cache
+      - *save_venv_cache_linux
       - *run_unittests_exc_sql_functions_tests
       - store_artifacts:
           path: test-reports
@@ -188,9 +199,9 @@ jobs:
 
     steps:
       - checkout
-      - *restore_venv_cache
+      - *restore_venv_cache_linux
       - *install_venv_dependencies
-      - *save_venv_cache
+      - *save_venv_cache_linux
       - *install_odbc_driver_linux
       - *install_pyodbc
       - *install_postgres_odbc_driver_linux
@@ -221,9 +232,9 @@ jobs:
 
     steps:
       - checkout
-      - *restore_venv_cache
+      - *restore_venv_cache_linux
       - *install_venv_dependencies
-      - *save_venv_cache
+      - *save_venv_cache_linux
       - *install_odbc_driver_linux
       - *install_pyodbc
       - *install_mysql_odbc_driver_linux
@@ -244,9 +255,9 @@ jobs:
 
     steps:
       - checkout
-      - *restore_venv_cache
+      - *restore_venv_cache_mac
       - *install_venv_dependencies
-      - *save_venv_cache
+      - *save_venv_cache_mac
       - *run_unittests_exc_sql_functions_tests
       - store_artifacts:
           path: test-reports
