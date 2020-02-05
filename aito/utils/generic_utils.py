@@ -1,6 +1,7 @@
 import datetime
 import logging
 from pathlib import Path
+import time
 
 
 def root_path():
@@ -20,5 +21,6 @@ def set_up_logger(log_file_path: Path = None, logging_level: int = logging.INFO)
             log_file_path = str(log_file_path.parent / log_file_name)
 
     logging.basicConfig(filename=log_file_path, level=logging_level,
-                        format='%(asctime)-5s %(name)-5s %(levelname)-10s %(message)s',
-                        datefmt='%H:%M:%S')
+                        format='%(asctime)s %(name)-20s %(levelname)-10s %(message)s',
+                        datefmt="%Y-%m-%dT%H:%M:%S%z")
+    logging.Formatter.converter = time.gmtime

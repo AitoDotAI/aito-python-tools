@@ -4,51 +4,46 @@ workflows:
   version: 2
   commit:
     jobs:
-      - runUnittestsExcludeSQLFunctionsTests
-      - runUnittestsPostgres
-      - runUnittestsMySQL
+      - runUnittestsExcludeSQLFunctionsTestsLinux
+      - runPostgresUnittestsLinux
+      - runMySQLUnittestsLinux
       - runUnittestsExcludeSQLFunctionsTestsMac
 
 commonYAMLStructure:
-  - &restore_venv_cache
-    restore_cache:
-      keys:
-        - v1-dependencies-{{ checksum "requirements.txt" }}
-        # fallback to using the latest cache if no exact match is found
-        - v1-dependencies-
   - &install_venv_dependencies
     run:
-      name: install python requirements
+      name: create virtualenv and install python requirements
       command: |
         python3 -m venv venv
         . venv/bin/activate
         pip install -r requirements.txt
-  - &save_venv_cache
-    save_cache:
-      paths:
-        - ./venv
-      key: v1-dependencies-{{ checksum "requirements.txt" }}
-  - &install_postgres_cli
+  - &install_odbc_driver_linux
+    run:
+      name: install odbc driver
+      command: sudo apt install unixodbc-dev
+  - &install_pyodbc
+    run:
+      name: install pyodbc library
+      command: |
+        . venv/bin/activate
+        pip install pyodbc
+  - &install_postgres_cli_linux
     run:
       name: install postgres cli
       command:          |
         sudo apt-get -qy update
         sudo apt-get install postgresql-client
-  - &install_mysql_cli
-    run:
-      name: install mysql cli
-      command:          |
-        sudo apt-get -qy update
-        sudo apt-get install default-mysql-client
-  - &install_odbc_driver_linux
-    run:
-      name: install odbc driver
-      command: sudo apt install unixodbc-dev
   - &install_postgres_odbc_driver_linux
     run:
       name: install postgres odbc driver
       command: |
         sudo apt-get install odbc-postgresql
+  - &install_mysql_cli_linux
+    run:
+      name: install mysql cli
+      command:          |
+        sudo apt-get -qy update
+        sudo apt-get install default-mysql-client
   - &install_mysql_odbc_driver_linux
     run:
       name: install msql odbc unicode driver
@@ -59,14 +54,106 @@ commonYAMLStructure:
         sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/lib/* /usr/local/lib
         sudo chmod 777 /usr/local/lib/libmyodbc*
         sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
-  - &install_pyodbc
+  - &restore_venv_cache
+    restore_cache:
+      keys:
+        - v1-dependencies-{{ checksum "requirements.txt" }}
+        # fallback to using the latest cache if no exact match is found
+        - v1-dependencies-
+  - &save_venv_cache
+    save_cache:
+      paths:
+        - ./venv
+      key: v1-dependencies-{{ checksum "requirements.txt" }}
+  - &wait_postgres
     run:
+      name: wait for postgres to be ready
+      command: |
+        for i in `seq 1 10`;
+        do
+          nc -z localhost 5432 && echo Success && exit 0
+          echo -n .
+          sleep 1
+        done
+        echo Failed waiting for Postgres && exit 1
+  - &wait_mysql
+    run:
+      name: wait for mysql to be ready
+      command: |
+        for i in `seq 1 10`;
+        do
+          nc -z 127.0.0.1 3306 && echo Success && exit 0
+          echo -n .
+          sleep 1
+        done
+        echo Failed waiting for MySQL && exit 1
+  - &prepare_data_postgres
+    run:
+      name: populate data to postgres
+      command: |
+        psql "$CONNECTION_STRING" -c "DROP TABLE IF EXISTS invoice;"
+        psql "$CONNECTION_STRING" -c "CREATE TABLE invoice(
+          id serial primary key,
+          name VARCHAR(355) not null,
+          amount double precision not null,
+          \"Remark\" VARCHAR (355)
+        );"
+        psql "$CONNECTION_STRING" -c "INSERT INTO invoice(name, amount, \"Remark\") VALUES
+          ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
+          (E'Sam \"Mad Dog\" Smith', 993.44, NULL),
+          ('Barney & Company', 0, E'Great to work with\nand always pays with cash.'),
+          (E'Johnson\'s Automotive', 2344, NULL);"
+  - &prepare_data_mysql
+    run:
+      name: populate data to mysql
+      command: |
+        mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "DROP TABLE IF EXISTS invoice;"
+        mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "CREATE TABLE invoice(
+          id serial primary key,
+          name VARCHAR(355) not null,
+          amount double precision not null,
+          remark VARCHAR (355)
+        );"
+        mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "INSERT INTO invoice(name, amount, remark) VALUES
+          ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
+          ('Sam \"Mad Dog\" Smith', 993.44, NULL),
+          ('Barney & Company', 0, 'Great to work with\nand always pays with cash.'),
+          ('Johnson\'s Automotive', 2344, NULL);"
+  - &run_unittests_exc_sql_functions_tests
+    run:
+      name: run all tests execluding sql functions tests
       command: |
         . venv/bin/activate
-        pip install pyodbc
-
+        python -m tests.test_parser suite tests.utils
+        python -m tests.test_parser suite tests.cli
+        export RUN_SKIP_TEST=true
+        python -m tests.test_parser case tests.cli.test_database_cli.TestDatabaseCli.test_delete_database
+  - &run_postgres_connection_test
+    run:
+      name: run postgres connection test
+      command: |
+        . venv/bin/activate
+        python -m tests.test_parser case tests.sql_functions.test_connection.TestPostgresConnection
+  - &run_postgres_cli_test
+    run:
+      name: run postgres cli test
+      command: |
+        . venv/bin/activate
+        python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestPostgresCliFunctions
+  - &run_mysql_connection_test
+    run:
+      name: run mysql connection test
+      command: |
+        . venv/bin/activate
+        python -m tests.test_parser case tests.sql_functions.test_connection.TestMySQLConnection
+  - &run_mysql_cli_test
+    run:
+      name: run mysql cli test
+      command: |
+        . venv/bin/activate
+        python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestMySQLCliFunctions
 jobs:
-  runUnittestsExcludeSQLFunctionsTests:
+  runUnittestsExcludeSQLFunctionsTestsLinux:
     docker:
       - image: circleci/python:3.6
 
@@ -77,30 +164,12 @@ jobs:
       - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
-      - run:
-          name: run utils tests
-          command: |
-            . venv/bin/activate
-            python -m tests.test_parser suite tests.utils
-
-      - run:
-          name: run cli tests
-          command: |
-            . venv/bin/activate
-            python -m tests.test_parser suite tests.cli
-
-      - run:
-          name: run delete database test
-          command: |
-            . venv/bin/activate
-            export RUN_SKIP_TEST=true
-            python -m tests.test_parser case tests.cli.test_database_cli.TestDatabaseCli.test_delete_database
-
+      - *run_unittests_exc_sql_functions_tests
       - store_artifacts:
           path: test-reports
           destination: test-reports
 
-  runUnittestsPostgres:
+  runPostgresUnittestsLinux:
     docker:
       - image: circleci/python:3.6
         environment:
@@ -125,50 +194,16 @@ jobs:
       - *install_odbc_driver_linux
       - *install_pyodbc
       - *install_postgres_odbc_driver_linux
-      - run:
-          name: Waiting for Postgres to be ready
-          command: |
-            for i in `seq 1 10`;
-            do
-              nc -z localhost 5432 && echo Success && exit 0
-              echo -n .
-              sleep 1
-            done
-            echo Failed waiting for Postgres && exit 1
-      - run:
-          name: run postgres connection tests
-          command: |
-            . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_connection.TestPostgresConnection
-      - *install_postgres_cli
-      - run: whoami
-      - run:
-          name: prepare data
-          command: |
-            psql "$CONNECTION_STRING" -c "DROP TABLE IF EXISTS invoice;"
-            psql "$CONNECTION_STRING" -c "CREATE TABLE invoice(
-              id serial primary key,
-              name VARCHAR(355) not null,
-              amount double precision not null,
-              \"Remark\" VARCHAR (355)
-            );"
-            psql "$CONNECTION_STRING" -c "INSERT INTO invoice(name, amount, \"Remark\") VALUES
-              ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
-              (E'Sam \"Mad Dog\" Smith', 993.44, NULL),
-              ('Barney & Company', 0, E'Great to work with\nand always pays with cash.'),
-              (E'Johnson\'s Automotive', 2344, NULL);"
-
-      - run:
-          name: run postgres cli functions tests
-          command: |
-            . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestPostgresCliFunctions
-
+      - *wait_postgres
+      - *run_postgres_connection_test
+      - *install_postgres_cli_linux
+      - *prepare_data_postgres
+      - *run_postgres_cli_test
       - store_artifacts:
           path: test-reports
           destination: test-reports
 
-  runUnittestsMySQL:
+  runMySQLUnittestsLinux:
     docker:
       - image: circleci/python:3.6-stretch
         environment:
@@ -192,44 +227,11 @@ jobs:
       - *install_odbc_driver_linux
       - *install_pyodbc
       - *install_mysql_odbc_driver_linux
-      - run:
-          name: Waiting for MySQL to be ready
-          command: |
-            for i in `seq 1 10`;
-            do
-              nc -z 127.0.0.1 3306 && echo Success && exit 0
-              echo -n .
-              sleep 1
-            done
-            echo Failed waiting for MySQL && exit 1
-      - run:
-          name: run mysql connection tests
-          command: |
-            . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_connection.TestMySQLConnection
-      - *install_mysql_cli
-      - run:
-          name: prepare data
-          command: |
-            mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "DROP TABLE IF EXISTS invoice;"
-            mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "CREATE TABLE invoice(
-              id serial primary key,
-              name VARCHAR(355) not null,
-              amount double precision not null,
-              remark VARCHAR (355)
-            );"
-            mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "INSERT INTO invoice(name, amount, remark) VALUES
-              ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
-              ('Sam \"Mad Dog\" Smith', 993.44, NULL),
-              ('Barney & Company', 0, 'Great to work with\nand always pays with cash.'),
-              ('Johnson\'s Automotive', 2344, NULL);"
-
-      - run:
-          name: run mysql cli functions tests
-          command: |
-            . venv/bin/activate
-            python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestMySQLCliFunctions
-
+      - *wait_mysql
+      - *run_mysql_connection_test
+      - *install_mysql_cli_linux
+      - *prepare_data_mysql
+      - *run_mysql_cli_test
       - store_artifacts:
           path: test-reports
           destination: test-reports
@@ -245,25 +247,7 @@ jobs:
       - *restore_venv_cache
       - *install_venv_dependencies
       - *save_venv_cache
-      - run:
-          name: run utils tests
-          command: |
-            . venv/bin/activate
-            python -m tests.test_parser suite tests.utils
-
-      - run:
-          name: run cli tests
-          command: |
-            . venv/bin/activate
-            python -m tests.test_parser suite tests.cli
-
-      - run:
-          name: run delete database test
-          command: |
-            . venv/bin/activate
-            export RUN_SKIP_TEST=true
-            python -m tests.test_parser case tests.cli.test_database_cli.TestDatabaseCli.test_delete_database
-
+      - *run_unittests_exc_sql_functions_tests
       - store_artifacts:
           path: test-reports
           destination: test-reports
