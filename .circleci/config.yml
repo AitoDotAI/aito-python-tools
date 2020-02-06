@@ -198,9 +198,6 @@ jobs:
       - *install_venv_dependencies
       - *save_venv_cache_linux
       - *run_unittests_exc_sql_functions_tests
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
 
   runPostgresUnittestsLinux:
     docker:
@@ -232,9 +229,6 @@ jobs:
       - *install_postgres_cli_linux
       - *prepare_data_postgres
       - *run_postgres_cli_test
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
 
   runMySQLUnittestsLinux:
     docker:
@@ -265,9 +259,6 @@ jobs:
       - *install_mysql_cli_linux
       - *prepare_data_mysql
       - *run_mysql_cli_test
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
 
   runUnittestsExcludeSQLFunctionsTestsMac:
     macos:
@@ -281,9 +272,6 @@ jobs:
       - *install_venv_dependencies
       - *save_venv_cache_mac
       - *run_unittests_exc_sql_functions_tests
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
 
   runPostgresUnittestsMac:
     macos:
@@ -309,6 +297,3 @@ jobs:
       - *run_postgres_connection_test
       - *prepare_data_postgres
       - *run_postgres_cli_test
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
