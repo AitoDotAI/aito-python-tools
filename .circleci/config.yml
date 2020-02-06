@@ -8,52 +8,9 @@ workflows:
       - runPostgresUnittestsLinux
       - runMySQLUnittestsLinux
       - runUnittestsExcludeSQLFunctionsTestsMac
+      - runPostgresUnittestsMac
 
 commonYAMLStructure:
-  - &install_venv_dependencies
-    run:
-      name: create virtualenv and install python requirements
-      command: |
-        python3 -m venv venv
-        . venv/bin/activate
-        pip install -r requirements.txt
-  - &install_odbc_driver_linux
-    run:
-      name: install odbc driver
-      command: sudo apt install unixodbc-dev
-  - &install_pyodbc
-    run:
-      name: install pyodbc library
-      command: |
-        . venv/bin/activate
-        pip install pyodbc
-  - &install_postgres_cli_linux
-    run:
-      name: install postgres cli
-      command:          |
-        sudo apt-get -qy update
-        sudo apt-get install postgresql-client
-  - &install_postgres_odbc_driver_linux
-    run:
-      name: install postgres odbc driver
-      command: |
-        sudo apt-get install odbc-postgresql
-  - &install_mysql_cli_linux
-    run:
-      name: install mysql cli
-      command:          |
-        sudo apt-get -qy update
-        sudo apt-get install default-mysql-client
-  - &install_mysql_odbc_driver_linux
-    run:
-      name: install msql odbc unicode driver
-      command: |
-        wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
-        tar zxvf mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
-        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/bin/* /usr/local/bin
-        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/lib/* /usr/local/lib
-        sudo chmod 777 /usr/local/lib/libmyodbc*
-        sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
   - &restore_venv_cache_linux
     restore_cache:
       keys:
@@ -66,6 +23,13 @@ commonYAMLStructure:
         - mac-venv-dependencies-{{ checksum "requirements.txt" }}
         # fallback to using the latest cache if no exact match is found
         - mac-venv-dependencies-
+  - &install_venv_dependencies
+    run:
+      name: create virtualenv and install python requirements
+      command: |
+        python3 -m venv venv
+        . venv/bin/activate
+        pip install -r requirements.txt
   - &save_venv_cache_linux
     save_cache:
       paths:
@@ -76,6 +40,59 @@ commonYAMLStructure:
       paths:
         - ./venv
       key: mac-venv-dependencies-{{ checksum "requirements.txt" }}
+  - &install_odbc_driver_linux
+    run:
+      name: install odbc driver
+      command: sudo apt install unixodbc-dev
+  - &install_odbc_driver_mac
+    run:
+      name: install odbc driver
+      command: brew install unixodbc
+  - &install_postgres_odbc_driver_linux
+    run:
+      name: install postgres odbc driver
+      command: sudo apt-get install odbc-postgresql
+  - &install_postgres_odbc_driver_mac
+    run:
+      name: install postgres odbc driver
+      command: |
+        brew install psqlodbc
+        echo "[PostgreSQL Unicode]" >> /usr/local/etc/odbcinst.ini
+        echo "Driver=/usr/local/lib/psqlodbcw.so" >> /usr/local/etc/odbcinst.ini
+  - &install_mysql_odbc_driver_linux
+    run:
+      name: install msql odbc unicode driver
+      command: |
+        wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
+        tar zxvf mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
+        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/bin/* /usr/local/bin
+        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/lib/* /usr/local/lib
+        sudo chmod 777 /usr/local/lib/libmyodbc*
+        sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
+  - &install_pyodbc
+    run:
+      name: install pyodbc library
+      command: |
+        . venv/bin/activate
+        pip install pyodbc
+  - &install_postgres_cli_linux
+    run:
+      name: install postgres cli
+      command:          |
+        sudo apt-get -qy update
+        sudo apt-get install postgresql-client
+
+  - &install_mysql_cli_linux
+    run:
+      name: install mysql cli
+      command:          |
+        sudo apt-get -qy update
+        sudo apt-get install default-mysql-client
+  - &start_postgres
+    run:
+      name: start postgres
+      command:
+        brew services start postgresql
   - &wait_postgres
     run:
       name: wait for postgres to be ready
@@ -98,6 +115,13 @@ commonYAMLStructure:
           sleep 1
         done
         echo Failed waiting for MySQL && exit 1
+  - &setup_credentials_postgres
+    run:
+      name: setup postgres db and user
+      command: |
+        psql postgres -c "CREATE ROLE test WITH LOGIN PASSWORD 'test_pw'"
+        psql postgres -c "CREATE DATABASE circleci_test"
+        psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE circleci_test TO test"
   - &prepare_data_postgres
     run:
       name: populate data to postgres
@@ -257,6 +281,34 @@ jobs:
       - *install_venv_dependencies
       - *save_venv_cache_mac
       - *run_unittests_exc_sql_functions_tests
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+  runPostgresUnittestsMac:
+    macos:
+      xcode: 11.3.0
+    environment:
+      SQL_SERVER: localhost
+      SQL_DATABASE: circleci_test
+      SQL_USERNAME: test
+      SQL_PASSWORD: test_pw
+      CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *restore_venv_cache_mac
+      - *install_venv_dependencies
+      - *save_venv_cache_mac
+      - *install_odbc_driver_mac
+      - *install_pyodbc
+      - *install_postgres_odbc_driver_mac
+      - *start_postgres
+      - *wait_postgres
+      - *setup_credentials_postgres
+      - *run_postgres_connection_test
+      - *prepare_data_postgres
+      - *run_postgres_cli_test
       - store_artifacts:
           path: test-reports
           destination: test-reports
