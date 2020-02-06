@@ -1,19 +1,15 @@
-from tests.test_case import TestCaseCompare
-from aito.utils.aito_client import AitoClient, ClientError
 import os
-import json
+
+from aito.utils.aito_client import AitoClient, ClientError
+from tests.test_case import TestCaseCompare
 
 
 class TestAitoClient(TestCaseCompare):
     @classmethod
     def setUpClass(cls):
         super().setUpClass(test_path='utils/aito_client')
-        cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_API_KEY'])
-
-        with (cls.input_folder / 'invoice_aito_schema.json').open() as f:
-            cls.sample_schema = json.load(f)
 
     def test_no_instance_url(self):
         with self.assertRaises(ClientError):

@@ -137,8 +137,6 @@ commonYAMLStructure:
         . venv/bin/activate
         python -m tests.test_parser suite tests.utils
         python -m tests.test_parser suite tests.cli
-        export RUN_SKIP_TEST=true
-        python -m tests.test_parser case tests.cli.test_database_cli.TestDatabaseCli.test_delete_database
   - &run_postgres_connection_test
     run:
       name: run postgres connection test
