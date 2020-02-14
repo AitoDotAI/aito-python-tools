@@ -15,12 +15,16 @@ def set_up_logger(log_file_path: Path = None, logging_level: int = logging.INFO)
     :param logging_level: The logging levels
     """
     if log_file_path:
-        log_file_path.parent.mkdir(parents=True, exist_ok=True)
         if log_file_path.exists():
-            log_file_name = log_file_path.name + str(datetime.datetime.now().isoformat(' ', 'seconds'))
-            log_file_path = str(log_file_path.parent / log_file_name)
-
+            log_file_path = str(log_file_path)
+        else:
+            log_file_path = None
     logging.basicConfig(filename=log_file_path, level=logging_level,
                         format='%(asctime)s %(name)-20s %(levelname)-10s %(message)s',
                         datefmt="%Y-%m-%dT%H:%M:%S%z")
     logging.Formatter.converter = time.gmtime
+    logging.VERBOSE = 5
+    logging.addLevelName(logging.VERBOSE, "VERBOSE")
+    logging.Logger.verbose = lambda inst, msg, *args, **kwargs: inst.log(logging.VERBOSE, msg, *args, **kwargs)
+    logging.verbose = lambda msg, *args, **kwargs: logging.log(logging.VERBOSE, msg, *args, **kwargs)
+

@@ -64,7 +64,7 @@ class TestCaseCompare(TestCaseTimer):
     def compare_default_out_exp_file(self):
         self.compare_file(self.out_file_path, self.exp_file_path)
 
-    def compare_json_file(
+    def compare_json_files(
             self,
             out_file_path: Path,
             exp_file_path: Path,

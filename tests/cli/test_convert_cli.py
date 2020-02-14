@@ -1,9 +1,6 @@
-import json
 import os
+import subprocess
 
-import ndjson
-
-from aito.cli.main_parser_wrapper import MainParserWrapper
 from tests.test_case import TestCaseCompare
 
 
@@ -12,132 +9,203 @@ class TestConvertCli(TestCaseCompare):
     def setUpClass(cls):
         super().setUpClass(test_path='cli/convert')
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
-
-    def setUp(self):
-        super().setUp()
-        self.out_file_path = self.output_folder / f"{self.method_name}_out.ndjson"
+        cls.prefix_args = ['python', '-m', 'aito.cli.main_parser_wrapper']
+        if os.getenv('TEST_BUILT_PACKAGE'):
+            cls.prefix_args = ['aito']
 
     def test_json_to_ndjson(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert json < {self.input_folder}/invoice.json "
-                  f"> {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice.ndjson').open()))
+        with (self.input_folder / 'invoice.json').open() as in_f, self.out_file_path.open('w') as out_f:
+            subprocess.run(self.prefix_args + ['convert', 'json'], stdin=in_f, stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_json_to_ndjson_file_path(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert json "
-                  f"{self.input_folder}/invoice.json > {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice.ndjson').open()))
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(self.prefix_args + ['convert', 'json', f'{self.input_folder}/invoice.json'], stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_csv_to_ndjson(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv < "
-                  f"{self.input_folder}/invoice.csv > {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice.ndjson').open()))
+        with (self.input_folder / 'invoice.csv').open() as in_f, self.out_file_path.open('w') as out_f:
+            subprocess.run(self.prefix_args + ['convert', 'csv'], stdin=in_f, stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_csv_to_ndjson_file_path(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv {self.input_folder}/invoice.csv > {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice.ndjson').open()))
-
-    def test_csv_semicolon_to_ndjson(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -d ';' "
-                  f"< {self.input_folder}/invoice_semicolon_delimiter.csv > {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice.ndjson').open()))
-
-    def test_csv_semicolon_comma_decimal_to_ndjson(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -d ';' -p ','"
-                  f"< {self.input_folder}/invoice_semicolon_delimiter_comma_decimal.csv > {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice.ndjson').open()))
-
-    def test_csv_semicolon_comma_decimal_to_ndjson_file_path(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -d ';' -p ',' "
-                  f"{self.input_folder}/invoice_semicolon_delimiter_comma_decimal.csv > {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice.ndjson').open()))
-
-    def test_excel_to_ndjson_file_path(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert excel {self.input_folder}/invoice.xlsx "
-                  f"> {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice.ndjson').open()))
-
-    def test_excel_one_sheet_to_ndjson(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert excel -o Sheet2 "
-                  f"{self.input_folder}/invoice_multi_sheets.xlsx > {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice_id_reversed.ndjson').open()))
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(self.prefix_args + ['convert', 'csv', f'{self.input_folder}/invoice.csv'], stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_csv_to_json(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -j < {self.input_folder}/invoice.csv "
-                  f"> {self.out_file_path}")
-        self.assertCountEqual(json.load(self.out_file_path.open()),
-                              json.load((self.input_folder / 'invoice.json').open()))
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(self.prefix_args + ['convert', 'csv', '-j', f'{self.input_folder}/invoice.csv'],
+                           stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
+
+    def test_csv_semicolon_to_ndjson(self):
+        with (self.input_folder / 'invoice_semicolon_delimiter.csv').open() as in_f, \
+                self.out_file_path.open('w') as out_f:
+            subprocess.run(self.prefix_args + ['convert', 'csv', '-d', ';'], stdin=in_f, stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_csv_semicolon_to_json(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -d ';' --json "
-                  f"< {self.input_folder}/invoice_semicolon_delimiter.csv > {self.out_file_path}")
-        self.assertCountEqual(json.load(self.out_file_path.open()),
-                              json.load((self.input_folder / 'invoice.json').open()))
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'csv', '-d', ';', '--json',
+                                    f'{self.input_folder}/invoice_semicolon_delimiter.csv'],
+                stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
+
+    def test_csv_semicolon_comma_decimal_to_ndjson(self):
+        with (self.input_folder / 'invoice_semicolon_delimiter_comma_decimal.csv').open() as in_f, \
+                self.out_file_path.open('w') as out_f:
+            subprocess.run(self.prefix_args + ['convert', 'csv', '-d', ';', '-p', ','], stdin=in_f, stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_csv_semicolon_comma_decimal_to_json(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -d ';' -p ',' --json"
-                  f"< {self.input_folder}/invoice_semicolon_delimiter_comma_decimal.csv > {self.out_file_path}")
-        self.assertCountEqual(json.load(self.out_file_path.open()),
-                              json.load((self.input_folder / 'invoice.json').open()))
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'csv', '-d', ';', '-p', ',', '-j',
+                                    f'{self.input_folder}/invoice_semicolon_delimiter_comma_decimal.csv'],
+                stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
+
+    def test_excel_to_ndjson_stdin(self):
+        with self.assertRaises(subprocess.CalledProcessError, msg='Expected error when using stdin for excel file'), \
+             (self.input_folder/'invoice.xlsx').open() as in_f, self.out_file_path.open('w') as out_f:
+                subprocess.check_call(self.prefix_args + ['convert', 'excel'], stdin=in_f, stdout=out_f)
+
+    def test_excel_to_ndjson_file_path(self):
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(self.prefix_args + ['convert', 'excel', f'{self.input_folder}/invoice.xlsx'], stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
+
+    def test_excel_one_sheet_to_ndjson(self):
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(self.prefix_args + ['convert', 'excel', '-o', 'Sheet2',
+                                               f'{self.input_folder}/invoice_multi_sheets.xlsx'], stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_id_reversed.ndjson',
+                                is_ndjson_file=True)
 
     def test_excel_to_json(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert excel --json {self.input_folder}/invoice.xlsx "
-                  f"> {self.out_file_path}")
-        self.assertCountEqual(json.load(self.out_file_path.open()),
-                              json.load((self.input_folder / 'invoice.json').open()))
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'excel', '-j', f'{self.input_folder}/invoice.xlsx'],
+                stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
 
     def test_excel_one_sheet_to_json(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert excel -o Sheet2 -j "
-                  f"{self.input_folder}/invoice_multi_sheets.xlsx > {self.out_file_path}")
-        self.assertCountEqual(json.load(self.out_file_path.open()),
-                              json.load((self.input_folder / 'invoice_id_reversed.json').open()))
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'excel', '-o', 'Sheet2', '-j',
+                                    f'{self.input_folder}/invoice_multi_sheets.xlsx'],
+                stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_id_reversed.json')
 
-    def test_generate_schema(self):
-        schema_out_path = self.output_folder / f"{self.method_name}_schema_out.json"
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -c {schema_out_path} "
-                  f"< {self.input_folder}/invoice.csv > {self.out_file_path}")
-        self.assertDictEqual(json.load(schema_out_path.open()),
-                             json.load((self.input_folder / 'invoice_aito_schema.json').open()))
+    def test_generate_schema_from_csv(self):
+        generated_schema_path = self.output_folder / f'{self.method_name}_schema_out.txt'
+        with (self.input_folder / 'invoice.csv').open() as in_f, self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'csv', '-c', str(generated_schema_path)],
+                stdin=in_f, stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
+        self.compare_json_files(generated_schema_path, self.input_folder / 'invoice_aito_schema.json')
+
+    def test_generate_schema_from_excel(self):
+        generated_schema_path = self.output_folder / f'{self.method_name}_schema_out.txt'
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'excel', '-c', str(generated_schema_path),
+                                    str(self.input_folder / 'invoice.xlsx')],
+                stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
+        self.compare_json_files(generated_schema_path, self.input_folder / 'invoice_aito_schema.json')
+
+    def test_generate_schema_from_json(self):
+        generated_schema_path = self.output_folder / f'{self.method_name}_schema_out.txt'
+        with (self.input_folder / 'invoice.json').open() as in_f, self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'json', '-c', str(generated_schema_path)],
+                stdin=in_f, stdout=out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
+        self.compare_json_files(generated_schema_path, self.input_folder / 'invoice_aito_schema.json')
+
+    def test_generate_schema_from_ndjson(self):
+        generated_schema_path = self.output_folder / f'{self.method_name}_schema_out.txt'
+        with (self.input_folder / 'invoice.ndjson').open() as in_f, self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'ndjson', '-c', str(generated_schema_path)],
+                stdin=in_f, stdout=out_f
+            )
+        self.compare_json_files(generated_schema_path, self.input_folder / 'invoice_aito_schema.json')
 
     def test_generate_schema_file_path(self):
-        schema_out_path = self.output_folder / f"{self.method_name}_schema_out.json"
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -c {schema_out_path} "
-                  f"{self.input_folder}/invoice.csv > {self.out_file_path}")
-        self.assertDictEqual(json.load(schema_out_path.open()),
-                             json.load((self.input_folder / 'invoice_aito_schema.json').open()))
+        generated_schema_path = self.output_folder / f'{self.method_name}_schema_out.txt'
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'csv', '-c', str(generated_schema_path),
+                                    f'{self.input_folder}/invoice.csv'],
+                stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
+        self.compare_json_files(generated_schema_path, self.input_folder / 'invoice_aito_schema.json')
 
-    def test_use_schema(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -s "
-                  f"{self.input_folder / 'invoice_aito_schema_altered.json'} "
-                  f"< {self.input_folder}/invoice.csv > {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice_altered.ndjson').open()))
+    def test_use_schema_csv(self):
+        with (self.input_folder / 'invoice.csv').open() as in_f, self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'csv',
+                                    '-s', f"{self.input_folder / 'invoice_aito_schema_altered.json'}"],
+                stdin=in_f, stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_altered.ndjson', is_ndjson_file=True)
+
+    def test_use_schema_excel(self):
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'excel',
+                                    '-s', f"{self.input_folder / 'invoice_aito_schema_altered.json'}",
+                                    f'{self.input_folder}/invoice.xlsx'],
+                stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_altered.ndjson', is_ndjson_file=True)
+
+    def test_use_schema_json(self):
+        with (self.input_folder / 'invoice.json').open() as in_f, self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'json',
+                                    '-s', f"{self.input_folder / 'invoice_aito_schema_altered.json'}"],
+                stdin=in_f, stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_altered.ndjson', is_ndjson_file=True)
+
+    def test_use_schema_ndjson(self):
+        with (self.input_folder / 'invoice.ndjson').open() as in_f, self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'ndjson',
+                                    '-s', f"{self.input_folder / 'invoice_aito_schema_altered.json'}"],
+                stdin=in_f, stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_altered.ndjson', is_ndjson_file=True)
 
     def test_use_schema_file_path(self):
-        os.system(f"python -m aito.cli.main_parser_wrapper convert csv -s "
-                  f"{self.input_folder / 'invoice_aito_schema_altered.json'} "
-                  f"{self.input_folder}/invoice.csv > {self.out_file_path}")
-        self.assertCountEqual(ndjson.load(self.out_file_path.open()),
-                              ndjson.load((self.input_folder / 'invoice_altered.ndjson').open()))
-
-    def test_excel_to_ndjson_std_in(self):
-        main_parser_wrapper = MainParserWrapper()
-        with self.assertRaises(SystemExit) as context:
-            main_parser_wrapper.parse_and_execute(['convert', 'excel', '-'])
-        self.assertEqual(context.exception.code, 2)
+        with self.out_file_path.open('w') as out_f:
+            subprocess.run(
+                self.prefix_args + ['convert', 'csv',
+                                    '-s', f"{self.input_folder / 'invoice_aito_schema_altered.json'}",
+                                    f'{self.input_folder}/invoice.csv'],
+                stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_altered.ndjson', is_ndjson_file=True)
 
     def test_both_create_and_use_schema(self):
-        schema_out_path = self.output_folder / f"{self.method_name}_schema_out.json"
-        main_parser_wrapper = MainParserWrapper()
-        with self.assertRaises(SystemExit) as context:
-            main_parser_wrapper.parse_and_execute(['convert', 'csv', f"-c={schema_out_path}",
-                                           f"-s={self.input_folder / 'invoice_aito_schema_altered.json'}"])
-        self.assertEqual(context.exception.code, 2)
+        with self.assertRaises(subprocess.CalledProcessError) as context:
+            subprocess.check_call(
+                self.prefix_args + ['convert', 'csv',
+                                    '-c', str(self.output_folder / f'{self.method_name}_schema_out.txt'),
+                                    '-s', str(self.input_folder / 'invoice_aito_schema_altered.json'),
+                                    str(self.input_folder / 'invoice.csv')]
+            )
+        self.assertEqual(context.exception.returncode, 2)
