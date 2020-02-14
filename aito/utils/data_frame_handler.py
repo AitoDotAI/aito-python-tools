@@ -170,6 +170,6 @@ class DataFrameHandler:
         if use_table_schema:
             df = self.convert_df_from_aito_table_schema(df, use_table_schema)
 
-        if out_format != in_format or convert_options:
+        if out_format != in_format or convert_options or use_table_schema:
             self.df_to_format(df, out_format, write_output, convert_options)
         return df
