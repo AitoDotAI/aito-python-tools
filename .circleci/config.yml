@@ -1,4 +1,7 @@
-version: 2
+version: 2.1
+
+orbs:
+  win: circleci/windows@2.2.0
 
 workflows:
   version: 2
@@ -9,8 +12,17 @@ workflows:
       - runMySQLUnittestsLinux
       - runUnittestsExcludeSQLFunctionsTestsMac
       - runPostgresUnittestsMac
+      - runUnittestsExcludeSQLFunctionsTestsWin
 
 commonYAMLStructure:
+  - &install_python_win
+    run:
+      name: install python and create virtual env
+      command: |
+        nuget install python -Version $env:PYTHON_VERSION -ExcludeVersion -OutputDirectory .
+        .\python\tools\python.exe --version
+        .\python\tools\python.exe -m pip install virtualenv
+        .\python\tools\python.exe -m virtualenv env
   - &restore_venv_cache_linux
     restore_cache:
       keys:
@@ -29,6 +41,13 @@ commonYAMLStructure:
       command: |
         python3 -m venv venv
         . venv/bin/activate
+        pip install -r requirements.txt
+  - &install_venv_dependencies_win
+    run:
+      name: install python requirements
+      command: |
+        env\Scripts\activate.ps1
+        python --version
         pip install -r requirements.txt
   - &save_venv_cache_linux
     save_cache:
@@ -159,32 +178,39 @@ commonYAMLStructure:
       name: run all tests execluding sql functions tests
       command: |
         . venv/bin/activate
-        python -m tests.test_parser suite tests/utils
-        python -m tests.test_parser suite tests/cli
+        python -m tests.test_parser -v suite tests/utils
+        python -m tests.test_parser -v suite tests/cli
+  - &run_unittests_exc_sql_functions_tests_win
+    run:
+      name: run all tests execluding sql functions tests
+      command: |
+        env\Scripts\activate.ps1
+        python -m tests.test_parser -v suite tests/utils
+        python -m tests.test_parser -v suite tests/cli
   - &run_postgres_connection_test
     run:
       name: run postgres connection test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser case tests.sql_functions.test_connection.TestPostgresConnection
+        python -m tests.test_parser -v case tests.sql_functions.test_connection.TestPostgresConnection
   - &run_postgres_cli_test
     run:
       name: run postgres cli test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser case tests.sql_functions.test_sql_functions_cli.TestPostgresCliFunctions
+        python -m tests.test_parser -v case tests.sql_functions.test_sql_functions_cli.TestPostgresCliFunctions
   - &run_mysql_connection_test
     run:
       name: run mysql connection test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser case tests.sql_functions.test_connection.TestMySQLConnection
+        python -m tests.test_parser -v case tests.sql_functions.test_connection.TestMySQLConnection
   - &run_mysql_cli_test
     run:
       name: run mysql cli test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser case tests.sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
+        python -m tests.test_parser -v case tests.sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
 jobs:
   runUnittestsExcludeSQLFunctionsTestsLinux:
     docker:
@@ -300,3 +326,18 @@ jobs:
       - *run_postgres_connection_test
       - *prepare_data_postgres
       - *run_postgres_cli_test
+
+  runUnittestsExcludeSQLFunctionsTestsWin:
+    executor:
+      name: win/default
+    environment:
+      PYTHON_VERSION: 3.6
+    working_directory: ~/repo
+    steps:
+      - run:
+          name: stop git from adding carriage return in windows
+          command: git config --global core.autocrlf false
+      - checkout
+      - *install_python_win
+      - *install_venv_dependencies_win
+      - *run_unittests_exc_sql_functions_tests_win
