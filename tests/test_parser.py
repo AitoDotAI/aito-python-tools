@@ -49,7 +49,7 @@ def generate_parser() -> ArgParser:
     case_parser = sub_parser.add_parser('case', help='Test a test case or method')
     case_parser.add_argument('caseName', type=str,
                              help="Path to TestCase or method from project root separated by dot. "
-                                  "E.g: testDir.testFile.TestCaseClass.testMethod")
+                                  "E.g: testFile.TestCaseClass.testMethod")
     sub_parser.add_parser('all', help='Test all cases discovered from the testDir ')
     list_parser = sub_parser.add_parser('list', help='List discovered test suites or cases from the testDir')
     list_parser.add_argument('level', type=str, choices=['suite', 'case', 'method'])
@@ -59,6 +59,7 @@ def generate_parser() -> ArgParser:
 def execute_parser(parser):
     args = parser.parse_args()
     test_dir = root_path().joinpath(args.testDirPath)
+    relative_to_root = '.'.join(test_dir.relative_to(root_path()).parts)
     if not test_dir.exists():
         parser.error(f"Test dir {test_dir} does not exist")
 
@@ -86,7 +87,7 @@ def execute_parser(parser):
         else:
             parser.error(f"Suite {args.suiteName} not found in {test_dir}. Use `list` option to list suite")
     elif args.action == 'case':
-        suite = unittest.defaultTestLoader.loadTestsFromName(args.caseName)
+        suite = unittest.defaultTestLoader.loadTestsFromName(f"{relative_to_root}.{args.caseName}")
         all_succeed = runner.run(suite).wasSuccessful()
     elif args.action == 'list':
         if args.level == 'suite':
@@ -119,39 +120,37 @@ def discover_test_suites(starting_dir: Path):
     for d in suites_dir:
         tests = unittest.TestLoader().discover(str(d))
         if tests.countTestCases() > 0:
-            test_suites[str(d.relative_to(root_path()))] = tests
+            test_suites['.'.join(d.relative_to(starting_dir).parts)] = tests
     return test_suites
 
 
 def discover_test_methods(starting_dir: Path):
-    relative_from_root = str(starting_dir.relative_to(root_path())).replace('/', '.')
     discovered_tests = unittest.TestLoader().discover(str(starting_dir))
 
     def test_case_gen(t_suite):
         for test in t_suite:
             if unittest.suite._isnotsuite(test):
-                yield f"{relative_from_root}.{test.id()}"
+                yield test.id()
             else:
                 for t in test_case_gen(test):
                     yield t
 
-    return list(test_case_gen(discovered_tests))
+    return sorted(list(test_case_gen(discovered_tests)))
 
 
 def discover_test_cases(starting_dir: Path):
-    relative_from_root = str(starting_dir.relative_to(root_path())).replace('/', '.')
     discovered_tests = unittest.TestLoader().discover(str(starting_dir))
 
     def test_case_gen(t_suite):
         for test in t_suite:
             if unittest.suite._isnotsuite(test):
                 case = '.'.join(test.id().split('.')[:-1])
-                yield f"{relative_from_root}.{case}"
+                yield case
             else:
                 for t in test_case_gen(test):
                     yield t
 
-    return list(set(test_case_gen(discovered_tests)))
+    return sorted(list(set(test_case_gen(discovered_tests))))
 
 
 if __name__ == '__main__':
