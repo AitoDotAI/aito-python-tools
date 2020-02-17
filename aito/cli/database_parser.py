@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 import tempfile
-from pathlib import Path
+from os import unlink
 
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.parser import AitoArgParser
@@ -36,25 +36,28 @@ def execute_quick_add_table(main_parser: AitoArgParser, parsed_args):
     in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
         else parsed_args['file_format']
 
-    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
+    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
     convert_options = {
         'read_input': input_file_path,
-        'write_output': Path(converted_tmp_file.name),
+        'write_output': converted_tmp_file.name,
         'in_format': in_format,
         'out_format': 'ndjson',
         'convert_options': {'compression': 'gzip'}
     }
     df_handler = DataFrameHandler()
     converted_df = df_handler.convert_file(**convert_options)
-    converted_tmp_file.seek(0)
+    converted_tmp_file.close()
 
     schema_handler = SchemaHandler()
     inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(converted_df)
 
     client = main_parser.create_client_from_parsed_args(parsed_args)
     client.put_table_schema(table_name, inferred_schema)
-    client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
+
+    with open(converted_tmp_file.name, 'rb') as in_f:
+        client.populate_table_by_file_upload(table_name, in_f)
     converted_tmp_file.close()
+    unlink(converted_tmp_file.name)
     return 0
 
 
@@ -159,10 +162,10 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
         else parsed_args['file_format']
 
-    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
+    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
     convert_options = {
         'read_input': input_file_path,
-        'write_output': Path(converted_tmp_file.name),
+        'write_output': converted_tmp_file.name,
         'in_format': in_format,
         'out_format': 'ndjson',
         'convert_options': {'compression': 'gzip'},
@@ -170,9 +173,12 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     }
     df_handler = DataFrameHandler()
     df_handler.convert_file(**convert_options)
-    converted_tmp_file.seek(0)
-    client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
     converted_tmp_file.close()
+
+    with open(converted_tmp_file.name, 'rb') as in_f:
+        client.populate_table_by_file_upload(table_name, in_f)
+    converted_tmp_file.close()
+    unlink(converted_tmp_file.name)
     return 0
 
 
@@ -191,13 +197,15 @@ def execute_upload_data_from_sql(main_parser: AitoArgParser, parsed_args):
     result_df = connection.execute_query_and_save_result(parsed_args['query'])
     dataframe_handler = DataFrameHandler()
 
-    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
+    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
     dataframe_handler.df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
+    converted_tmp_file.close()
 
     client = main_parser.create_client_from_parsed_args(parsed_args)
-    converted_tmp_file.seek(0)
-    client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
+    with open(converted_tmp_file.name, 'rb') as in_f:
+        client.populate_table_by_file_upload(table_name, in_f)
     converted_tmp_file.close()
+    unlink(converted_tmp_file.name)
     return 0
 
 
@@ -221,14 +229,17 @@ def execute_quick_add_table_from_sql(main_parser: AitoArgParser, parsed_args):
     inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(result_df)
 
     dataframe_handler = DataFrameHandler()
-    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=True)
+    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
     dataframe_handler.df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
-    converted_tmp_file.seek(0)
+    converted_tmp_file.close()
 
     client = main_parser.create_client_from_parsed_args(parsed_args)
     client.put_table_schema(table_name, inferred_schema)
-    client.populate_table_by_file_upload(table_name, Path(converted_tmp_file.name))
+
+    with open(converted_tmp_file.name, 'rb') as in_f:
+        client.populate_table_by_file_upload(table_name, in_f)
     converted_tmp_file.close()
+    unlink(converted_tmp_file.name)
     return 0
 
 
