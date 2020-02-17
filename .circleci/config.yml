@@ -172,7 +172,7 @@ commonYAMLStructure:
       name: run postgres cli test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestPostgresCliFunctions
+        python -m tests.test_parser case tests.sql_functions.test_sql_functions_cli.TestPostgresCliFunctions
   - &run_mysql_connection_test
     run:
       name: run mysql connection test
@@ -184,7 +184,7 @@ commonYAMLStructure:
       name: run mysql cli test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser case tests.sql_functions.test_cli_functions.TestMySQLCliFunctions
+        python -m tests.test_parser case tests.sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
 jobs:
   runUnittestsExcludeSQLFunctionsTestsLinux:
     docker:
@@ -208,6 +208,7 @@ jobs:
           SQL_USERNAME: test
           SQL_PASSWORD: test_pw
           CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
+          TEST_SQL_DB_DRIVER: PostgreSQL Unicode
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
@@ -238,6 +239,7 @@ jobs:
           SQL_DATABASE: circleci_test
           SQL_USERNAME: test
           SQL_PASSWORD: test_pw
+          TEST_SQL_DB_DRIVER: MySQL ODBC 8.0 Driver
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_DATABASE: circleci_test
@@ -282,6 +284,7 @@ jobs:
       SQL_USERNAME: test
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
+      TEST_SQL_DB_DRIVER: PostgreSQL Unicode
     working_directory: ~/repo
     steps:
       - checkout

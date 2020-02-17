@@ -72,7 +72,7 @@ class TestConvertCli(TestCaseCompare):
     def test_excel_to_ndjson_stdin(self):
         with self.assertRaises(subprocess.CalledProcessError, msg='Expected error when using stdin for excel file'), \
              (self.input_folder/'invoice.xlsx').open() as in_f, self.out_file_path.open('w') as out_f:
-                subprocess.check_call(self.prefix_args + ['convert', 'excel'], stdin=in_f, stdout=out_f)
+            subprocess.check_call(self.prefix_args + ['convert', 'excel'], stdin=in_f, stdout=out_f)
 
     def test_excel_to_ndjson_file_path(self):
         with self.out_file_path.open('w') as out_f:
