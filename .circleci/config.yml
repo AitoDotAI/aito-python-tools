@@ -7,63 +7,86 @@ workflows:
   version: 2
   commit:
     jobs:
-      - runUnittestsExcludeSQLFunctionsTestsLinux
-      - runPostgresUnittestsLinux
-      - runMySQLUnittestsLinux
-      - runUnittestsExcludeSQLFunctionsTestsMac
-      - runPostgresUnittestsMac
-      - runUnittestsExcludeSQLFunctionsTestsWin
+      - run_tests_exclude_sql_function_tests_linux_py_36
+      - run_tests_exclude_sql_function_tests_linux_py_37
+      - run_tests_exclude_sql_function_tests_linux_py_38
+      - run_postgres_tests_linux_py_36
+      - run_postgres_tests_linux_py_37
+      - run_postgres_tests_linux_py_38
+      - run_mysql_tests_linux_36
+      - run_mysql_tests_linux_37
+      - run_mysql_tests_linux_38
+      - run_tests_exclude_sql_function_tests_osx_py_36
+      - run_tests_exclude_sql_function_tests_osx_py_37
+      - run_tests_exclude_sql_function_tests_osx_py_38
+      - run_postgres_tests_osx_py_36
+      - run_postgres_tests_osx_py_37
+      - run_postgres_tests_osx_py_38
+      - run_tests_exclude_sql_function_tests_win_py_36
+      - run_tests_exclude_sql_function_tests_win_py_37
+      - run_tests_exclude_sql_function_tests_win_py_38
 
 commonYAMLStructure:
-  - &install_python_win
+  - &install_pyenv_osx
     run:
-      name: install python and create virtual env
+      name: install pyenv
+      command: brew install pyenv
+  - &restore_pyenv_cache
+    restore_cache:
+      keys:
+        - pyenv-{{ .Environment.CIRCLE_JOB }}
+  - &save_pyenv_cache
+    save_cache:
+      paths:
+        - ~/.pyenv
+      key: pyenv-{{ .Environment.CIRCLE_JOB }}
+  - &install_python_pyenv
+    run:
+      name: install python with pyenv
+      command: |
+        pyenv install $PYTHON_VERSION -s
+  - &restore_venv_cache
+    restore_cache:
+      keys:
+        - v1-dependencies-{{ checksum "requirements.txt" }}-{{ .Environment.CIRCLE_JOB }}
+  - &create_venv_and_install_dependencies_linux
+    run:
+      name: create virtualenv and install dependencies
+      command: |
+        python -m venv venv
+        . venv/bin/activate
+        pip install -r requirements.txt
+  - &create_venv_and_install_dependencies_osx
+    run:
+      name: create virtualenv and install dependencies
+      command: |
+        eval "$(pyenv init -)"
+        pyenv local $PYTHON_VERSION
+        python --version
+        python -m venv venv
+        . venv/bin/activate
+        pip install -r requirements.txt
+  - &install_python_and_dependencies_win
+    run:
+      name: create virtualenv and install dependencie
       command: |
         nuget install python -Version $env:PYTHON_VERSION -ExcludeVersion -OutputDirectory .
         .\python\tools\python.exe --version
         .\python\tools\python.exe -m pip install virtualenv
-        .\python\tools\python.exe -m virtualenv env
-  - &restore_venv_cache_linux
-    restore_cache:
-      keys:
-        - linux-venv-dependencies-{{ checksum "requirements.txt" }}
-        # fallback to using the latest cache if no exact match is found
-        - linux-venv-dependencies-
-  - &restore_venv_cache_mac
-    restore_cache:
-      keys:
-        - mac-venv-dependencies-{{ checksum "requirements.txt" }}
-        # fallback to using the latest cache if no exact match is found
-        - mac-venv-dependencies-
-  - &install_venv_dependencies
-    run:
-      name: create virtualenv and install python requirements
-      command: |
-        python3 -m venv venv
-        . venv/bin/activate
-        pip install -r requirements.txt
-  - &install_venv_dependencies_win
-    run:
-      name: install python requirements
-      command: |
-        env\Scripts\activate.ps1
+        .\python\tools\python.exe -m virtualenv venv
+        venv\Scripts\activate.ps1
         python --version
         pip install -r requirements.txt
-  - &save_venv_cache_linux
+  - &save_venv_cache
     save_cache:
       paths:
         - ./venv
-      key: linux-venv-dependencies-{{ checksum "requirements.txt" }}
-  - &save_venv_cache_mac
-    save_cache:
-      paths:
-        - ./venv
-      key: mac-venv-dependencies-{{ checksum "requirements.txt" }}
+      key: v1-dependencies-{{ checksum "requirements.txt" }}-{{ .Environment.CIRCLE_JOB }}
   - &install_odbc_driver_linux
     run:
       name: install odbc driver
       command: sudo apt install unixodbc-dev
-  - &install_odbc_driver_mac
+  - &install_odbc_driver_osx
     run:
       name: install odbc driver
       command: brew install unixodbc
@@ -71,7 +94,7 @@ commonYAMLStructure:
     run:
       name: install postgres odbc driver
       command: sudo apt-get install odbc-postgresql
-  - &install_postgres_odbc_driver_mac
+  - &install_postgres_odbc_driver_osx
     run:
       name: install postgres odbc driver
       command: |
@@ -173,18 +196,18 @@ commonYAMLStructure:
           ('Sam \"Mad Dog\" Smith', 993.44, NULL),
           ('Barney & Company', 0, 'Great to work with\nand always pays with cash.'),
           ('Johnson\'s Automotive', 2344, NULL);"
-  - &run_unittests_exc_sql_functions_tests
+  - &run_tests_exc_sql_functions_tests
     run:
       name: run all tests execluding sql functions tests
       command: |
         . venv/bin/activate
         python -m tests.test_parser -v suite utils
         python -m tests.test_parser -v suite cli
-  - &run_unittests_exc_sql_functions_tests_win
+  - &run_tests_exc_sql_functions_tests_win
     run:
       name: run all tests execluding sql functions tests
       command: |
-        env\Scripts\activate.ps1
+        venv\Scripts\activate.ps1
         python -m tests.test_parser -v suite utils
         python -m tests.test_parser -v suite cli
   - &run_postgres_connection_test
@@ -212,98 +235,35 @@ commonYAMLStructure:
         . venv/bin/activate
         python -m tests.test_parser -v case sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
 jobs:
-  runUnittestsExcludeSQLFunctionsTestsLinux:
+  run_tests_exclude_sql_function_tests_linux_py_36: &run_tests_exclude_sql_function_tests_linux_template
     docker:
       - image: circleci/python:3.6
-
     working_directory: ~/repo
-
     steps:
       - checkout
-      - *restore_venv_cache_linux
-      - *install_venv_dependencies
-      - *save_venv_cache_linux
-      - *run_unittests_exc_sql_functions_tests
+      - *restore_venv_cache
+      - *create_venv_and_install_dependencies_linux
+      - *save_venv_cache
+      - *run_tests_exc_sql_functions_tests
 
-  runPostgresUnittestsLinux:
+  run_tests_exclude_sql_function_tests_linux_py_37:
+    <<: *run_tests_exclude_sql_function_tests_linux_template
+    docker:
+      - image: circleci/python:3.7
+
+  run_tests_exclude_sql_function_tests_linux_py_38:
+    <<: *run_tests_exclude_sql_function_tests_linux_template
+    docker:
+      - image: circleci/python:3.8
+
+  run_postgres_tests_linux_py_36: &run_postgres_tests_linux_template
     docker:
       - image: circleci/python:3.6
-        environment:
-          SQL_SERVER: localhost
-          SQL_DATABASE: circleci_test
-          SQL_USERNAME: test
-          SQL_PASSWORD: test_pw
-          CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
-          TEST_SQL_DB_DRIVER: PostgreSQL Unicode
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test_pw
-
-    working_directory: ~/repo
-
-    steps:
-      - checkout
-      - *restore_venv_cache_linux
-      - *install_venv_dependencies
-      - *save_venv_cache_linux
-      - *install_odbc_driver_linux
-      - *install_pyodbc
-      - *install_postgres_odbc_driver_linux
-      - *wait_postgres
-      - *run_postgres_connection_test
-      - *install_postgres_cli_linux
-      - *prepare_data_postgres
-      - *run_postgres_cli_test
-
-  runMySQLUnittestsLinux:
-    docker:
-      - image: circleci/python:3.6-stretch
-        environment:
-          SQL_SERVER: 127.0.0.1
-          SQL_DATABASE: circleci_test
-          SQL_USERNAME: test
-          SQL_PASSWORD: test_pw
-          TEST_SQL_DB_DRIVER: MySQL ODBC 8.0 Driver
-      - image: circleci/mysql:8.0.3
-        environment:
-          MYSQL_DATABASE: circleci_test
-          MYSQL_USER: test
-          MYSQL_PASSWORD: test_pw
-
-    working_directory: ~/repo
-
-    steps:
-      - checkout
-      - *restore_venv_cache_linux
-      - *install_venv_dependencies
-      - *save_venv_cache_linux
-      - *install_odbc_driver_linux
-      - *install_pyodbc
-      - *install_mysql_odbc_driver_linux
-      - *wait_mysql
-      - *run_mysql_connection_test
-      - *install_mysql_cli_linux
-      - *prepare_data_mysql
-      - *run_mysql_cli_test
-
-  runUnittestsExcludeSQLFunctionsTestsMac:
-    macos:
-      xcode: 11.3.0
-
-    working_directory: ~/repo
-
-    steps:
-      - checkout
-      - *restore_venv_cache_mac
-      - *install_venv_dependencies
-      - *save_venv_cache_mac
-      - *run_unittests_exc_sql_functions_tests
-
-  runPostgresUnittestsMac:
-    macos:
-      xcode: 11.3.0
     environment:
       SQL_SERVER: localhost
       SQL_DATABASE: circleci_test
@@ -314,12 +274,141 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_venv_cache_mac
-      - *install_venv_dependencies
-      - *save_venv_cache_mac
-      - *install_odbc_driver_mac
+      - *install_odbc_driver_linux
+      - *install_postgres_odbc_driver_linux
+      - *restore_venv_cache
+      - *create_venv_and_install_dependencies_linux
       - *install_pyodbc
-      - *install_postgres_odbc_driver_mac
+      - *save_venv_cache
+      - *wait_postgres
+      - *run_postgres_connection_test
+      - *install_postgres_cli_linux
+      - *prepare_data_postgres
+      - *run_postgres_cli_test
+
+  run_postgres_tests_linux_py_37:
+    <<: *run_postgres_tests_linux_template
+    docker:
+      - image: circleci/python:3.7
+      - image: circleci/postgres:9.6
+        environment:
+          POSTGRES_DB: circleci_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test_pw
+
+  run_postgres_tests_linux_py_38:
+    <<: *run_postgres_tests_linux_template
+    docker:
+      - image: circleci/python:3.8
+      - image: circleci/postgres:9.6
+        environment:
+          POSTGRES_DB: circleci_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test_pw
+
+  run_mysql_tests_linux_36: &run_mysql_tests_template
+    docker:
+      - image: circleci/python:3.6-stretch
+      - image: circleci/mysql:8.0.3
+        environment:
+          MYSQL_DATABASE: circleci_test
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test_pw
+    environment:
+      SQL_SERVER: 127.0.0.1
+      SQL_DATABASE: circleci_test
+      SQL_USERNAME: test
+      SQL_PASSWORD: test_pw
+      TEST_SQL_DB_DRIVER: MySQL ODBC 8.0 Driver
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *restore_venv_cache
+      - *create_venv_and_install_dependencies_linux
+      - *save_venv_cache
+      - *install_odbc_driver_linux
+      - *install_mysql_odbc_driver_linux
+      - *install_pyodbc
+      - *wait_mysql
+      - *run_mysql_connection_test
+      - *install_mysql_cli_linux
+      - *prepare_data_mysql
+      - *run_mysql_cli_test
+
+  run_mysql_tests_linux_37:
+    <<: *run_mysql_tests_template
+    docker:
+      - image: circleci/python:3.7-stretch
+      - image: circleci/mysql:8.0.3
+        environment:
+          MYSQL_DATABASE: circleci_test
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test_pw
+
+  run_mysql_tests_linux_38:
+    <<: *run_mysql_tests_template
+    docker:
+      - image: circleci/python:3.8.0a3-stretch
+      - image: circleci/mysql:8.0.3
+        environment:
+          MYSQL_DATABASE: circleci_test
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test_pw
+
+  run_tests_exclude_sql_function_tests_osx_py_36: &run_tests_exclude_sql_function_tests_osx_template
+    macos:
+      xcode: 11.3.0
+    environment:
+      PYTHON_VERSION: 3.6.0
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *install_pyenv_osx
+      - *restore_pyenv_cache
+      - *install_python_pyenv
+      - *save_pyenv_cache
+      - *restore_venv_cache
+      - *create_venv_and_install_dependencies_osx
+      - *save_venv_cache
+      - *run_tests_exc_sql_functions_tests
+
+  run_tests_exclude_sql_function_tests_osx_py_37:
+    <<: *run_tests_exclude_sql_function_tests_osx_template
+    environment:
+      PYTHON_VERSION: 3.7.0
+      HOMEBREW_NO_AUTO_UPDATE: 1
+
+  run_tests_exclude_sql_function_tests_osx_py_38:
+    <<: *run_tests_exclude_sql_function_tests_osx_template
+    environment:
+      PYTHON_VERSION: 3.8.0
+      HOMEBREW_NO_AUTO_UPDATE: 1
+
+  run_postgres_tests_osx_py_36: &run_postgres_tests_osx_template
+    macos:
+      xcode: 11.3.0
+    environment:
+      SQL_SERVER: localhost
+      SQL_DATABASE: circleci_test
+      SQL_USERNAME: test
+      SQL_PASSWORD: test_pw
+      CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
+      TEST_SQL_DB_DRIVER: PostgreSQL Unicode
+      PYTHON_VERSION: 3.6.0
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *install_odbc_driver_osx
+      - *install_postgres_odbc_driver_osx
+      - *install_pyenv_osx
+      - *restore_pyenv_cache
+      - *install_python_pyenv
+      - *save_pyenv_cache
+      - *restore_venv_cache
+      - *create_venv_and_install_dependencies_osx
+      - *install_pyodbc
+      - *save_venv_cache
       - *start_postgres
       - *wait_postgres
       - *setup_credentials_postgres
@@ -327,17 +416,48 @@ jobs:
       - *prepare_data_postgres
       - *run_postgres_cli_test
 
-  runUnittestsExcludeSQLFunctionsTestsWin:
+  run_postgres_tests_osx_py_37:
+    <<: *run_postgres_tests_osx_template
+    environment:
+      SQL_SERVER: localhost
+      SQL_DATABASE: circleci_test
+      SQL_USERNAME: test
+      SQL_PASSWORD: test_pw
+      CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
+      TEST_SQL_DB_DRIVER: PostgreSQL Unicode
+      PYTHON_VERSION: 3.7.0
+
+  run_postgres_tests_osx_py_38:
+    <<: *run_postgres_tests_osx_template
+    environment:
+      SQL_SERVER: localhost
+      SQL_DATABASE: circleci_test
+      SQL_USERNAME: test
+      SQL_PASSWORD: test_pw
+      CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
+      TEST_SQL_DB_DRIVER: PostgreSQL Unicode
+      PYTHON_VERSION: 3.8.0
+
+  run_tests_exclude_sql_function_tests_win_py_36: &run_tests_exclude_sql_function_tests_win_template
     executor:
       name: win/default
     environment:
-      PYTHON_VERSION: 3.6
+      PYTHON_VERSION: 3.6.0
     working_directory: ~/repo
     steps:
       - run:
           name: stop git from adding carriage return in windows
           command: git config --global core.autocrlf false
       - checkout
-      - *install_python_win
-      - *install_venv_dependencies_win
-      - *run_unittests_exc_sql_functions_tests_win
+      - *install_python_and_dependencies_win
+      - *run_tests_exc_sql_functions_tests_win
+
+  run_tests_exclude_sql_function_tests_win_py_37:
+    <<: *run_tests_exclude_sql_function_tests_win_template
+    environment:
+      PYTHON_VERSION: 3.7.0
+
+  run_tests_exclude_sql_function_tests_win_py_38:
+    <<: *run_tests_exclude_sql_function_tests_win_template
+    environment:
+      PYTHON_VERSION: 3.8.0
