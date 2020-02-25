@@ -49,7 +49,7 @@ def execute_quick_add_table(main_parser: AitoArgParser, parsed_args):
     converted_tmp_file.close()
 
     schema_handler = SchemaHandler()
-    inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(converted_df)
+    inferred_schema = schema_handler.infer_table_schema_from_pandas_data_frame(converted_df)
 
     client = main_parser.create_client_from_parsed_args(parsed_args)
     client.put_table_schema(table_name, inferred_schema)
@@ -226,7 +226,7 @@ def execute_quick_add_table_from_sql(main_parser: AitoArgParser, parsed_args):
     result_df = connection.execute_query_and_save_result(parsed_args['query'])
 
     schema_handler = SchemaHandler()
-    inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(result_df)
+    inferred_schema = schema_handler.infer_table_schema_from_pandas_data_frame(result_df)
 
     dataframe_handler = DataFrameHandler()
     converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)

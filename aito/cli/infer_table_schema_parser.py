@@ -67,7 +67,7 @@ def add_infer_from_sql(format_subparsers):
 def execute_infer_from_sql(main_parser: AitoArgParser, parsed_args):
     connection = main_parser.create_sql_connecting_from_parsed_args(parsed_args)
     result_df = connection.execute_query_and_save_result(parsed_args['query'])
-    inferred_schema = SchemaHandler().infer_table_schema_from_pandas_dataframe(result_df)
+    inferred_schema = SchemaHandler().infer_table_schema_from_pandas_data_frame(result_df)
     json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
     return 0
 
@@ -129,6 +129,6 @@ def execute_infer_table_schema(main_parser: AitoArgParser, parsed_args):
             read_args['read_options']['sheet_name'] = parsed_args['one_sheet']
 
     df = DataFrameHandler().read_file_to_df(**read_args)
-    inferred_schema = SchemaHandler().infer_table_schema_from_pandas_dataframe(df)
+    inferred_schema = SchemaHandler().infer_table_schema_from_pandas_data_frame(df)
     json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
     return 0

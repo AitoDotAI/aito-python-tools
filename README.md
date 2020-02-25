@@ -78,7 +78,7 @@ You can download the example file from [here](https://raw.githubusercontent.com/
   dataframe.columns = dataframe.columns.str.replace(" ", "_")
 
   schema_handler = SchemaHandler()
-  table_schema = schema_handler.infer_table_schema_from_pandas_dataframe(dataframe)
+  table_schema = schema_handler.infer_table_schema_from_pandas_data_frame(dataframe)
   ```
 #### 2. Upload Aito schema 
 
