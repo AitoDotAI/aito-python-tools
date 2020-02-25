@@ -1,7 +1,6 @@
 import asyncio
 import logging
-from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, BinaryIO
 import time
 from timeit import default_timer
 import re
@@ -177,9 +176,7 @@ class AitoClient:
 
         self.logger.info(f"Uploaded {populated}/{len(entries)} entries to table '{table_name}'")
 
-    def populate_table_by_file_upload(self, table_name: str, file_path: Path):
-        if file_path.suffixes[-2:] != ['.ndjson', '.gz']:
-            raise ClientError("Cannot upload file. Uploading file must be in gzip compressed ndjson format")
+    def populate_table_by_file_upload(self, table_name: str, binary_file_object: BinaryIO):
         self.logger.info("Initiating file upload...")
         r = self.request('POST', f"/api/v1/data/{table_name}/file")
         upload_session_id = r['id']
@@ -189,7 +186,7 @@ class AitoClient:
 
         self.logger.info("Uploading file to S3...")
         try:
-            r = requests.request(upload_req_method, s3_url, data=file_path.open(mode='rb'))
+            r = requests.request(upload_req_method, s3_url, data=binary_file_object)
             r.raise_for_status()
         except Exception as e:
             raise ClientError(f"Failed to upload file to S3: {e}")

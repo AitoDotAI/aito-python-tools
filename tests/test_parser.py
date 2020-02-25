@@ -1,8 +1,7 @@
 import argparse
 import sys
 
-from aito.utils.generic_utils import set_up_logger, root_path
-from tests.test_case import *
+from aito.utils.generic_utils import root_path, set_up_logger
 from tests.test_result import *
 
 
@@ -13,37 +12,101 @@ class ArgParser(argparse.ArgumentParser):
         sys.exit(2)
 
 
-def generate_parser():
+def generate_parser() -> ArgParser:
     example_text = """example:
-    python test.py all
-    python test.py all --testDirPath tests/testDir
-    python test.py suite tests.testSuite --verbose -- meld
-    python test.py case tests.testDir.testFile.testClass
-    python test.py list tests
+    test all
+    test all --testDirPath tests/testDir
+    test suite tests.testSuite --verbose --meld
+    test case testDir.testFile.testClass.testMethod
+    test list suite
+    test list case
     """
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, epilog=example_text)
-    parser.add_argument('--testDirPath',
-                        help=f"Specify path to test dir containing tests from project root (default: tests)",
+    parser = ArgParser()
+    parser.prog = 'test'
+    parser.epilog = example_text
+
+    parser.add_argument('-d', '--testDirPath',
+                        help=f"Path to test dir containing tests to be discovered by TestLoader (default: tests)",
                         type=str,
                         default='tests')
-    parser.add_argument('-v', '--verbosity', choices=[1, 2], help=f"Test verbosity (default 2)", type=int, default=2)
-    parser.add_argument('-m', '--meld',
+    parser.add_argument('-l', '--metricsLogPath',
+                        help=f"Path to metrics log file (default: metrics_timestamp.log)",
+                        type=str)
+    parser.add_argument('-v', '--verbosity', help=f"Make the test verbose (default False)", action='store_true')
+    parser.add_argument('--meld',
                         help='Use meld to compare out and exp file (default False)',
                         action='store_true')
-    sub_parser = parser.add_subparsers(help="test option", dest='testOption')
-    suite_parser = sub_parser.add_parser('suite', help='Test an existing suite')
-    suite_parser.add_argument('suiteName', type=str, help=f"Name of the suite. Use list to see existing suite")
-    case_parser = sub_parser.add_parser('case', help='Test an existing test case using')
+    sub_parser = parser.add_subparsers(
+        title='action',
+        description='action to perform ',
+        dest='action',
+        parser_class=ArgParser,
+        metavar='<action>'
+    )
+    sub_parser.required = True
+    suite_parser = sub_parser.add_parser('suite', help='Test a suite')
+    suite_parser.add_argument('suiteName', type=str, help=f"Name of the suite")
+    case_parser = sub_parser.add_parser('case', help='Test a test case or method')
     case_parser.add_argument('caseName', type=str,
                              help="Path to TestCase or method from project root separated by dot. "
-                                  "E.g: test.testDir.testFile.TestCaseClass.testMethod")
-    all_parser = sub_parser.add_parser('all', help='Test all existing cases from a testDir')
-    list_parser = sub_parser.add_parser('listSuite', help='List test suites in a dir')
-    list_parser.add_argument('dirPath', help='path to dir from project root')
+                                  "E.g: testFile.TestCaseClass.testMethod")
+    sub_parser.add_parser('all', help='Test all cases discovered from the testDir ')
+    list_parser = sub_parser.add_parser('list', help='List discovered test suites or cases from the testDir')
+    list_parser.add_argument('level', type=str, choices=['suite', 'case', 'method'])
     return parser
 
 
-def get_test_suites(starting_dir: Path):
+def execute_parser(parser):
+    args = parser.parse_args()
+    test_dir = root_path().joinpath(args.testDirPath)
+    relative_to_root = '.'.join(test_dir.relative_to(root_path()).parts)
+    if not test_dir.exists():
+        parser.error(f"Test dir {test_dir} does not exist")
+
+    metric_log_path = Path(args.metricsLogPath) if args.metricsLogPath else test_dir / f"metrics.log"
+    if not metric_log_path.parent.exists():
+        parser.error(f"Metric log file dir {metric_log_path.parent} does not exist")
+    os.environ['METRICS_LOG_PATH'] = str(metric_log_path)
+    if args.verbosity:
+        set_up_logger(logging_level=5)
+        verbosity = 2
+    else:
+        set_up_logger()
+        verbosity = 1
+    result_class = TestResultCompareFileMeld if args.meld else TestResultLogMetrics
+    runner = unittest.TextTestRunner(verbosity=verbosity, resultclass=result_class)
+
+    all_succeed = True
+    test_suites = discover_test_suites(test_dir)
+    if args.action == 'all':
+        results = [runner.run(test_suites[s_name]).wasSuccessful() for s_name in test_suites]
+        all_succeed = all(results)
+    elif args.action == 'suite':
+        if args.suiteName in list(test_suites.keys()):
+            all_succeed = runner.run(test_suites[args.suiteName]).wasSuccessful()
+        else:
+            parser.error(f"Suite {args.suiteName} not found in {test_dir}. Use `list` option to list suite")
+    elif args.action == 'case':
+        suite = unittest.defaultTestLoader.loadTestsFromName(f"{relative_to_root}.{args.caseName}")
+        all_succeed = runner.run(suite).wasSuccessful()
+    elif args.action == 'list':
+        if args.level == 'suite':
+            names = list(test_suites.keys())
+        elif args.level == 'case':
+            names = discover_test_cases(test_dir)
+        else:
+            names = discover_test_methods(test_dir)
+        if not names:
+            sys.stdout.write(f"No {args.level} found in {test_dir}")
+        else:
+            sys.stdout.write('\n'.join(names))
+            sys.stdout.write('\n')
+
+    if not all_succeed:
+        sys.exit("Some tests failed")
+
+
+def discover_test_suites(starting_dir: Path):
     checking_dirs = {starting_dir}
     suites_dir = set()
     while checking_dirs:
@@ -55,56 +118,40 @@ def get_test_suites(starting_dir: Path):
             checking_dirs = checking_dirs.union(sub_dirs)
     test_suites = {}
     for d in suites_dir:
-        tests = unittest.TestLoader().discover(d)
+        tests = unittest.TestLoader().discover(str(d))
         if tests.countTestCases() > 0:
-            parent = d.parent.stem
-            test_suites[f"{parent}.{d.stem}"] = tests
+            test_suites['.'.join(d.relative_to(starting_dir).parts)] = tests
     return test_suites
 
 
-def main():
-    test_parser = generate_parser()
-    set_up_logger()
+def discover_test_methods(starting_dir: Path):
+    discovered_tests = unittest.TestLoader().discover(str(starting_dir))
 
-    args = test_parser.parse_args()
-    if args.meld:
-        result_class = TestResultCompareFileMeld
-    else:
-        result_class = unittest.TextTestResult
-    runner = unittest.TextTestRunner(verbosity=args.verbosity, resultclass=result_class)
-    result = False
-    if args.testOption:
-        if args.testOption == 'all':
-            results = set()
-            t_suites = get_test_suites(root_path().joinpath(args.testDirPath))
-            for s in t_suites:
-                results.add(runner.run(t_suites[s]).wasSuccessful())
-            result = all(results)
-        elif args.testOption == 'suite':
-            t_suites = get_test_suites(root_path().joinpath(args.testDirPath))
-            if args.suiteName in list(t_suites.keys()):
-                result = runner.run(t_suites[args.suiteName]).wasSuccessful()
+    def test_case_gen(t_suite):
+        for test in t_suite:
+            if unittest.suite._isnotsuite(test):
+                yield test.id()
             else:
-                sys.stderr.write(f"error: Suite {args.suiteName} not found in test dir {args.testDirPath}.\n"
-                                 f"Try another test suite or test dir.\n")
-                test_parser.print_help()
-        elif args.testOption == 'case':
-            suite = unittest.defaultTestLoader.loadTestsFromName(name=args.caseName)
-            result = runner.run(suite).wasSuccessful()
-        elif args.testOption == 'listSuite':
-            t_suites = get_test_suites(root_path().joinpath(args.dirPath))
-            if not t_suites:
-                sys.stdout.write(f"No test suite found in {args.dirPath}")
+                for t in test_case_gen(test):
+                    yield t
+
+    return sorted(list(test_case_gen(discovered_tests)))
+
+
+def discover_test_cases(starting_dir: Path):
+    discovered_tests = unittest.TestLoader().discover(str(starting_dir))
+
+    def test_case_gen(t_suite):
+        for test in t_suite:
+            if unittest.suite._isnotsuite(test):
+                case = '.'.join(test.id().split('.')[:-1])
+                yield case
             else:
-                sys.stdout.write(f"{' '.join(t_suites.keys())}")
-            result = True
-        if not result:
-            sys.exit("Some tests failed")
-    else:
-        sys.stderr.write(f"error: Testing option is required\n")
-        test_parser.print_help()
-        sys.exit(2)
+                for t in test_case_gen(test):
+                    yield t
+
+    return sorted(list(set(test_case_gen(discovered_tests))))
 
 
 if __name__ == '__main__':
-    main()
+    execute_parser(generate_parser())

@@ -10,12 +10,11 @@ class SchemaHandler:
         self.logger = logging.getLogger("SchemaHandler")
         self.pandas_dtypes_name_to_aito_type = {
             'string': 'Text',
-            'unicode': 'Text',
             'bytes': 'Text',
             'floating': 'Decimal',
             'integer': 'Int',
-            'mixed - integer': 'Decimal',
-            'mixed - integer - float': 'Decimal',
+            'mixed-integer': 'Decimal',
+            'mixed-integer-float': 'Decimal',
             'decimal': 'Decimal',
             'complex': 'Decimal',
             'categorical': 'String',
@@ -29,12 +28,12 @@ class SchemaHandler:
             'period': 'String',
             'mixed': 'Text'
         }
-        self.aito_types_to_pandas_dtypes = {
-            'Boolean': ['bool'],
-            'Decimal': ['float64', 'float16', 'float32', 'float128'],
-            'Int': ['int32', 'int8', 'int16', 'int64'],
-            'String': ['str'],
-            'Text': ['str']
+        self.aito_types_to_python_types = {
+            'Boolean': bool,
+            'Decimal': float,
+            'Int': int,
+            'String': str,
+            'Text': str
         }
 
         self.lang_detect_code_to_aito_code = {
@@ -50,11 +49,14 @@ class SchemaHandler:
                                          'lv', 'no', 'fa', 'pt', 'ro', 'ru', 'es', 'sv', 'th', 'tr']
         self.sample_size = 100000
 
-    def infer_aito_types_from_values(self, values: List):
-        dtypes = pd.api.types.infer_dtype(values, skipna=True)
-        return self.pandas_dtypes_name_to_aito_type[dtypes]
+    def infer_aito_types_from_pandas_series(self, series: pd.Series, sample_size = 100000) -> str:
+        sampled_values = series.values if len(series) < sample_size else series.sample(sample_size).values
+        inferred_dtype = pd.api.types.infer_dtype(sampled_values)
+        if inferred_dtype not in self.pandas_dtypes_name_to_aito_type:
+            raise Exception(f"Cannot not infer aito type from dtype {inferred_dtype}")
+        return self.pandas_dtypes_name_to_aito_type[inferred_dtype]
 
-    def infer_table_schema_from_pandas_dataframe(self, table_df: pd.DataFrame) -> Dict:
+    def infer_table_schema_from_pandas_data_frame(self, table_df: pd.DataFrame) -> Dict:
         """
         Return aito schema in dictionary format
         :param table_df: The pandas DataFrame containing table data
@@ -66,12 +68,11 @@ class SchemaHandler:
 
         columns_schema = {}
         for col in table_df.columns.values:
-            if rows_count >= self.sample_size:
-                col_df = table_df[col].sample(self.sample_size)
-            else:
-                col_df = table_df[col]
-            col_data = col_df.values
-            col_aito_type = self.infer_aito_types_from_values(col_data)
+            col_df = table_df[col]
+            try:
+                col_aito_type = self.infer_aito_types_from_pandas_series(table_df[col], self.sample_size)
+            except Exception as e:
+                raise Exception(f"Cannot infer aito type of column {col}: {e}")
             col_na_count = col_df.isna().sum()
             col_schema = {
                 'nullable': True if col_na_count > 0 else False,
@@ -109,7 +110,7 @@ class SchemaHandler:
             if arg_name not in object_dict:
                 raise ValueError(f"{object_name} missing '{arg_name}'")
 
-        def validate_arg_type(object_name: str, object_dict: Dict, arg_name: str, arg_type: object,
+        def validate_arg_type(object_name: str, object_dict: Dict, arg_name: str, arg_type: type,
                               accepted_values: List = None):
             arg_value = object_dict[arg_name]
             if not isinstance(arg_value, arg_type):
@@ -121,7 +122,7 @@ class SchemaHandler:
                     raise ValueError(f"{object_name} '{arg_name}' must be {accepted_values_str}")
 
         def validate_arg(object_name: str, object_dict: Dict, arg_name: str, required: bool = False,
-                         arg_type: object = None, accepted_values: List = None):
+                         arg_type: type = None, accepted_values: List = None):
             if required:
                 validate_required_arg(object_name, object_dict, arg_name)
             if arg_name in object_dict and arg_type:
@@ -132,7 +133,7 @@ class SchemaHandler:
         validate_arg('table', table_schema, 'columns', True, dict)
         for col in table_schema['columns']:
             col_schema = table_schema['columns'][col]
-            validate_arg(col, col_schema, 'type', True, str, list(self.aito_types_to_pandas_dtypes.keys()))
+            validate_arg(col, col_schema, 'type', True, str, list(self.aito_types_to_python_types.keys()))
             validate_arg(col, col_schema, 'nullable', False, bool)
         self.logger.info("Finished validating schema")
         return table_schema

@@ -1,8 +1,8 @@
 import io
-import json
 import logging
 from typing import List, Dict, Callable
 
+import numpy as np
 import pandas as pd
 
 from aito.utils._typing import *
@@ -63,20 +63,25 @@ class DataFrameHandler:
         table_schema_columns = set(columns_schema.keys())
 
         for col in (df_columns - table_schema_columns):
-            self.logger.warn(f"Column '{col}' found in the input data but not found in the input schema")
+            self.logger.warning(f"Column '{col}' found in the input data but not found in the input schema")
         for col in (table_schema_columns - df_columns):
-            self.logger.warn(f"Column '{col}' found in the input schema but not found in the input data")
+            self.logger.warning(f"Column '{col}' found in the input schema but not found in the input data")
 
         for col in table_schema_columns.intersection(df_columns):
             col_schema = columns_schema[col]
             col_schema_nullable = True if ('nullable' not in col_schema or col_schema['nullable']) else False
             if not col_schema_nullable and df[col].isna().any():
                 raise ValueError(f"Column '{col}' is nullable but stated non-nullable in the input schema")
-            col_schema_dtypes = self.schema_handler.aito_types_to_pandas_dtypes[col_schema['type']]
-            if df[col].dtype.name not in col_schema_dtypes:
-                self.logger.info(f"Converting column '{col}' to {col_schema['type']} type according to the schema...")
+            col_aito_type = col_schema['type']
+            col_inferred_aito_type = self.schema_handler.infer_aito_types_from_pandas_series(df[col])
+            self.logger.debug(f"Column '{col}' inferred aito type is {col_inferred_aito_type}")
+            if col_inferred_aito_type != col_aito_type and \
+                    not {col_aito_type, col_inferred_aito_type}.issubset({'Text', 'String'}):
+                col_python_type = self.schema_handler.aito_types_to_python_types[col_aito_type]
+                self.logger.info(f"Converting column '{col}' to {col_aito_type} type according to the schema")
+                self.logger.debug(f"Casting column '{col}' to {col_python_type}")
                 try:
-                    df[col] = df[col].astype(col_schema_dtypes[0], skipna=True)
+                    df[col] = df[col].apply(lambda cell: col_python_type(cell) if not np.isnan(cell) else np.nan)
                 except Exception as e:
                     self.logger.error(f'Conversion error: {e}')
                     raise e
@@ -170,6 +175,6 @@ class DataFrameHandler:
         if use_table_schema:
             df = self.convert_df_from_aito_table_schema(df, use_table_schema)
 
-        if out_format != in_format or convert_options:
+        if out_format != in_format or convert_options or use_table_schema:
             self.df_to_format(df, out_format, write_output, convert_options)
         return df

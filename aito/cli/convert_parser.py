@@ -127,7 +127,7 @@ def execute_convert(main_parser: AitoArgParser, parsed_args):
 
     if parsed_args['create_table_schema']:
         output_schema_path = main_parser.parse_path_value(parsed_args['create_table_schema'])
-        inferred_schema = schema_handler.infer_table_schema_from_pandas_dataframe(converted_df)
+        inferred_schema = schema_handler.infer_table_schema_from_pandas_data_frame(converted_df)
         with output_schema_path.open(mode='w') as f:
             json.dump(inferred_schema, f, indent=2, sort_keys=True)
 

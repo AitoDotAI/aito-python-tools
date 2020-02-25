@@ -21,11 +21,7 @@ The Aito CLI supports integration between your SQL database and the Aito databas
 The Aito CLI uses the python module [pyodbc](https://github.com/mkleehammer/pyodbc) to access to [ODBC](https://docs.microsoft.com/en-us/sql/odbc/reference/what-is-odbc?view=sql-server-ver15) databases.
 You need to install:
   * The ODBC driver manager (varies from system, read the instructions below)
-  * Install the aitoai package with SQL feature
-    ```bash
-    pip install aitoai[SQL]
-    ```
-    or install the pyodbc package on top of the original aitoai package
+  * Install the pyodbc package on top of the original aitoai package
     ```bash
     pip install aitoai
     pip install pyodbc
@@ -45,7 +41,7 @@ More instructions regarding the pyodbc library and connecting to different datab
 * Mac:
   ```bash
   brew update
-  brew install unixodbc freetds
+  brew install unixodbc
   ```
 * Generic Linux:
   ```
@@ -55,7 +51,7 @@ More instructions regarding the pyodbc library and connecting to different datab
   ```
 
 #### Install PostgreSQL ODBC Driver:
-The official instructions can be found [here](https://odbc.postgresql.org/)
+[psqlODBC](https://odbc.postgresql.org/) is the official PostgreSQL ODBC driver
 * Ubuntu:
   ```bash
   sudo apt install odbc-postgresql
@@ -116,3 +112,32 @@ There are 3 ways to set up the credentials:
 * Using flags:
 
   You can set up the credentials using `-s` flag for the server, `-P` flag for the port, `-d` flag for the database, `-u` flag for the username, and `-p` for the password
+
+#### Troubleshooting
+##### Database ODBC Driver not found after installation
+It is possible that the database driver is not registered directly to the ODBC Driver Manager automatically.
+In this case, you have to do it manually by following these steps:
+  * After installing the ODBC Driver Manager, you should be able to run the following command to check the location of ODBC ini files on your system:
+    ```bash
+    odbcinst -j
+    ```
+  The response should look similar to this:
+    ```
+    unixODBC 2.3.7
+    DRIVERS............: /usr/local/etc/odbcinst.ini
+    SYSTEM DATA SOURCES: /usr/local/etc/odbc.ini
+    FILE DATA SOURCES..: /usr/local/etc/ODBCDataSources
+    USER DATA SOURCES..: /User/distiller/.odbc.ini
+    SQLULEN Size.......: 8
+    SQLLEN Size........: 8
+    SQLSETPOSIROW Size.: 8
+    ```
+  You only need to care about the location of the driver ini file, which is `/usr/local/etc/odbcinst.ini` in this case.
+
+  * Find the location of the database driver and add it to the driver ini file. For example,
+  the postgres unicode odbc driver is at `/usr/local/lib/psqlodbcw.so`. Simply append the following text to the driver ini file:
+    ```
+    [PostgreSQL Unicode]
+      Driver=/usr/local/lib/psqlodbcw.so
+    ```
+  * You should now be able to connect to your database using the Aito CLI.
