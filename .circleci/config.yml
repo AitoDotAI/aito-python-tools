@@ -15,7 +15,6 @@ workflows:
       - run_postgres_tests_linux_py_38
       - run_mysql_tests_linux_36
       - run_mysql_tests_linux_37
-      - run_mysql_tests_linux_38
       - run_tests_exclude_sql_function_tests_osx_py_36
       - run_tests_exclude_sql_function_tests_osx_py_37
       - run_tests_exclude_sql_function_tests_osx_py_38
@@ -48,7 +47,12 @@ commonYAMLStructure:
   - &restore_venv_cache
     restore_cache:
       keys:
-        - v1-dependencies-{{ checksum "requirements.txt" }}-{{ .Environment.CIRCLE_JOB }}
+        - v2-dependencies-{{ checksum "requirements.txt" }}-{{ .Environment.CIRCLE_JOB }}
+  - &save_venv_cache
+    save_cache:
+      paths:
+        - ./venv
+      key: v2-dependencies-{{ checksum "requirements.txt" }}-{{ .Environment.CIRCLE_JOB }}
   - &create_venv_and_install_dependencies_linux
     run:
       name: create virtualenv and install dependencies
@@ -77,11 +81,6 @@ commonYAMLStructure:
         venv\Scripts\activate.ps1
         python --version
         pip install -r requirements.txt
-  - &save_venv_cache
-    save_cache:
-      paths:
-        - ./venv
-      key: v1-dependencies-{{ checksum "requirements.txt" }}-{{ .Environment.CIRCLE_JOB }}
   - &install_odbc_driver_linux
     run:
       name: install odbc driver
@@ -237,7 +236,7 @@ commonYAMLStructure:
 jobs:
   run_tests_exclude_sql_function_tests_linux_py_36: &run_tests_exclude_sql_function_tests_linux_template
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.6.9
     working_directory: ~/repo
     steps:
       - checkout
@@ -249,16 +248,16 @@ jobs:
   run_tests_exclude_sql_function_tests_linux_py_37:
     <<: *run_tests_exclude_sql_function_tests_linux_template
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.7.5
 
   run_tests_exclude_sql_function_tests_linux_py_38:
     <<: *run_tests_exclude_sql_function_tests_linux_template
     docker:
-      - image: circleci/python:3.8
+      - image: circleci/python:3.8.0
 
   run_postgres_tests_linux_py_36: &run_postgres_tests_linux_template
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.6.9
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
@@ -289,7 +288,7 @@ jobs:
   run_postgres_tests_linux_py_37:
     <<: *run_postgres_tests_linux_template
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.7.5
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
@@ -299,7 +298,7 @@ jobs:
   run_postgres_tests_linux_py_38:
     <<: *run_postgres_tests_linux_template
     docker:
-      - image: circleci/python:3.8
+      - image: circleci/python:3.8.0
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
@@ -308,7 +307,7 @@ jobs:
 
   run_mysql_tests_linux_36: &run_mysql_tests_template
     docker:
-      - image: circleci/python:3.6-stretch
+      - image: circleci/python:3.6.9-stretch
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_DATABASE: circleci_test
@@ -338,7 +337,7 @@ jobs:
   run_mysql_tests_linux_37:
     <<: *run_mysql_tests_template
     docker:
-      - image: circleci/python:3.7-stretch
+      - image: circleci/python:3.7.5-stretch
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_DATABASE: circleci_test
@@ -348,7 +347,7 @@ jobs:
   run_mysql_tests_linux_38:
     <<: *run_mysql_tests_template
     docker:
-      - image: circleci/python:3.8.0a3-stretch
+      - image: circleci/python:3.8.0a4-stretch
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_DATABASE: circleci_test
@@ -359,7 +358,7 @@ jobs:
     macos:
       xcode: 11.3.0
     environment:
-      PYTHON_VERSION: 3.6.0
+      PYTHON_VERSION: 3.6.9
       HOMEBREW_NO_AUTO_UPDATE: 1
     working_directory: ~/repo
     steps:
@@ -376,7 +375,7 @@ jobs:
   run_tests_exclude_sql_function_tests_osx_py_37:
     <<: *run_tests_exclude_sql_function_tests_osx_template
     environment:
-      PYTHON_VERSION: 3.7.0
+      PYTHON_VERSION: 3.7.5
       HOMEBREW_NO_AUTO_UPDATE: 1
 
   run_tests_exclude_sql_function_tests_osx_py_38:
@@ -395,7 +394,7 @@ jobs:
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
       TEST_SQL_DB_DRIVER: PostgreSQL Unicode
-      PYTHON_VERSION: 3.6.0
+      PYTHON_VERSION: 3.6.9
     working_directory: ~/repo
     steps:
       - checkout
@@ -425,7 +424,7 @@ jobs:
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
       TEST_SQL_DB_DRIVER: PostgreSQL Unicode
-      PYTHON_VERSION: 3.7.0
+      PYTHON_VERSION: 3.7.5
 
   run_postgres_tests_osx_py_38:
     <<: *run_postgres_tests_osx_template
@@ -442,7 +441,7 @@ jobs:
     executor:
       name: win/default
     environment:
-      PYTHON_VERSION: 3.6.0
+      PYTHON_VERSION: 3.6.9
     working_directory: ~/repo
     steps:
       - run:
@@ -455,7 +454,7 @@ jobs:
   run_tests_exclude_sql_function_tests_win_py_37:
     <<: *run_tests_exclude_sql_function_tests_win_template
     environment:
-      PYTHON_VERSION: 3.7.0
+      PYTHON_VERSION: 3.7.5
 
   run_tests_exclude_sql_function_tests_win_py_38:
     <<: *run_tests_exclude_sql_function_tests_win_template
