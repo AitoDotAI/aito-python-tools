@@ -22,7 +22,7 @@ if os.environ.get('CONVERT_README'):
 else:
     long_description = default_description
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 setup(
     name='aitoai',
