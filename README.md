@@ -247,4 +247,4 @@ We take our quality seriously and aim for the smoothest developer experience pos
 ## License
 [MIT License](LICENSE)
 
-## [Change logs](docs/change_logs.md)
+## [Change logs](docs/changelog.md)

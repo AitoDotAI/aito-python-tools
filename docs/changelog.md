@@ -1,4 +1,4 @@
-### Change Logs
+### Changelog
 #### 0.0.3
 * Add ```quick-add-table, create-table, delete-table, delete-databse, list``` client operation
 * Remove the option to create and use table schema from file-upload
@@ -20,3 +20,8 @@
 #### 0.1.1
 * Fix a bug that requires database name for sql_function
 * No longer requires specification of RO or RW key (Use AITO_API_KEY instead of AITO_RW_KEY and AITO_RO_KEY)
+
+#### 0.1.2
+* Fix a bug when converting or uploading a file in Windows due to tempfile persmission
+* Fix a bug that requires conversion between String and Text column
+* Add compatibility with Python 3.7 and 3.8

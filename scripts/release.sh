@@ -51,7 +51,7 @@ function bump_version_setup_file {
 }
 
 function check_version_doc_change_logs {
-  if ! grep -q "^#### $NEW_VERSION" docs/change_logs.md ;
+  if ! grep -q "^#### $NEW_VERSION" docs/changelog.md ;
   then
     echo
     echo "error: version $NEW_VERSION change log not found in docs/change_logs.md"
