@@ -5,7 +5,7 @@ function usage {
 
 location:
   test
-    release to testpypi
+    release to test.pypi
 
   prod
     release to pypi
@@ -13,6 +13,28 @@ location:
 version:
   a version number
 "
+}
+
+function version_gt {
+  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
+}
+
+function check_new_version {
+  if [[ "$DISTRIBUTION" == "test" ]]
+  then
+    distribution_url=https://test.pypi.org/pypi/aitoai/json
+  else
+    distribution_url=https://pypi.org/pypi/aitoai/json
+  fi
+  latest_version=$(curl -s "$distribution_url"  | jq .releases | jq 'keys[]' | sort -r | head -n1 | sed 's/\"//g')
+
+  if version_gt "$latest_version" "$NEW_VERSION" || [[ $NEW_VERSION == "$latest_version" ]]
+  then
+    echo
+    echo "error: new version must be greater than the latest version $latest_version"
+    echo
+    exit 1
+  fi
 }
 
 function check_git_tree {
@@ -23,29 +45,8 @@ function check_git_tree {
   fi
 }
 
-function version_gt {
-  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
-}
-
-function bump_version_setup {
+function bump_version_setup_file {
   old_version=$(sed -n 's/^VERSION *= \"\(.*\)\"/\1/p' setup.py)
-
-  if [[ $NEW_VERSION == $old_version ]]
-  then
-    echo
-    echo "error: new version $NEW_VERSION must be different from old_version $old_version"
-    echo
-    exit 1
-  fi
-
-  if version_gt $old_version $NEW_VERSION;
-  then
-    echo
-    echo "error: new version $NEW_VERSION is smaller than old_version $old_version"
-    echo
-    exit 1
-  fi
-
   sed -i -e "s/^VERSION *=.*/VERSION = \"$NEW_VERSION\"/" setup.py
 }
 
@@ -61,7 +62,7 @@ function check_version_doc_change_logs {
 
 function git_bump_prod_version {
   git commit -am "Bump to $NEW_VERSION"
-  git tag $NEW_VERSION
+  git tag "$NEW_VERSION"
   git push
   git push --tags
 }
@@ -84,31 +85,28 @@ function build_package {
 if [[ "$1" == "" ]]
 then
   echo
-  echo "error: specify release to test or prod"
+  echo "error: specify distribution: test|prod"
   echo
   usage
   exit 1
+else
+  DISTRIBUTION=$1
 fi
 
-NEW_VERSION=$2
-if [[ "$NEW_VERSION" == "" ]]
+if [[ "$2" == "" ]]
 then
   echo
   echo "error: missing release version"
   echo
   usage
   exit 1
+else
+  NEW_VERSION=$2
 fi
 
+check_new_version
 check_git_tree
-bump_version_setup
-
-if [[ "$1" == "prod" ]]
-then
-  check_version_doc_change_logs
-  git_bump_prod_version
-fi
-
+bump_version_setup_file
 prepare_release_tools
 build_package
 
@@ -116,6 +114,8 @@ if [[ "$1" == "test" ]]
 then
   twine check dist/* && twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 else
+  check_version_doc_change_logs
+  git_bump_prod_version
   twine check dist/* && twine upload dist/*
 fi
 
