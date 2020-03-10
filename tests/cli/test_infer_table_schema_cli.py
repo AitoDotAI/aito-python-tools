@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from tests.test_case import TestCaseCompare
+from tests.cases import TestCaseCompare
 
 
 class TestInferTableSchemaCli(TestCaseCompare):

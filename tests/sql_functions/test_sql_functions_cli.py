@@ -3,7 +3,7 @@ import os
 import subprocess
 
 from aito.utils.aito_client import AitoClient
-from tests.test_case import TestCaseCompare
+from tests.cases import TestCaseCompare
 from uuid import uuid4
 
 

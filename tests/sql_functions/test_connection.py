@@ -2,7 +2,7 @@ import json
 import os
 
 from aito.utils.sql_connection import SQLConnection
-from tests.test_case import TestCaseCompare
+from tests.cases import TestCaseCompare
 
 
 class TestPostgresConnection(TestCaseCompare):

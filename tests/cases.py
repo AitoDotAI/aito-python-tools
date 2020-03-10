@@ -7,7 +7,7 @@ from typing import Optional, Union
 import json
 import ndjson
 
-from aito.utils.generic_utils import root_path
+from aito.utils.generic_utils import ROOT_PATH
 
 
 class TestCaseTimer(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestCaseCompare(TestCaseTimer):
         :param test_path: Path to test class io folder if specified, else use class name
         :return:
         """
-        io_path = root_path().joinpath(io_folder_path)
+        io_path = ROOT_PATH.joinpath(io_folder_path)
         if not test_path:
             test_path = cls.__name__
         cls.input_folder = (io_path / in_folder_name).joinpath(test_path)
@@ -54,7 +54,7 @@ class TestCaseCompare(TestCaseTimer):
         self.logger = logging.getLogger(self.method_name)
 
     def compare_file(self, out_file_path: Path, exp_file_path: Path, msg=None):
-        self.logger.verbose(f'Comparing {out_file_path} with {exp_file_path}')
+        self.logger.debug(f'Comparing {out_file_path} with {exp_file_path}')
         if not msg:
             self.assertTrue(filecmp.cmp(str(out_file_path), str(exp_file_path), shallow=False),
                             f"out file {str(out_file_path)} does not match exp file {str(exp_file_path)}")
@@ -71,7 +71,7 @@ class TestCaseCompare(TestCaseTimer):
             compare_order: bool = False,
             is_ndjson_file: bool = False
     ):
-        self.logger.verbose(f'Comparing {out_file_path} with {exp_file_path}')
+        self.logger.debug(f'Comparing {out_file_path} with {exp_file_path}')
         load_method = ndjson.load if is_ndjson_file else json.load
         assert_method = self.assertEqual if compare_order else self.assertCountEqual
         with out_file_path.open() as out_f, exp_file_path.open() as exp_f:

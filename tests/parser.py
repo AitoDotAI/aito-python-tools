@@ -1,8 +1,12 @@
 import argparse
+import logging
+import os
 import sys
+import unittest
+from pathlib import Path
 
-from aito.utils.generic_utils import root_path, set_up_logger
-from tests.test_result import *
+from aito.utils.generic_utils import logging_config, ROOT_PATH
+from tests.results import TestResultLogMetrics, TestResultCompareFileMeld
 
 
 class ArgParser(argparse.ArgumentParser):
@@ -25,17 +29,19 @@ def generate_parser() -> ArgParser:
     parser.prog = 'test'
     parser.epilog = example_text
 
-    parser.add_argument('-d', '--testDirPath',
-                        help=f"Path to test dir containing tests to be discovered by TestLoader (default: tests)",
-                        type=str,
-                        default='tests')
-    parser.add_argument('-l', '--metricsLogPath',
-                        help=f"Path to metrics log file (default: metrics_timestamp.log)",
-                        type=str)
-    parser.add_argument('-v', '--verbosity', help=f"Make the test verbose (default False)", action='store_true')
-    parser.add_argument('--meld',
-                        help='Use meld to compare out and exp file (default False)',
-                        action='store_true')
+    parser.add_argument(
+        '-d', '--testDirPath', type=str, default='tests',
+        help=f"Path to test dir containing tests to be discovered by TestLoader (default: tests)"
+    )
+    parser.add_argument(
+        '-l', '--logDirPath', type=str, default='logs',
+        help=f"Path to log dir containing debug log (default: logs)"
+    )
+    parser.add_argument(
+        '-v', '--verbosity', action='store_true',
+        help=f"Make the test verbose (default False)"
+    )
+    parser.add_argument('--meld', action='store_true', help='Use meld to compare out and exp file (default False)')
     sub_parser = parser.add_subparsers(
         title='action',
         description='action to perform ',
@@ -58,20 +64,18 @@ def generate_parser() -> ArgParser:
 
 def execute_parser(parser):
     args = parser.parse_args()
-    test_dir = root_path().joinpath(args.testDirPath)
-    relative_to_root = '.'.join(test_dir.relative_to(root_path()).parts)
+    test_dir = ROOT_PATH.joinpath(args.testDirPath)
     if not test_dir.exists():
         parser.error(f"Test dir {test_dir} does not exist")
 
-    metric_log_path = Path(args.metricsLogPath) if args.metricsLogPath else test_dir / f"metrics.log"
-    if not metric_log_path.parent.exists():
-        parser.error(f"Metric log file dir {metric_log_path.parent} does not exist")
-    os.environ['METRICS_LOG_PATH'] = str(metric_log_path)
+    log_dir = ROOT_PATH.joinpath(args.logDirPath)
+    log_dir.mkdir(exist_ok=True)
+    os.environ['METRICS_LOG_PATH'] = str(log_dir / 'test_metrics.log')
     if args.verbosity:
-        set_up_logger(logging_level=5)
+        logging_config(filename=str(log_dir/'test.log'), level=logging.DEBUG)
         verbosity = 2
     else:
-        set_up_logger()
+        logging_config(filename=str(log_dir / 'test.log'))
         verbosity = 1
     result_class = TestResultCompareFileMeld if args.meld else TestResultLogMetrics
     runner = unittest.TextTestRunner(verbosity=verbosity, resultclass=result_class)
@@ -87,6 +91,7 @@ def execute_parser(parser):
         else:
             parser.error(f"Suite {args.suiteName} not found in {test_dir}. Use `list` option to list suite")
     elif args.action == 'case':
+        relative_to_root = '.'.join(test_dir.relative_to(ROOT_PATH).parts)
         suite = unittest.defaultTestLoader.loadTestsFromName(f"{relative_to_root}.{args.caseName}")
         all_succeed = runner.run(suite).wasSuccessful()
     elif args.action == 'list':
@@ -124,12 +129,20 @@ def discover_test_suites(starting_dir: Path):
     return test_suites
 
 
+def is_not_suite(test: unittest.suite.TestSuite):
+    try:
+        iter(test)
+    except TypeError:
+        return True
+    return False
+
+
 def discover_test_methods(starting_dir: Path):
     discovered_tests = unittest.TestLoader().discover(str(starting_dir))
 
     def test_case_gen(t_suite):
         for test in t_suite:
-            if unittest.suite._isnotsuite(test):
+            if is_not_suite(test):
                 yield test.id()
             else:
                 for t in test_case_gen(test):
@@ -143,7 +156,7 @@ def discover_test_cases(starting_dir: Path):
 
     def test_case_gen(t_suite):
         for test in t_suite:
-            if unittest.suite._isnotsuite(test):
+            if is_not_suite(test):
                 case = '.'.join(test.id().split('.')[:-1])
                 yield case
             else:

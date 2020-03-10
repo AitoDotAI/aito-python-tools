@@ -1,7 +1,7 @@
 import json
 from aito.utils.schema_handler import SchemaHandler
 from aito.utils.data_frame_handler import DataFrameHandler
-from tests.test_case import TestCaseCompare
+from tests.cases import TestCaseCompare
 
 
 class TestSchemaHandler(TestCaseCompare):

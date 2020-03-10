@@ -1,7 +1,7 @@
 import os
 
 from aito.utils.aito_client import AitoClient, ClientError
-from tests.test_case import TestCaseCompare
+from tests.cases import TestCaseCompare
 
 
 class TestAitoClient(TestCaseCompare):
