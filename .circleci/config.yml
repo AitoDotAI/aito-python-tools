@@ -235,7 +235,7 @@ commonYAMLStructure:
         python -m tests.parser -v case sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
   - &store_log_files
     store_artifacts:
-      path: /logs
+      path: ./.logs
 
 jobs:
   run_tests_exclude_sql_function_tests_linux_py_36: &run_tests_exclude_sql_function_tests_linux_template

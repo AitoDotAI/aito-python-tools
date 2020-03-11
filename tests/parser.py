@@ -34,8 +34,8 @@ def generate_parser() -> ArgParser:
         help=f"Path to test dir containing tests to be discovered by TestLoader (default: tests)"
     )
     parser.add_argument(
-        '-l', '--logDirPath', type=str, default='logs',
-        help=f"Path to log dir containing debug log (default: logs)"
+        '-l', '--logDirPath', type=str, default='.logs',
+        help=f"Path to log dir containing debug log (default: .logs)"
     )
     parser.add_argument(
         '-v', '--verbosity', action='store_true',
