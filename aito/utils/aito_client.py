@@ -30,14 +30,14 @@ class AitoClient:
     """A versatile client for your Aito Database Instance
 
     :ivar request_methods: request methods
-    :ivar paths: recognized query API endpoints
-    :ivar database_paths_prefix: recognized database API endpoints
+    :ivar query_endpoints: recognized query API endpoints
+    :ivar database_endpoints: recognized database API endpoints
     """
     request_methods = {
         'PUT': requests.put, 'POST': requests.post, 'GET': requests.get, 'DELETE': requests.delete
     }
 
-    paths = [
+    query_endpoints = [
         '/api/v1/_search',
         '/api/v1/_predict',
         '/api/v1/_recommend',
@@ -49,7 +49,7 @@ class AitoClient:
         '/version'
     ]
 
-    database_paths_prefix = [
+    database_endpoints = [
         '/api/v1/schema',
         '/api/v1/data'
     ]
@@ -76,8 +76,8 @@ class AitoClient:
         self.headers = {'Content-Type': 'application/json', 'x-api-key': api_key}
 
     def _check_endpoint(self, endpoint: str):
-        is_database_path = any([endpoint.startswith(db_path) for db_path in self.database_paths_prefix])
-        if not is_database_path and endpoint not in self.paths:
+        is_database_path = any([endpoint.startswith(db_path) for db_path in self.database_endpoints])
+        if not is_database_path and endpoint not in self.query_endpoints:
             LOG.warning(f'unrecognized endpoint {endpoint}')
 
     async def _async_fetch(self, session: ClientSession, method: str, path: str, json_data: Dict):
@@ -87,27 +87,27 @@ class AitoClient:
             json_resp = await resp.json()
             return json_resp
 
-    def async_requests(self, request_methods: List[str], request_paths: List[str], request_data: List[Dict]) -> List[Dict]:
+    def async_requests(self, methods: List[str], endpoints: List[str], queries: List[Dict]) -> List[Dict]:
         """async multiple requests
 
         This method is useful when sending a batch of, for example, predict requests.
 
-        :param request_methods: list of request methods
-        :type request_methods: List[str]
-        :param request_paths: list of request paths
-        :type request_paths: List[str]
-        :param request_data: list of request data
-        :type request_data: List[Dict]
+        :param methods: list of request method
+        :type methods: List[str]
+        :param endpoints: list of request endpoint
+        :type endpoints: List[str]
+        :param queries: list of request query
+        :type queries: List[Dict]
         :return: list of responses
         :rtype: List[Dict]
         """
         async def run():
             async with ClientSession() as session:
-                tasks = [self._async_fetch(session, method, request_paths[idx], request_data[idx])
-                         for idx, method in enumerate(request_methods)]
+                tasks = [self._async_fetch(session, method, endpoints[idx], queries[idx])
+                         for idx, method in enumerate(methods)]
                 return await asyncio.gather(*tasks)
 
-        request_count = len(request_methods)
+        request_count = len(methods)
         LOG.debug(f'async {request_count} requests')
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -116,22 +116,22 @@ class AitoClient:
         LOG.info(f'requested {request_count} requests')
         return responses
 
-    def request(self, req_method: str, path: str, query: Dict =None) -> Dict:
+    def request(self, req_method: str, endpoint: str, query: Dict =None) -> Dict:
         """request to an Aito API end point
 
         :param req_method: request method
         :type req_method: str
-        :param path: an Aito API endpoint
-        :type path: str
+        :param endpoint: an Aito API endpoint
+        :type endpoint: str
         :param query: an Aito query, defaults to None
         :type query: Dict, optional
         :raises AitoClientRequestError: An error occurred during request
         :return: request JSON content if succeed
         :rtype: Dict
         """
-        self._check_endpoint(path)
-        LOG.debug(f'`{req_method}` to `{path}` with query: {query}')
-        url = self.url + path
+        self._check_endpoint(endpoint)
+        LOG.debug(f'`{req_method}` to `{endpoint}` with query: {query}')
+        url = self.url + endpoint
         try:
             resp = self.request_methods[req_method](url, headers=self.headers, json=query)
         except Exception as e:
