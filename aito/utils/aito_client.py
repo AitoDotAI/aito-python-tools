@@ -27,6 +27,12 @@ class AitoClientRequestError(AitoClientError):
 
 
 class AitoClient:
+    """A versatile client for your Aito Database Instance
+
+    :ivar request_methods: request methods
+    :ivar paths: recognized query API endpoints
+    :ivar database_paths_prefix: recognized database API endpoints
+    """
     request_methods = {
         'PUT': requests.put, 'POST': requests.post, 'GET': requests.get, 'DELETE': requests.delete
     }
@@ -49,6 +55,14 @@ class AitoClient:
     ]
 
     def __init__(self, instance_name: str, api_key: str):
+        """Constructor method
+
+        :param instance_name: Aito instance name
+        :type instance_name: str
+        :param api_key: Aito instance API key
+        :type api_key: str
+        :raises AitoClientError: An error occurred during creating AitoClient
+        """
         if not instance_name:
             raise AitoClientError('instance name is required')
         instance_name = instance_name.strip()
@@ -73,35 +87,19 @@ class AitoClient:
             json_resp = await resp.json()
             return json_resp
 
-    def async_similar_requests(self, request_count: int, request_method: str, path: str, json_data: Dict = None):
-        """ async multiple similar requests
+    def async_requests(self, request_methods: List[str], request_paths: List[str], request_data: List[Dict]) -> List[Dict]:
+        """async multiple requests
 
-        :param request_count: number of requests
-        :param request_method:
-        :param path: aito API endpoints path
-        :param json_data: request content
-        :return:
-        """
-        async def run():
-            async with ClientSession() as session:
-                tasks = [self._async_fetch(session, request_method, path, json_data)] * request_count
-                return await asyncio.gather(*tasks)
-
-        LOG.debug(f'async {request_count} similar requests')
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        responses = loop.run_until_complete(run())
-        LOG.debug(f'responses: {responses}')
-        LOG.info(f'requested {request_count} similar requests')
-        return responses
-
-    def async_requests(self, request_methods: List[str], request_paths: List[str], request_data: List[Dict]):
-        """ async multiple requests
+        This method is useful when sending a batch of, for example, predict requests.
 
         :param request_methods: list of request methods
-        :param request_paths: list of request API path
+        :type request_methods: List[str]
+        :param request_paths: list of request paths
+        :type request_paths: List[str]
         :param request_data: list of request data
-        :return:
+        :type request_data: List[Dict]
+        :return: list of responses
+        :rtype: List[Dict]
         """
         async def run():
             async with ClientSession() as session:
@@ -118,13 +116,18 @@ class AitoClient:
         LOG.info(f'requested {request_count} requests')
         return responses
 
-    def request(self, req_method: str, path: str, query: Dict =None):
-        """ request to an aito API end point
+    def request(self, req_method: str, path: str, query: Dict =None) -> Dict:
+        """request to an Aito API end point
 
         :param req_method: request method
+        :type req_method: str
         :param path: an Aito API endpoint
-        :param query: an Aito query
-        :return:
+        :type path: str
+        :param query: an Aito query, defaults to None
+        :type query: Dict, optional
+        :raises AitoClientRequestError: An error occurred during request
+        :return: request JSON content if succeed
+        :rtype: Dict
         """
         self._check_endpoint(path)
         LOG.debug(f'`{req_method}` to `{path}` with query: {query}')
@@ -145,41 +148,107 @@ class AitoClient:
         return json_resp
 
     def get_version(self):
+        """get the aito instance version
+
+        :return: version information in json format
+        :rtype: Dict
+        """
         return self.request('GET', '/version')
 
-    def put_database_schema(self, database_schema):
+    def put_database_schema(self, database_schema: Dict)-> Dict:
+        """create database with the given database schema `API doc <https://aito.ai/docs/api/#put-api-v1-schema>`__
+
+        :param database_schema: Aito database schema
+        :type database_schema: Dict
+        :return: the database schema if succeed
+        :rtype: Dict
+        """
         r = self.request('PUT', '/api/v1/schema', database_schema)
         LOG.info('database schema created')
         return r
 
-    def get_database_schema(self):
+    def get_database_schema(self) -> Dict:
+        """get the schema of the database `API doc <https://aito.ai/docs/api/#get-api-v1-schema>`__
+
+        :return: Aito database schema if succeed
+        :rtype: Dict
+        """
         return self.request('GET', '/api/v1/schema')
 
-    def delete_database(self):
+    def delete_database(self) -> Dict:
+        """delete the whole database `API doc <https://aito.ai/docs/api/#delete-api-v1-schema>`__
+
+        :return: deleted tables
+        :rtype: Dict
+        """
         r = self.request('DELETE', '/api/v1/schema')
         LOG.info('database deleted')
         return r
 
-    def put_table_schema(self, table_name, table_schema):
+    def put_table_schema(self, table_name: str, table_schema: Dict) -> Dict:
+        """create a table with the given table schema `API doc <https://aito.ai/docs/api/#put-api-v1-schema-table>`__
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param table_schema: Aito table schema
+        :type table_schema: Dict
+        :return: the table scheam if succeed
+        :rtype: Dict
+        """
         r = self.request('PUT', f'/api/v1/schema/{table_name}', table_schema)
         LOG.info(f'table `{table_name}` created')
         return r
 
-    def delete_table(self, table_name):
+    def get_table_schema(self, table_name: str) -> Dict:
+        """get a table schema
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :return: the table schema if succeed
+        :rtype: Dict
+        """
+        return self.request('GET', f'/api/v1/schema/{table_name}')
+
+    def delete_table(self, table_name: str) -> Dict:
+        """delete a table `API doc <https://aito.ai/docs/api/#delete-api-v1-schema>`__
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :return: delete table if succeed
+        :rtype: Dict
+        """
         r = self.request('DELETE', f'/api/v1/schema/{table_name}')
         LOG.info(f'table `{table_name}` deleted')
         return r
 
-    def get_table_schema(self, table_name):
-        return self.request('GET', f'/api/v1/schema/{table_name}')
-
     def get_existing_tables(self) -> List[str]:
+        """get a list of existing tables in the instance
+
+        :return: list of existing tables name
+        :rtype: List[str]
+        """
         return list(self.get_database_schema()['schema'].keys())
 
-    def check_table_existed(self, table_name) -> bool:
+    def check_table_existed(self, table_name: str) -> bool:
+        """check if a table exist in the instance
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :return: True if the table exist
+        :rtype: bool
+        """
         return table_name in self.get_existing_tables()
 
-    def populate_table_entries(self, table_name, entries):
+    def populate_table_entries(self, table_name: str, entries: List[Dict]):
+        """populate a list of entries to a table API doc `API doc <https://aito.ai/docs/api/#post-api-v1-data-table-batch>`__
+
+        if the list contains more than 1000 entries, upload the entries by batch of 1000
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param entries: list of the table entries
+        :type entries: List[Dict]
+        """
         if len(entries) > 1000:
             self.populate_table_entries_by_batches(table_name, entries)
         else:
@@ -187,7 +256,16 @@ class AitoClient:
             self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
             LOG.info(f'uploaded {len(entries)} entries to table `{table_name}`')
 
-    def populate_table_entries_by_batches(self, table_name, entries, batch_size=1000):
+    def populate_table_entries_by_batches(self, table_name: str, entries: List[Dict], batch_size: int = 1000):
+        """populate a list of table entries by batches
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param entries: list of the table entries
+        :type entries: List[Dict]
+        :param batch_size: the batch size, defaults to 1000
+        :type batch_size: int, optional
+        """
         _l = LOG
         LOG.debug(f'uploading {len(entries)} entries to table `{table_name}` with batch size of {batch_size}...')
         begin_idx = 0
@@ -209,6 +287,14 @@ class AitoClient:
         LOG.info(f'uploaded {populated}/{len(entries)} entries to table `{table_name}`')
 
     def populate_table_by_file_upload(self, table_name: str, binary_file_object: BinaryIO):
+        """upload binary file object to a table `API doc <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param binary_file_object: binary file object
+        :type binary_file_object: BinaryIO
+        :raises AitoClientRequestError: An error occurred during uploading the file to S3
+        """
         _l = LOG
         LOG.debug(f'uploading file object to table `{table_name}`...')
         LOG.debug('initiating file upload...')
@@ -255,7 +341,21 @@ class AitoClient:
 
         LOG.info(f'uploaded file object to table `{table_name}`')
 
-    def query_table_entries(self, table_name: str, limit: int = None):
+    def query_table_entries(self, table_name: str, offset: int = 0, limit: int = 10) -> Dict:
+        """query entries of a table `API doc <https://aito.ai/docs/api/#post-api-v1-query>`__
+
+        use offset and limit for `pagination <https://aito.ai/docs/api/#pagination>`__
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param offset: offset, defaults to 0
+        :type offset: int, optional
+        :param limit: limit, defaults to 10
+        :type limit: int, optional
+        :return: the table entries if succeed
+        :rtype: Dict
+        """
+
         query = {'from': table_name}
         if limit:
             query['limit'] = limit
