@@ -51,6 +51,11 @@ Most used features:
 2. Create a table
 3. Upload data to a table
 
+.. toctree::
+   :hidden:
+
+   install
+
 .. note::
    The Aito Python SDK is an experimental project that we are already using ourselves.
    It might be a bit rough around the edges and is not yet ready for production grade.
