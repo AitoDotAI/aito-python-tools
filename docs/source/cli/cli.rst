@@ -26,7 +26,7 @@ To get started:
             convert           convert a file into ndjson|json format
             database          perform operations with your Aito database instance
 
-Upload a data file
+Upload a Data File
 ------------------
 
 The easiest way to upload a file to your Aito database instance is by using the ``database quick-add-table``
@@ -163,7 +163,7 @@ Supported input formats:
 Perform Database Operations
 ---------------------------
 
-Set up the credentials
+Set Up the Credentials
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Performing operation with your Aito database instance always requires credentials.
@@ -198,19 +198,19 @@ Database Operations
 
 **Note**: All of the following operations require read-write key
 
-Quick add a table
+Quick Add a Table
 ^^^^^^^^^^^^^^^^^
 Infer a table schema based on the given file, create a table using the file name and upload the file content to the created table::
 
       $aito database quick-add-table path/to/tableEntries.json
 
-Create a table
+Create a Table
 ^^^^^^^^^^^^^^
 Create a table using the given Aito table schema::
 
       $ aito database create-table tableName path/to/tableSchema.json
 
-Batch upload
+Batch Upload
 ^^^^^^^^^^^^
 
 Upload entries to an *existing* table (a table of which `schema has been created <https://aito.ai/docs/api/#put-api-v1-schema>`_) in your Aito instance::
@@ -218,14 +218,14 @@ Upload entries to an *existing* table (a table of which `schema has been created
       $ aito database upload-batch tableName < tableEntries.json
 
 
-File upload
+File Upload
 ^^^^^^^^^^^
 
 Upload a file to an *existing* table in your Aito instance::
 
       $ aito database upload-file tableName tableEntries.csv
 
-Delete a table
+Delete a Table
 ^^^^^^^^^^^^^^
 
 Delete a table schema and all the data inside it:
@@ -236,7 +236,7 @@ Delete a table schema and all the data inside it:
 
    .. warning:: This operation is irreversible
 
-Delete the whole database
+Delete the Whole Database
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Delete all tables schema and all data in the instance:
@@ -252,26 +252,25 @@ Tab Completion
 
 The CLI supports tab completion using argcomplete_
 
--  To activate global completion:
+-  To activate global completion::
 
-      activate-global-python-argcomplete
+      $ activate-global-python-argcomplete
 
 -  If you choose not to use global completion::
 
-      eval "$(register-python-argcomplete aito)"
+      $ eval "$(register-python-argcomplete aito)"
 
 - You might have to install ``python3-argcomplete``::
 
-      sudo apt install python3-argcomplete
+      $ sudo apt install python3-argcomplete
 
 - Please refer the `argcomplete documentation`_
 
 
 Integration with SQL Database
 -----------------------------
-Aito supports integration with your SQL database. To enable this
-feature, please follow the instructions
-`here <sql_functions.md/#installation>`__
+Aito supports integration with your SQL database. To enable this feature, please follow the instructions
+:doc:`here <sql>`
 
 .. _NDJSON: http://ndjson.org/
 .. _JSON: https://www.json.org/

@@ -56,6 +56,7 @@ Most used features:
 
    install
    cli/cli
+   cli/sql
 
 .. note::
    The Aito Python SDK is an experimental project that we are already using ourselves.
