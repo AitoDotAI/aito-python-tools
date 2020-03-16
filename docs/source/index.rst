@@ -7,12 +7,12 @@ Aito Python SDK is an useful library for Aito_ users containing.
 
 The SDK also provides the :doc:`Aito Command Line Interface <cli/cli>`.
 
-Installation
-------------
+Quick Installation
+------------------
 
 To install with pip, run: ``pip install aitoai``
 
-For more installation option, please check :doc:`install`
+For more installation option, please check :doc:`generic/install`
 
 Basic Usage
 -----------
@@ -54,10 +54,10 @@ Most used features:
 .. toctree::
   :hidden:
 
-  install
+  generic/install
   cli/cli
   cli/sql
-  changelog
+  generic/changelog
 
 .. note::
 
