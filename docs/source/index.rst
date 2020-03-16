@@ -55,6 +55,7 @@ Most used features:
    :hidden:
 
    install
+   cli/cli
 
 .. note::
    The Aito Python SDK is an experimental project that we are already using ourselves.
