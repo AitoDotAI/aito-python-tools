@@ -57,9 +57,10 @@ html_static_path = ['_static']
 html_sidebars = {
     "**": [
         "about.html",
-        "sidebarintro.html",
-        "navigation.html",
         "searchbox.html",
+        "navigation.html",
+        "relations.html",
+        "sidebarintro.html",
     ]
 }
 
@@ -67,6 +68,6 @@ html_theme_options = {
     "logo": "aito.svg",
     "github_user": "AitoDotAI",
     "github_repo": "aito-python-tools",
-    "github_type": "star",
     "show_powered_by": False,
+    "fixed_sidebar": True,
 }

@@ -1,5 +1,5 @@
 Aito CLI
-===========================
+========
 
 The Aito Command Line Interface (Aito CLI) is an open source tool that enables you to interact with
 your Aito instance using commands in your command-line shell with minimum setup.
@@ -200,7 +200,7 @@ Quick Add a Table
 ^^^^^^^^^^^^^^^^^
 Infer a table schema based on the given file, create a table using the file name and upload the file content to the created table::
 
-    $aito database quick-add-table path/to/tableEntries.json
+    $ aito database quick-add-table path/to/tableEntries.json
 
 Create a Table
 ^^^^^^^^^^^^^^
@@ -246,7 +246,7 @@ Delete all tables schema and all data in the instance:
   .. warning:: This operation is irreversible
 
 Tab Completion
-~~~~~~~~~~~~~~~
+--------------
 
 The CLI supports tab completion using argcomplete_
 

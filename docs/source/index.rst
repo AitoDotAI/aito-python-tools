@@ -56,9 +56,9 @@ Most used features:
 
   generic/install
   cli/cli
-  cli/sql
   sdk/quickstart
   sdk/api
+  generic/sql
   generic/changelog
 
 .. note::
