@@ -268,7 +268,7 @@ The CLI supports tab completion using argcomplete_
 Integration with SQL Database
 -----------------------------
 Aito supports integration with your SQL database. To enable this feature, please follow the instructions
-:doc:`here <sql>`
+:doc:`here <../generic/sql>`
 
 .. _NDJSON: http://ndjson.org/
 .. _JSON: https://www.json.org/

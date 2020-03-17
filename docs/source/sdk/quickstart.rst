@@ -27,6 +27,8 @@ You can download an example data file `here <https://raw.githubusercontent.com/A
   reddit_df = pd.read_csv('reddit_sampe.csv')
 
 
+.. _sdkInferTableSchema:
+
 Infer a Table Schema
 --------------------
 
@@ -53,6 +55,7 @@ The example below assume that you already have a DataFrame named :ref:`reddit_df
     "tokenSeparator": " "
   }
 
+.. _sdkCreateSchema:
 
 Create Aito Schema
 ------------------
@@ -122,6 +125,8 @@ Your AitoClient must be set up with the READ-WRITE API key
 
     # Check your DB schema in Aito
     aito_client.get_database_schema()
+
+.. _sdkUploadData:
 
 Upload Data
 -----------

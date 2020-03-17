@@ -45,11 +45,11 @@ For an additional guide of the CLI tool, see the :doc:`CLI documentations <cli/c
 Using the Python SDK
 ~~~~~~~~~~~~~~~~~~~~
 
-Most used features:
+Some common features:
 
-1. Infer Aito Schema from a Pandas DataFrame
-2. Create a table
-3. Upload data to a table
+1. :ref:`sdkInferTableSchema`
+2. :ref:`sdkCreateSchema`
+3. :ref:`sdkUploadData`
 
 .. toctree::
   :hidden:
