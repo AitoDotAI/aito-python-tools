@@ -1,6 +1,8 @@
 Aito Python SDK
 ===============
 
+Version |release|
+
 |PyPI| |PyPI version|
 
 Aito Python SDK is an useful library for Aito_ users containing.
