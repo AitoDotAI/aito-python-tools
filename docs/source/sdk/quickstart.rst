@@ -1,5 +1,5 @@
-Aito Python SDK
-===============
+SDK Quickstart
+==============
 
 Usage Examples
 --------------

@@ -31,7 +31,7 @@ version = release.split(".dev")[0]
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['recommonmark', 'sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel']
 autodoc_mock_imports = [
     'pandas', 'dotenv', 'requests', 'aiohttp', 'ndjson', 'langdetect', 'argcomplete', 'xlrd', 'numpy', 'pyodbc']
 
