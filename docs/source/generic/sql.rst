@@ -1,61 +1,32 @@
-Aito CLI SQL Integration
+SQL Database Integration
 ========================
 
-The Aito CLI supports integration between your SQL database and the Aito database
+The Aito Python SDK supports integration between your SQL database and the Aito database
 
-Supported Functions
--------------------
-
-- Infer a table schema from the result of a SQL query::
-
-    $ aito infer-table-schema from-sql "PostgreSQL Unicode" "SELECT * FROM tableName" > inferredSchema.json
-
-  To see help::
-
-    $ aito infer-table-schema from-sql -h
-
-- Upload the result of a SQL to an existing table::
-
-    $ aito database upload-data-from-sql "MySQL ODBC 8.0 Driver" tableName "SELECT * FROM tableName"
-
-  To see help::
-
-    $ aito database upload-data-from-sql -h
-
-- Infer schema, create table, and upload the result of a SQL to the database::
-
-    $ aito database quick-add-table-from-sql "PostgreSQL Unicode" -s localhost -u root -d testDB -tableName "SELECT * FROM tableName"
-
-  To see help::
-
-    $ aito database quick-add-table-from-sql -h
-
-.. note::
-  The sql functions won't appear unless you perform the additional installation below
-
+.. _sqlInstallation:
 
 Additional Installation
 -----------------------
 
-The Aito CLI uses the pyodbc_ module to gain access to ODBC_ databases.
+We use pyodbc_ module to gain access to ODBC_ supported databases.
 
 To enable the SQL integration, you need to do the following extra installation:
 
-- Install the unix ODBC driver manager (varies between systems). Follow the instructions :ref:`below<Install ODBC Driver Manager>`
+- `Install ODBC Driver Manager`_
 - Install the pyodbc_ package on top of the original aitoai package::
 
     $ pip install aitoai
     $ pip install pyodbc
 
--Install your database specific ODBC driver:
+- `Install Database ODBC driver`_
    - :ref:`PostgreSQL<Install PostgreSQL ODBC Driver>`
    - :ref:`MySQL<Install MySQL ODBC Driver>`
 
 More instructions regarding the pyodbc_ library and connecting to different databases can
-be found `here <https://github.com/mkleehammer/pyodbc/wiki>`__
+be found `here <https://github.com/mkleehammer/pyodbc/wiki>`__.
 
 Install ODBC Driver Manager
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  On Ubuntu::
 
@@ -74,10 +45,14 @@ Install ODBC Driver Manager
     $ sudo yum install unixODBC.x86_64
     $ sudo yum install unixODBC-devel.x86_64
 
+Install Database ODBC driver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Install PostgreSQL ODBC Driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 psqlODBC_ is the official PostgreSQL ODBC driver. To install:
+
 - On Ubuntu::
 
     $ sudo apt install odbc-postgresql
@@ -108,8 +83,12 @@ The official instructions can be found `here <https://dev.mysql.com/doc/connecto
 
     $ myodbc-installer -d -l
 
+
+CLI Integration
+---------------
+
 Set Up SQL Database Credentials
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Similar to setting up the Aito credentials, there are 3 ways to set up the SQL Database credentials:
 
@@ -144,11 +123,70 @@ Similar to setting up the Aito credentials, there are 3 ways to set up the SQL D
     - ``-u`` flag for the username
     - ``-p`` for the password
 
+Supported Functions
+~~~~~~~~~~~~~~~~~~~
+
+- Infer a table schema from the result of a SQL query::
+
+    $ aito infer-table-schema from-sql "PostgreSQL Unicode" "SELECT * FROM tableName" > inferredSchema.json
+
+  To see help::
+
+    $ aito infer-table-schema from-sql -h
+
+- Upload the result of a SQL to an existing table::
+
+    $ aito database upload-data-from-sql "MySQL ODBC 8.0 Driver" tableName "SELECT * FROM tableName"
+
+  To see help::
+
+    $ aito database upload-data-from-sql -h
+
+- Infer schema, create table, and upload the result of a SQL to the database::
+
+    $ aito database quick-add-table-from-sql "PostgreSQL Unicode" -s localhost -u root -d testDB -tableName "SELECT * FROM tableName"
+
+  To see help::
+
+    $ aito database quick-add-table-from-sql -h
+
+.. note::
+
+  The sql functions won't appear unless you perform the additional installation below
+
+
+SDK Integration
+---------------
+
+You can connect to your SQL Database using the :ref:`apiSQLConnection`. The example below shows how you can upload a SQL query results to an Aito table:
+
+.. code:: python
+
+  from aito.utils.sql_connection import SQLConnection
+  connection = SQLConnection(
+    sql_driver='PostgreSQL Unicode',
+    sql_server='localhost',
+    sql_database='database_name',
+    sql_usersname='username',
+    sql_password='password'
+  )
+
+  # save query results to pandas DataFrame
+  query_results_df = connection.execute_query_and_save_result(query = 'from table select *')
+  # convert DataFrame to list of entries
+  query_results_entries = query_results_df.to_dict(orient="records")
+
+  # create aito client
+  aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
+  # upload entries to table
+  aito_client.populate_table_entries(table_name='table', entries=query_results_entries)
+
+
 Troubleshooting
 ---------------
 
 Database ODBC Driver not found after installation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible that the database driver is not registered to the ODBC Driver Manager automatically.
 In this case, you have to do it manually by following these steps:

@@ -33,7 +33,8 @@ version = release.split(".dev")[0]
 # ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel']
 autodoc_mock_imports = [
-    'pandas', 'dotenv', 'requests', 'aiohttp', 'ndjson', 'langdetect', 'argcomplete', 'xlrd', 'numpy', 'pyodbc']
+    'pandas', 'dotenv', 'requests', 'aiohttp', 'ndjson', 'langdetect', 'argcomplete', 'xlrd', 'numpy', 'pyodbc'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

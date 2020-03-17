@@ -31,3 +31,13 @@ SchemaHandler
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. _apiSQLConnection:
+
+SQLConnection
+-------------
+
+.. automodule:: aito.utils.sql_connection
+   :members:
+   :undoc-members:
+   :show-inheritance:
