@@ -3,7 +3,7 @@ import logging
 import re
 import time
 from timeit import default_timer
-from typing import Dict, List, BinaryIO
+from typing import Dict, List, BinaryIO, Union
 
 import requests
 from aiohttp import ClientSession
@@ -116,7 +116,7 @@ class AitoClient:
         LOG.info(f'requested {request_count} requests')
         return responses
 
-    def request(self, req_method: str, endpoint: str, query: Dict =None) -> Dict:
+    def request(self, req_method: str, endpoint: str, query: Union[Dict, List] = None) -> Dict:
         """request to an Aito API end point
 
         :param req_method: request method
@@ -124,7 +124,7 @@ class AitoClient:
         :param endpoint: an Aito API endpoint
         :type endpoint: str
         :param query: an Aito query, defaults to None
-        :type query: Dict, optional
+        :type query: Union[Dict, List], optional
         :raises AitoClientRequestError: An error occurred during request
         :return: request JSON content if succeed
         :rtype: Dict
@@ -147,7 +147,7 @@ class AitoClient:
             raise AitoClientRequestError(f'unknown error: {e}')
         return json_resp
 
-    def get_version(self):
+    def get_version(self) -> Dict:
         """get the aito instance version
 
         :return: version information in json format
@@ -155,7 +155,7 @@ class AitoClient:
         """
         return self.request('GET', '/version')
 
-    def put_database_schema(self, database_schema: Dict)-> Dict:
+    def put_database_schema(self, database_schema: Dict) -> Dict:
         """create database with the given database schema `API doc <https://aito.ai/docs/api/#put-api-v1-schema>`__
 
         :param database_schema: Aito database schema
@@ -356,7 +356,5 @@ class AitoClient:
         :rtype: Dict
         """
 
-        query = {'from': table_name}
-        if limit:
-            query['limit'] = limit
+        query = {'from': table_name, 'offset': offset, 'limit': limit}
         return self.request('POST', '/api/v1/_query', query)

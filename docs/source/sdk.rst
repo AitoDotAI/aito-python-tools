@@ -1,16 +1,7 @@
 SDK Quickstart
 ==============
 
-Usage Examples
---------------
-
-Uploading a data file to Aito
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-1. `Load a Data File to Pandas DataFrame`_
-2. `Infer a Table Schema`_ (skip this step if you want to upload data to an existing table)
-3. `Create Aito Schema`_ (skip this step if you want to upload data to an existing table)
-4. `Upload Data`_
+:ref:`Quickstart guide to upload data <sdkQuickStartUploadData>`
 
 Load a Data File to Pandas DataFrame
 ------------------------------------
@@ -26,6 +17,7 @@ You can download an example data file `here <https://raw.githubusercontent.com/A
 
   reddit_df = pd.read_csv('reddit_sampe.csv')
 
+You can also use the :ref:`apiDataFrameHandler` to read data into pandas DataFrame
 
 .. _sdkInferTableSchema:
 
@@ -187,3 +179,61 @@ Your AitoClient must be set up with the READ-WRITE API key
 - Delete the entire database :meth:`aito.utils.aito_client.AitoClient.delete_table`
 
 .. _Pandas DataFrame: https://pandas.pydata.org/pandas-docs/stable/reference/frame.html
+
+
+Execute Queries
+---------------
+
+You can execute queries with an :ref:`apiAitoClient`.
+
+Your AitoClient can be set up with the READ-ONLY API key
+
+:meth:`Query a Table Entries <aito.utils.aito_client.AitoClient.query_table_entries>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+  # query the first 10 entries of a table
+  aito_client.query_table_entries(table_name='table_name')
+
+:meth:`Custom Query <aito.utils.aito_client.AitoClient.request>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+  # make a prediction
+  response = aito_client.request(
+    req_method='POST',
+    endpoint='/api/v1/_predict',
+    query={
+      'from': 'invoice',
+      'where': {
+        'description': 'a very long invoice description'
+      },
+      'predict': 'sales_rep'
+    }
+  )
+
+:meth:`Executing multiple queries asynchronously <aito.utils.aito_client.AitoClient.async_requests>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+  # predict with different descriptions
+
+  descriptions = ['first description', 'second description', 'third description']
+
+  responses = aito_client.async_requests(
+    methods=['POST'] * len(descriptions),
+    endpoints=['/api/v1/_predict'] * len(descriptions),
+    queries=[
+      {
+        'from': 'invoice',
+        'where': {
+          'description': desc
+        },
+        'predict': 'sales_rep'
+      }
+      for desc in descriptions
+    ]
+  )
