@@ -10,6 +10,8 @@ from aito.utils.schema_handler import SchemaHandler
 
 
 class DataFrameHandler:
+    """Pandas DataFrame handler
+    """
     allowed_format = ['csv', 'json', 'excel', 'ndjson']
 
     def __init__(self):
@@ -24,10 +26,13 @@ class DataFrameHandler:
         self.schema_handler = SchemaHandler()
 
     def validate_in_out_format(self, in_format: str, out_format: str):
-        """
-        Validate the file parameters of the converter
+        """Validate the file parameters of the converter
+
         :param in_format: input format
+        :type in_format: str
         :param out_format: output format
+        :type out_format: str
+        :raises ValueError: Unexpected input format or output format
         """
         if in_format not in self.allowed_format:
             raise ValueError(f"Expect input format to be {str(self.allowed_format)} instead of {in_format}")
@@ -37,7 +42,13 @@ class DataFrameHandler:
 
     @staticmethod
     def datetime_to_string(df: pd.DataFrame) -> pd.DataFrame:
-        # Aito hasn't support datetime data yet. Converting all datetime data to string
+        """Convert pandas datetime type to string
+
+        :param df: input pandas DataFrame
+        :type df: pd.DataFrame
+        :return: converted pandas DataFrame
+        :rtype: pd.DataFrame
+        """
         for col in df:
             if df[col].dtypes == 'datetime64[ns]':
                 df[col] = df[col].astype(str)
@@ -45,17 +56,31 @@ class DataFrameHandler:
 
     @staticmethod
     def apply_functions_on_df(df: pd.DataFrame, functions: List[Callable]) -> pd.DataFrame:
-        """
-        Applying functions sequentially to a dataframe
-        :param df:
-        :param functions:
-        :return:
+        """Applying partial functions to a dataframe
+
+        :param df: input pandas DataFrame
+        :type df: pd.DataFrame
+        :param functions: list of partial functions that will be applied to the loaded pd.DataFrame
+        :type functions: List[Callable]
+        :return: output DataFrame
+        :rtype: pd.DataFrame
         """
         for f in functions:
             df = f(df)
         return df
 
-    def convert_df_from_aito_table_schema(self, df: pd.DataFrame, table_schema: Dict):
+    def convert_df_from_aito_table_schema(self, df: pd.DataFrame, table_schema: Dict) -> pd.DataFrame:
+        """Convert a pandas DataFrame to match a Aito table schema
+
+        :param df: input pandas DataFrame
+        :type df: pd.DataFrame
+        :param table_schema: input table schema
+        :type table_schema: Dict
+        :raises ValueError: input table schema is invalid
+        :raises e: fail to convert
+        :return: converted DataFrame
+        :rtype: pd.DataFrame
+        """
         self.schema_handler.validate_table_schema(table_schema)
 
         columns_schema = table_schema['columns']
@@ -87,13 +112,17 @@ class DataFrameHandler:
                     raise e
         return df
 
-    def read_file_to_df(self, read_input, in_format: str, read_options: Dict = None) -> pd.DataFrame:
-        """
-        Load a file and return pandas Dataframe
-        :param read_input: path to or buffer of input
+    def read_file_to_df(self, read_input: FilePathOrBuffer, in_format: str, read_options: Dict = None) -> pd.DataFrame:
+        """Read input to a Pandas DataFrame
+
+        :param read_input: read input
+        :type read_input: FilePathOrBuffer
         :param in_format: input format
-        :param read_options: dictionary contains arguments for pandas read function
-        :return:
+        :type in_format: str
+        :param read_options: dictionary contains arguments for pandas read function, defaults to None
+        :type read_options: Dict, optional
+        :return: read DataFrame
+        :rtype: pd.DataFrame
         """
         if isinstance(read_input, io.TextIOWrapper):
             self.logger.info("Start reading from standard input...")
@@ -109,27 +138,23 @@ class DataFrameHandler:
         df = read_functions[in_format](read_input, **options)
         return df
 
-    def df_to_format(self,
-                     df: pd.DataFrame,
-                     out_format: str,
-                     write_output: FilePathOrBuffer,
-                     convert_options: Dict = None):
-        """
+    def df_to_format(
+            self,
+            df: pd.DataFrame,
+            out_format: str,
+            write_output: FilePathOrBuffer,
+            convert_options: Dict = None
+        ):
+        """Write a Pandas DataFrame
 
-        :param df:
-        :param out_format:
-        :param write_output:
-        :param convert_options: dictionary contains arguments for pandas convert function
-        :return:
-        """
-        """
-
-        :param df:
-        :param out_format: file output format
-        :param out_file_name: if output file name is not defined, it will be the same as input file name
-        :param out_file_folder: path to output file folder
-        :param convert_options: dictionary contains arguments for pandas convert function
-        :return:
+        :param df: input DataFrame
+        :type df: pd.DataFrame
+        :param out_format: output format
+        :type out_format: str
+        :param write_output: write output
+        :type write_output: FilePathOrBuffer
+        :param convert_options: dictionary contains arguments for pandas write function, defaults to None
+        :type convert_options: Dict, optional
         """
         self.logger.info(f"Start converting to {out_format} and writing to output...")
         convert_functions = {'csv': df.to_csv, 'excel': df.to_excel, 'json': df.to_json, 'ndjson': df.to_json}
@@ -141,26 +166,37 @@ class DataFrameHandler:
 
         convert_functions[out_format](write_output, **options)
 
-    def convert_file(self,
-                     read_input: FilePathOrBuffer,
-                     write_output: FilePathOrBuffer,
-                     in_format: str,
-                     out_format: str,
-                     read_options: Dict = None,
-                     convert_options: Dict = None,
-                     apply_functions: List[Callable[..., pd.DataFrame]] = None,
-                     use_table_schema: Dict = None):
-        """
-        Converting a file into expected format and generate aito schema if required
-        :param read_input: filepath to input or input buffer
-        :param write_output: filepath to output or output buffer
+    def convert_file(
+            self,
+            read_input: FilePathOrBuffer,
+            write_output: FilePathOrBuffer,
+            in_format: str,
+            out_format: str,
+            read_options: Dict = None,
+            convert_options: Dict = None,
+            apply_functions: List[Callable[..., pd.DataFrame]] = None,
+            use_table_schema: Dict = None
+        ) -> pd.DataFrame:
+        """Converting input file to expected format, generate or use Aito table schema if specified
+
+        :param read_input: read input
+        :type read_input: FilePathOrBuffer
+        :param write_output: write output
+        :type write_output: FilePathOrBuffer
         :param in_format: input format
+        :type in_format: str
         :param out_format: output format
-        :param read_options: dictionary contains arguments for pandas read function
-        :param convert_options: dictionary contains arguments for pandas convert function
-        :param apply_functions: List of partial functions that will be chained applied to the loaded pd.DataFrame
-        :param use_table_schema: use an aito schema to dictates data types and convert the data
-        :return:
+        :type out_format: str
+        :param read_options: dictionary contains arguments for pandas read function, defaults to None
+        :type read_options: Dict, optional
+        :param convert_options: dictionary contains arguments for pandas write function, defaults to None
+        :type convert_options: Dict, optional
+        :param apply_functions: list of partial functions that will be applied to the loaded pd.DataFrame, defaults to None
+        :type apply_functions: List[Callable[..., pd.DataFrame]], optional
+        :param use_table_schema: use an aito schema to dictates data types and convert the data, defaults to None
+        :type use_table_schema: Dict, optional
+        :return: converted DataFrame
+        :rtype: pd.DataFrame
         """
         self.validate_in_out_format(in_format, out_format)
 

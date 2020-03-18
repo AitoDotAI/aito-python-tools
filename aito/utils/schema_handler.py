@@ -50,27 +50,40 @@ class SchemaHandler:
         self.sample_size = 100000
 
     def infer_aito_types_from_pandas_series(self, series: pd.Series, sample_size = 100000) -> str:
+        """Infer aito column type from a Pandas Series
+
+        :param series: input Pandas Series
+        :type series: pd.Series
+        :param sample_size: sample size for type inference, defaults to 100000
+        :type sample_size: int, optional
+        :raises Exception: fail to infer type
+        :return: inferred Aito type
+        :rtype: str
+        """
         sampled_values = series.values if len(series) < sample_size else series.sample(sample_size).values
         inferred_dtype = pd.api.types.infer_dtype(sampled_values)
         if inferred_dtype not in self.pandas_dtypes_name_to_aito_type:
             raise Exception(f"Cannot not infer aito type from dtype {inferred_dtype}")
         return self.pandas_dtypes_name_to_aito_type[inferred_dtype]
 
-    def infer_table_schema_from_pandas_data_frame(self, table_df: pd.DataFrame) -> Dict:
-        """
-        Return aito schema in dictionary format
-        :param table_df: The pandas DataFrame containing table data
-        :return: Aito Table Schema as dict
+    def infer_table_schema_from_pandas_data_frame(self, df: pd.DataFrame) -> Dict:
+        """Infer a table schema from a Pandas DataFrame
+
+        :param df: input Pandas DataFrame
+        :type df: pd.DataFrame
+        :raises Exception: an error occurred during column type inference
+        :return: inferred table schema
+        :rtype: Dict
         """
         self.logger.info("Start inferring schema...")
 
-        rows_count = table_df.shape[0]
+        rows_count = df.shape[0]
 
         columns_schema = {}
-        for col in table_df.columns.values:
-            col_df = table_df[col]
+        for col in df.columns.values:
+            col_df = df[col]
             try:
-                col_aito_type = self.infer_aito_types_from_pandas_series(table_df[col], self.sample_size)
+                col_aito_type = self.infer_aito_types_from_pandas_series(df[col], self.sample_size)
             except Exception as e:
                 raise Exception(f"Cannot infer aito type of column {col}: {e}")
             col_na_count = col_df.isna().sum()
@@ -100,11 +113,14 @@ class SchemaHandler:
         self.logger.info("Finished inferring schema")
         return table_schema
 
-    def validate_table_schema(self, table_schema: Dict):
-        """
+    def validate_table_schema(self, table_schema: Dict) -> Dict:
+        """Validate Aito Schema
 
-        :param table_schema: table schema as dict
-        :return:
+        :param table_schema: input table schema
+        :type table_schema: Dict
+        :raises ValueError: table schema is invalid
+        :return: table schema if valid
+        :rtype: Dict
         """
         def validate_required_arg(object_name: str, object_dict: Dict, arg_name: str):
             if arg_name not in object_dict:
