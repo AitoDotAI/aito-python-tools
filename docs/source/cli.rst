@@ -39,47 +39,86 @@ Supported input formats:
 - JSON_
 - NDJSON_
 
-Commands:
+Usage
+~~~~~
 
-- To see help::
+To see help::
 
-    $ aito infer-table-schema -h
+  $ aito infer-table-schema -h
 
-  To see help for a specific input format::
+To see help for a specific input format::
 
-    $ aito infer-table-schema <input-format> -h
+  $ aito infer-table-schema <input-format> -h
 
-- By default, the command takes standard input and standard output. To redirect::
 
-    $ aito infer-table-schema csv < path/to/myFile.csv > path/to/schemaFile.json
+Redirection
+~~~~~~~~~~~
 
-- Infer a table schema from a csv file::
+By default, the command takes standard input and standard output. To redirect::
 
-    $ aito infer-table-schema csv < path/to/myCSVFile.csv
+  $ aito infer-table-schema csv < path/to/myFile.csv > path/to/schemaFile.json
 
-- Infer a table schema from a semicolon delimited csv file::
+Infer Table Schema From Csv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    $ aito infer-table-schema csv -d ';' < path/to/myCSVFile.csv
+To see help::
 
-- Infer a table schema from a semicolon delimited comma decimal point csv file::
+  $ aito infer-table-schema csv -h
 
-    $ aito infer-table-schema csv -d ';' -p ',' < path/to/myCSVFile.csv
+Example::
 
-- Infer a table schema from an excel file::
+  $ aito infer-table-schema csv < path/to/myCSVFile.csv
 
-    $ aito infer-table-schema excel path/to/myExcelFile.xlsx
+Infer a table schema from a semicolon delimited csv file::
 
-- Infer a table schema from a single sheet of an excel file::
+  $ aito infer-table-schema csv -d ';' < path/to/myCSVFile.csv
 
-    $ aito infer-table-schema excel -o sheetName path/to/myExcelFile.xls
+Infer a table schema from a semicolon delimited comma decimal point csv file::
 
-- Infer a table schema from a JSON_ file::
+  $ aito infer-table-schema csv -d ';' -p ',' < path/to/myCSVFile.csv
 
-    $ aito infer-table-schema json path/to/myJsonFile.json
+Infer Table Schema From Excel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Infer a table schema from a NDJSON_ file::
+To see help::
 
-    $ aito infer-table-schema ndjson path/to/myNdJsonFile.ndjson
+  $ aito infer-table-schema excel -h
+
+Example::
+
+  $ aito infer-table-schema excel path/to/myExcelFile.xlsx
+
+.. note::
+
+  Infer table schema from Excel only take file path instead of stdin
+
+Infer a table schema from a single sheet of an excel file::
+
+  $ aito infer-table-schema excel -o sheetName path/to/myExcelFile.xls
+
+
+Infer Table Schema From JSON_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To see help::
+
+  $ aito infer-table-schema json -h
+
+Example::
+
+  $ aito infer-table-schema json path/to/myJSONFile.json
+
+
+Infer Table Schema From NDJSON_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To see help::
+
+  $ aito infer-table-schema ndjson -h
+
+Example::
+
+  $ aito infer-table-schema ndjson path/to/myNDJSONFile.ndjson
 
 
 .. _cliConvert:
@@ -102,35 +141,104 @@ Supported input formats:
 - JSON_
 - NDJSON_
 
-Commands:
+Usage
+~~~~~
 
-- To see help::
+To see help::
 
-    $ aito convert -h
+  $ aito convert -h
 
-  To see help for a specific input format::
+To see help for a specific input format::
 
-    $ aito convert <input-format> -h
+  $ aito convert <input-format> -h
 
-- By default, the command takes standard input and standard output. To redirect::
+Redirection
+~~~~~~~~~~~
 
-    $ aito convert csv < path/to/myFile.csv > path/to/myConvertedFile.ndjson
+By default, the command takes standard input and standard output. To redirect::
 
-- Convert a csv file to NDJSON_ format for file upload::
+  $ aito convert csv < path/to/myFile.csv > path/to/myConvertedFile.ndjson
 
-    $ aito convert csv path/to/myFile.csv > path/to/myConvertedFile.ndjson
+Convert to JSON
+~~~~~~~~~~~~~~~
 
-- Convert an excel file to JSON_ format for batch upload::
+By default, the command convert input to NDJSON_ format. If you want to convert to JSON_ format, use the ``-j`` or ``--json`` flag::
 
-    $ aito convert excel --json path/to/myFile.xlsx > path/to/myConvertedFile.json
+  $ aito convert <input-format> --json ...
 
-- Convert a csv file to NDJSON_ format and and infer the file table schema on the way::
+Convert and Infer Schema
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-    $ aito convert csv -c path/to/inferredTableSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
+You can convert the data and infer a table schema on the way by using the ``-c`` or ``--create-table-schema`` flag::
 
-- Convert a file and use a given Aito table schema. This function is useful when want to make changes to the inferred schema and want to convert the data accordingly. For example, the `id` column should be of String type instead of Int type::
+  $ aito convert <input-format> -c path/to/inferredTableSchema.json ...
 
-    $ aito convert csv -s path/to/desiredSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
+Convert Using A Table Schema
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can convert the data to match an existing table schema by using the ``-s`` or ``--use-table-schema`` flag::
+
+  $ aito convert <input-format> -s path/to/tableSchema.json ...
+
+Convert Csv
+~~~~~~~~~~~
+
+To see help::
+
+  $ aito convert csv -h
+
+Example::
+
+  $ aito convert csv path/to/myCsvFile.csv > path/to/convertedFile.ndjson
+
+Convert a semicolon delimited csv file::
+
+  $ aito convert csv -d ';' < path/to/myCsvFile.csv
+
+Convert a semicolon delimited comma decimal point csv file::
+
+  $ aito convert csv -d ';' -p ',' < path/to/myCsvFile.csv
+
+Convert Excel
+~~~~~~~~~~~~~
+
+To see help::
+
+  $ aito convert excel -h
+
+Example::
+
+  $ aito convert excel path/to/myExcelFile.xlsx > path/to/convertedFile.ndjson
+
+.. note::
+
+  Convert from Excel only take file path instead of stdin
+
+Convert a single sheet of an excel file::
+
+  $ aito convert excel -o sheetName path/to/myExcelFile.xls
+
+Convert JSON
+~~~~~~~~~~~~
+
+To see help::
+
+  $ aito convert json -h
+
+Example::
+
+  $ aito convert json < path/to/myJSONFile.json > path/to/convertedFile.ndjson
+
+Convert NDJSON
+~~~~~~~~~~~~~~
+
+To see help::
+
+  $ aito convert ndjson -h
+
+Example::
+
+  $ aito convert ndjson -j < path/to/myNDJSONFile.ndjson > path/to/convertedFile.json
 
 
 .. _cliDatabase:
@@ -172,9 +280,6 @@ There are 3 ways to set up the credentials:
 
     $ aito database -i MY_AITO_INSTANCE_NAME -k MY_API_KEY <operation> ...
 
-Database Operations
-~~~~~~~~~~~~~~~~~~~
-
 .. note::
 
   All of the following operations require read-write key
@@ -182,23 +287,24 @@ Database Operations
 .. _cliQuickAddTable:
 
 Quick Add a Table
-^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~
+
 Infer a table schema based on the given file, create a table using the file name and upload the file content to the created table::
 
-    $ aito database quick-add-table path/to/tableEntries.json
+  $ aito database quick-add-table path/to/tableEntries.json
 
 .. _cliCreateTable:
 
 Create a Table
-^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~
 Create a table using the given Aito table schema::
 
-    $ aito database create-table tableName path/to/tableSchema.json
+  $ aito database create-table tableName path/to/tableSchema.json
 
 .. _cliBatchUpload:
 
 Batch Upload
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 Upload entries to an *existing* table (a table of which `schema has been created <https://aito.ai/docs/api/#put-api-v1-schema>`_) in your Aito instance::
 
@@ -207,14 +313,14 @@ Upload entries to an *existing* table (a table of which `schema has been created
 .. _cliFileUpload:
 
 File Upload
-^^^^^^^^^^^
+~~~~~~~~~~~
 
 Upload a file to an *existing* table in your Aito instance::
 
     $ aito database upload-file tableName tableEntries.ndjson.gz
 
 Delete a Table
-^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~
 
 Delete a table schema and all the data inside it:
 
@@ -225,7 +331,7 @@ Delete a table schema and all the data inside it:
   .. warning:: This operation is irreversible
 
 Delete the Whole Database
-^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Delete all tables schema and all data in the instance:
 
