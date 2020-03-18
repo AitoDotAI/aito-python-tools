@@ -5,9 +5,12 @@ Version |release|
 
 |PyPI| |PyPI version|
 
-Aito Python SDK is an useful library for Aito_ users containing.
 
-The SDK also provides the :doc:`Aito Command Line Interface <cli>`.
+The Aito Python SDK is an open-source library that helps you to integrate your Python application
+to Aito_ quicker and more efficiently.
+
+The SDK also includes the :doc:`Aito Command Line Interface (CLI) <cli>` that enables you to interact with Aito
+using commands in your command-line shell, e.g: infer a table schema from a file or upload a file to Aito.
 
 Quick Installation
 ------------------
