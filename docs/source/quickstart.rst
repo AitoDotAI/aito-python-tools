@@ -1,188 +1,91 @@
-SDK Quickstart
-==============
+Quickstart
+==========
 
-Usage Examples
---------------
+This section explains how to upload data to Aito with either :doc:`CLI <cli>` or :doc:`Python SDK <sdk>`.
 
-Uploading a data file to Aito
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Essentially, upload data to Aito can be broken down into the following steps:
 
-1. `Load a Data File to Pandas DataFrame`_
-2. `Infer a Table Schema`_ (skip this step if you want to upload data to an existing table)
-3. `Create Aito Schema`_ (skip this step if you want to upload data to an existing table)
-4. `Upload Data`_
+1. Infer Aito table schema
+2. Change the inferred schema if needed
+3. Create a table
+4. Convert the data to appropriate format for uploading
+5. Upload the data
 
-Load a Data File to Pandas DataFrame
-------------------------------------
+.. note::
 
-The Aito Python SDK uses `Pandas DataFrame`_ for multiple operations.
+  Skip steps 1, 2, and 3 if you upload data to an existing table
 
-The example belows show how you can load a csv file into a DataFrame, please read the `official guide <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__ for further instructions.
-You can download an example data file `here <https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv>`__ and run the code below:
+.. _cliQuickStartUploadData:
 
-.. code:: python
+Uploading Data with CLI
+-----------------------
 
-  import pandas as pd
+.. note::
 
-  reddit_df = pd.read_csv('reddit_sampe.csv')
+  You can use the :ref:`Quick Add Table Operation <cliQuickAddTable>` instead of doing upload step-by-step if
+  you want to upload to a new table and don't think you need to adjust the inferred schema.
 
 
-.. _sdkInferTableSchema:
+The CLI supports all steps needed to upload data:
 
-Infer a Table Schema
---------------------
+1. :ref:`cliInferTableSchema`
 
-An Aito table schema describes how the table should be constructed and internally processed.
-You can read more about the Aito schema `here <https://aito.ai/docs/articles/defining-a-database-schema/>`__
+  For examples, infer a table schema from a csv file::
 
-The Aito Python SDK includes a :ref:`apiSchemaHandler` that can infer an Aito table schema from a `Pandas DataFrame`_.
-The example below assume that you already have a DataFrame named :ref:`reddit_df DataFrame<Load a Data File to Pandas DataFrame>`.
+    $ aito infer-table-schema csv < path/to/myCSVFile.csv > path/to/inferredSchema.json
 
-.. code:: python
+2. Change the inferred schema if needed:
 
-  schema_handler = SchemaHandler()
-  reddit_schema = schema_handler.infer_table_schema_from_pandas_data_frame(reddit_df)
+  You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
+  or add a Analyzer_ to a ``Text`` column. In that case, just make changes to the inferred schema JSON file.
 
-  # Feels free to change the schema as you see fit. For example:
-  # Change `label` type to `String` instead of `Int`
-  reddit_schema['columns']['label']['type'] = 'String'
-  # Use a different analyzer
-  reddit_schema['columns']['comments']['analyzer'] = {
-    "type": "token-ngram",
-    "source": { "type": "language", "language": "english" },
-    "minGram": 1,
-    "maxGram": 3,
-    "tokenSeparator": " "
-  }
+3. :ref:`cliCreateTable`
 
-.. _sdkCreateSchema:
+  You need a table name and a table schema to create a table::
 
-Create Aito Schema
-------------------
+    $ aito database create-table tableName path/to/tableSchema.json
 
-You can create Aito schema with an :ref:`apiAitoClient`.
+4. :ref:`Convert the data to appropriate format for uploading <cliConvert>`
 
-Your AitoClient must be set up with the READ-WRITE API key
+  You can either convert the data to:
 
-.. code:: python
+    - A list of entries in JSON format for `Batch Upload`_::
 
-  from aito.utils.aito_client import AitoClient
-  aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
+        $ aito convert csv --json path/to/myCSVFile.csv > path/to/myConvertedFile.json
 
-- `Create a table schema <https://aito.ai/docs/api/#put-api-v1-schema-table>`_
+    - A NDJSON file for `File Upload`_::
 
-  .. code:: python
+        $ aito convert csv < path/to/myFile.csv > path/to/myConvertedFile.ndjson
 
-    # Aito table schema example
-    table_schema = {
-      'type': 'table',
-      'columns': {
-        'label': {'nullable': False, 'type': 'Int'},
-        'comment': {'nullable': False, 'type': 'Text', 'analyzer': 'en'},
-        'author': {'nullable': False, 'type': 'Text', 'analyzer': 'en'},
-        'subreddit': {'nullable': False, 'type': 'String'},
-        'score': {'nullable': False, 'type': 'Int'},
-        'ups': {'nullable': False, 'type': 'Int'},
-        'downs': {'nullable': False, 'type': 'Int'},
-        'date': {'nullable': False, 'type': 'String'},
-        'created_utc': {'nullable': False, 'type': 'Text'},
-        'parent_comment': {'nullable': False, 'type': 'Text','analyzer': 'en'
-        }
-      }
-    }
+      Remember to gzip the NDJSON file::
 
-    aito_client.put_table_schema(table_name='reddit', table_schema=table_schema)
+        $ gzip path/to/myConvertedFile.ndjson
 
-    # Check your table schema in Aito
-    aito_client.get_table_schema(table_name=table_name)
 
-- `Create a database schema <https://aito.ai/docs/api/#put-api-v1-schema>`_
+  If you made change to the inferred schema or have an existing schema, use the schema when converting to make sure that the converted data matches the schema::
 
-  .. code:: python
+    $ aito convert csv -s path/to/updatedSchema.json path/to/myCSVFile.csv > path/to/myConvertedFile.ndjson
 
-    # Aito DB schema example
-    database_schema = {
-      'schema': {
-        'reddit': {
-          'type': 'table',
-          'columns': {
-            'label': {'nullable': False, 'type': 'Int'},
-            'comment': {'nullable': False, 'type': 'Text', 'analyzer': 'en'},
-            'author': {'nullable': False, 'type': 'Text', 'analyzer': 'en'},
-            'subreddit': {'nullable': False, 'type': 'String'},
-            'score': {'nullable': False, 'type': 'Int'},
-            'ups': {'nullable': False, 'type': 'Int'},
-            'downs': {'nullable': False, 'type': 'Int'},
-            'date': {'nullable': False, 'type': 'String'},
-            'created_utc': {'nullable': False, 'type': 'Text'},
-            'parent_comment': {'nullable': False, 'type': 'Text','analyzer': 'en'
-            }
-          }
-        }
-      }
-    }
-    aito_client.put_database_schema(database_schema=database_schema)
+5. Upload the Data
 
-    # Check your DB schema in Aito
-    aito_client.get_database_schema()
+  You can upload data with the CLI by using the :ref:`cliDatabase`.
 
-.. _sdkUploadData:
+  First, :ref:`cliSetUpAitoCredentials`. The easiest way is by using the environment variables::
 
-Upload Data
------------
+    $ source AITO_INSTANCE_NAME=your-instance-name
+    $ source AITO_API_KEY=your-api-key
 
-You can create Aito schema with an :ref:`apiAitoClient`.
+  You can then upload the data by either:
 
-Your AitoClient must be set up with the READ-WRITE API key
+    - :ref:`cliBatchUpload`::
 
-.. code:: python
+        $ aito database upload-batch tableName < tableEntries.json
 
-  from aito.utils.aito_client import AitoClient
-  aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
+    - :ref:`cliFileUpload`::
 
-- `Upload a list of table entries <https://aito.ai/docs/api/#post-api-v1-data-table-batch>`__
+        $ aito database upload-file tableName tableEntries.ndjson.gz
 
-  .. code:: python
-
-    entries = [
-      {
-        'label': 0,
-        'comment': 'it was.',
-        'author': 'renden123',
-        'subreddit': 'CFB',
-        'score': 4,
-        'ups': -1,
-        'downs': -1,
-        'date': '2016-11',
-        'created_utc': '2016-11-22 21:32:03',
-        'parent_comment': "Wasn't it 2010?"
-      }
-    ]
-    aito_client.populate_table_entries(table_name='reddit', entries=entries)
-
-- Upload a `Pandas DataFrame`_
-
-  .. code:: python
-
-    # convert DataFrame to list of entries
-    entries = df.to_dict(orient="records")
-    aito_client.populate_table_entries(table_name='reddit', entries=entries)
-
-- `Upload a gzipped ndjson file <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
-
-  .. code:: python
-
-    with file_path.open(mode='rb') as in_f:
-      aito_client.populate_table_by_file_upload(table_name='table_name', binary_file_object=in_f)
-
-Delete data
------------
-
-You can delete the data with an :ref:`apiAitoClient`.
-
-Your AitoClient must be set up with the READ-WRITE API key
-
-- Delete a table: :meth:`aito.utils.aito_client.AitoClient.delete_table`
-- Delete the entire database :meth:`aito.utils.aito_client.AitoClient.delete_table`
-
-.. _Pandas DataFrame: https://pandas.pydata.org/pandas-docs/stable/reference/frame.html
+.. _Analyzer: https://aito.ai/docs/api/#schema-analyzer
+.. _Batch Upload: https://aito.ai/docs/api/#post-api-v1-data-table-batch
+.. _ColumnType: https://aito.ai/docs/api/#schema-column-type
+.. _File Upload: https://aito.ai/docs/api/#post-api-v1-data-table-file

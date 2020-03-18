@@ -4,9 +4,6 @@ Aito CLI
 The Aito Command Line Interface (Aito CLI) is an open source tool that enables you to interact with
 your Aito instance using commands in your command-line shell with minimum setup.
 
-Quickstart
-----------
-
 To get started:
 
   .. code-block:: console
@@ -26,36 +23,14 @@ To get started:
         convert           convert a file into ndjson|json format
         database          perform operations with your Aito database instance
 
-Upload a Data File
-------------------
+:ref:`Quickstart guide to upload data <cliQuickStartUploadData>`
 
-The easiest way to upload a file to your Aito database instance is by using the ``database quick-add-table``
+.. _cliInferTableSchema:
 
-1. `Set up the credentials`_
-2. Run::
-
-    $ aito database quick-add-table path/to/dataFile
-
-  To see help::
-
-    $ aito database quick-add-table -h
-
-
-Quick add table essentially does the following step:
-
-1. `Infer an Aito table schema`_
-2. :ref:`Create a table using the inferred schema<Create a table>`
-3. :ref:`Convert the file to gzipped NDJSON file for file upload<Convert data>`
-4. :ref:`Upload the file to the created table<File upload>`
-
-
-You can customized this workflow, for example, adjust the inferred schema before creating table or
-upload file to an existing table, by following each step guide and execute it manually.
-
-Infer an Aito Table Schema
+infer-table-schema command
 --------------------------
 
-Infer an Aito table schema from the input data
+The ``infer-table-schema`` command helps you to infer a table schema from the input data
 
 Supported input formats:
 
@@ -78,44 +53,47 @@ Commands:
 
     $ aito infer-table-schema csv < path/to/myFile.csv > path/to/schemaFile.json
 
-- Infer table schema from a csv file::
+- Infer a table schema from a csv file::
 
     $ aito infer-table-schema csv < path/to/myCSVFile.csv
 
-- Infer table schema from a semicolon delimited csv file::
+- Infer a table schema from a semicolon delimited csv file::
 
     $ aito infer-table-schema csv -d ';' < path/to/myCSVFile.csv
 
-- Infer table schema from a semicolon delimited comma decimal point csv file::
+- Infer a table schema from a semicolon delimited comma decimal point csv file::
 
     $ aito infer-table-schema csv -d ';' -p ',' < path/to/myCSVFile.csv
 
-- Infer table schema from an excel file::
+- Infer a table schema from an excel file::
 
     $ aito infer-table-schema excel path/to/myExcelFile.xlsx
 
-- Infer table schema from a single sheet of an excel file::
+- Infer a table schema from a single sheet of an excel file::
 
     $ aito infer-table-schema excel -o sheetName path/to/myExcelFile.xls
 
-- Infer table schema from a JSON_ file::
+- Infer a table schema from a JSON_ file::
 
     $ aito infer-table-schema json path/to/myJsonFile.json
 
-- Infer table schema from a NDJSON_ file::
+- Infer a table schema from a NDJSON_ file::
 
     $ aito infer-table-schema ndjson path/to/myNdJsonFile.ndjson
 
 
-Convert Data
-------------
+.. _cliConvert:
+
+convert command
+---------------
+
+The ``convert`` command helps you to convert the input data into JSON_ or NDJSON_ for upload or covert the data
+according to a table schema.
 
 Aito takes JSON array of objects for `Inserting multiple
 entries <https://aito.ai/docs/api/#post-api-v1-data-table-batch>`__ and
 a gzip compressed NDJSON_ file for
 `File upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__.
-
-The convert action helps you to convert your data file into JSON_ or NDJSON_ format.
 
 Supported input formats:
 
@@ -154,13 +132,18 @@ Commands:
 
     $ aito convert csv -s path/to/desiredSchema.json path/to/myFile.csv > path/to/myConvertedFile.ndjson
 
-Perform Database Operations
----------------------------
 
-.. _setUpAitoCredentials:
+.. _cliDatabase:
 
-Set Up the Credentials
-~~~~~~~~~~~~~~~~~~~~~~
+database command
+----------------
+
+The ``database`` command allows you to perform most database operations.
+
+.. _cliSetUpAitoCredentials:
+
+Set Up Aito Credentials
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Performing operation with your Aito database instance always requires credentials.
 
@@ -196,17 +179,23 @@ Database Operations
 
   All of the following operations require read-write key
 
+.. _cliQuickAddTable:
+
 Quick Add a Table
 ^^^^^^^^^^^^^^^^^
 Infer a table schema based on the given file, create a table using the file name and upload the file content to the created table::
 
     $ aito database quick-add-table path/to/tableEntries.json
 
+.. _cliCreateTable:
+
 Create a Table
 ^^^^^^^^^^^^^^
 Create a table using the given Aito table schema::
 
     $ aito database create-table tableName path/to/tableSchema.json
+
+.. _cliBatchUpload:
 
 Batch Upload
 ^^^^^^^^^^^^
@@ -215,13 +204,14 @@ Upload entries to an *existing* table (a table of which `schema has been created
 
     $ aito database upload-batch tableName < tableEntries.json
 
+.. _cliFileUpload:
 
 File Upload
 ^^^^^^^^^^^
 
 Upload a file to an *existing* table in your Aito instance::
 
-    $ aito database upload-file tableName tableEntries.csv
+    $ aito database upload-file tableName tableEntries.ndjson.gz
 
 Delete a Table
 ^^^^^^^^^^^^^^

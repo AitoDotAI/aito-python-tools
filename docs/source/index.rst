@@ -35,12 +35,13 @@ Aito Command Line Interface
 
     <action>
       infer-table-schema
-                         infer an Aito table schema from a file
+                        infer an Aito table schema from a file
       convert           convert a file into ndjson|json format
       database          perform operations with your Aito database instance
 
 .. note::
-  For the database action, remember to :ref:`set up your Aito instance credentials<setUpAitoCredentials>`.
+
+  For the database action, remember to :ref:`set up your Aito instance credentials<cliSetUpAitoCredentials>`.
 
 For an additional guide of the CLI tool, see the :doc:`CLI documentations <cli>`.
 
@@ -56,12 +57,13 @@ Some common features:
 .. toctree::
   :hidden:
 
-  generic/install
-  cli/cli
-  sdk/quickstart
-  sdk/api
-  generic/sql
-  generic/changelog
+  install
+  quickstart
+  cli
+  sdk
+  api
+  sql
+  changelog
 
 .. note::
 
