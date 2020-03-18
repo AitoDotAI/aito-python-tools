@@ -71,4 +71,5 @@ html_theme_options = {
     "github_repo": "aito-python-tools",
     "show_powered_by": False,
     "fixed_sidebar": True,
+    "show_relbars": True,
 }
