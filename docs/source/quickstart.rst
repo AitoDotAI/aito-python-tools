@@ -5,17 +5,18 @@ This section explains how to upload data to Aito with either :doc:`CLI <cli>` or
 
 Essentially, upload data to Aito can be broken down into the following steps:
 
-1. Infer Aito table schema
-2. Change the inferred schema if needed
-3. Create a table
-4. Convert the data to appropriate format for uploading
-5. Upload the data
+1. Infer a Table Schema :ref:`cli <cliQuickstartInferTableSchema>` | :ref:`sdk <sdkQuickstartInferTableSchema>`
+2. Change the inferred schema if needed :ref:`cli <cliQuickstartChangeSchema>` | :ref:`sdk <sdkQuickstartChangeSchema>`
+3. Create a table :ref:`cli <cliQuickstartCreateTable>` | :ref:`sdk <sdkQuickstartCreateTable>`
+4. Convert the data :ref:`cli <cliQuickstartConvertData>` | :ref:`sdk <sdkQuickstartConvertData>`
+5. Upload the data :ref:`cli <cliQuickstartUploadData>` | :ref:`sdk <sdkQuickstartUploadData>`
 
 .. note::
 
   Skip steps 1, 2, and 3 if you upload data to an existing table
+  Skip step 4 if you already have the data in the appropriate format for uploading or the data matches the table schema
 
-.. _cliQuickStartUploadData:
+If you don't have a data file, you can download our `example file <https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv>`_ and follow the guide.
 
 Uploading Data with CLI
 -----------------------
@@ -28,45 +29,64 @@ Uploading Data with CLI
 
 The CLI supports all steps needed to upload data:
 
-1. :ref:`cliInferTableSchema`
+.. _cliQuickstartInferTableSchema:
 
-  For examples, infer a table schema from a csv file::
+:ref:`Infer a Table Schema <cliInferTableSchema>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    $ aito infer-table-schema csv < path/to/myCSVFile.csv > path/to/inferredSchema.json
+For examples, infer a table schema from a csv file::
 
-2. Change the inferred schema if needed:
+  $ aito infer-table-schema csv < path/to/myCSVFile.csv > path/to/inferredSchema.json
 
-  You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
-  or add a Analyzer_ to a ``Text`` column. In that case, just make changes to the inferred schema JSON file.
+.. _cliQuickstartChangeSchema:
 
-3. :ref:`cliCreateTable`
+Change the Schema
+~~~~~~~~~~~~~~~~~
 
-  You need a table name and a table schema to create a table::
+You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
+or add a Analyzer_ to a ``Text`` column. In that case, just make changes to the inferred schema JSON file.
 
-    $ aito database create-table tableName path/to/tableSchema.json
+The example below use ``jq`` to change the ``id`` column type::
 
-4. :ref:`Convert the data to appropriate format for uploading <cliConvert>`
+  $ jq '.columns.id.type = "String"' < path/to/schemaFile.json > path/to/updatedSchemaFile.json
 
-  You can either convert the data to:
+.. _cliQuickstartCreateTable:
 
-    - A list of entries in JSON format for `Batch Upload`_::
+:ref:`Create a Table <cliCreateTable>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        $ aito convert csv --json path/to/myCSVFile.csv > path/to/myConvertedFile.json
+You need a table name and a table schema to create a table::
 
-    - A NDJSON file for `File Upload`_::
+  $ aito database create-table tableName path/to/tableSchema.json
 
-        $ aito convert csv < path/to/myFile.csv > path/to/myConvertedFile.ndjson
+.. _cliQuickstartConvertData:
 
-      Remember to gzip the NDJSON file::
+:ref:`Convert the Data <cliConvert>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        $ gzip path/to/myConvertedFile.ndjson
+If you made change to the inferred schema or have an existing schema, use the schema when with the ``-s`` flag to make sure that the converted data matches the schema::
+
+  $ aito convert csv -s path/to/updatedSchema.json path/to/myCSVFile.csv > path/to/myConvertedFile.ndjson
+
+You can either convert the data to:
+
+  - A list of entries in JSON format for `Batch Upload`_::
+
+      $ aito convert csv --json path/to/myCSVFile.csv > path/to/myConvertedFile.json
+
+  - A NDJSON file for `File Upload`_::
+
+      $ aito convert csv < path/to/myFile.csv > path/to/myConvertedFile.ndjson
+
+    Remember to gzip the NDJSON file::
+
+      $ gzip path/to/myConvertedFile.ndjson
 
 
-  If you made change to the inferred schema or have an existing schema, use the schema when converting to make sure that the converted data matches the schema::
+.. _cliQuickstartUploadData:
 
-    $ aito convert csv -s path/to/updatedSchema.json path/to/myCSVFile.csv > path/to/myConvertedFile.ndjson
-
-5. Upload the Data
+Upload the Data
+~~~~~~~~~~~~~~~
 
   You can upload data with the CLI by using the :ref:`cliDatabase`.
 
@@ -85,7 +105,118 @@ The CLI supports all steps needed to upload data:
 
         $ aito database upload-file tableName tableEntries.ndjson.gz
 
+
+Uploading Data with SDK
+-----------------------
+
+The Aito Python SDK uses `Pandas DataFrame`_ for multiple operations.
+
+The example belows show how you can load a csv file into a DataFrame, please read the `official guide <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__ for further instructions.
+
+.. code:: python
+
+  import pandas as pd
+
+  reddit_df = pd.read_csv('reddit_sampe.csv')
+
+.. _sdkQuickstartInferTableSchema:
+
+:ref:`Infer a Table Schema <sdkInferTableSchema>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :ref:`apiSchemaHandler` can infer table schema from a DataFrame:
+
+  .. code:: python
+
+    from aito.utils.schema_handler import SchemaHandler
+    schema_handler = SchemaHandler()
+    inferred_schema = schema_handler.infer_table_schema_from_pandas_data_frame(data_frame)
+
+.. _sdkQuickstartChangeSchema:
+
+Change the Schema
+~~~~~~~~~~~~~~~~~
+
+You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
+or add a Analyzer_ to a ``Text`` column.
+
+The return inferred schema from :ref:`apiSchemaHandler` is a `Python Dictionary Object`_ and hence, can be updated by updating the value:
+
+  .. code :: python
+
+    inferred_schema['columns']['id']['type'] = 'String'
+
+.. _sdkQuickstartCreateTable:
+
+:ref:`Create a Table <sdkCreateTable>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :ref:`apiAitoClient` can create a table using a table name and a table schema:
+
+  .. code:: python
+
+    from aito.utils.aito_client import AitoClient
+    aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
+    aito_client.put_table_schema(table_name='your-table-name', table_schema=table_schema_content)
+
+.. _sdkQuickstartConvertData:
+
+Convert the Data
+~~~~~~~~~~~~~~~~
+
+The DataFrameHandler can convert a DataFrame to match an existing schema:
+
+  .. code:: python
+
+    converted_data_frame = data_frame_handler.convert_df_from_aito_table_schema(
+      df=data_frame,
+      table_schema=table_schema_content
+    )
+
+A DataFrame can be converted to:
+
+  - A list of entries in JSON format for `Batch Upload`_:
+
+    .. code:: python
+
+      entries = data_frame.to_dict(orient="records")
+
+  - A gzipped NDJSON file for `File Upload`_ using the DataFrameHandler:
+
+    .. code:: python
+
+      from aito.utils.data_frame_handler import DataFrameHandler
+      data_frame_handler = DataFrameHandler()
+      data_frame_handler.df_to_format(
+        df=data_frame,
+        out_format='ndjson',
+        write_output='path/to/myConvertedFile.ndjson.gz',
+        convert_options={'compression': 'gzip'}
+      )
+
+.. _sdkQuickstartUploadData:
+
+:ref:`Upload the Data <sdkUploadData>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :ref:`apiAitoClient` can upload the data with either `Batch Upload`_ or `File Upload`_:
+
+.. code:: python
+
+  from aito.utils.aito_client import AitoClient
+  aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
+
+  # Batch upload
+  aito_client.populate_table_entries(table_name='reddit', entries=entries)
+
+  # File Upload
+
+  with file_path.open(mode='rb') as in_f:
+    aito_client.populate_table_by_file_upload(table_name='table_name', binary_file_object=in_f)
+
 .. _Analyzer: https://aito.ai/docs/api/#schema-analyzer
 .. _Batch Upload: https://aito.ai/docs/api/#post-api-v1-data-table-batch
 .. _ColumnType: https://aito.ai/docs/api/#schema-column-type
 .. _File Upload: https://aito.ai/docs/api/#post-api-v1-data-table-file
+.. _Pandas DataFrame: https://pandas.pydata.org/pandas-docs/stable/reference/frame.html
+.. _Python Dictionary Object: https://docs.python.org/3/tutorial/datastructures.html#dictionaries

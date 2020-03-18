@@ -40,6 +40,7 @@ The example below assume that you already have a DataFrame named :ref:`reddit_df
 
 .. code:: python
 
+  from aito.utils.schema_handler import SchemaHandler
   schema_handler = SchemaHandler()
   reddit_schema = schema_handler.infer_table_schema_from_pandas_data_frame(reddit_df)
 
@@ -55,7 +56,7 @@ The example below assume that you already have a DataFrame named :ref:`reddit_df
     "tokenSeparator": " "
   }
 
-.. _sdkCreateSchema:
+.. _sdkCreateTable:
 
 Create Aito Schema
 ------------------

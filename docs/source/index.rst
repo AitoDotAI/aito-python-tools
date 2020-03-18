@@ -51,7 +51,7 @@ Using the Python SDK
 Some common features:
 
 1. :ref:`sdkInferTableSchema`
-2. :ref:`sdkCreateSchema`
+2. :ref:`sdkCreateTable`
 3. :ref:`sdkUploadData`
 
 .. toctree::
