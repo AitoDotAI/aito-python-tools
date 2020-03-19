@@ -69,15 +69,15 @@ class DataFrameHandler:
             df = f(df)
         return df
 
-    def convert_df_from_aito_table_schema(self, df: pd.DataFrame, table_schema: Dict) -> pd.DataFrame:
-        """Convert a pandas DataFrame to match a Aito table schema
+    def convert_df_using_aito_table_schema(self, df: pd.DataFrame, table_schema: Dict) -> pd.DataFrame:
+        """Convert a pandas DataFrame to match a given Aito table schema
 
         :param df: input pandas DataFrame
         :type df: pd.DataFrame
         :param table_schema: input table schema
         :type table_schema: Dict
         :raises ValueError: input table schema is invalid
-        :raises e: fail to convert
+        :raises e: failed to convert
         :return: converted DataFrame
         :rtype: pd.DataFrame
         """
@@ -209,7 +209,7 @@ class DataFrameHandler:
         df = self.apply_functions_on_df(df, apply_functions)
 
         if use_table_schema:
-            df = self.convert_df_from_aito_table_schema(df, use_table_schema)
+            df = self.convert_df_using_aito_table_schema(df, use_table_schema)
 
         if out_format != in_format or convert_options or use_table_schema:
             self.df_to_format(df, out_format, write_output, convert_options)

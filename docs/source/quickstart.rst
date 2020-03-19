@@ -3,7 +3,7 @@ Quickstart
 
 This section explains how to upload data to Aito with either :doc:`CLI <cli>` or :doc:`Python SDK <sdk>`.
 
-Essentially, upload data to Aito can be broken down into the following steps:
+Essentially, uploading data into Aito can be broken down into the following steps:
 
 1. Infer a Table Schema :ref:`cli <cliQuickstartInferTableSchema>` | :ref:`sdk <sdkQuickstartInferTableSchema>`
 2. Change the inferred schema if needed :ref:`cli <cliQuickstartChangeSchema>` | :ref:`sdk <sdkQuickstartChangeSchema>`
@@ -18,8 +18,8 @@ Essentially, upload data to Aito can be broken down into the following steps:
 
 If you don't have a data file, you can download our `example file <https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv>`_ and follow the guide.
 
-Uploading Data with CLI
------------------------
+Upload Data with the CLI
+------------------------
 
 .. note::
 
@@ -44,9 +44,9 @@ Change the Schema
 ~~~~~~~~~~~~~~~~~
 
 You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
-or add a Analyzer_ to a ``Text`` column. In that case, just make changes to the inferred schema JSON file.
+or add an Analyzer_ to a ``Text`` column. In that case, just make changes to the inferred schema JSON file.
 
-The example below use ``jq`` to change the ``id`` column type::
+The example below use `jq <https://stedolan.github.io/jq/>`_ to change the ``id`` column type::
 
   $ jq '.columns.id.type = "String"' < path/to/schemaFile.json > path/to/updatedSchemaFile.json
 
@@ -64,7 +64,7 @@ You need a table name and a table schema to create a table::
 :ref:`Convert the Data <cliConvert>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you made change to the inferred schema or have an existing schema, use the schema when with the ``-s`` flag to make sure that the converted data matches the schema::
+If you made changes to the inferred schema or have an existing schema, use the schema when with the ``-s`` flag to make sure that the converted data matches the schema::
 
   $ aito convert csv -s path/to/updatedSchema.json path/to/myCSVFile.csv > path/to/myConvertedFile.ndjson
 
@@ -92,8 +92,8 @@ Upload the Data
 
   First, :ref:`cliSetUpAitoCredentials`. The easiest way is by using the environment variables::
 
-    $ source AITO_INSTANCE_NAME=your-instance-name
-    $ source AITO_API_KEY=your-api-key
+    $ export AITO_INSTANCE_NAME=your-instance-name
+    $ export AITO_API_KEY=your-api-key
 
   You can then upload the data by either:
 
@@ -106,18 +106,18 @@ Upload the Data
         $ aito database upload-file tableName tableEntries.ndjson.gz
 
 
-Uploading Data with SDK
------------------------
+Upload Data with the SDK
+------------------------
 
 The Aito Python SDK uses `Pandas DataFrame`_ for multiple operations.
 
-The example belows show how you can load a csv file into a DataFrame, please read the `official guide <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__ for further instructions.
+The example below show how you can load a csv file into a DataFrame, please read the `official guide <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__ for further instructions.
 
 .. code:: python
 
   import pandas as pd
 
-  reddit_df = pd.read_csv('reddit_sampe.csv')
+  reddit_df = pd.read_csv('reddit_sample.csv')
 
 .. _sdkQuickstartInferTableSchema:
 
@@ -156,8 +156,17 @@ The :ref:`apiAitoClient` can create a table using a table name and a table schem
   .. code:: python
 
     from aito.utils.aito_client import AitoClient
-    aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
-    aito_client.put_table_schema(table_name='your-table-name', table_schema=table_schema_content)
+    table_schema = {
+      "type": "table",
+      "columns": {
+        "id": { "type": "Int" },
+        "name": { "type": "String" },
+        "price": { "type": "Decimal" },
+        "description": { "type": "Text", "analyzer": "English" }
+      }
+    }
+    aito_client = AitoClient(instance_name='your_aito_instance_name', api_key='your_rw_api_key')
+    aito_client.put_table_schema(table_name='your-table-name', table_schema=table_schema)
 
 .. _sdkQuickstartConvertData:
 

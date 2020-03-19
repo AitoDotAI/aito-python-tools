@@ -154,7 +154,7 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     client = main_parser.create_client_from_parsed_args(parsed_args)
     table_name = parsed_args['table-name']
 
-    if not client.check_table_existed(table_name):
+    if not client.check_table_exists(table_name):
         main_parser.error(f"Table '{table_name}' does not exist. Please create table first.")
 
     input_file_path = main_parser.parse_path_value(parsed_args['input-file'])

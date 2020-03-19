@@ -126,7 +126,7 @@ Example::
 convert command
 ---------------
 
-The ``convert`` command helps you to convert the input data into JSON_ or NDJSON_ for upload or covert the data
+The ``convert`` command helps you to convert the input data into JSON_ or NDJSON_ for upload or convert the data
 according to a table schema.
 
 Aito takes JSON array of objects for `Inserting multiple
@@ -162,14 +162,14 @@ By default, the command takes standard input and standard output. To redirect::
 Convert to JSON
 ~~~~~~~~~~~~~~~
 
-By default, the command convert input to NDJSON_ format. If you want to convert to JSON_ format, use the ``-j`` or ``--json`` flag::
+By default, the command converts the input to the NDJSON_ format. If you want to convert to the JSON_ format, use the ``-j`` or ``--json`` flag::
 
   $ aito convert <input-format> --json ...
 
 Convert and Infer Schema
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can convert the data and infer a table schema on the way by using the ``-c`` or ``--create-table-schema`` flag::
+You can convert the data and infer a table schema at the same time by using the ``-c`` or ``--create-table-schema`` flag::
 
   $ aito convert <input-format> -c path/to/inferredTableSchema.json ...
 
@@ -180,7 +180,7 @@ You can convert the data to match an existing table schema by using the ``-s`` o
 
   $ aito convert <input-format> -s path/to/tableSchema.json ...
 
-Convert Csv
+Convert CSV
 ~~~~~~~~~~~
 
 To see help::
@@ -212,7 +212,7 @@ Example::
 
 .. note::
 
-  Convert from Excel only take file path instead of stdin
+  Convert from Excel only takes a file path instead of stdin
 
 Convert a single sheet of an excel file::
 
@@ -253,16 +253,16 @@ The ``database`` command allows you to perform most database operations.
 Set Up Aito Credentials
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Performing operation with your Aito database instance always requires credentials.
+Performing operations with your Aito database instance always requires credentials.
 
 There are 3 ways to set up the credentials:
 
 1. The most convenient way is to set up the following environment variables::
 
-    $ source AITO_INSTANCE_NAME=your-instance-name
-    $ source AITO_API_KEY=your-api-key
+    $ export AITO_INSTANCE_NAME=your-instance-name
+    $ export AITO_API_KEY=your-api-key
 
-  You can now perform operations::
+  You can now perform database operations::
 
     $ aito database <operation> ...
 
@@ -282,7 +282,7 @@ There are 3 ways to set up the credentials:
 
 .. note::
 
-  All of the following operations require read-write key
+  All of the following operations require the read-write key
 
 .. _cliQuickAddTable:
 
@@ -333,7 +333,7 @@ Delete a table schema and all the data inside it:
 Delete the Whole Database
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Delete all tables schema and all data in the instance:
+Delete the database's schema and all data in the instance:
 
   .. code-block:: console
 
@@ -346,11 +346,11 @@ Tab Completion
 
 The CLI supports tab completion using argcomplete_
 
--  To activate global completion::
+-  Activate global completion::
 
     $ activate-global-python-argcomplete
 
--  If you choose not to use global completion::
+-  If you don't want to use global completion::
 
     $ eval "$(register-python-argcomplete aito)"
 
@@ -358,7 +358,7 @@ The CLI supports tab completion using argcomplete_
 
     $ sudo apt install python3-argcomplete
 
-- Please refer the `argcomplete documentation`_
+- Please refer to the `argcomplete documentation`_
 
 
 Integration with SQL Database

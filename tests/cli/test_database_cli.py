@@ -95,19 +95,19 @@ class TestDatabaseCli(TestCaseCompare):
     def test_create_table(self):
         subprocess.run(self.prefix_args + ['database', 'create-table', self.default_table_name,
                                            f'{self.input_folder}/invoice_aito_schema.json'])
-        self.assertTrue(self.client.check_table_existed(self.default_table_name))
+        self.assertTrue(self.client.check_table_exists(self.default_table_name))
 
     def test_create_table_stdin(self):
         with (self.input_folder / 'invoice_aito_schema.json').open() as in_f:
             subprocess.run(self.prefix_args +['database', 'create-table', self.default_table_name], stdin=in_f)
-        self.assertTrue(self.client.check_table_existed(self.default_table_name))
+        self.assertTrue(self.client.check_table_exists(self.default_table_name))
 
     def test_delete_table(self):
         self.create_table()
         proc = subprocess.Popen(self.prefix_args + ['database', 'delete-table', self.default_table_name],
                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         proc.communicate(b"yes")
-        self.assertFalse(self.client.check_table_existed(self.default_table_name))
+        self.assertFalse(self.client.check_table_exists(self.default_table_name))
 
     def test_quick_add_table(self):
         input_file = self.input_folder / 'invoice.csv'
@@ -134,5 +134,5 @@ class TestDatabaseCli(TestCaseCompare):
         proc = subprocess.Popen(self.prefix_args + ['database', 'delete-database'],
                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         proc.communicate(b"y")
-        self.assertFalse(self.client.check_table_existed(self.default_table_name))
-        self.assertFalse(self.client.check_table_existed('invoice_altered'))
+        self.assertFalse(self.client.check_table_exists(self.default_table_name))
+        self.assertFalse(self.client.check_table_exists('invoice_altered'))

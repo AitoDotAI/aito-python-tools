@@ -8,14 +8,14 @@ Load a Data File to Pandas DataFrame
 
 The Aito Python SDK uses `Pandas DataFrame`_ for multiple operations.
 
-The example belows show how you can load a csv file into a DataFrame, please read the `official guide <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__ for further instructions.
+The example below shows how you can load a csv file into a DataFrame, please read the `official pandas guide <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__ for further instructions.
 You can download an example data file `here <https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv>`__ and run the code below:
 
 .. code:: python
 
   import pandas as pd
 
-  reddit_df = pd.read_csv('reddit_sampe.csv')
+  reddit_df = pd.read_csv('reddit_sample.csv')
 
 You can also use the :ref:`apiDataFrameHandler` to read data into pandas DataFrame
 
@@ -24,11 +24,11 @@ You can also use the :ref:`apiDataFrameHandler` to read data into pandas DataFra
 Infer a Table Schema
 --------------------
 
-An Aito table schema describes how the table should be constructed and internally processed.
+An Aito table schema describes how the table should be constructed and processed internally.
 You can read more about the Aito schema `here <https://aito.ai/docs/articles/defining-a-database-schema/>`__
 
 The Aito Python SDK includes a :ref:`apiSchemaHandler` that can infer an Aito table schema from a `Pandas DataFrame`_.
-The example below assume that you already have a DataFrame named :ref:`reddit_df DataFrame<Load a Data File to Pandas DataFrame>`.
+The example below assumes that you already have a DataFrame named :ref:`reddit_df DataFrame<Load a Data File to Pandas DataFrame>`.
 
 .. code:: python
 
@@ -36,7 +36,7 @@ The example below assume that you already have a DataFrame named :ref:`reddit_df
   schema_handler = SchemaHandler()
   reddit_schema = schema_handler.infer_table_schema_from_pandas_data_frame(reddit_df)
 
-  # Feels free to change the schema as you see fit. For example:
+  # Feel free to change the schema as you see fit. For example:
   # Change `label` type to `String` instead of `Int`
   reddit_schema['columns']['label']['type'] = 'String'
   # Use a different analyzer
@@ -124,7 +124,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 Upload Data
 -----------
 
-You can create Aito schema with an :ref:`apiAitoClient`.
+You can create an Aito schema with the :ref:`apiAitoClient`.
 
 Your AitoClient must be set up with the READ-WRITE API key
 
@@ -171,7 +171,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 Delete data
 -----------
 
-You can delete the data with an :ref:`apiAitoClient`.
+You can delete data with the :ref:`apiAitoClient`.
 
 Your AitoClient must be set up with the READ-WRITE API key
 
@@ -184,7 +184,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 Execute Queries
 ---------------
 
-You can execute queries with an :ref:`apiAitoClient`.
+You can execute queries with the :ref:`apiAitoClient`.
 
 Your AitoClient can be set up with the READ-ONLY API key
 

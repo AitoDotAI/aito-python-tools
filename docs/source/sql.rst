@@ -94,11 +94,11 @@ Similar to setting up the Aito credentials, there are 3 ways to set up the SQL D
 
 1. The most convenient way is to set up the following environment variables::
 
-    $ source SQL_SERVER=server to connect to
-    $ source SQL_PORT=port to connect to
-    $ source SQL_DATABASE=database_to_connect_to
-    $ source SQL_USER=username for authentication
-    $ source SQL_PASSWORD=password for authentication
+    $ export SQL_SERVER=server to connect to
+    $ export SQL_PORT=port to connect to
+    $ export SQL_DATABASE=database_to_connect_to
+    $ export SQL_USER=username for authentication
+    $ export SQL_PASSWORD=password for authentication
 
   You can now perform the sql operations. For example::
 
@@ -152,7 +152,7 @@ Supported Functions
 
 .. note::
 
-  The sql functions won't appear unless you perform the additional installation below
+  The sql functions won't appear unless you perform the additional installation above
 
 
 SDK Integration

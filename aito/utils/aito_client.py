@@ -61,14 +61,14 @@ class AitoClient:
         :type instance_name: str
         :param api_key: Aito instance API key
         :type api_key: str
-        :raises AitoClientError: An error occurred during creating AitoClient
+        :raises AitoClientError: An error occurred during the creation of AitoClient
         """
         if not instance_name:
             raise AitoClientError('instance name is required')
         instance_name = instance_name.strip()
         if not re.fullmatch('^[a-z][a-z0-9-]*', instance_name):
             raise AitoClientError(
-                'instance name must begin with a letter and can only contains lowercase letters, numbers, and dashses'
+                'instance name must begin with a letter and can only contain lowercase letters, numbers, and dashes'
             )
         self.url = f'https://{instance_name}.api.aito.ai'
         if not api_key:
@@ -92,11 +92,11 @@ class AitoClient:
 
         This method is useful when sending a batch of, for example, predict requests.
 
-        :param methods: list of request method
+        :param methods: list of request methods
         :type methods: List[str]
-        :param endpoints: list of request endpoint
+        :param endpoints: list of request endpoints
         :type endpoints: List[str]
-        :param queries: list of request query
+        :param queries: list of request queries
         :type queries: List[Dict]
         :return: list of responses
         :rtype: List[Dict]
@@ -117,7 +117,7 @@ class AitoClient:
         return responses
 
     def request(self, req_method: str, endpoint: str, query: Union[Dict, List] = None) -> Dict:
-        """request to an Aito API end point
+        """Make a request to an Aito API endpoint
 
         :param req_method: request method
         :type req_method: str
@@ -160,7 +160,7 @@ class AitoClient:
 
         :param database_schema: Aito database schema
         :type database_schema: Dict
-        :return: the database schema if succeed
+        :return: the database schema if successful
         :rtype: Dict
         """
         r = self.request('PUT', '/api/v1/schema', database_schema)
@@ -170,7 +170,7 @@ class AitoClient:
     def get_database_schema(self) -> Dict:
         """get the schema of the database `API doc <https://aito.ai/docs/api/#get-api-v1-schema>`__
 
-        :return: Aito database schema if succeed
+        :return: Aito database schema if successful
         :rtype: Dict
         """
         return self.request('GET', '/api/v1/schema')
@@ -192,7 +192,7 @@ class AitoClient:
         :type table_name: str
         :param table_schema: Aito table schema
         :type table_schema: Dict
-        :return: the table scheam if succeed
+        :return: the table schema if successful
         :rtype: Dict
         """
         r = self.request('PUT', f'/api/v1/schema/{table_name}', table_schema)
@@ -204,7 +204,7 @@ class AitoClient:
 
         :param table_name: the name of the table
         :type table_name: str
-        :return: the table schema if succeed
+        :return: the table schema if successful
         :rtype: Dict
         """
         return self.request('GET', f'/api/v1/schema/{table_name}')
@@ -214,7 +214,7 @@ class AitoClient:
 
         :param table_name: the name of the table
         :type table_name: str
-        :return: delete table if succeed
+        :return: deleted table if successful
         :rtype: Dict
         """
         r = self.request('DELETE', f'/api/v1/schema/{table_name}')
@@ -224,17 +224,17 @@ class AitoClient:
     def get_existing_tables(self) -> List[str]:
         """get a list of existing tables in the instance
 
-        :return: list of existing tables name
+        :return: list of the names of existing tables
         :rtype: List[str]
         """
         return list(self.get_database_schema()['schema'].keys())
 
-    def check_table_existed(self, table_name: str) -> bool:
+    def check_table_exists(self, table_name: str) -> bool:
         """check if a table exist in the instance
 
         :param table_name: the name of the table
         :type table_name: str
-        :return: True if the table exist
+        :return: True if the table exists
         :rtype: bool
         """
         return table_name in self.get_existing_tables()
@@ -293,7 +293,7 @@ class AitoClient:
         :type table_name: str
         :param binary_file_object: binary file object
         :type binary_file_object: BinaryIO
-        :raises AitoClientRequestError: An error occurred during uploading the file to S3
+        :raises AitoClientRequestError: An error occurred during the upload of the file to S3
         """
         _l = LOG
         LOG.debug(f'uploading file object to table `{table_name}`...')
@@ -352,7 +352,7 @@ class AitoClient:
         :type offset: int, optional
         :param limit: limit, defaults to 10
         :type limit: int, optional
-        :return: the table entries if succeed
+        :return: the table entries if successful
         :rtype: Dict
         """
 

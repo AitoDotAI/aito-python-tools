@@ -13,7 +13,7 @@ def logging_config(
 ):
     """Wrapper for logging basic config with a default format
 
-    :param level: loging level
+    :param level: logging level
     :param log_format: logging format
     :param log_date_fmt: logging date format
     :param kwargs:

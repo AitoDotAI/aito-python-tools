@@ -17,7 +17,7 @@ Quick Installation
 
 To install with pip, run: ``pip install aitoai``
 
-For more installation option, please check :doc:`install`
+For more installation options, please check :doc:`install`
 
 Basic Usage
 -----------
@@ -71,9 +71,9 @@ Some common features:
 .. note::
 
   The Aito Python SDK is an experimental project that we are already using ourselves.
-  It might be a bit rough around the edges and is not yet ready for production grade.
-  This project is under constant development and is likely to be broken in the future.
-  Feel free to use, and share any feedback with us via our `Slack channel`_ or
+  It might be a bit rough around the edges and is not yet production-grade.
+  This project is under constant development and is subject to change.
+  Feel free to use the Aito SDK, and share any feedback with us via our `Slack channel`_ or
   our `Issue tracker`_
 
 .. _Aito: https://aito.ai/

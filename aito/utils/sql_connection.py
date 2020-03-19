@@ -34,7 +34,7 @@ class SQLConnection():
         :type sql_username: str, optional
         :param sql_password: database password, defaults to None
         :type sql_password: str, optional
-        :raises SQLConnectionError: An error occurred during establishing connection
+        :raises SQLConnectionError: An error occurred during the establishment of the connection
         """
         self.logger = logging.getLogger('SQLConnection')
         if not sql_driver:
@@ -86,7 +86,7 @@ class SQLConnection():
 
         :param query_string: input query
         :type query_string: str
-        :raises SQLConnectionError: An error occurred during executing the query
+        :raises SQLConnectionError: An error occurred during the execution of the query
         :return: cursor
         :rtype: pyodbc.Cursor
         """
