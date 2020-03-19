@@ -1,7 +1,7 @@
 import os
 
-from aito.utils.aito_client import AitoClient, ClientError
-from tests.test_case import TestCaseCompare
+from aito.utils.aito_client import AitoClient, AitoClientError, AitoClientRequestError
+from tests.cases import TestCaseCompare
 
 
 class TestAitoClient(TestCaseCompare):
@@ -12,21 +12,21 @@ class TestAitoClient(TestCaseCompare):
         cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_API_KEY'])
 
     def test_no_instance_url(self):
-        with self.assertRaises(ClientError):
+        with self.assertRaises(AitoClientError):
             AitoClient("", "key")
 
     def test_error_instance_name(self):
-        with self.assertRaises(ClientError):
+        with self.assertRaises(AitoClientError):
             AitoClient("1broccoli", "key")
 
     def test_missing_both_keys(self):
-        with self.assertRaises(ClientError):
+        with self.assertRaises(AitoClientError):
             AitoClient("broccoli", "")
 
     def test_error_endpoint(self):
-        with self.assertRaises(ClientError):
+        with self.assertRaises(AitoClientRequestError):
             self.client.request('GET', 'api/v1/schema')
 
     def test_error_query(self):
-        with self.assertRaises(ClientError):
+        with self.assertRaises(AitoClientRequestError):
             self.client.request('POST', '/api/v1/_query', {"from": "catch_me_if_you_can"})

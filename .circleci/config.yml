@@ -200,39 +200,43 @@ commonYAMLStructure:
       name: run all tests execluding sql functions tests
       command: |
         . venv/bin/activate
-        python -m tests.test_parser -v suite utils
-        python -m tests.test_parser -v suite cli
+        python -m tests.parser -v suite utils
+        python -m tests.parser -v suite cli
   - &run_tests_exc_sql_functions_tests_win
     run:
       name: run all tests execluding sql functions tests
       command: |
         venv\Scripts\activate.ps1
-        python -m tests.test_parser -v suite utils
-        python -m tests.test_parser -v suite cli
+        python -m tests.parser -v suite utils
+        python -m tests.parser -v suite cli
   - &run_postgres_connection_test
     run:
       name: run postgres connection test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser -v case sql_functions.test_connection.TestPostgresConnection
+        python -m tests.parser -v case sql_functions.test_connection.TestPostgresConnection
   - &run_postgres_cli_test
     run:
       name: run postgres cli test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser -v case sql_functions.test_sql_functions_cli.TestPostgresCliFunctions
+        python -m tests.parser -v case sql_functions.test_sql_functions_cli.TestPostgresCliFunctions
   - &run_mysql_connection_test
     run:
       name: run mysql connection test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser -v case sql_functions.test_connection.TestMySQLConnection
+        python -m tests.parser -v case sql_functions.test_connection.TestMySQLConnection
   - &run_mysql_cli_test
     run:
       name: run mysql cli test
       command: |
         . venv/bin/activate
-        python -m tests.test_parser -v case sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
+        python -m tests.parser -v case sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
+  - &store_log_files
+    store_artifacts:
+      path: ./.logs
+
 jobs:
   run_tests_exclude_sql_function_tests_linux_py_36: &run_tests_exclude_sql_function_tests_linux_template
     docker:
@@ -244,6 +248,7 @@ jobs:
       - *create_venv_and_install_dependencies_linux
       - *save_venv_cache
       - *run_tests_exc_sql_functions_tests
+      - *store_log_files
 
   run_tests_exclude_sql_function_tests_linux_py_37:
     <<: *run_tests_exclude_sql_function_tests_linux_template
@@ -284,6 +289,7 @@ jobs:
       - *install_postgres_cli_linux
       - *prepare_data_postgres
       - *run_postgres_cli_test
+      - *store_log_files
 
   run_postgres_tests_linux_py_37:
     <<: *run_postgres_tests_linux_template
@@ -333,6 +339,7 @@ jobs:
       - *install_mysql_cli_linux
       - *prepare_data_mysql
       - *run_mysql_cli_test
+      - *store_log_files
 
   run_mysql_tests_linux_37:
     <<: *run_mysql_tests_template
@@ -371,6 +378,7 @@ jobs:
       - *create_venv_and_install_dependencies_osx
       - *save_venv_cache
       - *run_tests_exc_sql_functions_tests
+      - *store_log_files
 
   run_tests_exclude_sql_function_tests_osx_py_37:
     <<: *run_tests_exclude_sql_function_tests_osx_template
@@ -414,6 +422,7 @@ jobs:
       - *run_postgres_connection_test
       - *prepare_data_postgres
       - *run_postgres_cli_test
+      - *store_log_files
 
   run_postgres_tests_osx_py_37:
     <<: *run_postgres_tests_osx_template
@@ -450,6 +459,7 @@ jobs:
       - checkout
       - *install_python_and_dependencies_win
       - *run_tests_exc_sql_functions_tests_win
+      - *store_log_files
 
   run_tests_exclude_sql_function_tests_win_py_37:
     <<: *run_tests_exclude_sql_function_tests_win_template

@@ -3,7 +3,7 @@ import json
 import ndjson
 
 from aito.utils.data_frame_handler import DataFrameHandler
-from tests.test_case import TestCaseCompare
+from tests.cases import TestCaseCompare
 
 
 class TestDataFrameHandler(TestCaseCompare):
