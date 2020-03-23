@@ -371,3 +371,65 @@ class AitoClient:
 
         query = {'from': table_name, 'offset': offset, 'limit': limit}
         return self.request('POST', '/api/v1/_query', query)
+
+    def create_job(self, job_endpoint: str, query: Union[List, Dict]) -> Dict:
+        """Create a job for queries that takes longer than 30 seconds to run
+
+        `API doc <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
+        :param job_endpoint: job endpoint
+        :type job_endpoint: str
+        :param query: the query for the endpoint
+        :type query: Union[List, Dict]
+        :return: job information
+        :rtype: Dict
+        """
+        return self.request('POST', job_endpoint, query)
+
+    def get_job_status(self, job_id: str) -> Dict:
+        """Get the status of a job with the given id
+
+        `API doc <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__
+        :param job_id: the id of the job
+        :type job_id: str
+        :return: job status
+        :rtype: Dict
+        """
+        return self.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}')
+
+    def get_job_result(self, job_id: str) -> Dict:
+        """Get the result of a job with the given id
+
+        `API doc <https://aito.ai/docs/api/#get-api-v1-jobs-uuid-result>`__
+        :param job_id: the id of the job
+        :type job_id: str
+        :return: the job result
+        :rtype: Dict
+        """
+        return self.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}/result')
+
+    def job_request(
+            self, job_endpoint: str, query: Union[Dict, List] = None, polling_time: int = 10
+    ) -> Dict:
+        """Make a request to an Aito API endpoint using job
+
+        This method should be used for request that takes longer than 30 seconds, e.g: evaluate
+
+        :param job_endpoint: job end point
+        :type job_endpoint: str
+        :param query: an Aito query, defaults to None
+        :type query: Union[Dict, List], optional
+        :param polling_time: polling wait time, default to 10
+        :type polling_time: int
+        :raises AitoClientRequestError: An error occurred during request
+        :return: request JSON content if succeed
+        :rtype: Dict
+        """
+        resp = self.create_job(job_endpoint, query)
+        job_id = resp['id']
+        LOG.debug('polling job status...')
+        while True:
+            job_status_resp = self.get_job_status(job_id)
+            if 'finishedAt' in job_status_resp:
+                break
+            time.sleep(polling_time)
+        return self.get_job_result(job_id)

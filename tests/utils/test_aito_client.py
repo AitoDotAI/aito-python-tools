@@ -79,6 +79,13 @@ class TestAitoClient(TestCaseCompare):
         )
         self.assertTrue(isinstance(responses[1], RequestError))
 
+    def job_query_step(self):
+        resp = self.client.job_request('/api/v1/jobs/_query', {'from': self.default_table_name, 'offset': 0, 'limit': 1})
+        self.assertEqual(
+            resp,
+            {'offset': 0, 'total': 4, 'hits': [{'id': 0, 'name': 'some_name', 'amount': 0}]}
+        )
+
     def test_functions(self):
         self.create_table_step()
         self.upload_by_batch_step()
@@ -86,4 +93,5 @@ class TestAitoClient(TestCaseCompare):
         self.async_query_step()
         self.bounded_async_query_step()
         self.async_error_query_step()
+        self.job_query_step()
         self.delete_table_step()
