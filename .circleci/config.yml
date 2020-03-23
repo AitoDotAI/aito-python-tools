@@ -8,22 +8,44 @@ workflows:
   commit:
     jobs:
       - run_tests_exclude_sql_function_tests_linux_py_36
-      - run_tests_exclude_sql_function_tests_linux_py_37
-      - run_tests_exclude_sql_function_tests_linux_py_38
+      - run_tests_exclude_sql_function_tests_linux_py_37:
+          requires:
+            - run_tests_exclude_sql_function_tests_linux_py_36
+      - run_tests_exclude_sql_function_tests_linux_py_38:
+          requires:
+            - run_tests_exclude_sql_function_tests_linux_py_36
       - run_postgres_tests_linux_py_36
-      - run_postgres_tests_linux_py_37
-      - run_postgres_tests_linux_py_38
+      - run_postgres_tests_linux_py_37:
+          requires:
+            - run_postgres_tests_linux_py_36
+      - run_postgres_tests_linux_py_38:
+          requires:
+            - run_postgres_tests_linux_py_36
       - run_mysql_tests_linux_36
-      - run_mysql_tests_linux_37
+      - run_mysql_tests_linux_37:
+          requires:
+            - run_mysql_tests_linux_36
       - run_tests_exclude_sql_function_tests_osx_py_36
-      - run_tests_exclude_sql_function_tests_osx_py_37
-      - run_tests_exclude_sql_function_tests_osx_py_38
+      - run_tests_exclude_sql_function_tests_osx_py_37:
+          requires:
+            - run_tests_exclude_sql_function_tests_osx_py_36
+      - run_tests_exclude_sql_function_tests_osx_py_38:
+          requires:
+            - run_tests_exclude_sql_function_tests_osx_py_36
       - run_postgres_tests_osx_py_36
-      - run_postgres_tests_osx_py_37
-      - run_postgres_tests_osx_py_38
+      - run_postgres_tests_osx_py_37:
+          requires:
+            - run_postgres_tests_osx_py_36
+      - run_postgres_tests_osx_py_38:
+          requires:
+            - run_postgres_tests_osx_py_36
       - run_tests_exclude_sql_function_tests_win_py_36
-      - run_tests_exclude_sql_function_tests_win_py_37
-      - run_tests_exclude_sql_function_tests_win_py_38
+      - run_tests_exclude_sql_function_tests_win_py_37:
+          requires:
+            - run_tests_exclude_sql_function_tests_win_py_36
+      - run_tests_exclude_sql_function_tests_win_py_38:
+          requires:
+            - run_tests_exclude_sql_function_tests_win_py_36
 
 commonYAMLStructure:
   - &install_pyenv_osx

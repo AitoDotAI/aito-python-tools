@@ -22,8 +22,8 @@ class TestSQLCliFunctions(TestCaseCompare):
         if not cls.driver_name:
             raise ValueError("Missing SQL DB driver name")
 
-    def setUp(self):
-        super().setUp()
+    def tearDown(self):
+        super().tearDown()
         self.client.delete_table(self.default_table_name)
 
 

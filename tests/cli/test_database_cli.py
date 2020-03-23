@@ -37,8 +37,8 @@ class TestDatabaseCli(TestCaseCompare):
         else:
             self.assertCountEqual(table_entries, file_content)
 
-    def setUp(self):
-        super().setUp()
+    def tearDown(self):
+        super().tearDown()
         self.client.delete_table(self.default_table_name)
 
     def test_upload_batch_no_table_schema(self):

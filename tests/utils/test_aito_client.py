@@ -80,12 +80,10 @@ class TestAitoClient(TestCaseCompare):
         self.assertTrue(isinstance(responses[1], RequestError))
 
     def test_functions(self):
-        self.delete_table_step()
         self.create_table_step()
         self.upload_by_batch_step()
         self.query_table_entries_step()
         self.async_query_step()
         self.bounded_async_query_step()
         self.async_error_query_step()
-
-
+        self.delete_table_step()
