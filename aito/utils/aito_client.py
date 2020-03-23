@@ -38,26 +38,13 @@ class AitoClient:
     :ivar query_endpoints: recognized query API endpoints
     :ivar database_endpoints: recognized database API endpoints
     """
-    request_methods = {
+    _request_methods = {
         'PUT': requests.put, 'POST': requests.post, 'GET': requests.get, 'DELETE': requests.delete
     }
-
-    query_endpoints = [
-        '/api/v1/_search',
-        '/api/v1/_predict',
-        '/api/v1/_recommend',
-        '/api/v1/_evaluate',
-        '/api/v1/_similarity',
-        '/api/v1/_match',
-        '/api/v1/_relate',
-        '/api/v1/_query',
-        '/version'
-    ]
-
-    database_endpoints = [
-        '/api/v1/schema',
-        '/api/v1/data'
-    ]
+    _query_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
+    _query_endpoints = [f'/api/v1/{p}' for p in _query_paths] + ['/version']
+    _database_endpoints = ['/api/v1/schema', '/api/v1/data']
+    _job_endpoint = '/api/v1/jobs'
 
     def __init__(self, instance_url: str, api_key: str, check_credentials: bool = True):
         """Constructor method
@@ -78,13 +65,16 @@ class AitoClient:
                 raise BaseError('failed to instantiate Aito Client, please check your credentials')
 
     def _check_endpoint(self, endpoint: str):
-        """warn if the given endpoint is not recognized
+        """raise error if erroneous endpoint and warn if the unrecognied endpoint
 
         :param endpoint: endpoint
         :return:
         """
-        is_database_path = any([endpoint.startswith(db_path) for db_path in self.database_endpoints])
-        if not is_database_path and endpoint not in self.query_endpoints:
+        if not endpoint.startswith('/'):
+            raise BaseError('endpoint must start with `/` character')
+        is_database_path = any([endpoint.startswith(db_endpoint) for db_endpoint in self._database_endpoints])
+        is_job_path = endpoint.startswith(self._job_endpoint)
+        if not is_database_path and not is_job_path and endpoint not in self._query_endpoints:
             LOG.warning(f'unrecognized endpoint {endpoint}')
 
     async def _async_request(

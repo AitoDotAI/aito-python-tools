@@ -26,7 +26,7 @@ class TestAitoClient(TestCaseCompare):
             AitoClient(os.environ['AITO_INSTANCE_URL'], "under_pressure")
 
     def test_error_endpoint(self):
-        with self.assertRaises(RequestError):
+        with self.assertRaises(BaseError):
             self.client.request('GET', 'api/v1/schema')
 
     def test_error_query(self):
