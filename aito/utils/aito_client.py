@@ -162,7 +162,7 @@ class AitoClient:
         self._check_endpoint(endpoint)
         url = self.url + endpoint
         try:
-            resp = self.request_methods[method](url, headers=self.headers, json=query)
+            resp = self._request_methods[method](url, headers=self.headers, json=query)
             resp.raise_for_status()
             json_resp = resp.json()
         except Exception as e:
@@ -308,13 +308,14 @@ class AitoClient:
 
         LOG.info(f'uploaded {populated}/{len(entries)} entries to table `{table_name}`')
 
-    def populate_table_by_file_upload(self, table_name: str, binary_file_object: BinaryIO):
+    def populate_table_by_file_upload(self, table_name: str, binary_file_object: BinaryIO, polling_time: int = 10):
         """upload binary file object to a table `API doc <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
 
         :param table_name: the name of the table
         :type table_name: str
         :param binary_file_object: binary file object
         :type binary_file_object: BinaryIO
+        :param polling_time: polling wait time
         :raises AitoClientRequestError: An error occurred during the upload of the file to S3
         """
         _l = LOG
@@ -338,7 +339,7 @@ class AitoClient:
         LOG.debug('trigger file processing...')
         self.request('POST', session_end_point)
         LOG.info('triggered file processing')
-        start_polling = default_timer()
+        LOG.debug('polling processing status...')
         while True:
             try:
                 processing_progress = self.request('GET', session_end_point)
@@ -350,17 +351,7 @@ class AitoClient:
                     break
             except Exception as e:
                 LOG.debug(f'failed to get file upload status: {e}')
-            time_elapsed = default_timer() - start_polling
-            if time_elapsed < 60:
-                sleeping_time = 5
-            elif time_elapsed < 180:
-                sleeping_time = 15
-            elif time_elapsed < 300:
-                sleeping_time = 30
-            else:
-                sleeping_time = 60
-            time.sleep(sleeping_time)
-
+            time.sleep(polling_time)
         LOG.info(f'uploaded file object to table `{table_name}`')
 
     def query_table_entries(self, table_name: str, offset: int = 0, limit: int = 10) -> Dict:
