@@ -75,21 +75,51 @@ class AitoClient:
             try:
                 self.get_version()
             except Exception:
-                raise AitoClientError('failed to instantiate Aito Client, please check your credentials')
+                raise BaseError('failed to instantiate Aito Client, please check your credentials')
 
     def _check_endpoint(self, endpoint: str):
+        """warn if the given endpoint is not recognized
+
+        :param endpoint: endpoint
+        :return:
+        """
         is_database_path = any([endpoint.startswith(db_path) for db_path in self.database_endpoints])
         if not is_database_path and endpoint not in self.query_endpoints:
             LOG.warning(f'unrecognized endpoint {endpoint}')
 
-    async def _async_fetch(self, session: ClientSession, method: str, path: str, json_data: Dict):
-        self._check_endpoint(path)
-        LOG.debug(f'async {method} {path} {json_data}')
-        async with session.request(method=method, url=self.url + path, json=json_data, headers=self.headers) as resp:
-            json_resp = await resp.json()
-            return json_resp
+    async def _async_request(
+            self, session: ClientSession, method: str, endpoint: str, query: Union[List, Dict]
+    ) -> Tuple[int, Union[Dict, List]]:
+        """async a request
 
-    def async_requests(self, methods: List[str], endpoints: List[str], queries: List[Dict]) -> List[Dict]:
+        :param session: aiohttp client session
+        :param method: request method
+        :param endpoint: request endpoint
+        :param query: request query
+        :return: tuple of request status code and request json content
+        """
+        self._check_endpoint(endpoint)
+        LOG.debug(f'async {method} to {endpoint} with query {query}')
+        async with session.request(method=method, url=self.url + endpoint, json=query, headers=self.headers) as resp:
+            return resp.status, await resp.json()
+
+    async def _bounded_async_request(self, semaphore: asyncio.Semaphore, *args) -> Tuple[int, Union[Dict, List]]:
+        """bounded requests by semaphore
+
+        :param semaphore: asyncio Semaphore
+        :param args: request args
+        :return:
+        """
+        async with semaphore:
+            return await self._async_request(*args)
+
+    def async_requests(
+            self,
+            methods: List[str],
+            endpoints: List[str],
+            queries: List[Union[List, Dict]],
+            batch_size: int = 10
+    ) -> List[Dict]:
         """async multiple requests
 
         This method is useful when sending a batch of, for example, predict requests.
@@ -100,22 +130,30 @@ class AitoClient:
         :type endpoints: List[str]
         :param queries: list of request queries
         :type queries: List[Dict]
-        :return: list of responses
+        :param batch_size: number of queries to be sent at a time
+        :type batch_size: int
+        :return: list of request response or exception if request did not succeed
         :rtype: List[Dict]
         """
         async def run():
             async with ClientSession() as session:
-                tasks = [self._async_fetch(session, method, endpoints[idx], queries[idx])
-                         for idx, method in enumerate(methods)]
-                return await asyncio.gather(*tasks)
+                tasks = [
+                    self._bounded_async_request(semaphore, session, method, endpoints[idx], queries[idx])
+                    for idx, method in enumerate(methods)
+                ]
+                return await asyncio.gather(*tasks, return_exceptions=True)
 
-        request_count = len(methods)
-        LOG.debug(f'async {request_count} requests')
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        semaphore = asyncio.Semaphore(batch_size)
+        loop = asyncio.get_event_loop()
         responses = loop.run_until_complete(run())
-        LOG.debug(f'responses: {responses}')
-        LOG.info(f'requested {request_count} requests')
+        for resp_idx, resp in enumerate(responses):
+            if isinstance(resp, Exception):
+                responses[resp_idx] = RequestError(methods[resp_idx], endpoints[resp_idx], queries[resp_idx], resp)
+            # manually handling raise for status since aiohttp doesnt return response content with raise for status
+            elif resp[0] >= 400:
+                responses[resp_idx] = RequestError(methods[resp_idx], endpoints[resp_idx], queries[resp_idx], resp[1])
+            else:
+                responses[resp_idx] = resp[1]
         return responses
 
     def request(self, method: str, endpoint: str, query: Union[Dict, List] = None) -> Dict:
