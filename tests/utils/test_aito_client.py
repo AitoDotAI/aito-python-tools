@@ -11,17 +11,13 @@ class TestAitoClient(TestCaseCompare):
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
 
-    def test_no_instance_url(self):
+    def test_error_instance_url(self):
         with self.assertRaises(AitoClientError):
-            AitoClient("", "key")
+            AitoClient("dont_stop_me_now", "key")
 
-    def test_error_instance_name(self):
+    def test_error_api_key_keys(self):
         with self.assertRaises(AitoClientError):
-            AitoClient("1broccoli", "key")
-
-    def test_missing_both_keys(self):
-        with self.assertRaises(AitoClientError):
-            AitoClient("broccoli", "")
+            AitoClient(os.environ['AITO_INSTANCE_URL'], "under_pressure")
 
     def test_error_endpoint(self):
         with self.assertRaises(AitoClientRequestError):

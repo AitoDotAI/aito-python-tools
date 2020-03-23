@@ -54,16 +54,23 @@ class AitoClient:
         '/api/v1/data'
     ]
 
-    def __init__(self, instance_url: str, api_key: str):
+    def __init__(self, instance_url: str, api_key: str, check_credentials: bool = True):
         """Constructor method
         :param instance_url: Aito instance url
         :type instance_url: str
         :param api_key: Aito instance API key
         :type api_key: str
+        :param check_credentials: Check the given credentials by requesting Aito instance version, default to True
+        :type check_credentials: bool
         :raises AitoClientError: An error occurred during the creation of AitoClient
         """
         self.url = instance_url
         self.headers = {'Content-Type': 'application/json', 'x-api-key': api_key}
+        if check_credentials:
+            try:
+                self.get_version()
+            except Exception:
+                raise AitoClientError('failed to instantiate Aito Client, please check your credentials')
 
     def _check_endpoint(self, endpoint: str):
         is_database_path = any([endpoint.startswith(db_path) for db_path in self.database_endpoints])
