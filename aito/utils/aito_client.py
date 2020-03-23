@@ -1,29 +1,34 @@
 import asyncio
 import logging
-import re
 import time
 from timeit import default_timer
-from typing import Dict, List, BinaryIO, Union
+from typing import Dict, List, BinaryIO, Union, Tuple
 
 import requests
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientResponseError
 
 LOG = logging.getLogger('AitoClient')
 
 
-class AitoClientError(Exception):
+class BaseError(Exception):
     def __init__(self, message):
-        super().__init__(message)
         LOG.error(message)
+        LOG.debug(message, stack_info=True)
         self.message = message
 
     def __str__(self):
         return f'AitoClientError: {self.message}'
 
 
-class AitoClientRequestError(AitoClientError):
-    def __str__(self):
-        return f'AitoClient failed to make request {self.message}'
+class RequestError(BaseError):
+    def __init__(self, method: str, endpoint: str, query: Union[List, Dict], error: Exception):
+        if isinstance(error, requests.HTTPError):
+            error_msg = error.response.json()['message']
+        elif isinstance(error, ClientResponseError):
+            error_msg = error.message
+        else:
+            error_msg = str(error)
+        super().__init__(f'failed to {method} to {endpoint} with query {query}) {error_msg}')
 
 
 class AitoClient:
@@ -113,11 +118,11 @@ class AitoClient:
         LOG.info(f'requested {request_count} requests')
         return responses
 
-    def request(self, req_method: str, endpoint: str, query: Union[Dict, List] = None) -> Dict:
+    def request(self, method: str, endpoint: str, query: Union[Dict, List] = None) -> Dict:
         """Make a request to an Aito API endpoint
 
-        :param req_method: request method
-        :type req_method: str
+        :param method: request method
+        :type method: str
         :param endpoint: an Aito API endpoint
         :type endpoint: str
         :param query: an Aito query, defaults to None
@@ -127,21 +132,13 @@ class AitoClient:
         :rtype: Dict
         """
         self._check_endpoint(endpoint)
-        LOG.debug(f'`{req_method}` to `{endpoint}` with query: {query}')
         url = self.url + endpoint
         try:
-            resp = self.request_methods[req_method](url, headers=self.headers, json=query)
-        except Exception as e:
-            raise AitoClientRequestError(e)
-        try:
+            resp = self.request_methods[method](url, headers=self.headers, json=query)
             resp.raise_for_status()
-        except requests.HTTPError as e:
-            raise AitoClientRequestError(f'{e} {resp.text}')
-        try:
-            LOG.debug(f'response content : {resp.content}')
             json_resp = resp.json()
         except Exception as e:
-            raise AitoClientRequestError(f'unknown error: {e}')
+            raise RequestError(method, endpoint, query, e)
         return json_resp
 
     def get_version(self) -> Dict:
@@ -308,7 +305,7 @@ class AitoClient:
             r = requests.request(upload_req_method, s3_url, data=binary_file_object)
             r.raise_for_status()
         except Exception as e:
-            raise AitoClientRequestError(f'fail to upload file to S3: {e}')
+            raise BaseError(f'fail to upload file to S3: {e}')
         LOG.debug('uploaded file to S3')
         LOG.debug('trigger file processing...')
         self.request('POST', session_end_point)
