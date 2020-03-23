@@ -54,25 +54,15 @@ class AitoClient:
         '/api/v1/data'
     ]
 
-    def __init__(self, instance_name: str, api_key: str):
+    def __init__(self, instance_url: str, api_key: str):
         """Constructor method
-
-        :param instance_name: Aito instance name
-        :type instance_name: str
+        :param instance_url: Aito instance url
+        :type instance_url: str
         :param api_key: Aito instance API key
         :type api_key: str
         :raises AitoClientError: An error occurred during the creation of AitoClient
         """
-        if not instance_name:
-            raise AitoClientError('instance name is required')
-        instance_name = instance_name.strip()
-        if not re.fullmatch('^[a-z][a-z0-9-]*', instance_name):
-            raise AitoClientError(
-                'instance name must begin with a letter and can only contain lowercase letters, numbers, and dashes'
-            )
-        self.url = f'https://{instance_name}.api.aito.ai'
-        if not api_key:
-            raise AitoClientError('instance API key is required')
+        self.url = instance_url
         self.headers = {'Content-Type': 'application/json', 'x-api-key': api_key}
 
     def _check_endpoint(self, endpoint: str):

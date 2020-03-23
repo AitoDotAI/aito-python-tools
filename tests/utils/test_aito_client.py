@@ -9,7 +9,7 @@ class TestAitoClient(TestCaseCompare):
     def setUpClass(cls):
         super().setUpClass(test_path='utils/aito_client')
         env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_API_KEY'])
+        cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
 
     def test_no_instance_url(self):
         with self.assertRaises(AitoClientError):

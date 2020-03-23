@@ -17,7 +17,7 @@ class TestDatabaseCli(TestCaseCompare):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.main_parser = MainParserWrapper()
         env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_INSTANCE_NAME'], env_var['AITO_API_KEY'])
+        cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
         with (cls.input_folder / "invoice_aito_schema.json").open() as f:
             cls.default_table_schema = json.load(f)
         cls.default_table_name = f"invoice_{uuid4()}"

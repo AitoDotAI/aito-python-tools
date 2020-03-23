@@ -250,14 +250,14 @@ def add_database_parser(action_subparsers, enable_sql_functions):
     database_parser.add_aito_credentials_arguments_flags(add_use_env_arg=True)
     database_parser.epilog += '''
 To see help for a specific operation:
-  aito database <operation> -h  
+  aito database <operation> -h
 
 Example:
   aito database quick-add-table myTable.csv
   aito database quick-add-table-from-sql "PostgreSQL Unicode" tableName 'SELECT * FROM tableName;'
   aito database create-table tableName < path/to/tableSchema
   aito database -e path/to/myCredentials.env upload-file myTable path/to/myFile
-  aito database -i MY_INSTANCE_NAME -k MY_API_KEY upload-batch myTable < path/to/myTableEntries
+  aito database -i MY_INSTANCE_URL -k MY_API_KEY upload-batch myTable < path/to/myTableEntries
   '''
     operation_subparsers = database_parser.add_subparsers(title="operation",
                                                           description="operation to perform",

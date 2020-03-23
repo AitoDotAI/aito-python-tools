@@ -259,7 +259,7 @@ There are 3 ways to set up the credentials:
 
 1. The most convenient way is to set up the following environment variables::
 
-    $ export AITO_INSTANCE_NAME=your-instance-name
+    $ export AITO_INSTANCE_URL=your-instance-url
     $ export AITO_API_KEY=your-api-key
 
   You can now perform database operations::
@@ -276,9 +276,9 @@ There are 3 ways to set up the credentials:
 
 3. Using flags:
 
-  You can set up the credentials using ``-i`` flag for the instance name and ``-k`` flag for the api key::
+  You can set up the credentials using ``-i`` flag for the instance url and ``-k`` flag for the api key::
 
-    $ aito database -i MY_AITO_INSTANCE_NAME -k MY_API_KEY <operation> ...
+    $ aito database -i MY_AITO_INSTANCE_URL -k MY_API_KEY <operation> ...
 
 .. note::
 

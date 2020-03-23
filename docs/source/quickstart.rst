@@ -92,7 +92,7 @@ Upload the Data
 
   First, :ref:`cliSetUpAitoCredentials`. The easiest way is by using the environment variables::
 
-    $ export AITO_INSTANCE_NAME=your-instance-name
+    $ export AITO_INSTANCE_URL=your-instance-url
     $ export AITO_API_KEY=your-api-key
 
   You can then upload the data by either:
@@ -165,7 +165,7 @@ The :ref:`apiAitoClient` can create a table using a table name and a table schem
         "description": { "type": "Text", "analyzer": "English" }
       }
     }
-    aito_client = AitoClient(instance_name='your_aito_instance_name', api_key='your_rw_api_key')
+    aito_client = AitoClient(instance_url='your_aito_instance_url', api_key='your_rw_api_key')
     aito_client.put_table_schema(table_name='your-table-name', table_schema=table_schema)
 
 .. _sdkQuickstartConvertData:
@@ -213,7 +213,7 @@ The :ref:`apiAitoClient` can upload the data with either `Batch Upload`_ or `Fil
 .. code:: python
 
   from aito.utils.aito_client import AitoClient
-  aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
+  aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
 
   # Batch upload
   aito_client.populate_table_entries(table_name='reddit', entries=entries)

@@ -60,7 +60,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 .. code:: python
 
   from aito.utils.aito_client import AitoClient
-  aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
+  aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
 
 - `Create a table schema <https://aito.ai/docs/api/#put-api-v1-schema-table>`_
 
@@ -131,7 +131,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 .. code:: python
 
   from aito.utils.aito_client import AitoClient
-  aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
+  aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
 
 - `Upload a list of table entries <https://aito.ai/docs/api/#post-api-v1-data-table-batch>`__
 

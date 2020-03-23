@@ -53,7 +53,7 @@ To get you data into Aito you will have to go through the following steps:
 2. [Upload Aito schema](#2-upload-aito-schema)
 3. [Upload data](#3-upload-data)
 
-#### 1. Define Aito schema 
+#### 1. Define Aito schema
 
 You can either create the schema manually, by using your own code or use the infer feature of the Aito python library.
 
@@ -77,9 +77,9 @@ dataframe.columns = dataframe.columns.str.replace(" ", "_")
 schema_handler = SchemaHandler()
 table_schema = schema_handler.infer_table_schema_from_pandas_data_frame(dataframe)
 ```
-#### 2. Upload Aito schema 
+#### 2. Upload Aito schema
 
-To upload your Aito schema, you will need the name of your Aito instance and the read-write API key.
+To upload your Aito schema, you will need the url of your Aito instance and the read-write API key.
 
 ##### Upload Aito table schema
 ```python
@@ -102,7 +102,7 @@ table_schema = {
       }
   }
 
-aito_client = AitoClient(instance_name="your-aito-instance-name", api_key="your-rw-api-key")
+aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
 aito_client.put_table_schema(table_name=aito_table_name, table_schema=table_schema)
 
 # Check your table schema in Aito
@@ -144,7 +144,7 @@ database_schema = {
   }
 }
 
-aito_client = AitoClient(instance_name="your-aito-instance-name", api_key="your-rw-api-key")
+aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
 aito_client.put_database_schema(database_schema=database_schema)
 
 # Check your DB schema in Aito
@@ -176,7 +176,7 @@ dataframe.columns = dataframe.columns.str.replace(" ", "_")
 data = dataframe.to_dict(orient="records")
 
 # Upload the data
-aito_client = AitoClient(instance_name="your-aito-instance-name", api_key="your-rw-api-key")
+aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
 aito_client.populate_table_entries(table_name=aito_table_name, entries=data)
 
 # Check the data
@@ -213,7 +213,7 @@ aito_table_name = "your-table-name-in-aito-schema"
 file_path = Path("reddit_sample.ndjson.gz")
 
 # Upload the data
-aito_client = AitoClient(instance_name="your-aito-instance-name", api_key="your-rw-api-key")
+aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
 aito_client.populate_table_by_file_upload(table_name=aito_table_name, file_path=file_path)
 
 # Check the data
@@ -230,14 +230,14 @@ from aito.utils.aito_client import AitoClient
 
 aito_table_name = "your-table-name-in-aito-schema"
 
-aito_client = AitoClient(instance_name="your-aito-instance-name", api_key="your-rw-api-key")
+aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
 aito_client.delete_table(table_name=aito_table_name)
 ```
 #### Delete entire database
 ```python
 from aito.utils.aito_client import AitoClient
 
-aito_client = AitoClient(instance_name="your-aito-instance-name", api_key="your-rw-api-key")
+aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
 aito_client.delete_database()
 ```
 

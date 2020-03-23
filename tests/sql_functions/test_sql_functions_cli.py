@@ -13,7 +13,7 @@ class TestSQLCliFunctions(TestCaseCompare):
         super().setUpClass(test_path='sql_functions/cli')
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_vars = os.environ
-        cls.client = AitoClient(env_vars['AITO_INSTANCE_NAME'], env_vars['AITO_API_KEY'])
+        cls.client = AitoClient(env_vars['AITO_INSTANCE_URL'], env_vars['AITO_API_KEY'])
         cls.default_table_name = f"invoice_{uuid4()}"
         cls.prefix_args = ['python', '-m', 'aito.cli.main_parser_wrapper']
         if os.getenv('TEST_BUILT_PACKAGE'):

@@ -71,12 +71,12 @@ class AitoArgParser(argparse.ArgumentParser):
         if add_use_env_arg:
             args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
                               help='set up the credentials using a .env file containing the required env variables')
-        args.add_argument('-i', '--instance-name', type=str, default='.env', help='specify aito instance name')
+        args.add_argument('-i', '--instance-url', type=str, default='.env', help='specify aito instance url')
         args.add_argument('-k', '--api-key', type=str, default='.env',
                           help='specify aito read-write or read-only API key')
         epilog_str = '''You must provide your Aito credentials to execute database operations
 If no Aito credential is given, the following environment variables are used to connect to your Aito database:
-  AITO_INSTANCE_NAME, AITO_API_KEY
+  AITO_INSTANCE_URL, AITO_API_KEY
   '''
         if not self.epilog:
             self.epilog = epilog_str
@@ -99,7 +99,7 @@ If no Aito credential is given, the following environment variables are used to 
 
         epilog_str = '''Each database requires different odbc driver. Please refer to our docs for more info.
 If no database connection is given, the following environment variable are used to connect to your SQL database:
-  SQL_SERVER, SQL_PORT, SQL_DATABASE, SQL_USERNAME, SQL_PASSWORD          
+  SQL_SERVER, SQL_PORT, SQL_DATABASE, SQL_USERNAME, SQL_PASSWORD
   '''
         if not self.epilog:
             self.epilog = epilog_str
@@ -112,8 +112,8 @@ If no database connection is given, the following environment variable are used 
             load_dotenv(env_file_path)
 
         client_args = {
-            'instance_name': self.parse_env_variable('AITO_INSTANCE_NAME') if parsed_args['instance_name'] == '.env'
-            else parsed_args['instance_name'],
+            'instance_url': self.parse_env_variable('AITO_INSTANCE_URL') if parsed_args['instance_url'] == '.env'
+            else parsed_args['instance_url'],
             'api_key': self.parse_env_variable('AITO_API_KEY') if parsed_args['api_key'] == '.env'
             else parsed_args['api_key']
         }

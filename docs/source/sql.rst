@@ -177,7 +177,7 @@ You can connect to your SQL Database using the :ref:`apiSQLConnection`. The exam
   query_results_entries = query_results_df.to_dict(orient="records")
 
   # create aito client
-  aito_client = AitoClient(instance_name="your_aito_instance_name", api_key="your_rw_api_key")
+  aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
   # upload entries to table
   aito_client.populate_table_entries(table_name='table', entries=query_results_entries)
 

@@ -152,7 +152,7 @@ Performing operation with your Aito database instance always requires credential
 There are 3 ways to set up the credentials:
 * The most convinient way is to set up the following environment variables:
   ```
-  AITO_INSTANCE_NAME=your-instance-name
+  AITO_INSTANCE_URL=your-instance-url
   AITO_API_KEY=your-api-key
   ```
 
@@ -171,9 +171,9 @@ There are 3 ways to set up the credentials:
   ```
 * Using flags:
 
-  You can set up the credentials using `-i` flag for the instance name, `-k` flag for the api key:
+  You can set up the credentials using `-i` flag for the instance url, `-k` flag for the api key:
   ```bash
-  aito database -i MY_AITO_INSTANCE_NAME -k MY_API_KEY <operation> ...
+  aito database -i MY_AITO_INSTANCE_URL -k MY_API_KEY <operation> ...
   ```
 
 #### Some common operations
