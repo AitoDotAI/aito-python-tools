@@ -1,11 +1,12 @@
 import asyncio
 import logging
 import time
-from timeit import default_timer
+from pathlib import Path
 from typing import Dict, List, BinaryIO, Union, Tuple
 
 import requests
 from aiohttp import ClientSession, ClientResponseError
+from .file_utils import gzip_file
 
 LOG = logging.getLogger('AitoClient')
 
@@ -62,7 +63,7 @@ class AitoClient:
                 raise BaseError('failed to instantiate Aito Client, please check your credentials')
 
     def _check_endpoint(self, endpoint: str):
-        """raise error if erroneous endpoint and warn if the unrecognied endpoint
+        """raise error if erroneous endpoint and warn if the unrecognized endpoint
 
         :param endpoint: endpoint
         :return:
@@ -119,7 +120,7 @@ class AitoClient:
         :type queries: List[Dict]
         :param batch_size: number of queries to be sent at a time
         :type batch_size: int
-        :return: list of request response or exception if request did not succeed
+        :return: list of request response or exception if a request did not succeed
         :rtype: List[Dict]
         """
         async def run():
@@ -153,7 +154,7 @@ class AitoClient:
         :param query: an Aito query, defaults to None
         :type query: Union[Dict, List], optional
         :raises AitoClientRequestError: An error occurred during request
-        :return: request JSON content if succeed
+        :return: request JSON content
         :rtype: Dict
         """
         self._check_endpoint(endpoint)
@@ -179,9 +180,8 @@ class AitoClient:
 
         :param database_schema: Aito database schema
         :type database_schema: Dict
-        :return: the database schema if successful
-        :rtype: Dict
-        """
+        :return: the database schema
+        :rtype: Dict        """
         r = self.request('PUT', '/api/v1/schema', database_schema)
         LOG.info('database schema created')
         return r
@@ -189,7 +189,7 @@ class AitoClient:
     def get_database_schema(self) -> Dict:
         """get the schema of the database `API doc <https://aito.ai/docs/api/#get-api-v1-schema>`__
 
-        :return: Aito database schema if successful
+        :return: Aito database schema
         :rtype: Dict
         """
         return self.request('GET', '/api/v1/schema')
@@ -211,7 +211,7 @@ class AitoClient:
         :type table_name: str
         :param table_schema: Aito table schema
         :type table_schema: Dict
-        :return: the table schema if successful
+        :return: the table schema
         :rtype: Dict
         """
         r = self.request('PUT', f'/api/v1/schema/{table_name}', table_schema)
@@ -223,7 +223,7 @@ class AitoClient:
 
         :param table_name: the name of the table
         :type table_name: str
-        :return: the table schema if successful
+        :return: the table schema
         :rtype: Dict
         """
         return self.request('GET', f'/api/v1/schema/{table_name}')
@@ -233,7 +233,7 @@ class AitoClient:
 
         :param table_name: the name of the table
         :type table_name: str
-        :return: deleted table if successful
+        :return: deleted table
         :rtype: Dict
         """
         r = self.request('DELETE', f'/api/v1/schema/{table_name}')
@@ -388,24 +388,6 @@ class AitoClient:
         if optimize_on_finished:
             self.optimize_table(table_name)
 
-    def query_table_entries(self, table_name: str, offset: int = 0, limit: int = 10) -> Dict:
-        """query entries of a table `API doc <https://aito.ai/docs/api/#post-api-v1-query>`__
-
-        use offset and limit for `pagination <https://aito.ai/docs/api/#pagination>`__
-
-        :param table_name: the name of the table
-        :type table_name: str
-        :param offset: offset, defaults to 0
-        :type offset: int, optional
-        :param limit: limit, defaults to 10
-        :type limit: int, optional
-        :return: the table entries if successful
-        :rtype: Dict
-        """
-
-        query = {'from': table_name, 'offset': offset, 'limit': limit}
-        return self.request('POST', '/api/v1/_query', query)
-
     def create_job(self, job_endpoint: str, query: Union[List, Dict]) -> Dict:
         """Create a job for queries that takes longer than 30 seconds to run
 
@@ -455,7 +437,7 @@ class AitoClient:
         :param polling_time: polling wait time, default to 10
         :type polling_time: int
         :raises AitoClientRequestError: An error occurred during request
-        :return: request JSON content if succeed
+        :return: request JSON content
         :rtype: Dict
         """
         resp = self.create_job(job_endpoint, query)
@@ -467,3 +449,102 @@ class AitoClient:
                 break
             time.sleep(polling_time)
         return self.get_job_result(job_id)
+
+    def get_table_size(self, table_name: str) -> int:
+        """return number of entries in a table
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :return: number of entries in the table
+        :rtype int
+        """
+        return self.request('POST', '/api/v1/_query', {'from': table_name})['total']
+
+    def query_table_entries(self, table_name: str, offset: int = 0, limit: int = 10) -> Dict:
+        """query entries of a table `API doc <https://aito.ai/docs/api/#post-api-v1-query>`__
+
+        use offset and limit for `pagination <https://aito.ai/docs/api/#pagination>`__
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param offset: offset, defaults to 0
+        :type offset: int, optional
+        :param limit: limit, defaults to 10
+        :type limit: int, optional
+        :return: the table entries
+        :rtype: Dict
+        """
+
+        query = {'from': table_name, 'offset': offset, 'limit': limit}
+        return self.request('POST', '/api/v1/_query', query)
+
+    def query_table_all_entries(self, table_name: str, batch_size: int = 5000) -> List[Dict]:
+        """query all entries in a table
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param batch_size: number of entries to be queried at once
+        :type batch_size: int
+        :return: list of all entries in the table
+        :rtype List[Dict]
+        """
+        LOG.debug(f'getting all entries of table {table_name} in batch of {batch_size}...')
+        table_size = self.get_table_size(table_name)
+        all_entries = []
+        begin_idx = 0
+        while begin_idx < table_size:
+            last_idx = begin_idx + batch_size if begin_idx + batch_size <= table_size else table_size
+            LOG.debug(f'getting table chunk {begin_idx}:{last_idx}...')
+            all_entries += self.request(
+                'POST', '/api/v1/_query', {'from': table_name, 'offset': begin_idx, 'limit': batch_size}
+            )['hits']
+            LOG.debug(f'queried chunk {begin_idx}:{last_idx}')
+            begin_idx += batch_size
+        LOG.info(f'queried all entries of table `{table_name}`')
+        return all_entries
+
+    def download_table(
+            self,
+            table_name: str,
+            output_folder: Path,
+            file_name: str = None,
+            batch_size: int = 5000,
+            gzip_output: bool = False
+    ):
+        """download a table to a NDJSON file or a gzipped NDJSON file
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param output_folder: the folder that contains the output file
+        :type output_folder: pathlib.Path
+        :parm file_name: the name of the output file, default to None. If not name is given, use the table name
+        :type file_name: str
+        :param batch_size: number of entries to be downloaded at once, default to 5000
+        :type batch_size: int
+        :param gzip_output: gzip the output file, default to False
+        :type gzip_output: bool
+        """
+        import ndjson
+        if not file_name:
+            file_name = table_name
+        out_file_path = output_folder / f'{file_name}.ndjson'
+        if out_file_path.exists():
+            LOG.warning(f'output file {out_file_path} already exists')
+        LOG.debug(f'downloading table `{table_name}` to {out_file_path}')
+        table_size = self.get_table_size(table_name)
+        begin_idx = 0
+        while begin_idx < table_size:
+            last_idx = begin_idx + batch_size if begin_idx + batch_size <= table_size else table_size
+            LOG.debug(f'downloading table chunk {begin_idx}:{last_idx}...')
+            hits = self.request(
+                'POST', '/api/v1/_query', {'from': table_name, 'offset': begin_idx, 'limit': batch_size}
+            )['hits']
+            with out_file_path.open('a+') as f:
+                ndjson.dump(hits, f)
+                if last_idx != table_size:
+                    f.write('\n')
+            LOG.debug(f'downloaded table chunk {begin_idx}/{last_idx}')
+            begin_idx += batch_size
+        if gzip_output:
+            gzip_file(out_file_path, keep=False)
+        LOG.info(f'downloaded table `{table_name}` to {out_file_path}')

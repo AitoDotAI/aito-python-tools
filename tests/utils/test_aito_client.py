@@ -1,9 +1,10 @@
+import json
 import os
+from uuid import uuid4
 
 from aito.utils.aito_client import AitoClient, BaseError, RequestError
+from aito.utils.file_utils import read_ndjson_gz_file
 from tests.cases import TestCaseCompare
-from uuid import uuid4
-import json
 
 
 class TestAitoClient(TestCaseCompare):
@@ -92,6 +93,22 @@ class TestAitoClient(TestCaseCompare):
         self.client.populate_table_entries_by_batches(self.default_table_name, entries, 1, False)
         self.client.optimize_table(self.default_table_name)
 
+    def get_all_table_entries_step(self):
+        entries = self.client.query_table_all_entries(self.default_table_name)
+        self.assertEqual(entries, [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(0, 8)])
+
+    def download_table_step(self):
+        self.client.download_table(self.default_table_name, self.output_folder)
+        import ndjson
+        with (self.output_folder / f'{self.default_table_name}.ndjson').open() as f:
+            entries = ndjson.load(f)
+        self.assertEqual(entries,  [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(0, 8)])
+
+    def download_table_gzipped_step(self):
+        self.client.download_table(self.default_table_name, self.output_folder, file_name='invoices', gzip_output=True)
+        entries = read_ndjson_gz_file(self.output_folder / 'invoices.ndjson.gz')
+        self.assertEqual(entries,  [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(0, 8)])
+
     def test_functions(self):
         self.create_table_step()
         self.upload_by_batch_step()
@@ -101,4 +118,8 @@ class TestAitoClient(TestCaseCompare):
         self.async_error_query_step()
         self.job_query_step()
         self.optimize_step()
+        self.get_all_table_entries_step()
+        self.download_table_step()
+        self.download_table_gzipped_step()
         self.delete_table_step()
+
