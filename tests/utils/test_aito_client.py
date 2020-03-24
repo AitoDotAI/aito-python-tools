@@ -45,7 +45,7 @@ class TestAitoClient(TestCaseCompare):
 
     def upload_by_batch_step(self):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(4)]
-        self.client.populate_table_entries_by_batches(self.default_table_name, entries, 2)
+        self.client.populate_table_entries_by_batches(self.default_table_name, entries, 2, False)
 
     def query_table_entries_step(self):
         entries = self.client.query_table_entries(self.default_table_name, 2, 2)['hits']
@@ -80,11 +80,17 @@ class TestAitoClient(TestCaseCompare):
         self.assertTrue(isinstance(responses[1], RequestError))
 
     def job_query_step(self):
-        resp = self.client.job_request('/api/v1/jobs/_query', {'from': self.default_table_name, 'offset': 0, 'limit': 1})
+        resp = self.client.job_request(
+            '/api/v1/jobs/_query', {'from': self.default_table_name, 'offset': 0, 'limit': 1})
         self.assertEqual(
             resp,
             {'offset': 0, 'total': 4, 'hits': [{'id': 0, 'name': 'some_name', 'amount': 0}]}
         )
+
+    def optimize_step(self):
+        entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(4, 8)]
+        self.client.populate_table_entries_by_batches(self.default_table_name, entries, 1, False)
+        self.client.optimize_table(self.default_table_name)
 
     def test_functions(self):
         self.create_table_step()
@@ -94,4 +100,5 @@ class TestAitoClient(TestCaseCompare):
         self.bounded_async_query_step()
         self.async_error_query_step()
         self.job_query_step()
+        self.optimize_step()
         self.delete_table_step()

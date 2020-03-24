@@ -38,7 +38,7 @@ def generate_parser() -> ArgParser:
         help=f"Path to log dir containing debug log (default: .logs)"
     )
     parser.add_argument(
-        '-v', '--verbosity', action='store_true',
+        '-v', '--verbose', action='store_true',
         help=f"Make the test verbose (default False)"
     )
     parser.add_argument('--meld', action='store_true', help='Use meld to compare out and exp file (default False)')
@@ -71,7 +71,7 @@ def execute_parser(parser):
     log_dir = ROOT_PATH.joinpath(args.logDirPath)
     log_dir.mkdir(exist_ok=True)
     os.environ['METRICS_LOG_PATH'] = str(log_dir / 'test_metrics.log')
-    if args.verbosity:
+    if args.verbose:
         logging_config(filename=str(log_dir/'test.log'), level=logging.DEBUG)
         verbosity = 2
     else:

@@ -34,9 +34,6 @@ class RequestError(BaseError):
 class AitoClient:
     """A versatile client for your Aito Database Instance
 
-    :ivar request_methods: request methods
-    :ivar query_endpoints: recognized query API endpoints
-    :ivar database_endpoints: recognized database API endpoints
     """
     _request_methods = {
         'PUT': requests.put, 'POST': requests.post, 'GET': requests.get, 'DELETE': requests.delete
@@ -112,7 +109,7 @@ class AitoClient:
     ) -> List[Dict]:
         """async multiple requests
 
-        This method is useful when sending a batch of, for example, predict requests.
+        This method is useful when sending a batch of requests, for example, when sending a batch of predict requests.
 
         :param methods: list of request methods
         :type methods: List[str]
@@ -261,25 +258,44 @@ class AitoClient:
         """
         return table_name in self.get_existing_tables()
 
-    def populate_table_entries(self, table_name: str, entries: List[Dict]):
-        """populate a list of entries to a table API doc `API doc <https://aito.ai/docs/api/#post-api-v1-data-table-batch>`__
+    def optimize_table(self, table_name):
+        try:
+            self.request('POST', f'/api/v1/data/{table_name}/optimize', {})
+        except Exception as e:
+            LOG.error(f'failed to optimize: {e}')
+        LOG.info(f'table {table_name} optimized')
 
-        if the list contains more than 1000 entries, upload the entries by batch of 1000
+    def populate_table_entries(self, table_name: str, entries: List[Dict], optimize_on_finished: bool = True):
+        """populate a list of entries to a table API doc
+
+        `API doc <https://aito.ai/docs/api/#post-api-v1-data-table-batch>`__
+        if the list contains more than 1000 entries, upload the entries by batches of 1000
 
         :param table_name: the name of the table
         :type table_name: str
         :param entries: list of the table entries
         :type entries: List[Dict]
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__
+        the table on finished, default to True
+        :type optimize_on_finished: bool
         """
         if len(entries) > 1000:
-            self.populate_table_entries_by_batches(table_name, entries)
+            self.populate_table_entries_by_batches(table_name, entries, optimize_on_finished)
         else:
             LOG.debug(f'uploading {len(entries)} to table `{table_name}`...')
             self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
             LOG.info(f'uploaded {len(entries)} entries to table `{table_name}`')
+            if optimize_on_finished:
+                self.optimize_table(table_name)
 
-    def populate_table_entries_by_batches(self, table_name: str, entries: List[Dict], batch_size: int = 1000):
-        """populate a list of table entries by batches
+    def populate_table_entries_by_batches(
+            self,
+            table_name: str,
+            entries: List[Dict],
+            batch_size: int = 1000,
+            optimize_on_finished: bool = True
+    ):
+        """populate a list of table entries by batches of batch_size
 
         :param table_name: the name of the table
         :type table_name: str
@@ -287,6 +303,9 @@ class AitoClient:
         :type entries: List[Dict]
         :param batch_size: the batch size, defaults to 1000
         :type batch_size: int, optional
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__
+        the table on finished, default to True
+        :type optimize_on_finished: bool
         """
         _l = LOG
         LOG.debug(f'uploading {len(entries)} entries to table `{table_name}` with batch size of {batch_size}...')
@@ -308,14 +327,27 @@ class AitoClient:
 
         LOG.info(f'uploaded {populated}/{len(entries)} entries to table `{table_name}`')
 
-    def populate_table_by_file_upload(self, table_name: str, binary_file_object: BinaryIO, polling_time: int = 10):
+        if optimize_on_finished:
+            self.optimize_table(table_name)
+
+    def populate_table_by_file_upload(
+            self,
+            table_name: str,
+            binary_file_object: BinaryIO,
+            polling_time: int = 10,
+            optimize_on_finished: bool = True
+    ):
         """upload binary file object to a table `API doc <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
 
         :param table_name: the name of the table
         :type table_name: str
         :param binary_file_object: binary file object
         :type binary_file_object: BinaryIO
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__
+        the table on finished, default to True
+        :type optimize_on_finished: bool
         :param polling_time: polling wait time
+        :type polling_time: int
         :raises AitoClientRequestError: An error occurred during the upload of the file to S3
         """
         _l = LOG
@@ -336,7 +368,7 @@ class AitoClient:
         except Exception as e:
             raise BaseError(f'fail to upload file to S3: {e}')
         LOG.debug('uploaded file to S3')
-        LOG.debug('trigger file processing...')
+        LOG.debug('triggering file processing...')
         self.request('POST', session_end_point)
         LOG.info('triggered file processing')
         LOG.debug('polling processing status...')
@@ -353,6 +385,8 @@ class AitoClient:
                 LOG.debug(f'failed to get file upload status: {e}')
             time.sleep(polling_time)
         LOG.info(f'uploaded file object to table `{table_name}`')
+        if optimize_on_finished:
+            self.optimize_table(table_name)
 
     def query_table_entries(self, table_name: str, offset: int = 0, limit: int = 10) -> Dict:
         """query entries of a table `API doc <https://aito.ai/docs/api/#post-api-v1-query>`__
