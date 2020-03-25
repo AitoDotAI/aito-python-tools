@@ -26,10 +26,10 @@ class TestDatabaseCli(TestCaseCompare):
             cls.prefix_args = ['aito']
 
     def create_table(self):
-        self.client.put_table_schema(self.default_table_name, self.default_table_schema)
+        self.client.create_table(self.default_table_name, self.default_table_schema)
 
     def compare_table_entries_to_file_content(self, table_name: str, exp_file_path: Path, compare_order: bool = False):
-        table_entries = self.client.query_table_entries(table_name)['hits']
+        table_entries = self.client.query_entries(table_name)['hits']
         with exp_file_path.open() as exp_f:
             file_content = json.load(exp_f)
         if compare_order:
@@ -130,7 +130,7 @@ class TestDatabaseCli(TestCaseCompare):
         self.create_table()
         with (self.input_folder / 'invoice_aito_schema_altered.json').open() as f:
             another_tbl_schema = json.load(f)
-        self.client.put_table_schema('invoice_altered', another_tbl_schema)
+        self.client.create_table('invoice_altered', another_tbl_schema)
         proc = subprocess.Popen(self.prefix_args + ['database', 'delete-database'],
                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         proc.communicate(b"y")

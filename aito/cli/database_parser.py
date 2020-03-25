@@ -52,10 +52,10 @@ def execute_quick_add_table(main_parser: AitoArgParser, parsed_args):
     inferred_schema = schema_handler.infer_table_schema_from_pandas_data_frame(converted_df)
 
     client = main_parser.create_client_from_parsed_args(parsed_args)
-    client.put_table_schema(table_name, inferred_schema)
+    client.create_table(table_name, inferred_schema)
 
     with open(converted_tmp_file.name, 'rb') as in_f:
-        client.populate_table_by_file_upload(table_name, in_f)
+        client.upload_binary_file(table_name, in_f)
     converted_tmp_file.close()
     unlink(converted_tmp_file.name)
     return 0
@@ -81,7 +81,7 @@ def execute_create_table(main_parser: AitoArgParser, parsed_args):
         input_path = main_parser.parse_path_value(parsed_args['schema-input'])
         with input_path.open() as f:
             table_schema = json.load(f)
-    client.put_table_schema(table_name, table_schema)
+    client.create_table(table_name, table_schema)
     return 0
 
 
@@ -132,7 +132,7 @@ def execute_upload_batch(main_parser: AitoArgParser, parsed_args):
         input_path = main_parser.parse_path_value(parsed_args['input'])
         with input_path.open() as f:
             table_content = json.load(f)
-    client.populate_table_entries(table_name, table_content)
+    client.upload_entries(table_name, table_content)
     return 0
 
 
@@ -176,7 +176,7 @@ def execute_upload_file(main_parser: AitoArgParser, parsed_args):
     converted_tmp_file.close()
 
     with open(converted_tmp_file.name, 'rb') as in_f:
-        client.populate_table_by_file_upload(table_name, in_f)
+        client.upload_binary_file(table_name, in_f)
     converted_tmp_file.close()
     unlink(converted_tmp_file.name)
     return 0
@@ -203,7 +203,7 @@ def execute_upload_data_from_sql(main_parser: AitoArgParser, parsed_args):
 
     client = main_parser.create_client_from_parsed_args(parsed_args)
     with open(converted_tmp_file.name, 'rb') as in_f:
-        client.populate_table_by_file_upload(table_name, in_f)
+        client.upload_binary_file(table_name, in_f)
     converted_tmp_file.close()
     unlink(converted_tmp_file.name)
     return 0
@@ -234,10 +234,10 @@ def execute_quick_add_table_from_sql(main_parser: AitoArgParser, parsed_args):
     converted_tmp_file.close()
 
     client = main_parser.create_client_from_parsed_args(parsed_args)
-    client.put_table_schema(table_name, inferred_schema)
+    client.create_table(table_name, inferred_schema)
 
     with open(converted_tmp_file.name, 'rb') as in_f:
-        client.populate_table_by_file_upload(table_name, in_f)
+        client.upload_binary_file(table_name, in_f)
     converted_tmp_file.close()
     unlink(converted_tmp_file.name)
     return 0

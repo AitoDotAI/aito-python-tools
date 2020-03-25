@@ -114,7 +114,7 @@ Your AitoClient must be set up with the READ-WRITE API key
         }
       }
     }
-    aito_client.put_database_schema(database_schema=database_schema)
+    aito_client.create_database(database_schema=database_schema)
 
     # Check your DB schema in Aito
     aito_client.get_database_schema()
@@ -151,7 +151,7 @@ Your AitoClient must be set up with the READ-WRITE API key
         'parent_comment': "Wasn't it 2010?"
       }
     ]
-    aito_client.populate_table_entries(table_name='reddit', entries=entries)
+    aito_client.upload_entries(table_name='reddit', entries=entries)
 
 - Upload a `Pandas DataFrame`_
 
@@ -159,14 +159,14 @@ Your AitoClient must be set up with the READ-WRITE API key
 
     # convert DataFrame to list of entries
     entries = df.to_dict(orient="records")
-    aito_client.populate_table_entries(table_name='reddit', entries=entries)
+    aito_client.upload_entries(table_name='reddit', entries=entries)
 
 - `Upload a gzipped ndjson file <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
 
   .. code:: python
 
     with file_path.open(mode='rb') as in_f:
-      aito_client.populate_table_by_file_upload(table_name='table_name', binary_file_object=in_f)
+      aito_client.upload_binary_file(table_name='table_name', binary_file=in_f)
 
 Delete data
 -----------
@@ -188,13 +188,13 @@ You can execute queries with the :ref:`apiAitoClient`.
 
 Your AitoClient can be set up with the READ-ONLY API key
 
-:meth:`Query a Table Entries <aito.utils.aito_client.AitoClient.query_table_entries>`
+:meth:`Query a Table Entries <aito.utils.aito_client.AitoClient.query_entries>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
   # query the first 10 entries of a table
-  aito_client.query_table_entries(table_name='table_name')
+  aito_client.query_entries(table_name='table_name')
 
 :meth:`Custom Query <aito.utils.aito_client.AitoClient.request>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

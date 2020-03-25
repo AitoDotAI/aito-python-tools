@@ -103,7 +103,7 @@ table_schema = {
   }
 
 aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
-aito_client.put_table_schema(table_name=aito_table_name, table_schema=table_schema)
+aito_client.create_table(table_name=aito_table_name, table_schema=table_schema)
 
 # Check your table schema in Aito
 aito_client.get_table_schema(table_name=aito_table_name)
@@ -145,7 +145,7 @@ database_schema = {
 }
 
 aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
-aito_client.put_database_schema(database_schema=database_schema)
+aito_client.create_database(database_schema=database_schema)
 
 # Check your DB schema in Aito
 aito_client.get_database_schema()
@@ -177,10 +177,10 @@ data = dataframe.to_dict(orient="records")
 
 # Upload the data
 aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
-aito_client.populate_table_entries(table_name=aito_table_name, entries=data)
+aito_client.upload_entries(table_name=aito_table_name, entries=data)
 
 # Check the data
-aito_client.query_table_entries(table_name=aito_table_name, limit=2)
+aito_client.query_entries(table_name=aito_table_name, limit=2)
 ```
 
 ##### Upload gzipped ndjson file
@@ -214,10 +214,10 @@ file_path = Path("reddit_sample.ndjson.gz")
 
 # Upload the data
 aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
-aito_client.populate_table_by_file_upload(table_name=aito_table_name, file_path=file_path)
+aito_client.upload_binary_file(table_name=aito_table_name, file_path=file_path)
 
 # Check the data
-aito_client.query_table_entries(table_name=aito_table_name, limit=2)
+aito_client.query_entries(table_name=aito_table_name, limit=2)
 ```
 
 ### Delete data

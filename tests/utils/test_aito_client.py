@@ -38,7 +38,7 @@ class TestAitoClient(TestCaseCompare):
         self.client.delete_table(self.default_table_name)
 
     def create_table_step(self):
-        self.client.put_table_schema(self.default_table_name, self.default_schema)
+        self.client.create_table(self.default_table_name, self.default_schema)
 
     def get_table_schema_step(self):
         tbl_schema = self.client.get_table_schema(self.default_table_name)
@@ -46,10 +46,10 @@ class TestAitoClient(TestCaseCompare):
 
     def upload_by_batch_step(self):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(4)]
-        self.client.populate_table_entries_by_batches(self.default_table_name, entries, 2, False)
+        self.client.upload_entries_by_batches(self.default_table_name, entries, 2, False)
 
     def query_table_entries_step(self):
-        entries = self.client.query_table_entries(self.default_table_name, 2, 2)['hits']
+        entries = self.client.query_entries(self.default_table_name, 2, 2)['hits']
         self.assertEqual(entries, [
             {'id': 2, 'name': 'some_name', 'amount': 2},
             {'id': 3, 'name': 'some_name', 'amount': 3}
@@ -90,11 +90,11 @@ class TestAitoClient(TestCaseCompare):
 
     def optimize_step(self):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(4, 8)]
-        self.client.populate_table_entries_by_batches(self.default_table_name, entries, 1, False)
+        self.client.upload_entries_by_batches(self.default_table_name, entries, 1, False)
         self.client.optimize_table(self.default_table_name)
 
     def get_all_table_entries_step(self):
-        entries = self.client.query_table_all_entries(self.default_table_name)
+        entries = self.client.query_all_entries(self.default_table_name)
         self.assertEqual(entries, [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(0, 8)])
 
     def download_table_step(self):

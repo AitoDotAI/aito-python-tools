@@ -31,7 +31,7 @@ class TestPostgresCliFunctions(TestSQLCliFunctions):
     def create_table(self):
         with (self.input_folder / "invoice_aito_schema.json").open() as f:
             table_schema = json.load(f)
-        self.client.put_table_schema(self.default_table_name, table_schema)
+        self.client.create_table(self.default_table_name, table_schema)
 
     def test_infer_schema_from_query(self):
         with self.out_file_path.open('w') as out_f:
@@ -45,7 +45,7 @@ class TestPostgresCliFunctions(TestSQLCliFunctions):
         self.create_table()
         subprocess.run(self.prefix_args + ['database', 'upload-data-from-sql', f'{self.driver_name}',
                                            self.default_table_name, 'SELECT * FROM invoice'])
-        result_table_entries = self.client.query_table_entries(self.default_table_name)
+        result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
             self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
 
@@ -57,7 +57,7 @@ class TestPostgresCliFunctions(TestSQLCliFunctions):
     def test_quick_add_table_from_query(self):
         subprocess.run(self.prefix_args + ['database', 'quick-add-table-from-sql', f'{self.driver_name}',
                                            self.default_table_name, 'SELECT * FROM invoice'])
-        result_table_entries = self.client.query_table_entries(self.default_table_name)
+        result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
             self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
 
@@ -66,7 +66,7 @@ class TestMySQLCliFunctions(TestSQLCliFunctions):
     def create_table(self):
         with (self.input_folder / "invoice_aito_schema_lower_case_columns.json").open() as f:
             table_schema = json.load(f)
-        self.client.put_table_schema(self.default_table_name, table_schema)
+        self.client.create_table(self.default_table_name, table_schema)
 
     def test_infer_schema_from_query(self):
         with self.out_file_path.open('w') as out_f:
@@ -79,7 +79,7 @@ class TestMySQLCliFunctions(TestSQLCliFunctions):
         self.create_table()
         subprocess.run(self.prefix_args + ['database', 'upload-data-from-sql', f'{self.driver_name}',
                                            self.default_table_name, 'SELECT * FROM invoice'])
-        result_table_entries = self.client.query_table_entries(self.default_table_name)
+        result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
             self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
 
@@ -91,7 +91,7 @@ class TestMySQLCliFunctions(TestSQLCliFunctions):
     def test_quick_add_table_from_query(self):
         subprocess.run(self.prefix_args + ['database', 'quick-add-table-from-sql', f'{self.driver_name}',
                                            self.default_table_name, 'SELECT * FROM invoice'])
-        result_table_entries = self.client.query_table_entries(self.default_table_name)
+        result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
             self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
 
