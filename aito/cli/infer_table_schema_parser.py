@@ -26,11 +26,6 @@ def add_infer_csv_parser(format_subparsers):
                         help="delimiter to use. Need escape (default: ',')")
     parser.add_argument('-p', '--decimal', type=str, default='.',
                         help="Character to recognize decimal point (default '.')")
-    parser.epilog = '''Example:
-  aito infer-table-schema csv myFile.csv
-  aito infer-table-schema csv -d ';' < mySemicolonDelimiterFile.csv > inferredSchema.json
-  aito infer-table-schema from-sql "PostgreSQL Unicode" "SELECT * FROM tableName"
-  '''
     return parser
 
 
@@ -41,10 +36,6 @@ If the file has multiple sheets, read the first sheet by default
     '''
     parser.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name',
                         help='read a sheet by sheet name')
-    parser.epilog = '''Example:
-  aito infer-table-schema excel ./myFile.xls
-  aito infer-table-schema excel -o firstSheet < myFile.xslx
-  '''
     return parser
 
 
@@ -75,6 +66,7 @@ def execute_infer_from_sql(main_parser: AitoArgParser, parsed_args):
 def add_infer_table_schema_parser(action_subparsers, enable_sql_functions):
     """
     :param action_subparsers: Action subparsers from the main parser
+    :parm enable_sql_functions: enable sql function in the parser
     :return:
     """
     infer_parser = action_subparsers.add_parser('infer-table-schema', help='infer Aito table schema from a file')
@@ -84,11 +76,6 @@ def add_infer_table_schema_parser(action_subparsers, enable_sql_functions):
 
 When no input or when input is -, read standard input.
 You must use input file instead of standard input for excel file
-
-Example:
-  aito infer-table-schema json myFile.json > inferredSchema.json
-  aito infer-table-schema csv myFile.csv > inferredSchema.json
-  aito infer-table-schema excel < myFile.xlsx > inferredSchema.json
   '''
 
     format_sub_parsers = infer_parser.add_subparsers(title='input-format',

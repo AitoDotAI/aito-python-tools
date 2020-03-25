@@ -562,7 +562,7 @@ class AitoClient:
                 ndjson.dump(hits, f)
                 if last_idx != table_size:
                     f.write('\n')
-            LOG.debug(f'downloaded table chunk {begin_idx}/{last_idx}')
+            LOG.debug(f'downloaded table chunk {begin_idx}:{last_idx}')
             begin_idx += batch_size
         if gzip_output:
             gzip_file(out_file_path, keep=False)

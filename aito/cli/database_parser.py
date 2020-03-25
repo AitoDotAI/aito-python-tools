@@ -13,11 +13,6 @@ def add_quick_add_table_parser(operation_subparsers):
     parser = operation_subparsers.add_parser(
         'quick-add-table', help="infer schema, create table, and upload a file to the database"
     )
-    parser.epilog = '''Example:
-  aito database quick-add-table myFile.json
-  aito database quick-add-table --table-name aTableName myFile.csv
-  aito database quick-add-table -n myTable -f csv myFile
-'''
     parser.add_argument(
         '-n', '--table-name', type=str,
         help='create a table with the given name (default: the input file name without the extension)')
@@ -63,10 +58,7 @@ def execute_quick_add_table(main_parser: AitoArgParser, parsed_args):
 
 def add_create_table_parser(operation_subparsers):
     parser = operation_subparsers.add_parser('create-table', help='create a table using the input table schema')
-    parser.epilog = '''With no table-schema-input or when input is -, read from standard input
-Example:
-  aito client create-table aTableName < path/to/tableSchemaFile.json
-  '''
+    parser.epilog = 'With no table-schema-input or when input is -, read from standard input'
     parser.add_argument('table-name', type=str, help="name of the table to be created")
     parser.add_argument('schema-input', default='-', type=str, nargs='?', help="table schema input")
     return parser
@@ -114,11 +106,7 @@ def execute_delete_database(main_parser: AitoArgParser, parsed_args):
 
 def add_upload_batch_parser(operation_subparsers):
     parser = operation_subparsers.add_parser('upload-batch', help='populate table entries to an existing table')
-    parser.epilog = '''With no input, or when input is -, read table content from standard input
-Example:
-  aito client upload-batch myTable path/to/myTableEntries.json
-  aito client upload-batch myTable < path/to/myTableEntries.json
-  '''
+    parser.epilog = 'With no input, or when input is -, read table content from standard input'
     parser.add_argument('table-name', type=str, help='name of the table to be populated')
     parser.add_argument('input', default='-', type=str, nargs='?', help='input file or stream in JSON array format')
 
@@ -138,10 +126,6 @@ def execute_upload_batch(main_parser: AitoArgParser, parsed_args):
 
 def add_upload_file_parser(operation_subparsers):
     parser = operation_subparsers.add_parser('upload-file', help='populate a file to an existing table')
-    parser.epilog = '''Example:
-  aito client upload-file tableName path/to/myFile.csv
-  aito client upload-file -f csv tableName path/to/myFile.txt
-  '''
 
     parser.add_argument('table-name', type=str, help='name of the table to be populated')
     parser.add_argument('input-file', type=str, help="path to the input file")
@@ -251,13 +235,6 @@ def add_database_parser(action_subparsers, enable_sql_functions):
     database_parser.epilog += '''
 To see help for a specific operation:
   aito database <operation> -h
-
-Example:
-  aito database quick-add-table myTable.csv
-  aito database quick-add-table-from-sql "PostgreSQL Unicode" tableName 'SELECT * FROM tableName;'
-  aito database create-table tableName < path/to/tableSchema
-  aito database -e path/to/myCredentials.env upload-file myTable path/to/myFile
-  aito database -i MY_INSTANCE_URL -k MY_API_KEY upload-batch myTable < path/to/myTableEntries
   '''
     operation_subparsers = database_parser.add_subparsers(title="operation",
                                                           description="operation to perform",

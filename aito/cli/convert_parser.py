@@ -32,10 +32,6 @@ def add_convert_csv_parser(format_subparsers):
     parser.add_argument('-d', '--delimiter', type=str, default=',', help="delimiter to use (default: ',')")
     parser.add_argument('-p', '--decimal', type=str, default='.',
                         help="character to recognize decimal point (default '.')")
-    parser.epilog = '''Example:
-  aito convert csv myFile.csv
-  aito convert csv -d ';' --json < mySemicolonDelimiterFile.csv > convertedFile.json
-  '''
     return parser
 
 
@@ -44,10 +40,6 @@ def add_convert_excel_parser(format_subparsers):
     parser.description = 'Convert excel format input, accept both xls and xlsx. ' \
                          'Read the first sheet of the file by default'
     parser.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name', help='read a sheet of the excel file')
-    parser.epilog = '''Example:
-    aito convert excel ./myFile.xls
-    aito convert excel -o firstSheet myMultipleSheetsFile.xslx
-    '''
     return parser
 
 
@@ -73,11 +65,6 @@ def add_convert_parser(action_subparsers):
 
 When no input or when input is -, read standard input. 
 You must use input file instead of standard input for excel file
-
-Example:
-  aito convert json myFile.json > convertedFile.ndjson
-  aito convert csv -c myInferredTableSchema.json --json myFile.csv > convertedFile.json
-  aito convert excel -s desiredSchema.json < myFile.xlsx > convertedFile.ndjson
   '''
 
     format_subparsers = convert_parser.add_subparsers(title='input-format',

@@ -13,11 +13,13 @@ class MainParserWrapper(ParserWrapper):
     def __init__(self, add_help=True):
         super().__init__(add_help)
         self.parser.prog = 'aito'
-        action_subparsers = self.parser.add_subparsers(title='action',
-                                                       description='action to perform',
-                                                       dest='action',
-                                                       parser_class=AitoArgParser,
-                                                       metavar="<action>")
+        action_subparsers = self.parser.add_subparsers(
+            title='action',
+            description='action to perform',
+            dest='action',
+            parser_class=AitoArgParser,
+            metavar="<action>"
+        )
         action_subparsers.required = True
         enable_sql_functions = True
         try:
