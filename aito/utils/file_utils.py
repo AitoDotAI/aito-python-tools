@@ -19,11 +19,9 @@ def check_file_is_gzipped(file_path: PathLike):
 
 def gzip_file(input_path: PathLike, output_path: PathLike = None, keep=True):
     input_path = Path(input_path)
-    output_path = Path(output_path)
     if input_path.name.endswith('.gz'):
         raise ValueError(f'{input_path} is already gzipped')
-    if not output_path:
-        output_path = input_path.parent / f"{input_path.name}.gz"
+    output_path = Path(output_path) if output_path else input_path.parent / f"{input_path.name}.gz"
     with input_path.open('rb') as f_in, gzip.open(output_path, 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
     if not keep:
