@@ -165,8 +165,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 
   .. code:: python
 
-    with file_path.open(mode='rb') as in_f:
-      aito_client.upload_binary_file(table_name='table_name', binary_file=in_f)
+    aito_client.upload_file(table_name='table_name', file_path=file_path)
 
 Delete data
 -----------

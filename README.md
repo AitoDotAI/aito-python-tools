@@ -214,7 +214,7 @@ file_path = Path("reddit_sample.ndjson.gz")
 
 # Upload the data
 aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
-aito_client.upload_binary_file(table_name=aito_table_name, file_path=file_path)
+aito_client.upload_file(table_name=aito_table_name, file_path=file_path)
 
 # Check the data
 aito_client.query_entries(table_name=aito_table_name, limit=2)

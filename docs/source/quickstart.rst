@@ -219,9 +219,7 @@ The :ref:`apiAitoClient` can upload the data with either `Batch Upload`_ or `Fil
   aito_client.upload_entries(table_name='reddit', entries=entries)
 
   # File Upload
-
-  with file_path.open(mode='rb') as in_f:
-    aito_client.upload_binary_file(table_name='table_name', binary_file=in_f)
+  aito_client.upload_file(table_name='table_name', file_path=file_path)
 
 .. _Analyzer: https://aito.ai/docs/api/#schema-analyzer
 .. _Batch Upload: https://aito.ai/docs/api/#post-api-v1-data-table-batch
