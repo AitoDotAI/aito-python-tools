@@ -7,12 +7,16 @@ from aito.cli.database_parser import add_database_parser, execute_database_opera
 from aito.cli.infer_table_schema_parser import add_infer_table_schema_parser, execute_infer_table_schema
 from aito.utils.generic_utils import logging_config
 from aito.utils.parser import AitoArgParser, ParserWrapper
+from aito import __version__
 
 
 class MainParserWrapper(ParserWrapper):
     def __init__(self, add_help=True):
         super().__init__(add_help)
         self.parser.prog = 'aito'
+        self.parser.add_argument('-V', '--version', action='store_true', help='display the version of this tool')
+        self.parser.add_argument('-v', '--verbose', action='store_true', help='display verbose messages')
+        self.parser.add_argument('-q', '--quiet', action='store_true', help='display only error messages')
         action_subparsers = self.parser.add_subparsers(
             title='action',
             description='action to perform',
@@ -20,7 +24,6 @@ class MainParserWrapper(ParserWrapper):
             parser_class=AitoArgParser,
             metavar="<action>"
         )
-        action_subparsers.required = True
         enable_sql_functions = True
         try:
             import pyodbc
@@ -33,9 +36,15 @@ class MainParserWrapper(ParserWrapper):
         argcomplete.autocomplete(self.parser)
 
     def parse_and_execute(self, parsing_args):
-        logging_config()
         parsed_args = vars(self.parser.parse_args(parsing_args))
+        if parsed_args['version']:
+            print(__version__)
+            return 0
+        logging_level = 10 if parsed_args['verbose'] else 40 if parsed_args['quiet'] else 20
+        logging_config(level=logging_level)
         action = parsed_args['action']
+        if not action:
+            self.parser.error('the following arguments are required: <action>')
         if action == 'infer-table-schema':
             execute_infer_table_schema(self.parser, parsed_args)
         elif action == 'convert':
