@@ -15,7 +15,7 @@ class TestSQLCliFunctions(TestCaseCompare):
         env_vars = os.environ
         cls.client = AitoClient(env_vars['AITO_INSTANCE_URL'], env_vars['AITO_API_KEY'])
         cls.default_table_name = f"invoice_{uuid4()}"
-        cls.prefix_args = ['python', '-m', 'aito.cli.main_parser_wrapper']
+        cls.prefix_args = ['python', '-m', 'aito.cli']
         if os.getenv('TEST_BUILT_PACKAGE'):
             cls.prefix_args = ['aito']
         cls.driver_name = os.getenv('TEST_SQL_DB_DRIVER')

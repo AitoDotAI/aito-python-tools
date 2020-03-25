@@ -9,7 +9,7 @@ class TestConvertCli(TestCaseCompare):
     def setUpClass(cls):
         super().setUpClass(test_path='cli/convert')
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
-        cls.prefix_args = ['python', '-m', 'aito.cli.main_parser_wrapper']
+        cls.prefix_args = ['python', '-m', 'aito.cli']
         if os.getenv('TEST_BUILT_PACKAGE'):
             cls.prefix_args = ['aito']
 

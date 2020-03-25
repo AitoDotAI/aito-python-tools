@@ -6,18 +6,18 @@ from aito.cli.convert_parser import add_convert_parser, execute_convert
 from aito.cli.database_parser import add_database_parser, execute_database_operation
 from aito.cli.infer_table_schema_parser import add_infer_table_schema_parser, execute_infer_table_schema
 from aito.utils.generic_utils import logging_config
-from aito.utils.parser import AitoArgParser, ParserWrapper
+from aito.cli.parser import AitoArgParser
 from aito import __version__
 
 
-class MainParserWrapper(ParserWrapper):
-    def __init__(self, add_help=True):
-        super().__init__(add_help)
-        self.parser.prog = 'aito'
-        self.parser.add_argument('-V', '--version', action='store_true', help='display the version of this tool')
-        self.parser.add_argument('-v', '--verbose', action='store_true', help='display verbose messages')
-        self.parser.add_argument('-q', '--quiet', action='store_true', help='display only error messages')
-        action_subparsers = self.parser.add_subparsers(
+class MainParser(AitoArgParser):
+    def __init__(self):
+        super().__init__()
+        self.prog = 'aito'
+        self.add_argument('-V', '--version', action='store_true', help='display the version of this tool')
+        self.add_argument('-v', '--verbose', action='store_true', help='display verbose messages')
+        self.add_argument('-q', '--quiet', action='store_true', help='display only error messages')
+        action_subparsers = self.add_subparsers(
             title='action',
             description='action to perform',
             dest='action',
@@ -33,10 +33,10 @@ class MainParserWrapper(ParserWrapper):
         add_infer_table_schema_parser(action_subparsers, enable_sql_functions)
         add_convert_parser(action_subparsers)
         add_database_parser(action_subparsers, enable_sql_functions)
-        argcomplete.autocomplete(self.parser)
+        argcomplete.autocomplete(self)
 
-    def parse_and_execute(self, parsing_args):
-        parsed_args = vars(self.parser.parse_args(parsing_args))
+    def parse_and_execute(self):
+        parsed_args = vars(self.parse_args())
         if parsed_args['version']:
             print(__version__)
             return 0
@@ -44,20 +44,11 @@ class MainParserWrapper(ParserWrapper):
         logging_config(level=logging_level)
         action = parsed_args['action']
         if not action:
-            self.parser.error('the following arguments are required: <action>')
+            self.error('the following arguments are required: <action>')
         if action == 'infer-table-schema':
-            execute_infer_table_schema(self.parser, parsed_args)
+            execute_infer_table_schema(self, parsed_args)
         elif action == 'convert':
-            execute_convert(self.parser, parsed_args)
+            execute_convert(self, parsed_args)
         elif action == 'database':
-            execute_database_operation(self.parser, parsed_args)
+            execute_database_operation(self, parsed_args)
         return 0
-
-
-def main():
-    main_parser = MainParserWrapper()
-    main_parser.parse_and_execute(sys.argv[1:])
-
-
-if __name__ == '__main__':
-    main()

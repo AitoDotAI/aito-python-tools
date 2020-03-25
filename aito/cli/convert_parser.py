@@ -3,7 +3,7 @@ import json
 import sys
 
 from aito.utils.data_frame_handler import DataFrameHandler
-from aito.utils.parser import AitoArgParser
+from aito.cli.parser import AitoArgParser
 from aito.utils.schema_handler import SchemaHandler
 
 

@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from aito.cli.main_parser_wrapper import MainParserWrapper
+from aito.cli.main_parser import MainParser
 from aito.utils.aito_client import AitoClient
 from tests.cases import TestCaseCompare
 
@@ -15,13 +15,13 @@ class TestDatabaseCli(TestCaseCompare):
     def setUpClass(cls):
         super().setUpClass(test_path='cli/client')
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
-        cls.main_parser = MainParserWrapper()
+        cls.main_parser = MainParser()
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
         with (cls.input_folder / "invoice_aito_schema.json").open() as f:
             cls.default_table_schema = json.load(f)
         cls.default_table_name = f"invoice_{uuid4()}"
-        cls.prefix_args = ['python', '-m', 'aito.cli.main_parser_wrapper']
+        cls.prefix_args = ['python', '-m', 'aito.cli']
         if os.getenv('TEST_BUILT_PACKAGE'):
             cls.prefix_args = ['aito']
 
