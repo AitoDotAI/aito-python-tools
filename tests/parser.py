@@ -164,7 +164,3 @@ def discover_test_cases(starting_dir: Path):
                     yield t
 
     return sorted(list(set(test_case_gen(discovered_tests))))
-
-
-if __name__ == '__main__':
-    execute_parser(generate_parser())

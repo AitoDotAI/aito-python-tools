@@ -222,39 +222,39 @@ commonYAMLStructure:
       name: run all tests execluding sql functions tests
       command: |
         . venv/bin/activate
-        python -m tests.parser -v suite utils
-        python -m tests.parser -v suite cli
+        python -m tests -v suite utils
+        python -m tests -v suite cli
   - &run_tests_exc_sql_functions_tests_win
     run:
       name: run all tests execluding sql functions tests
       command: |
         venv\Scripts\activate.ps1
-        python -m tests.parser -v suite utils
-        python -m tests.parser -v suite cli
+        python -m tests -v suite utils
+        python -m tests -v suite cli
   - &run_postgres_connection_test
     run:
       name: run postgres connection test
       command: |
         . venv/bin/activate
-        python -m tests.parser -v case sql_functions.test_connection.TestPostgresConnection
+        python -m tests -v case sql_functions.test_connection.TestPostgresConnection
   - &run_postgres_cli_test
     run:
       name: run postgres cli test
       command: |
         . venv/bin/activate
-        python -m tests.parser -v case sql_functions.test_sql_functions_cli.TestPostgresCliFunctions
+        python -m tests -v case sql_functions.test_sql_functions_cli.TestPostgresCliFunctions
   - &run_mysql_connection_test
     run:
       name: run mysql connection test
       command: |
         . venv/bin/activate
-        python -m tests.parser -v case sql_functions.test_connection.TestMySQLConnection
+        python -m tests -v case sql_functions.test_connection.TestMySQLConnection
   - &run_mysql_cli_test
     run:
       name: run mysql cli test
       command: |
         . venv/bin/activate
-        python -m tests.parser -v case sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
+        python -m tests -v case sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
   - &store_log_files
     store_artifacts:
       path: ./.logs
@@ -291,12 +291,12 @@ jobs:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test_pw
     environment:
+      SQL_DRIVER: PostgreSQL Unicode
       SQL_SERVER: localhost
       SQL_DATABASE: circleci_test
       SQL_USERNAME: test
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
-      TEST_SQL_DB_DRIVER: PostgreSQL Unicode
     working_directory: ~/repo
     steps:
       - checkout
@@ -342,11 +342,11 @@ jobs:
           MYSQL_USER: test
           MYSQL_PASSWORD: test_pw
     environment:
+      SQL_DRIVER: MySQL ODBC 8.0 Driver
       SQL_SERVER: 127.0.0.1
       SQL_DATABASE: circleci_test
       SQL_USERNAME: test
       SQL_PASSWORD: test_pw
-      TEST_SQL_DB_DRIVER: MySQL ODBC 8.0 Driver
     working_directory: ~/repo
     steps:
       - checkout
@@ -418,12 +418,12 @@ jobs:
     macos:
       xcode: 11.3.0
     environment:
+      SQL_DRIVER: PostgreSQL Unicode
       SQL_SERVER: localhost
       SQL_DATABASE: circleci_test
       SQL_USERNAME: test
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
-      TEST_SQL_DB_DRIVER: PostgreSQL Unicode
       PYTHON_VERSION: 3.6.9
     working_directory: ~/repo
     steps:
@@ -449,23 +449,23 @@ jobs:
   run_postgres_tests_osx_py_37:
     <<: *run_postgres_tests_osx_template
     environment:
+      SQL_DRIVER: PostgreSQL Unicode
       SQL_SERVER: localhost
       SQL_DATABASE: circleci_test
       SQL_USERNAME: test
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
-      TEST_SQL_DB_DRIVER: PostgreSQL Unicode
       PYTHON_VERSION: 3.7.5
 
   run_postgres_tests_osx_py_38:
     <<: *run_postgres_tests_osx_template
     environment:
+      SQL_DRIVER: PostgreSQL Unicode
       SQL_SERVER: localhost
       SQL_DATABASE: circleci_test
       SQL_USERNAME: test
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
-      TEST_SQL_DB_DRIVER: PostgreSQL Unicode
       PYTHON_VERSION: 3.8.0
 
   run_tests_exclude_sql_function_tests_win_py_36: &run_tests_exclude_sql_function_tests_win_template
