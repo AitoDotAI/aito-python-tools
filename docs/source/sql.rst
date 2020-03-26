@@ -94,11 +94,12 @@ Similar to setting up the Aito credentials, there are 3 ways to set up the SQL D
 
 1. The most convenient way is to set up the following environment variables::
 
-    $ export SQL_SERVER=server to connect to
-    $ export SQL_PORT=port to connect to
-    $ export SQL_DATABASE=database_to_connect_to
-    $ export SQL_USER=username for authentication
-    $ export SQL_PASSWORD=password for authentication
+    $ export SQL_DRIVER=the name of the database ODBC driver
+    $ export SQL_SERVER=the server to connect to
+    $ export SQL_PORT=the port to connect to
+    $ export SQL_DATABASE=the database to connect to
+    $ export SQL_USER=the username for authentication
+    $ export SQL_PASSWORD=the password for authentication
 
   You can now perform the sql operations. For example::
 
@@ -110,13 +111,17 @@ Similar to setting up the Aito credentials, there are 3 ways to set up the SQL D
 
   You can set up the credentials using a dotenv file with the ``-e`` flag. For example::
 
-    $ aito infer-table-schema from-sql -e path/to/myDotEnvFile.env "PostgreSQL Unicode" "SELECT * FROM table"
+    $ aito infer-table-schema from-sql -e path/to/dotEnvFile.env "PostgreSQL Unicode" "SELECT * FROM table"
 
+  .. note::
+
+    For database operation with SQL integration, the dotenv file must also contain the Aito instance credentials.
 
 3. Using flags:
 
   You can set up the credentials using:
 
+    - ``-D`` flag fro the name of the driver
     - ``-s`` flag for the server
     - ``-P`` flag for the port
     - ``-d`` flag for the database
@@ -128,7 +133,7 @@ Supported Functions
 
 - Infer a table schema from the result of a SQL query::
 
-    $ aito infer-table-schema from-sql "PostgreSQL Unicode" "SELECT * FROM tableName" > inferredSchema.json
+    $ aito infer-table-schema from-sql "SELECT * FROM tableName" > inferredSchema.json
 
   To see help::
 
@@ -136,7 +141,7 @@ Supported Functions
 
 - Upload the result of a SQL to an existing table::
 
-    $ aito database upload-data-from-sql "MySQL ODBC 8.0 Driver" tableName "SELECT * FROM tableName"
+    $ aito database -e path/to/dotEnvFile.env upload-data-from-sql tableName "SELECT * FROM tableName"
 
   To see help::
 
@@ -144,15 +149,11 @@ Supported Functions
 
 - Infer schema, create table, and upload the result of a SQL to the database::
 
-    $ aito database quick-add-table-from-sql "PostgreSQL Unicode" -s localhost -u root -d testDB -tableName "SELECT * FROM tableName"
+    $ aito database quick-add-table-from-sql -D "PostgreSQL Unicode" -s localhost -u root -d testDB -tableName "SELECT * FROM tableName"
 
   To see help::
 
     $ aito database quick-add-table-from-sql -h
-
-.. note::
-
-  The sql functions won't appear unless you perform the additional installation above
 
 
 SDK Integration

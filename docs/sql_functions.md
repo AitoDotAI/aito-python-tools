@@ -5,15 +5,15 @@ The Aito CLI supports integration between your SQL database and the Aito databas
 ## Supported functions
 * Infer a table schema from the result of a SQL query:
   ```bash
-  aito infer-table-schema from-sql "PostgreSQL Unicode" "SELECT * FROM tableName" > inferredSchema.json
+  aito infer-table-schema from-sql "SELECT * FROM tableName" > inferredSchema.json
   ```
 * Upload the result of a SQL to an existing table:
   ```bash
-  aito database upload-data-from-sql "MySQL ODBC 8.0 Driver" tableName "SELECT * FROM tableName"
+  aito database upload-data-from-sql tableName "SELECT * FROM tableName"
   ```
 * Infer schema, create table, and upload the result of a SQL to the database:
   ```bash
-  aito database quick-add-table-from-sql "PostgreSQL Unicode" -s localhost -u root -d testDB -tableName "SELECT * FROM tableName"
+  aito database quick-add-table-from-sql -D "PostgreSQL Unicode" -s localhost -u root -d testDB -tableName "SELECT * FROM tableName"
   ```
 
 ## <a name="installation"> Additional Installation
@@ -89,6 +89,7 @@ The official instructions can be found [here](https://dev.mysql.com/doc/connecto
 There are 3 ways to set up the credentials:
 * The most convenient way is to set up the following environment variables:
   ```bash
+  SQL_DRIVER=name of the database ODBC driver
   SQL_SERVER=server to connect to
   SQL_PORT=port to connect to
   SQL_DATABASE=database_to_connect_to
@@ -111,7 +112,7 @@ There are 3 ways to set up the credentials:
   ```
 * Using flags:
 
-  You can set up the credentials using `-s` flag for the server, `-P` flag for the port, `-d` flag for the database, `-u` flag for the username, and `-p` for the password
+  You can set up the credentials using `-D` flag for the driver name, `-s` flag for the server, `-P` flag for the port, `-d` flag for the database, `-u` flag for the username, and `-p` for the password
 
 #### Troubleshooting
 ##### Database ODBC Driver not found after installation

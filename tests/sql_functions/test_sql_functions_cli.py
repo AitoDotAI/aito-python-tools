@@ -18,9 +18,6 @@ class TestSQLCliFunctions(TestCaseCompare):
         cls.prefix_args = ['python', '-m', 'aito.cli']
         if os.getenv('TEST_BUILT_PACKAGE'):
             cls.prefix_args = ['aito']
-        cls.driver_name = os.getenv('TEST_SQL_DB_DRIVER')
-        if not cls.driver_name:
-            raise ValueError("Missing SQL DB driver name")
 
     def tearDown(self):
         super().tearDown()
@@ -36,27 +33,32 @@ class TestPostgresCliFunctions(TestSQLCliFunctions):
     def test_infer_schema_from_query(self):
         with self.out_file_path.open('w') as out_f:
             subprocess.run(
-                self.prefix_args + ['infer-table-schema', 'from-sql', f'{self.driver_name}', 'SELECT * FROM invoice'],
+                self.prefix_args + ['infer-table-schema', 'from-sql', 'SELECT * FROM invoice'],
                 stdout=out_f
             )
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema.json')
 
     def test_upload_data_from_query(self):
         self.create_table()
-        subprocess.run(self.prefix_args + ['database', 'upload-data-from-sql', f'{self.driver_name}',
-                                           self.default_table_name, 'SELECT * FROM invoice'])
+        subprocess.run(
+            self.prefix_args + ['database', 'upload-data-from-sql',self.default_table_name, 'SELECT * FROM invoice']
+        )
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
             self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
 
     def test_upload_data_from_query_table_not_existed(self):
         with self.assertRaises(subprocess.CalledProcessError):
-            subprocess.check_call(self.prefix_args + ['database', 'upload-data-from-sql', f'{self.driver_name}',
-                                                      self.default_table_name, 'SELECT * FROM invoice'])
+            subprocess.check_call(
+                self.prefix_args +
+                ['database', 'upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice']
+            )
 
     def test_quick_add_table_from_query(self):
-        subprocess.run(self.prefix_args + ['database', 'quick-add-table-from-sql', f'{self.driver_name}',
-                                           self.default_table_name, 'SELECT * FROM invoice'])
+        subprocess.run(
+            self.prefix_args +
+            ['database', 'quick-add-table-from-sql', self.default_table_name, 'SELECT * FROM invoice']
+        )
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
             self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
@@ -70,28 +72,30 @@ class TestMySQLCliFunctions(TestSQLCliFunctions):
 
     def test_infer_schema_from_query(self):
         with self.out_file_path.open('w') as out_f:
-            subprocess.run(self.prefix_args + ['infer-table-schema', 'from-sql', f'{self.driver_name}',
-                                               'SELECT * FROM invoice'],
-                           stdout=out_f)
+            subprocess.run(
+                self.prefix_args + ['infer-table-schema', 'from-sql', 'SELECT * FROM invoice'], stdout=out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema_lower_case_columns.json')
 
     def test_upload_data_from_query(self):
         self.create_table()
-        subprocess.run(self.prefix_args + ['database', 'upload-data-from-sql', f'{self.driver_name}',
-                                           self.default_table_name, 'SELECT * FROM invoice'])
+        subprocess.run(
+            self.prefix_args + ['database', 'upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'])
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
             self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
 
     def test_upload_data_from_query_table_not_existed(self):
         with self.assertRaises(subprocess.CalledProcessError):
-            subprocess.check_call(self.prefix_args + ['database', 'upload-data-from-sql', f'{self.driver_name}',
-                                                      self.default_table_name, 'SELECT * FROM invoice'])
+            subprocess.check_call(
+                self.prefix_args +
+                ['database', 'upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice']
+            )
 
     def test_quick_add_table_from_query(self):
-        subprocess.run(self.prefix_args + ['database', 'quick-add-table-from-sql', f'{self.driver_name}',
-                                           self.default_table_name, 'SELECT * FROM invoice'])
+        subprocess.run(
+            self.prefix_args +
+            ['database', 'quick-add-table-from-sql', self.default_table_name, 'SELECT * FROM invoice']
+        )
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
             self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
-

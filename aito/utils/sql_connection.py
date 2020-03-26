@@ -8,18 +8,18 @@ class SQLConnectionError(Exception):
         super().__init__(message)
 
 
-class SQLConnection():
+class SQLConnection:
     """Connection to SQL Database using pyodbc module
     """
     def __init__(
             self,
             sql_driver: str,
             sql_server: str = None,
-            sql_port : str = None,
-            sql_database : str = None,
+            sql_port: str = None,
+            sql_database: str = None,
             sql_username: str = None,
             sql_password: str = None
-        ):
+    ):
         """Constructor method
 
         :param sql_driver: ODBC driver name
