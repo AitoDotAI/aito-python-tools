@@ -42,7 +42,7 @@ class ArgParser(argparse.ArgumentParser):
             args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
                               help='set up the credentials using a .env file containing the required env variables')
 
-        args.add_argument('--driver', '-D', type=str, help='the name of the ODBC driver')
+        args.add_argument('--driver', '-D', type=str, help='the name of the ODBC driver', default='.env')
         args.add_argument('--server', '-s', type=str, help='server to connect to', default='.env')
         args.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
         args.add_argument('--database', '-d', type=str, help='database to connect to', default='.env')
