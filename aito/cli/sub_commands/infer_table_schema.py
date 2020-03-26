@@ -1,0 +1,122 @@
+import json
+import sys
+from typing import Dict
+from typing import List
+
+from aito.utils.data_frame_handler import DataFrameHandler
+from aito.utils.schema_handler import SchemaHandler
+from aito.cli.parse_utils import parse_input_arg_value, ParseError, create_sql_connecting_from_parsed_args
+from .sub_command import SubCommand
+
+
+class InferFromFormatSubCommand(SubCommand):
+    def build_parser(self, parser):
+        # add share arguments between formats
+        parser.add_argument('-e', '--encoding', type=str, default='utf-8',
+                            help="encoding to use (default: 'utf-8')")
+        parser.add_argument(
+            'input', default='-', type=str, nargs='?',
+            help="path to the input file (when no input file is given or when input is -, read from the standard input)"
+        )
+
+    @staticmethod
+    def parsed_args_to_data_frame_handler_read_args(parsed_args: Dict) -> Dict:
+        in_format = parsed_args['input-format']
+
+        read_args = {
+            'read_input': parse_input_arg_value(parsed_args['input']),
+            'in_format': in_format,
+            'read_options': {
+                'encoding': parsed_args['encoding']
+            }
+        }
+
+        if in_format == 'csv':
+            read_args['read_options']['delimiter'] = parsed_args['delimiter']
+            read_args['read_options']['decimal'] = parsed_args['decimal']
+        elif in_format == 'excel':
+            if parsed_args['input'] == '-':
+                raise ParseError('input must be a file path for excel files')
+            if parsed_args['one_sheet']:
+                read_args['read_options']['sheet_name'] = parsed_args['one_sheet']
+        return read_args
+
+    def parse_and_execute(self, parsed_args: Dict):
+        parsed_read_args = self.parsed_args_to_data_frame_handler_read_args(parsed_args)
+        df = DataFrameHandler().read_file_to_df(**parsed_read_args)
+        inferred_schema = SchemaHandler().infer_table_schema_from_pandas_data_frame(df)
+        json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
+        return 0
+
+
+class InferFromCSVSubCommand(InferFromFormatSubCommand):
+    def __init__(self):
+        super().__init__('csv', 'infer a table schema from CSV data')
+
+    def build_parser(self, parser):
+        super().build_parser(parser)
+        parser.add_csv_format_default_arguments()
+
+
+class InferFromExcelSubCommand(InferFromFormatSubCommand):
+    def __init__(self):
+        super().__init__('excel', 'infer a table schema from EXCEL data')
+
+    def build_parser(self, parser):
+        super().build_parser(parser)
+        parser.add_excel_format_default_arguments()
+        parser.description = 'Infer table schema from EXCEL data, accept both xls and xlsx'
+
+
+class InferFromSQLSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('from-sql', 'infer table schema the result of a SQL query')
+
+    def build_parser(self, parser):
+        parser.add_sql_default_credentials_arguments(add_use_env_arg=True)
+        parser.add_argument('query', type=str, help='query to get the data from your database')
+
+    def parse_and_execute(self, parsed_args: Dict):
+        connection = create_sql_connecting_from_parsed_args(parsed_args)
+        result_df = connection.execute_query_and_save_result(parsed_args['query'])
+        inferred_schema = SchemaHandler().infer_table_schema_from_pandas_data_frame(result_df)
+        json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
+        return 0
+
+
+class InferTableSchemaSubCommand(SubCommand):
+    _default_sub_commands = [
+        InferFromCSVSubCommand(),
+        InferFromExcelSubCommand(),
+        InferFromFormatSubCommand('json', 'infer a table schema from JSON data'),
+        InferFromFormatSubCommand('ndjson', 'infer a table schema from NDJSON data'),
+        InferFromSQLSubCommand()
+    ]
+
+    def __init__(self, sub_commands: List[SubCommand] = None):
+        super().__init__('infer-table-schema', 'infer an Aito table schema from a file')
+        if not sub_commands:
+            sub_commands = self._default_sub_commands
+        self._sub_commands_map = {cmd.name: cmd for cmd in sub_commands}
+
+    def build_parser(self, parser):
+        parser.epilog = '''To see help for a specific format:
+  aito infer-table-schema <input-format> - h
+
+When no input or when input is -, read standard input.
+You must use input file instead of standard input for excel file
+'''
+        sub_commands_subparsers = parser.add_subparsers(
+            title='input-format',
+            dest='input-format',
+            metavar='<input-format>'
+        )
+        sub_commands_subparsers.required = True
+
+        for sub_cmd in self._sub_commands_map.values():
+            sub_cmd_parser = sub_commands_subparsers.add_parser(sub_cmd.name, help=sub_cmd.help_message)
+            sub_cmd.build_parser(sub_cmd_parser)
+
+    def parse_and_execute(self, parsed_args: Dict):
+        self._sub_commands_map[parsed_args['input-format']].parse_and_execute(parsed_args)
+        return 0
