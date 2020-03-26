@@ -191,7 +191,7 @@ There are 3 ways to set up the credentials:
 * **Batch-upload**: Upload entries to an *existing* table
 (a table of which [schema has been created](https://aito.ai/docs/api/#put-api-v1-schema)) in your Aito instance:
   ```bash
-  aito database upload-batch tableName < tableEntries.json
+  aito database upload-entries tableName < tableEntries.json
   ```
 * **File-upload**: Upload a file to an *existing* table in your Aito instance:
 

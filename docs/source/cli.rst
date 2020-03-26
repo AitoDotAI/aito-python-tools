@@ -308,7 +308,7 @@ Batch Upload
 
 Upload entries to an *existing* table (a table of which `schema has been created <https://aito.ai/docs/api/#put-api-v1-schema>`_) in your Aito instance::
 
-    $ aito database upload-batch tableName < tableEntries.json
+    $ aito database upload-entries tableName < tableEntries.json
 
 .. _cliFileUpload:
 

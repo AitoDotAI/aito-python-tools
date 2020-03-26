@@ -99,7 +99,7 @@ Upload the Data
 
     - :ref:`cliBatchUpload`::
 
-        $ aito database upload-batch tableName < tableEntries.json
+        $ aito database upload-entries tableName < tableEntries.json
 
     - :ref:`cliFileUpload`::
 

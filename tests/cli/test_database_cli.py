@@ -43,18 +43,18 @@ class TestDatabaseCli(TestCaseCompare):
 
     def test_upload_batch_no_table_schema(self):
         with self.assertRaises(subprocess.CalledProcessError):
-            subprocess.check_call(self.prefix_args + ['database', 'upload-batch', self.default_table_name,
+            subprocess.check_call(self.prefix_args + ['database', 'upload-entries', self.default_table_name,
                                                       str(self.input_folder / 'invoice.json')])
 
     def test_upload_batch_invalid_entries(self):
         self.create_table()
         with self.assertRaises(subprocess.CalledProcessError):
-            subprocess.check_call(self.prefix_args + ['database', 'upload-batch', self.default_table_name,
+            subprocess.check_call(self.prefix_args + ['database', 'upload-entries', self.default_table_name,
                                                       str(self.input_folder / 'invoice.ndjson')])
 
     def test_upload_batch(self):
         self.create_table()
-        subprocess.run(self.prefix_args + ['database', 'upload-batch', self.default_table_name,
+        subprocess.run(self.prefix_args + ['database', 'upload-entries', self.default_table_name,
                                            f'{self.input_folder}/invoice.json'])
         self.compare_table_entries_to_file_content(self.default_table_name,
                                                    self.input_folder / 'invoice_no_null_value.json')
@@ -62,7 +62,7 @@ class TestDatabaseCli(TestCaseCompare):
     def test_upload_batch_stdin(self):
         self.create_table()
         with (self.input_folder / 'invoice.json').open() as in_f:
-            subprocess.run(self.prefix_args + ['database', 'upload-batch', self.default_table_name], stdin=in_f)
+            subprocess.run(self.prefix_args + ['database', 'upload-entries', self.default_table_name], stdin=in_f)
         self.compare_table_entries_to_file_content(self.default_table_name,
                                                    self.input_folder / 'invoice_no_null_value.json')
 
