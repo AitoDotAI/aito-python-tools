@@ -222,6 +222,7 @@ commonYAMLStructure:
       name: run all tests execluding sql functions tests
       command: |
         . venv/bin/activate
+        python -m tests -v suite argparser
         python -m tests -v suite utils
         python -m tests -v suite cli
   - &run_tests_exc_sql_functions_tests_win
@@ -292,7 +293,7 @@ jobs:
           POSTGRES_PASSWORD: test_pw
     environment:
       SQL_DRIVER: PostgreSQL Unicode
-      SQL_SERVER: localhost
+      SQL_SERVER: F
       SQL_DATABASE: circleci_test
       SQL_USERNAME: test
       SQL_PASSWORD: test_pw

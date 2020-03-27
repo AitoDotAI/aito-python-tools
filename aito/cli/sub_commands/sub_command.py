@@ -9,14 +9,14 @@ class SubCommand(ABC):
 
     @abstractmethod
     def build_parser(self, parser):
-        """Take a vanilla parser from main parser's action sub parser and add arguments
+        """Take a vanilla argparser from main argparser's action sub argparser and add arguments
 
-        :param parser: a vanilla parser from main parser's action sub parser
+        :param parser: a vanilla argparser from main argparser's action sub argparser
         """
 
     @abstractmethod
     def parse_and_execute(self, parsed_args: Dict):
-        """Use the parsed args from main parser and execute the action
+        """Use the parsed args from main argparser and execute the action
 
         :param parsed_args:
         """
