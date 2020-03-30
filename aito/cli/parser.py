@@ -1,10 +1,13 @@
-import argparse
+from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
 import sys
+from pathlib import Path
+from abc import ABC, abstractmethod
+from typing import Union, TextIO
 
 
-class ArgParser(argparse.ArgumentParser):
+class ArgParser(ArgumentParser):
     def __init__(self, **kwargs):
-        super().__init__(formatter_class=argparse.RawTextHelpFormatter, **kwargs)
+        super().__init__(formatter_class=RawTextHelpFormatter, **kwargs)
 
     def error(self, message):
         sys.stderr.write(f"error: {message}\n")
@@ -64,3 +67,88 @@ class ArgParser(argparse.ArgumentParser):
 
     def add_excel_format_default_arguments(self):
         self.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name', help='read a sheet by sheet name')
+
+
+class ParseError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(message)
+
+
+class PathType:
+    """Customized PathType instead of argparse.FileType to handle close file more gracefully
+
+    """
+    def __init__(self, must_exist: bool = False):
+        self.must_exist = must_exist
+
+    def __call__(self, string) -> Path:
+        try:
+            path = Path(string)
+        except Exception:
+            raise ArgumentTypeError(f'invalid path: {string}')
+        if self.must_exist and not path.exists():
+            raise ArgumentTypeError(f'{path} does not exist')
+        return path
+
+
+class IOType(ABC):
+    """Input Type Argument that parse into FilePathOrBuffer
+
+        """
+
+    def __init__(self, special_input_character: str = '-'):
+        """
+
+        :param special_input_character: special character to signal stdin and stdout
+        """
+        self.special_input_character = special_input_character
+
+    @abstractmethod
+    def __call__(self, string) -> Union[TextIO, Path]:
+        pass
+
+
+class InputType(IOType):
+    """Input Type Argument that parse into either sys.stdin or a file path
+
+    """
+    def __init__(self, special_input_character: str = '-'):
+        """
+
+        :param special_input_character: special character to signal stdin and stdout
+        """
+        super().__init__(special_input_character)
+
+    def __call__(self, string) -> Union[TextIO, Path]:
+        if string == self.special_input_character:
+            return sys.stdin
+        try:
+            path = Path(string)
+        except Exception:
+            raise ArgumentTypeError(f'invalid path: {string}')
+        if not path.exists():
+            raise ArgumentTypeError(f'{path} does not exist')
+        return path
+
+
+class OutputType(IOType):
+    """Input Type Argument that parse into either sys.stdin or a file path
+
+        """
+
+    def __init__(self, special_input_character: str = '-'):
+        """
+
+        :param special_input_character: special character to signal stdin and stdout
+        """
+        super().__init__(special_input_character)
+
+    def __call__(self, string) -> Union[TextIO, Path]:
+        if string == self.special_input_character:
+            return sys.stdout
+        try:
+            path = Path(string)
+        except Exception:
+            raise ArgumentTypeError(f'invalid path: {string}')
+        return path

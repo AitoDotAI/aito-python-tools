@@ -4,9 +4,9 @@ import argcomplete
 
 from aito import __version__
 from aito.utils.generic_utils import logging_config
-from .parse_utils import ParseError
-from .parser import ArgParser
+from .parser import ArgParser, ParseError
 from .sub_commands import *
+from typing import Dict, Optional
 
 
 class MainParser(ArgParser):
@@ -36,8 +36,9 @@ class MainParser(ArgParser):
             sub_cmd.build_parser(sub_cmd_parser)
         argcomplete.autocomplete(self)
 
-    def parse_and_execute(self):
-        parsed_args = vars(self.parse_args())
+    def parse_and_execute(self, parsed_args: Optional[Dict] = None):
+        if parsed_args is None:
+            parsed_args = vars(self.parse_args())
         if parsed_args['version']:
             print(__version__)
             return 0

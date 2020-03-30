@@ -2,10 +2,11 @@ import json
 import sys
 from typing import Dict, List
 
-from aito.cli.parse_utils import parse_input_arg_value, parse_path_value, ParseError, try_json_load
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.schema_handler import SchemaHandler
 from .sub_command import SubCommand
+from ..parser import PathType, InputType, ParseError
+from ..parser_utils import try_json_load
 
 
 class ConvertFromFormatSubCommand(SubCommand):
@@ -13,17 +14,17 @@ class ConvertFromFormatSubCommand(SubCommand):
         # add share arguments between formats
         either_use_or_create_schema = parser.add_mutually_exclusive_group()
         either_use_or_create_schema.add_argument(
-            '-c', '--create-table-schema', metavar='schema-output-file', type=str,
+            '-c', '--create-table-schema', metavar='schema-output-file', type=PathType(),
             help='create an inferred aito schema and write to output file'
         )
         either_use_or_create_schema.add_argument(
-            '-s', '--use-table-schema', metavar='schema-input-file', type=str,
+            '-s', '--use-table-schema', metavar='schema-input-file', type=PathType(must_exist=True),
             help='convert the data to match the input table schema'
         )
         parser.add_argument('-e', '--encoding', type=str, default='utf-8', help="encoding to use (default: 'utf-8')")
         parser.add_argument('-j', '--json', action='store_true', help='convert to json format')
         parser.add_argument(
-            'input', default='-', type=str, nargs='?',
+            'input', default='-', type=InputType(), nargs='?',
             help="path to the input file (when no input file is given or when input is -, read from the standard input)"
         )
 
@@ -31,7 +32,7 @@ class ConvertFromFormatSubCommand(SubCommand):
     def parsed_args_to_data_frame_handler_convert_args(parsed_args: Dict) -> Dict:
         in_format = parsed_args['input-format']
         convert_args = {
-            'read_input': parse_input_arg_value(parsed_args['input']),
+            'read_input': parsed_args['input'],
             'write_output': sys.stdout,
             'in_format': parsed_args['input-format'],
             'out_format': 'json' if parsed_args['json'] else 'ndjson',
@@ -42,8 +43,7 @@ class ConvertFromFormatSubCommand(SubCommand):
         }
 
         if parsed_args['use_table_schema']:
-            schema_path = parse_path_value(parsed_args['use_table_schema'], check_exists=True)
-            with schema_path.open() as f:
+            with parsed_args['use_table_schema'].open() as f:
                 table_schema = try_json_load(f, 'table schema')
             convert_args['use_table_schema'] = table_schema
 
@@ -52,7 +52,7 @@ class ConvertFromFormatSubCommand(SubCommand):
             convert_args['read_options']['decimal'] = parsed_args['decimal']
 
         if in_format == 'excel':
-            if parsed_args['input'] == '-':
+            if parsed_args['input'] == sys.stdin:
                 raise ParseError('input must be a file path for excel files')
             if parsed_args['one_sheet']:
                 convert_args['read_options']['sheet_name'] = parsed_args['one_sheet']
@@ -60,8 +60,7 @@ class ConvertFromFormatSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         parsed_convert_args = self.parsed_args_to_data_frame_handler_convert_args(parsed_args)
-        output_schema_path = parse_path_value(parsed_args['create_table_schema']) \
-            if parsed_args['create_table_schema'] else None
+        output_schema_path = parsed_args['create_table_schema'] if parsed_args['create_table_schema'] else None
 
         converted_df = DataFrameHandler().convert_file(**parsed_convert_args)
         if output_schema_path:

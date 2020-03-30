@@ -2,12 +2,12 @@ import tempfile
 from os import unlink
 from typing import Dict, List
 
-from aito.cli.parse_utils import parse_path_value, ParseError, create_client_from_parsed_args, \
-    load_json_from_input_arg_value, \
-    prompt_confirmation, create_sql_connecting_from_parsed_args
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.schema_handler import SchemaHandler
 from .sub_command import SubCommand
+from ..parser import PathType, InputType, ParseError
+from ..parser_utils import create_client_from_parsed_args, load_json_from_parsed_input_arg, \
+    prompt_confirmation, create_sql_connecting_from_parsed_args
 
 
 class QuickAddTableSubCommand(SubCommand):
@@ -22,23 +22,23 @@ class QuickAddTableSubCommand(SubCommand):
         parser.add_argument(
             '-f', '--file-format', type=str, choices=file_format_choices, default='infer',
             help='specify the input file format (default: infer from the file extension)')
-        parser.add_argument('input-file', type=str, help="path to the input file")
+        parser.add_argument('input-file', type=PathType(must_exist=True), help="path to the input file")
         return parser
 
     def parse_and_execute(self, parsed_args: Dict):
         df_handler = DataFrameHandler()
-        input_file_path = parse_path_value(parsed_args['input-file'])
-        in_format = input_file_path.suffixes[0].replace('.', '') \
+        in_f_path = parsed_args['input-file']
+        in_format = in_f_path.suffixes[0].replace('.', '') \
             if parsed_args['file_format'] == 'infer' else parsed_args['file_format']
 
         if in_format not in df_handler.allowed_format:
-            raise ParseError(f'failed to infer file {input_file_path} format. '
+            raise ParseError(f'failed to infer file {in_f_path} format. '
                              f'Please give the exact file format instead of `infer`')
 
-        table_name = parsed_args['table_name'] if parsed_args['table_name'] else input_file_path.stem
+        table_name = parsed_args['table_name'] if parsed_args['table_name'] else in_f_path.stem
         converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
         convert_options = {
-            'read_input': input_file_path,
+            'read_input': in_f_path,
             'write_output': converted_tmp_file.name,
             'in_format': in_format,
             'out_format': 'ndjson',
@@ -66,13 +66,13 @@ class CreateTableSubCommand(SubCommand):
     def build_parser(self, parser):
         parser.add_argument('table-name', type=str, help="name of the table to be created")
         parser.add_argument(
-            'input', default='-', type=str, nargs='?',
+            'input', default='-', type=InputType(), nargs='?',
             help="path to the schema file (when no file is given or when input is -, read from the standard input)")
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
-        table_schema = load_json_from_input_arg_value(parsed_args['input'], 'table schema')
+        table_schema = load_json_from_parsed_input_arg(parsed_args['input'], 'table schema')
         client.create_table(table_name, table_schema)
         return 0
 
@@ -113,13 +113,13 @@ class UploadEntriesSubCommand(SubCommand):
         parser.epilog = 'With no input, or when input is -, read table content from standard input'
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
         parser.add_argument(
-            'input', default='-', type=str, nargs='?',
+            'input', default='-', type=InputType(), nargs='?',
             help="path to the entries file (when no file is given or when input is -, read from the standard input)")
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
-        table_entries = load_json_from_input_arg_value(parsed_args['input'])
+        table_entries = load_json_from_parsed_input_arg(parsed_args['input'])
         client.upload_entries(table_name, table_entries)
         return 0
 
@@ -149,15 +149,15 @@ class UploadFileSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         df_handler = DataFrameHandler()
         table_name = parsed_args['table-name']
-        input_file_path = parse_path_value(parsed_args['input-file'])
-        in_format = input_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
+        in_file_path = parsed_args['input-file']
+        in_format = in_file_path.suffixes[0].replace('.', '') if parsed_args['file_format'] == 'infer' \
             else parsed_args['file_format']
         if in_format not in df_handler.allowed_format:
-            raise ParseError(f'failed to infer file {input_file_path} format. '
+            raise ParseError(f'failed to infer file {in_file_path} format. '
                              f'Please give the exact file format instead of `infer`')
         converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
         convert_options = {
-            'read_input': input_file_path,
+            'read_input': in_file_path,
             'write_output': converted_tmp_file.name,
             'in_format': in_format,
             'out_format': 'ndjson',

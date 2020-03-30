@@ -1,12 +1,12 @@
 import json
-import os
+from os import getenv, PathLike
 import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from aito.utils._typing import FilePathOrBuffer
 from aito.utils.aito_client import AitoClient
+from typing import Union, TextIO
 
 
 class ParseError(Exception):
@@ -16,7 +16,7 @@ class ParseError(Exception):
 
 
 def parse_env_variable(var_name, required=False):
-    env_var = os.getenv(var_name)
+    env_var = getenv(var_name)
     if not env_var and required:
         raise ParseError(f'missing environment variable `{var_name}`')
     return env_var
@@ -56,15 +56,7 @@ def parse_path_value(path, check_exists=False) -> Path:
     return path
 
 
-def parse_input_arg_value(input_arg_value: str) -> FilePathOrBuffer:
-    return sys.stdin if input_arg_value == '-' else parse_path_value(input_arg_value, True)
-
-
-def parse_output_arg_value(output_arg_value: str) -> FilePathOrBuffer:
-    return sys.stdout if output_arg_value == '-' else parse_path_value(output_arg_value)
-
-
-def try_json_load(fp, parsing_object_name: str=''):
+def try_json_load(fp: TextIO, parsing_object_name: str=''):
     try:
         return json.load(fp)
     except json.decoder.JSONDecodeError as e:
@@ -73,13 +65,12 @@ def try_json_load(fp, parsing_object_name: str=''):
         raise ParseError(f'failed to parse {parsing_object_name}: {e}')
 
 
-def load_json_from_input_arg_value(input_arg_value: str, parsing_object_name: str = ''):
-    if input_arg_value == '-':
-        return try_json_load(sys.stdin, parsing_object_name)
+def load_json_from_parsed_input_arg(parsed_input_arg: Union[Path, TextIO], parsing_object_name: str = ''):
+    if isinstance(parsed_input_arg, Path):
+        with parsed_input_arg.open() as in_f:
+            return try_json_load(in_f, parsing_object_name)
     else:
-        input_path = parse_path_value(input_arg_value)
-        with input_path.open() as f:
-            return try_json_load(f, parsing_object_name)
+        return try_json_load(parsed_input_arg, parsing_object_name)
 
 
 def pyodbc_installed() -> bool:
