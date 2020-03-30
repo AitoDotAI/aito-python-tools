@@ -18,7 +18,7 @@ class ConvertFromFormatSubCommand(SubCommand):
             help='create an inferred aito schema and write to output file'
         )
         either_use_or_create_schema.add_argument(
-            '-s', '--use-table-schema', metavar='schema-input-file', type=PathType(must_exist=True),
+            '-s', '--use-table-schema', metavar='schema-input-file', type=PathType(exists=True),
             help='convert the data to match the input table schema'
         )
         parser.add_argument('-e', '--encoding', type=str, default='utf-8', help="encoding to use (default: 'utf-8')")

@@ -79,15 +79,18 @@ class PathType:
     """Customized PathType instead of argparse.FileType to handle close file more gracefully
 
     """
-    def __init__(self, must_exist: bool = False):
-        self.must_exist = must_exist
+    def __init__(self, parent_exists: bool = False, exists: bool = False):
+        self.parent_exists = parent_exists
+        self.exists = exists
 
     def __call__(self, string) -> Path:
         try:
             path = Path(string)
         except Exception:
             raise ArgumentTypeError(f'invalid path: {string}')
-        if self.must_exist and not path.exists():
+        if self.parent_exists and not path.parent.exists():
+            raise ArgumentTypeError(f'{path.parent} does not exist')
+        if self.exists and not path.exists():
             raise ArgumentTypeError(f'{path} does not exist')
         return path
 
@@ -151,4 +154,6 @@ class OutputType(IOType):
             path = Path(string)
         except Exception:
             raise ArgumentTypeError(f'invalid path: {string}')
+        if not path.parent.exists():
+            raise ArgumentTypeError(f'{path.parent} does not exist')
         return path

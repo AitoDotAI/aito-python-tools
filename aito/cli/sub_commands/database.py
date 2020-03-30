@@ -22,7 +22,7 @@ class QuickAddTableSubCommand(SubCommand):
         parser.add_argument(
             '-f', '--file-format', type=str, choices=file_format_choices, default='infer',
             help='specify the input file format (default: infer from the file extension)')
-        parser.add_argument('input-file', type=PathType(must_exist=True), help="path to the input file")
+        parser.add_argument('input-file', type=PathType(exists=True), help="path to the input file")
         return parser
 
     def parse_and_execute(self, parsed_args: Dict):
