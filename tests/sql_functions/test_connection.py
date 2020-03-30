@@ -2,13 +2,13 @@ import json
 import os
 
 from aito.utils.sql_connection import SQLConnection
-from tests.cases import TestCaseCompare
+from tests.cases import CompareTestCase
 
 
-class TestPostgresConnection(TestCaseCompare):
+class TestPostgresConnection(CompareTestCase):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='sql_functions/connection')
+        super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_variables = os.environ
         cls.connection = SQLConnection(
@@ -54,10 +54,10 @@ class TestPostgresConnection(TestCaseCompare):
         cursor.close()
 
 
-class TestMySQLConnection(TestCaseCompare):
+class TestMySQLConnection(CompareTestCase):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='sql_functions/connection')
+        super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_variables = os.environ
         cls.connection = SQLConnection(

@@ -4,13 +4,13 @@ from uuid import uuid4
 
 from aito.utils.aito_client import AitoClient, BaseError, RequestError
 from aito.utils.file_utils import read_ndjson_gz_file
-from tests.cases import TestCaseCompare
+from tests.cases import CompareTestCase
 
 
-class TestAitoClient(TestCaseCompare):
+class TestAitoClient(CompareTestCase):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='utils/aito_client')
+        super().setUpClass()
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
         cls.default_table_name = f"invoice_{uuid4()}"

@@ -1,13 +1,13 @@
 import os
 import subprocess
 
-from tests.cases import TestCaseCompare
+from tests.cases import CompareTestCase
 
 
-class TestConvertCli(TestCaseCompare):
+class TestConvertCli(CompareTestCase):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='cli/convert')
+        super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.prefix_args = ['python', '-m', 'aito.cli']
         if os.getenv('TEST_BUILT_PACKAGE'):

@@ -7,13 +7,13 @@ from uuid import uuid4
 
 from aito.cli.main_parser import MainParser
 from aito.utils.aito_client import AitoClient
-from tests.cases import TestCaseCompare
+from tests.cases import CompareTestCase
 
 
-class TestDatabaseCli(TestCaseCompare):
+class TestDatabaseCli(CompareTestCase):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='cli/client')
+        super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.main_parser = MainParser()
         env_var = os.environ

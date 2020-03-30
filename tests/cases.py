@@ -1,16 +1,24 @@
 import filecmp
+import json
 import logging
-from datetime import datetime, timezone
+import sys
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Union
-import json
+
 import ndjson
 
-from aito.utils.generic_utils import ROOT_PATH
+from .parser import ROOT_PATH
 
 
-class TestCaseTimer(unittest.TestCase):
+class BaseTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        class_path = Path(sys.modules[cls.__module__].__file__)
+        cls.test_dir_path = ROOT_PATH / class_path.relative_to(ROOT_PATH).parts[0]
+        cls.relative_to_test_dir = class_path.relative_to(cls.test_dir_path)
+
     def setUp(self) -> None:
         self._started_at = datetime.now(timezone.utc)
 
@@ -19,31 +27,25 @@ class TestCaseTimer(unittest.TestCase):
         self._elapsed = self._finished_at - self._started_at
 
 
-class TestCaseCompare(TestCaseTimer):
+class CompareTestCase(BaseTestCase):
     """
     The TestCase create a input and a output folder and supports file comparison
     """
 
     @classmethod
     def setUpClass(
-            cls,
-            io_folder_path: Optional[Union[Path, str]] = 'tests/io',
-            in_folder_name: Optional[str] = 'in',
-            out_folder_name: Optional[str] = 'out',
-            test_path: Optional[Union[Path, str]] = None
+            cls, in_folder_path: Optional[Union[Path, str]] = None,out_folder_path: Optional[Union[Path, str]] = None
     ):
         """
-        :param io_folder_path: Path to test io folder from project root
-        :param in_folder_name: Input folder name
-        :param out_folder_name: Output folder name
-        :param test_path: Path to test class io folder if specified, else use class name
+        :param in_folder_path: Input folder path if specified, else test_dir/io/in/path_to_case
+        :param out_folder_path: Output folder Path if specified, else test_dir/io/out/path_to_case
         :return:
         """
-        io_path = ROOT_PATH.joinpath(io_folder_path)
-        if not test_path:
-            test_path = cls.__name__
-        cls.input_folder = (io_path / in_folder_name).joinpath(test_path)
-        cls.output_folder = (io_path / out_folder_name).joinpath(test_path)
+        super().setUpClass()
+        cls.input_folder = Path(in_folder_path) if in_folder_path \
+            else cls.test_dir_path.joinpath(f'io/in/{cls.relative_to_test_dir}')
+        cls.output_folder = Path(out_folder_path) if out_folder_path \
+            else cls.test_dir_path.joinpath(f'io/out/{cls.relative_to_test_dir}')
         cls.output_folder.mkdir(parents=True, exist_ok=True)
 
     def setUp(self):

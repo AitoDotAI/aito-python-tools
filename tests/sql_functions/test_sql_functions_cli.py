@@ -3,14 +3,14 @@ import os
 import subprocess
 
 from aito.utils.aito_client import AitoClient
-from tests.cases import TestCaseCompare
+from tests.cases import CompareTestCase
 from uuid import uuid4
 
 
-class TestSQLCliFunctions(TestCaseCompare):
+class TestSQLCliFunctions(CompareTestCase):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='sql_functions/cli')
+        super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         env_vars = os.environ
         cls.client = AitoClient(env_vars['AITO_INSTANCE_URL'], env_vars['AITO_API_KEY'])

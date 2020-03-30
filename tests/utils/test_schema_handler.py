@@ -1,13 +1,13 @@
 import json
 from aito.utils.schema_handler import SchemaHandler
 from aito.utils.data_frame_handler import DataFrameHandler
-from tests.cases import TestCaseCompare
+from tests.cases import CompareTestCase
 
 
-class TestSchemaHandler(TestCaseCompare):
+class TestSchemaHandler(CompareTestCase):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='utils/schema_handler')
+        super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.schema_handler = SchemaHandler()
 

@@ -3,13 +3,13 @@ import json
 import ndjson
 
 from aito.utils.data_frame_handler import DataFrameHandler
-from tests.cases import TestCaseCompare
+from tests.cases import CompareTestCase
 
 
-class TestDataFrameHandler(TestCaseCompare):
+class TestDataFrameHandler(CompareTestCase):
     @classmethod
     def setUpClass(cls):
-        super().setUpClass(test_path='utils/df_handler')
+        super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.df_handler = DataFrameHandler()
 

@@ -1,3 +1,3 @@
-from .parser import generate_parser, execute_parser
+from .parser import TestParser
 
-execute_parser(generate_parser())
+TestParser()()
