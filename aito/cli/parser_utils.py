@@ -56,7 +56,7 @@ def parse_path_value(path, check_exists=False) -> Path:
     return path
 
 
-def try_json_load(fp: TextIO, parsing_object_name: str=''):
+def try_json_load(fp: TextIO, parsing_object_name: str = ''):
     try:
         return json.load(fp)
     except json.decoder.JSONDecodeError as e:
