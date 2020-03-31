@@ -5,7 +5,7 @@ from typing import Dict, List
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.schema_handler import SchemaHandler
 from .sub_command import SubCommand
-from ..parser import PathType, InputType, ParseError
+from ..parser import PathArgType, InputArgType, ParseError
 from ..parser_utils import try_json_load
 
 
@@ -14,17 +14,17 @@ class ConvertFromFormatSubCommand(SubCommand):
         # add share arguments between formats
         either_use_or_create_schema = parser.add_mutually_exclusive_group()
         either_use_or_create_schema.add_argument(
-            '-c', '--create-table-schema', metavar='schema-output-file', type=PathType(parent_exists=True),
+            '-c', '--create-table-schema', metavar='schema-output-file', type=PathArgType(parent_must_exist=True),
             help='create an inferred aito schema and write to output file'
         )
         either_use_or_create_schema.add_argument(
-            '-s', '--use-table-schema', metavar='schema-input-file', type=PathType(exists=True),
+            '-s', '--use-table-schema', metavar='schema-input-file', type=PathArgType(must_exist=True),
             help='convert the data to match the input table schema'
         )
         parser.add_argument('-e', '--encoding', type=str, default='utf-8', help="encoding to use (default: 'utf-8')")
         parser.add_argument('-j', '--json', action='store_true', help='convert to json format')
         parser.add_argument(
-            'input', default='-', type=InputType(), nargs='?',
+            'input', default='-', type=InputArgType(), nargs='?',
             help="path to the input file (when no input file is given or when input is -, read from the standard input)"
         )
 

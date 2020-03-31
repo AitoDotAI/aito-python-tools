@@ -1,7 +1,7 @@
-from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
 import sys
-from pathlib import Path
 from abc import ABC, abstractmethod
+from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
+from pathlib import Path
 from typing import Union, TextIO
 
 
@@ -25,10 +25,10 @@ class ArgParser(ArgumentParser):
             '-k', '--api-key', type=str, default='.env', help='specify aito read-write or read-only API key'
         )
         epilog_str = '''\
-        You must provide your Aito credentials to execute database operations
-          If no Aito credential flag is given, the following environment variables are used:
-          AITO_INSTANCE_URL, AITO_API_KEY
-        '''
+You must provide your Aito credentials to execute database operations
+  If no Aito credential flag is given, the following environment variables are used:
+  AITO_INSTANCE_URL, AITO_API_KEY
+'''
         if not self.epilog:
             self.epilog = epilog_str
         else:
@@ -53,9 +53,9 @@ class ArgParser(ArgumentParser):
         args.add_argument('--password', '-p', type=str, help='password for authentication', default='.env')
 
         epilog_str = '''\
-        If no database credentials flag is given, the following environment variable are used: 
-          SQL_DRIVER, SQL_SERVER, SQL_PORT, SQL_DATABASE, SQL_USERNAME, SQL_PASSWORD
-        '''
+If no database credentials flag is given, the following environment variable are used: 
+  SQL_DRIVER, SQL_SERVER, SQL_PORT, SQL_DATABASE, SQL_USERNAME, SQL_PASSWORD
+'''
         if not self.epilog:
             self.epilog = epilog_str
         else:
@@ -75,56 +75,52 @@ class ParseError(Exception):
         super().__init__(message)
 
 
-class PathType:
+class ArgType(ABC):
+    @abstractmethod
+    def __call__(self, string):
+        pass
+
+
+class PathArgType(ArgType):
     """Customized PathType instead of argparse.FileType to handle close file more gracefully
 
     """
-    def __init__(self, parent_exists: bool = False, exists: bool = False):
-        self.parent_exists = parent_exists
-        self.exists = exists
+    def __init__(self, parent_must_exist: bool = False, must_exist: bool = False):
+        self.parent_must_exist = parent_must_exist
+        self.must_exist = must_exist
 
     def __call__(self, string) -> Path:
         try:
             path = Path(string)
         except Exception:
             raise ArgumentTypeError(f'invalid path: {string}')
-        if self.parent_exists and not path.parent.exists():
+        if self.parent_must_exist and not path.parent.exists():
             raise ArgumentTypeError(f'{path.parent} does not exist')
-        if self.exists and not path.exists():
+        if self.must_exist and not path.exists():
             raise ArgumentTypeError(f'{path} does not exist')
         return path
 
 
-class IOType(ABC):
+class IOArgType(ArgType):
     """Input Type Argument that parse into FilePathOrBuffer
+    """
 
+    def __init__(self, default: str = '-'):
         """
 
-    def __init__(self, special_input_character: str = '-'):
+        :param default: special character to signal stdin and stdout
         """
+        self.default = default
 
-        :param special_input_character: special character to signal stdin and stdout
-        """
-        self.special_input_character = special_input_character
-
-    @abstractmethod
-    def __call__(self, string) -> Union[TextIO, Path]:
+    def __call__(self, string):
         pass
 
 
-class InputType(IOType):
-    """Input Type Argument that parse into either sys.stdin or a file path
-
+class InputArgType(IOArgType):
+    """parse into sys.stdin if match the default input or a must exist path
     """
-    def __init__(self, special_input_character: str = '-'):
-        """
-
-        :param special_input_character: special character to signal stdin and stdout
-        """
-        super().__init__(special_input_character)
-
     def __call__(self, string) -> Union[TextIO, Path]:
-        if string == self.special_input_character:
+        if string == self.default:
             return sys.stdin
         try:
             path = Path(string)
@@ -135,20 +131,11 @@ class InputType(IOType):
         return path
 
 
-class OutputType(IOType):
-    """Input Type Argument that parse into either sys.stdin or a file path
-
-        """
-
-    def __init__(self, special_input_character: str = '-'):
-        """
-
-        :param special_input_character: special character to signal stdin and stdout
-        """
-        super().__init__(special_input_character)
-
+class OutputArgType(IOArgType):
+    """parse into sys.stdout if match the default input or a path whose parent must exist
+    """
     def __call__(self, string) -> Union[TextIO, Path]:
-        if string == self.special_input_character:
+        if string == self.default:
             return sys.stdout
         try:
             path = Path(string)

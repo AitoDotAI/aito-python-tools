@@ -5,7 +5,7 @@ from typing import Dict, List
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.schema_handler import SchemaHandler
 from .sub_command import SubCommand
-from ..parser import PathType, InputType, ParseError
+from ..parser import PathArgType, InputArgType, ParseError
 from ..parser_utils import create_client_from_parsed_args, load_json_from_parsed_input_arg, \
     prompt_confirmation, create_sql_connecting_from_parsed_args
 
@@ -22,7 +22,7 @@ class QuickAddTableSubCommand(SubCommand):
         parser.add_argument(
             '-f', '--file-format', type=str, choices=file_format_choices, default='infer',
             help='specify the input file format (default: infer from the file extension)')
-        parser.add_argument('input-file', type=PathType(exists=True), help="path to the input file")
+        parser.add_argument('input-file', type=PathArgType(must_exist=True), help="path to the input file")
         return parser
 
     def parse_and_execute(self, parsed_args: Dict):
@@ -66,7 +66,7 @@ class CreateTableSubCommand(SubCommand):
     def build_parser(self, parser):
         parser.add_argument('table-name', type=str, help="name of the table to be created")
         parser.add_argument(
-            'input', default='-', type=InputType(), nargs='?',
+            'input', default='-', type=InputArgType(), nargs='?',
             help="path to the schema file (when no file is given or when input is -, read from the standard input)")
 
     def parse_and_execute(self, parsed_args: Dict):
@@ -113,7 +113,7 @@ class UploadEntriesSubCommand(SubCommand):
         parser.epilog = 'With no input, or when input is -, read table content from standard input'
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
         parser.add_argument(
-            'input', default='-', type=InputType(), nargs='?',
+            'input', default='-', type=InputArgType(), nargs='?',
             help="path to the entries file (when no file is given or when input is -, read from the standard input)")
 
     def parse_and_execute(self, parsed_args: Dict):
@@ -139,7 +139,7 @@ class UploadFileSubCommand(SubCommand):
 
     def build_parser(self, parser):
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
-        parser.add_argument('input-file', type=PathType(exists=True), help="path to the input file")
+        parser.add_argument('input-file', type=PathArgType(must_exist=True), help="path to the input file")
         file_format_choices = ['infer'] + DataFrameHandler.allowed_format
         parser.add_argument(
             '-f', '--file-format', type=str, choices=file_format_choices,

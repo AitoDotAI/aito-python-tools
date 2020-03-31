@@ -87,7 +87,7 @@ class CompareTestCase(BaseTestCase):
 
         self.addCleanup(cleanup)
         sys.stdin = new_input
-        self.logger.info(f'new stdin {sys.stdin}')
+        self.logger.debug(f'new stdin {sys.stdin}')
 
     def stub_stdout(self, new_output):
         saved_stdout = sys.stdout
@@ -97,4 +97,4 @@ class CompareTestCase(BaseTestCase):
 
         self.addCleanup(cleanup)
         sys.stdout = new_output
-        self.logger.info(f'new stdout {sys.stdout}')
+        self.logger.debug(f'new stdout {sys.stdout}')

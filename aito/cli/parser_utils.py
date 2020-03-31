@@ -1,18 +1,13 @@
 import json
-from os import getenv, PathLike
 import sys
+from os import getenv
 from pathlib import Path
+from typing import Union, TextIO
 
 from dotenv import load_dotenv
 
 from aito.utils.aito_client import AitoClient
-from typing import Union, TextIO
-
-
-class ParseError(Exception):
-    def __init__(self, message):
-        self.message = message
-        super().__init__(message)
+from .parser import ParseError
 
 
 def parse_env_variable(var_name, required=False):

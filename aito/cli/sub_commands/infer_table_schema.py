@@ -6,7 +6,7 @@ from typing import List
 from aito.utils.data_frame_handler import DataFrameHandler
 from aito.utils.schema_handler import SchemaHandler
 from .sub_command import SubCommand
-from ..parser import InputType, ParseError
+from ..parser import InputArgType, ParseError
 from ..parser_utils import create_sql_connecting_from_parsed_args
 
 
@@ -16,7 +16,7 @@ class InferFromFormatSubCommand(SubCommand):
         parser.add_argument('-e', '--encoding', type=str, default='utf-8',
                             help="encoding to use (default: 'utf-8')")
         parser.add_argument(
-            'input', default='-', type=InputType(), nargs='?',
+            'input', default='-', type=InputArgType(), nargs='?',
             help="path to the input file (when no input file is given or when input is -, read from the standard input)"
         )
 
