@@ -139,7 +139,7 @@ class UploadFileSubCommand(SubCommand):
 
     def build_parser(self, parser):
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
-        parser.add_argument('input-file', type=str, help="path to the input file")
+        parser.add_argument('input-file', type=PathType(exists=True), help="path to the input file")
         file_format_choices = ['infer'] + DataFrameHandler.allowed_format
         parser.add_argument(
             '-f', '--file-format', type=str, choices=file_format_choices,
