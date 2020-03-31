@@ -14,7 +14,7 @@ class ConvertFromFormatSubCommand(SubCommand):
         # add share arguments between formats
         either_use_or_create_schema = parser.add_mutually_exclusive_group()
         either_use_or_create_schema.add_argument(
-            '-c', '--create-table-schema', metavar='schema-output-file', type=PathType(),
+            '-c', '--create-table-schema', metavar='schema-output-file', type=PathType(parent_exists=True),
             help='create an inferred aito schema and write to output file'
         )
         either_use_or_create_schema.add_argument(

@@ -124,10 +124,7 @@ class DataFrameHandler:
         :return: read DataFrame
         :rtype: pd.DataFrame
         """
-        if isinstance(read_input, io.TextIOWrapper):
-            self.logger.info("Start reading from standard input...")
-        else:
-            self.logger.info(f"Start reading input from {read_input}...")
+        self.logger.debug(f'Star reading from {read_input}...')
         read_functions = {'csv': pd.read_csv, 'excel': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
 
         if not read_options:

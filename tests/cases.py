@@ -17,7 +17,7 @@ class BaseTestCase(unittest.TestCase):
     def setUpClass(cls) -> None:
         class_path = Path(sys.modules[cls.__module__].__file__)
         cls.test_dir_path = ROOT_PATH / class_path.relative_to(ROOT_PATH).parts[0]
-        cls.relative_to_test_dir = class_path.relative_to(cls.test_dir_path)
+        cls.relative_to_test_dir = class_path.relative_to(cls.test_dir_path).parent
 
     def setUp(self) -> None:
         self._started_at = datetime.now(timezone.utc)
@@ -37,15 +37,15 @@ class CompareTestCase(BaseTestCase):
             cls, in_folder_path: Optional[Union[Path, str]] = None,out_folder_path: Optional[Union[Path, str]] = None
     ):
         """
-        :param in_folder_path: Input folder path if specified, else test_dir/io/in/path_to_case
-        :param out_folder_path: Output folder Path if specified, else test_dir/io/out/path_to_case
+        :param in_folder_path: Input folder path if specified, else test_dir/io/in/path_to_case/case_name
+        :param out_folder_path: Output folder Path if specified, else test_dir/io/out/path_to_case/case_name
         :return:
         """
         super().setUpClass()
         cls.input_folder = Path(in_folder_path) if in_folder_path \
-            else cls.test_dir_path.joinpath(f'io/in/{cls.relative_to_test_dir}')
+            else cls.test_dir_path.joinpath(f'io/in/{cls.relative_to_test_dir}/{cls.__name__}')
         cls.output_folder = Path(out_folder_path) if out_folder_path \
-            else cls.test_dir_path.joinpath(f'io/out/{cls.relative_to_test_dir}')
+            else cls.test_dir_path.joinpath(f'io/out/{cls.relative_to_test_dir}/{cls.__name__}')
         cls.output_folder.mkdir(parents=True, exist_ok=True)
 
     def setUp(self):
@@ -78,3 +78,23 @@ class CompareTestCase(BaseTestCase):
         assert_method = self.assertEqual if compare_order else self.assertCountEqual
         with out_file_path.open() as out_f, exp_file_path.open() as exp_f:
             assert_method(load_method(out_f), load_method(exp_f))
+
+    def stub_stdin(self, new_input):
+        saved_stdin = sys.stdin
+
+        def cleanup():
+            sys.stdin = saved_stdin
+
+        self.addCleanup(cleanup)
+        sys.stdin = new_input
+        self.logger.info(f'new stdin {sys.stdin}')
+
+    def stub_stdout(self, new_output):
+        saved_stdout = sys.stdout
+
+        def cleanup():
+            sys.stdout = saved_stdout
+
+        self.addCleanup(cleanup)
+        sys.stdout = new_output
+        self.logger.info(f'new stdout {sys.stdout}')
