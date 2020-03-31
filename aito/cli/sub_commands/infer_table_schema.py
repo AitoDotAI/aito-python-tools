@@ -16,7 +16,7 @@ class InferFromFormatSubCommand(SubCommand):
         parser.add_argument('-e', '--encoding', type=str, default='utf-8',
                             help="encoding to use (default: 'utf-8')")
         parser.add_argument(
-            'input', default='-', type=InputType, nargs='?',
+            'input', default='-', type=InputType(), nargs='?',
             help="path to the input file (when no input file is given or when input is -, read from the standard input)"
         )
 
