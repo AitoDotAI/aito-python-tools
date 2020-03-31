@@ -293,7 +293,7 @@ jobs:
           POSTGRES_PASSWORD: test_pw
     environment:
       SQL_DRIVER: PostgreSQL Unicode
-      SQL_SERVER: F
+      SQL_SERVER: localhost
       SQL_DATABASE: circleci_test
       SQL_USERNAME: test
       SQL_PASSWORD: test_pw
