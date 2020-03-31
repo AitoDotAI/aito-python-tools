@@ -55,9 +55,9 @@ def try_json_load(fp: TextIO, parsing_object_name: str = ''):
     try:
         return json.load(fp)
     except json.decoder.JSONDecodeError as e:
-        raise ParseError(f'failed to parse {parsing_object_name}: {e.msg}')
+        raise ParseError(f'failed to parse JSON {parsing_object_name}: {e.msg}')
     except Exception as e:
-        raise ParseError(f'failed to parse {parsing_object_name}: {e}')
+        raise ParseError(f'failed to parse JSON {parsing_object_name}: {e}')
 
 
 def load_json_from_parsed_input_arg(parsed_input_arg: Union[Path, TextIO], parsing_object_name: str = ''):

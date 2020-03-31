@@ -31,7 +31,7 @@ class RequestError(BaseError):
             error_msg = error.message
         else:
             error_msg = str(error)
-        super().__init__(f'failed to {method} to {endpoint} with query {query}) {error_msg}')
+        super().__init__(f'failed to `{method}` to `{endpoint}` with query {str(query)[:100]}...: {error_msg}')
 
 
 class AitoClient:

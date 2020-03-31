@@ -16,7 +16,7 @@ class TestInferTableSchema(CompareTestCase):
         }
 
     def assert_parse_then_execute(
-            self, parsing_args, expected_args, stub_stdin=None, stub_stdout= None, execute_exception=None
+            self, parsing_args, expected_args, stub_stdin=None, stub_stdout=None, execute_exception=None
     ):
         self.assertDictEqual(vars(self.parser.parse_args(parsing_args)), expected_args)
 
