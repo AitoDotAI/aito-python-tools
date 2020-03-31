@@ -17,16 +17,15 @@ class ArgParser(ArgumentParser):
     def add_aito_default_credentials_arguments(self):
         args = self.add_argument_group("aito credential arguments")
         args.add_argument(
-            '-e', '--use-env-file', type=str, metavar='env-input-file',
+            '-e', '--use-env-file', type=PathArgType(must_exist=True), metavar='env-input-file',
             help='set up the credentials using a .env file containing the required env variables'
         )
         args.add_argument('-i', '--instance-url', type=str, default='.env', help='specify aito instance url')
         args.add_argument(
             '-k', '--api-key', type=str, default='.env', help='specify aito read-write or read-only API key'
         )
-        epilog_str = '''\
-You must provide your Aito credentials to execute database operations
-  If no Aito credential flag is given, the following environment variables are used:
+        epilog_str = '''You must provide your Aito credentials to execute database operations.
+If no Aito credential flag is given, the following environment variables are used:
   AITO_INSTANCE_URL, AITO_API_KEY
 '''
         if not self.epilog:
@@ -42,7 +41,7 @@ You must provide your Aito credentials to execute database operations
         """
         args = self.add_argument_group('database connection arguments')
         if add_use_env_arg:
-            args.add_argument('-e', '--use-env-file', type=str, metavar='env-input-file',
+            args.add_argument('-e', '--use-env-file', type=PathArgType(must_exist=True), metavar='env-input-file',
                               help='set up the credentials using a .env file containing the required env variables')
 
         args.add_argument('--driver', '-D', type=str, help='the name of the ODBC driver', default='.env')
@@ -52,8 +51,7 @@ You must provide your Aito credentials to execute database operations
         args.add_argument('--username', '-u', type=str, help='username for authentication', default='.env')
         args.add_argument('--password', '-p', type=str, help='password for authentication', default='.env')
 
-        epilog_str = '''\
-If no database credentials flag is given, the following environment variable are used: 
+        epilog_str = '''If no database credentials flag is given, the following environment variable are used: 
   SQL_DRIVER, SQL_SERVER, SQL_PORT, SQL_DATABASE, SQL_USERNAME, SQL_PASSWORD
 '''
         if not self.epilog:

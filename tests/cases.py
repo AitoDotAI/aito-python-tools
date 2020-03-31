@@ -6,6 +6,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Union
+import os
 
 import ndjson
 
@@ -98,3 +99,16 @@ class CompareTestCase(BaseTestCase):
         self.addCleanup(cleanup)
         sys.stdout = new_output
         self.logger.debug(f'new stdout {sys.stdout}')
+
+    def stub_or_delete_environment_variable(self, var_name: str, new_var_value: str = None):
+        old_var_value = os.getenv(var_name)
+        def cleanup():
+            if old_var_value is not None:
+                os.environ[var_name] = old_var_value
+        self.addCleanup(cleanup)
+        if new_var_value is not None:
+            os.environ[var_name] = new_var_value
+            self.logger.debug(f'stub env var `{var_name}`: {old_var_value} -> {new_var_value}')
+        else:
+            del os.environ[var_name]
+            self.logger.debug(f'delete env var `{var_name}`')

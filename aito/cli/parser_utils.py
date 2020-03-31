@@ -13,7 +13,7 @@ from .parser import ParseError
 def parse_env_variable(var_name, required=False):
     env_var = getenv(var_name)
     if not env_var and required:
-        raise ParseError(f'missing environment variable `{var_name}`')
+        raise ParseError(f'environment variable `{var_name}` not found')
     return env_var
 
 
@@ -75,16 +75,17 @@ def pyodbc_installed() -> bool:
     return True
 
 
-def create_client_from_parsed_args(parsed_args):
+def create_client_from_parsed_args(parsed_args, check_credentials=True) -> AitoClient:
     if parsed_args['use_env_file']:
         env_file_path = parse_path_value(parsed_args['use_env_file'], True)
-        load_dotenv(str(env_file_path))
+        load_dotenv(str(env_file_path), override=True)
 
     client_args = {
-        'instance_url': parse_env_variable('AITO_INSTANCE_URL') if parsed_args['instance_url'] == '.env'
+        'instance_url': parse_env_variable('AITO_INSTANCE_URL', required=True) if parsed_args['instance_url'] == '.env'
         else parsed_args['instance_url'],
-        'api_key': parse_env_variable('AITO_API_KEY') if parsed_args['api_key'] == '.env'
-        else parsed_args['api_key']
+        'api_key': parse_env_variable('AITO_API_KEY', required=True) if parsed_args['api_key'] == '.env'
+        else parsed_args['api_key'],
+        'check_credentials': check_credentials
     }
     return AitoClient(**client_args)
 
@@ -93,7 +94,9 @@ def create_sql_connecting_from_parsed_args(parsed_args):
     if not pyodbc_installed():
         raise ParseError('pyodbc is not installed. Please refer to our documentation: '
                          'https://aitodotai.github.io/aito-python-tools/sql.html#additional-installation')
-
+    if parsed_args['use_env_file']:
+        env_file_path = parse_path_value(parsed_args['use_env_file'], True)
+        load_dotenv(str(env_file_path), override=True)
     connection_args = {}
     for arg in ('driver', 'server', 'port', 'database', 'username', 'password'):
         connection_arg_name = f"sql_{arg}"
