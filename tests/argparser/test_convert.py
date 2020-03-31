@@ -1,7 +1,7 @@
-import subprocess
 import sys
 
 from aito.cli.main_parser import MainParser
+from aito.cli.sub_commands.convert import ConvertFromFormatSubCommand
 from tests.cases import CompareTestCase
 
 
@@ -30,6 +30,75 @@ class TestConvert(CompareTestCase):
                 self.parser.parse_and_execute(vars(self.parser.parse_args(parsing_args)))
         else:
             self.parser.parse_and_execute(vars(self.parser.parse_args(parsing_args)))
+
+    def test_parse_args_to_df_handler_convert_args(self):
+        import json
+        with (self.input_folder / 'invoice_aito_schema.json').open() as f:
+            schema = json.load(f)
+
+        self.assertEqual(
+            {
+                'read_input': sys.stdin,
+                'write_output': sys.stdout,
+                'in_format': 'json',
+                'out_format': 'ndjson',
+                'read_options': {'encoding': 'utf-8'},
+                'convert_options': {},
+            },
+            ConvertFromFormatSubCommand.parsed_args_to_data_frame_handler_convert_args(
+                vars(self.parser.parse_args(['convert', 'json']))
+            )
+        )
+
+        self.assertEqual(
+            {
+                'read_input': sys.stdin,
+                'write_output': sys.stdout,
+                'in_format': 'ndjson',
+                'out_format': 'json',
+                'read_options': {'encoding': 'utf-8'},
+                'convert_options': {},
+                'use_table_schema': schema
+            },
+            ConvertFromFormatSubCommand.parsed_args_to_data_frame_handler_convert_args(
+                vars(self.parser.parse_args([
+                    'convert', 'ndjson', '-j', '-s', str(self.input_folder / 'invoice_aito_schema.json')
+                ]))
+            )
+        )
+
+        self.assertEqual(
+            {
+                'read_input': sys.stdin,
+                'write_output': sys.stdout,
+                'in_format': 'csv',
+                'out_format': 'ndjson',
+                'read_options': {'encoding': 'utf-8', 'delimiter': ';', 'decimal': ','},
+                'convert_options': {},
+                'use_table_schema': schema
+            },
+            ConvertFromFormatSubCommand.parsed_args_to_data_frame_handler_convert_args(
+                vars(self.parser.parse_args([
+                    'convert', 'csv', '-s', str(self.input_folder / 'invoice_aito_schema.json'), '-d', ';', '-p', ','
+                ]))
+            )
+        )
+
+        self.assertEqual(
+            {
+                'read_input': self.input_folder / 'invoice.xlsx',
+                'write_output': sys.stdout,
+                'in_format': 'excel',
+                'out_format': 'ndjson',
+                'read_options': {'encoding': 'utf-8', 'sheet_name': 'sheet_name'},
+                'convert_options': {},
+            },
+            ConvertFromFormatSubCommand.parsed_args_to_data_frame_handler_convert_args(
+                vars(self.parser.parse_args([
+                    'convert', 'excel', '-o', 'sheet_name', str(self.input_folder / 'invoice.xlsx')
+                ]))
+            )
+        )
 
     def test_json_to_ndjson(self):
         expected_args = {
