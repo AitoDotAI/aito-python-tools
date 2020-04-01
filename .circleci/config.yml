@@ -7,13 +7,13 @@ workflows:
   version: 2
   commit:
     jobs:
-      - run_tests_exclude_sql_function_tests_linux_py_36
-      - run_tests_exclude_sql_function_tests_linux_py_37:
+      - run_sdk_and_cli_tests_linux_py_36
+      - run_sdk_and_cli_tests_linux_py_37:
           requires:
-            - run_tests_exclude_sql_function_tests_linux_py_36
-      - run_tests_exclude_sql_function_tests_linux_py_38:
+            - run_sdk_and_cli_tests_linux_py_36
+      - run_sdk_and_cli_tests_linux_py_38:
           requires:
-            - run_tests_exclude_sql_function_tests_linux_py_36
+            - run_sdk_and_cli_tests_linux_py_36
       - run_postgres_tests_linux_py_36
       - run_postgres_tests_linux_py_37:
           requires:
@@ -25,13 +25,13 @@ workflows:
       - run_mysql_tests_linux_37:
           requires:
             - run_mysql_tests_linux_36
-      - run_tests_exclude_sql_function_tests_osx_py_36
-      - run_tests_exclude_sql_function_tests_osx_py_37:
+      - run_sdk_and_cli_tests_osx_py_36
+      - run_sdk_and_cli_tests_osx_py_37:
           requires:
-            - run_tests_exclude_sql_function_tests_osx_py_36
-      - run_tests_exclude_sql_function_tests_osx_py_38:
+            - run_sdk_and_cli_tests_osx_py_36
+      - run_sdk_and_cli_tests_osx_py_38:
           requires:
-            - run_tests_exclude_sql_function_tests_osx_py_36
+            - run_sdk_and_cli_tests_osx_py_36
       - run_postgres_tests_osx_py_36
       - run_postgres_tests_osx_py_37:
           requires:
@@ -39,13 +39,38 @@ workflows:
       - run_postgres_tests_osx_py_38:
           requires:
             - run_postgres_tests_osx_py_36
-      - run_tests_exclude_sql_function_tests_win_py_36
-      - run_tests_exclude_sql_function_tests_win_py_37:
+      - run_sdk_and_cli_tests_win_py_36
+      - run_sdk_and_cli_tests_win_py_37:
           requires:
-            - run_tests_exclude_sql_function_tests_win_py_36
-      - run_tests_exclude_sql_function_tests_win_py_38:
+            - run_sdk_and_cli_tests_win_py_36
+      - run_sdk_and_cli_tests_win_py_38:
           requires:
-            - run_tests_exclude_sql_function_tests_win_py_36
+            - run_sdk_and_cli_tests_win_py_36
+
+  deploy_to_test_pypi_and_test_package:
+    jobs:
+      - deploy_to_test_pypi:
+          filters:
+            branches:
+              only: master
+      - run_sdk_and_cli_tests_built_package:
+          requires:
+          - deploy_to_test_pypi
+          filters:
+            branches:
+              only: master
+      - run_postgres_tests_built_package:
+          requires:
+            - deploy_to_test_pypi
+          filters:
+            branches:
+              only: master
+      - run_mysql_tests_built_package:
+          requires:
+            - deploy_to_test_pypi
+          filters:
+            branches:
+              only: master
 
 commonYAMLStructure:
   - &install_pyenv_osx
@@ -92,6 +117,22 @@ commonYAMLStructure:
         python -m venv venv
         . venv/bin/activate
         pip install -r requirements.txt
+  - &restore_venv_cache_deploy
+    restore_cache:
+      keys:
+        - v2-dependencies-{{ checksum "requirements_deploy.txt" }}-{{ .Environment.CIRCLE_JOB }}
+  - &save_venv_cache_deploy
+    save_cache:
+      paths:
+        - ./venv
+      key: v2-dependencies-{{ checksum "requirements_deploy.txt" }}-{{ .Environment.CIRCLE_JOB }}
+  - &create_venv_and_install_dependencies_deploy
+    run:
+      name: create virtualenv and install dependencies
+      command: |
+        python -m venv venv
+        . venv/bin/activate
+        pip install -r requirements_deploy.txt
   - &install_python_and_dependencies_win
     run:
       name: create virtualenv and install dependencie
@@ -217,14 +258,14 @@ commonYAMLStructure:
           ('Sam \"Mad Dog\" Smith', 993.44, NULL),
           ('Barney & Company', 0, 'Great to work with\nand always pays with cash.'),
           ('Johnson\'s Automotive', 2344, NULL);"
-  - &run_tests_exc_sql_functions_tests
+  - &run_sdk_and_cli_tests
     run:
       name: run all tests execluding sql functions tests
       command: |
         . venv/bin/activate
         python -m tests -v suite sdk
         python -m tests -v suite cli
-  - &run_tests_exc_sql_functions_tests_win
+  - &run_sdk_and_cli_tests_windows
     run:
       name: run all tests execluding sql functions tests
       command: |
@@ -258,9 +299,22 @@ commonYAMLStructure:
   - &store_log_files
     store_artifacts:
       path: ./.logs
+  - &run_deploy_script_to_test_pypi
+    run:
+      name: deploy to test pypi
+      command: |
+        . venv/bin/activate
+        ./scripts/deploy test.pypi
+  - &install_built_package
+    run:
+      name: install built package from test pypi
+      command: |
+        . venv/bin/activate
+        pip install -i https://test.pypi.org/simple/ aitoai --no-deps
+        pip install aitoai
 
 jobs:
-  run_tests_exclude_sql_function_tests_linux_py_36: &run_tests_exclude_sql_function_tests_linux_template
+  run_sdk_and_cli_tests_linux_py_36: &run_sdk_and_cli_tests_linux_template
     docker:
       - image: circleci/python:3.6.9
     working_directory: ~/repo
@@ -269,16 +323,16 @@ jobs:
       - *restore_venv_cache
       - *create_venv_and_install_dependencies_linux
       - *save_venv_cache
-      - *run_tests_exc_sql_functions_tests
+      - *run_sdk_and_cli_tests
       - *store_log_files
 
-  run_tests_exclude_sql_function_tests_linux_py_37:
-    <<: *run_tests_exclude_sql_function_tests_linux_template
+  run_sdk_and_cli_tests_linux_py_37:
+    <<: *run_sdk_and_cli_tests_linux_template
     docker:
       - image: circleci/python:3.7.5
 
-  run_tests_exclude_sql_function_tests_linux_py_38:
-    <<: *run_tests_exclude_sql_function_tests_linux_template
+  run_sdk_and_cli_tests_linux_py_38:
+    <<: *run_sdk_and_cli_tests_linux_template
     docker:
       - image: circleci/python:3.8.0
 
@@ -383,7 +437,7 @@ jobs:
           MYSQL_USER: test
           MYSQL_PASSWORD: test_pw
 
-  run_tests_exclude_sql_function_tests_osx_py_36: &run_tests_exclude_sql_function_tests_osx_template
+  run_sdk_and_cli_tests_osx_py_36: &run_sdk_and_cli_tests_osx_template
     macos:
       xcode: 11.3.0
     environment:
@@ -399,17 +453,17 @@ jobs:
       - *restore_venv_cache
       - *create_venv_and_install_dependencies_osx
       - *save_venv_cache
-      - *run_tests_exc_sql_functions_tests
+      - *run_sdk_and_cli_tests
       - *store_log_files
 
-  run_tests_exclude_sql_function_tests_osx_py_37:
-    <<: *run_tests_exclude_sql_function_tests_osx_template
+  run_sdk_and_cli_tests_osx_py_37:
+    <<: *run_sdk_and_cli_tests_osx_template
     environment:
       PYTHON_VERSION: 3.7.5
       HOMEBREW_NO_AUTO_UPDATE: 1
 
-  run_tests_exclude_sql_function_tests_osx_py_38:
-    <<: *run_tests_exclude_sql_function_tests_osx_template
+  run_sdk_and_cli_tests_osx_py_38:
+    <<: *run_sdk_and_cli_tests_osx_template
     environment:
       PYTHON_VERSION: 3.8.0
       HOMEBREW_NO_AUTO_UPDATE: 1
@@ -468,7 +522,7 @@ jobs:
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
       PYTHON_VERSION: 3.8.0
 
-  run_tests_exclude_sql_function_tests_win_py_36: &run_tests_exclude_sql_function_tests_win_template
+  run_sdk_and_cli_tests_win_py_36: &run_sdk_and_cli_tests_win_template
     executor:
       name: win/default
     environment:
@@ -480,15 +534,97 @@ jobs:
           command: git config --global core.autocrlf false
       - checkout
       - *install_python_and_dependencies_win
-      - *run_tests_exc_sql_functions_tests_win
+      - *run_sdk_and_cli_tests_windows
       - *store_log_files
 
-  run_tests_exclude_sql_function_tests_win_py_37:
-    <<: *run_tests_exclude_sql_function_tests_win_template
+  run_sdk_and_cli_tests_win_py_37:
+    <<: *run_sdk_and_cli_tests_win_template
     environment:
       PYTHON_VERSION: 3.7.5
 
-  run_tests_exclude_sql_function_tests_win_py_38:
-    <<: *run_tests_exclude_sql_function_tests_win_template
+  run_sdk_and_cli_tests_win_py_38:
+    <<: *run_sdk_and_cli_tests_win_template
     environment:
       PYTHON_VERSION: 3.8.0
+
+  deploy_to_test_pypi:
+    docker:
+      - image: circleci/python:3.6.9
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *restore_venv_cache_deploy
+      - *create_venv_and_install_dependencies_deploy
+      - *save_venv_cache_deploy
+      - *run_deploy_script_to_test_pypi
+      - store_artifacts:
+          path: ./dist
+
+  run_sdk_and_cli_tests_built_package:
+    docker:
+      - image: circleci/python:3.6.9
+    environment:
+      TEST_BUILT_PACKAGE: True
+    working_directory: ~/repo
+    steps:
+      - *install_built_package
+      - *run_sdk_and_cli_tests
+      - *store_log_files
+
+  run_postgres_tests_built_package:
+    docker:
+      - image: circleci/python:3.6.9
+      - image: circleci/postgres:9.6
+        environment:
+          POSTGRES_DB: circleci_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test_pw
+    environment:
+      SQL_DRIVER: PostgreSQL Unicode
+      SQL_SERVER: localhost
+      SQL_DATABASE: circleci_test
+      SQL_USERNAME: test
+      SQL_PASSWORD: test_pw
+      CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
+      TEST_BUILT_PACKAGE: True
+    working_directory: ~/repo
+    steps:
+      - *install_odbc_driver_linux
+      - *install_postgres_odbc_driver_linux
+      - *install_built_package
+      - *install_pyodbc
+      - *wait_postgres
+      - *run_postgres_connection_test
+      - *install_postgres_cli_linux
+      - *prepare_data_postgres
+      - *run_postgres_cli_test
+      - *store_log_files
+
+  run_mysql_tests_built_package:
+    docker:
+      - image: circleci/python:3.6.9-stretch
+      - image: circleci/mysql:8.0.3
+        environment:
+          MYSQL_DATABASE: circleci_test
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test_pw
+    environment:
+      SQL_DRIVER: MySQL ODBC 8.0 Driver
+      SQL_SERVER: 127.0.0.1
+      SQL_DATABASE: circleci_test
+      SQL_USERNAME: test
+      SQL_PASSWORD: test_pw
+      TEST_BUILT_PACKAGE: True
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *install_odbc_driver_linux
+      - *install_mysql_odbc_driver_linux
+      - *install_built_package
+      - *install_pyodbc
+      - *wait_mysql
+      - *run_mysql_connection_test
+      - *install_mysql_cli_linux
+      - *prepare_data_mysql
+      - *run_mysql_cli_test
+      - *store_log_files

@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+import argparse
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+import requests
+
+PROJECT_ROOT_PATH = Path(__file__).parent.parent
+VERSION_FILE_PATH = PROJECT_ROOT_PATH / 'aito' / '__init__.py'
+CHANGE_LOG_FILE_PATH = PROJECT_ROOT_PATH / 'docs' / 'source' / 'changelog.rst'
+
+
+def find_current_version(version_file_path: Path) -> str:
+    with version_file_path.open() as f:
+        init_content = f.read()
+
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", init_content, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+
+def update_version(version_file_path: Path, new_version: str):
+    with version_file_path.open() as f:
+        init_content = f.read()
+    with version_file_path.open('w') as f:
+        f.write(re.sub(r"^__version__ = ['\"]([^'\"]*)['\"]", f'__version__ = "{new_version}"', init_content, re.M))
+
+    assert find_current_version(version_file_path) == new_version, 'version is not updated'
+
+
+def get_latest_version(repo):
+    url = 'https://test.pypi.org/pypi/aitoai/json' if repo == 'test.pypi' else 'pypi'
+    package_info = requests.get(url).json()
+    return sorted(package_info['releases'].keys(), reverse=True)[0]
+
+
+def generate_dev_version(current_version: str) -> str:
+    """create new dev version (current_version.dev#). Bump to newer version if dev version already exists
+
+    :param current_version:
+    :return: new dev version
+    """
+    test_pypi_info = requests.get('https://test.pypi.org/pypi/aitoai/json').json()
+    existed_dev_versions = [rel for rel in test_pypi_info['releases'].keys() if rel.startswith(current_version)]
+    if existed_dev_versions:
+        # Bump to next version
+        parts = sorted(existed_dev_versions, reverse=True)[0].split('.')
+        latest_dev_ver = parts[-1].split('dev')[1]
+        new_dev_ver = f'dev{int(latest_dev_ver) + 1}'
+        return '.'.join(parts[:-1] + [new_dev_ver])
+    return f'{current_version}.dev1'
+
+
+def build_package_and_check():
+    print('cleaning dist dir')
+    dist_path = PROJECT_ROOT_PATH / 'dist'
+    if dist_path.exists():
+        for file in dist_path.glob('*'):
+            file.unlink()
+    subprocess.run(['python', 'setup.py', 'sdist', 'bdist_wheel'], check=True)
+    subprocess.run(['twine', 'check', 'dist/*'], check=True)
+
+
+def publish(repo):
+    if repo == 'test.pypi':
+        subprocess.run(['twine', 'upload', '--repository-url', 'https://test.pypi.org/legacy/', 'dist/*'], check=True)
+    elif repo == 'pypi':
+        subprocess.run(['twine', 'upload', 'dist/*'], check=True)
+
+
+def check_version_change_log(change_log_file_path: Path, new_version: str):
+    with change_log_file_path.open() as in_f:
+        change_log_content = in_f.read()
+    if not re.search(f'^{new_version}', change_log_content, re.M):
+        return False
+    return True
+
+
+def git_bump_version_and_tag(new_version):
+    subprocess.run(['git', 'commit', '-am', f'Bump to {new_version}'], check=True)
+    subprocess.run(['git', 'tag', '$NEW_VERSION'], check=True)
+    subprocess.run(['git', 'push'], check=True)
+    subprocess.run(['git', 'push', '--tags'], check=True)
+
+
+def check_git_tree():
+    if subprocess.run(['git', 'status', '--porcelain']):
+        sys.exit('tree is dirty, please commit changes before deployment')
+
+
+def deploy(repo, new_version):
+    check_git_tree()
+
+    if repo == 'test.pypi' and new_version == 'auto':
+        new_version = generate_dev_version(find_current_version(VERSION_FILE_PATH))
+
+    latest_version = get_latest_version(repo)
+    if new_version <= latest_version:
+        sys.exit(f'deploy version {new_version} < latest version {latest_version}')
+
+    update_version(VERSION_FILE_PATH, new_version)
+    build_package_and_check()
+
+    if repo == 'pypi':
+        check_version_change_log(CHANGE_LOG_FILE_PATH, new_version)
+        git_bump_version_and_tag(new_version)
+    publish(repo)
+
+
+class DeployParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write(f"error: {message}\n")
+        self.print_help()
+        sys.exit(2)
+
+    def __init__(self):
+        super().__init__()
+
+        sub_parser = self.add_subparsers(
+            title='repo', dest='repo', parser_class=argparse.ArgumentParser, description='repo to be published to'
+        )
+        sub_parser.required = True
+        test_parser = sub_parser.add_parser('test.pypi', help='deploy to test.pypi')
+        test_parser.add_argument(
+            'version', type=str, default='auto', nargs='?',
+            help='new version to be published (default to auto incremental)'
+        )
+        prod_parser = sub_parser.add_parser('pypi', help='deploy to pypi')
+        prod_parser.add_argument('version', type=str, help='new version to be published')
+
+    def __call__(self):
+        parsed_args = self.parse_args()
+        deploy(parsed_args.repo, parsed_args.version)
+
+
+DeployParser()()

@@ -1,18 +1,29 @@
 from setuptools import setup, find_packages
 import os
+import re
+from pathlib import Path
 
-install_requires = [
-    'pandas == 0.25.3; python_full_version<="3.6.0"',
-    'pandas == 1.0.0; python_full_version>"3.6.0"',
-    'python-dotenv == 0.11.0',
-    'requests == 2.22.0',
-    'aiohttp == 3.6.1; python_version >= "3.8"',
-    'aiohttp == 3.6.0; python_version < "3.8"',
-    'ndjson == 0.2.0',
-    'langdetect == 1.0.7',
-    'argcomplete == 1.11.1',
-    'xlrd == 1.1.0'
-]
+PROJECT_ROOT_PATH = Path(__file__).parent
+VERSION_FILE_PATH = PROJECT_ROOT_PATH / 'aito' / '__init__.py'
+REQUIREMENTS_FILE_PATH = PROJECT_ROOT_PATH / 'requirements.txt'
+
+
+def find_current_version(version_file_path: Path) -> str:
+    with version_file_path.open() as f:
+        init_content = f.read()
+
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", init_content, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+
+def fetch_requirements(requirements_file_path: Path):
+    requirements = []
+    with requirements_file_path.open() as in_f:
+        for line in in_f:
+            requirements.append(line.strip())
+    return requirements
 
 default_description = "Please go to our Homepage at https://github.com/AitoDotAI/aito-python-tools " \
                       "for more detailed documentation.\n"
@@ -22,19 +33,16 @@ if os.environ.get('CONVERT_README'):
 else:
     long_description = default_description
 
-VERSION = "0.1.2"
-
 setup(
     name='aitoai',
-    version=VERSION,
+    version=find_current_version(VERSION_FILE_PATH),
     author='aito.ai',
     author_email='admin@aito.ai',
     description='A collection of python support tools and scripts for Aito.ai',
     long_description=long_description,
     url='https://github.com/AitoDotAI/aito-python-tools',
     packages=find_packages(exclude=['tests', 'tests.*']),
-    install_requires=install_requires,
-    extra_requires={},
+    install_requires=fetch_requirements(REQUIREMENTS_FILE_PATH),
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
