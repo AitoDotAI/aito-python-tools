@@ -242,7 +242,7 @@ commonYAMLStructure:
       name: run postgres cli test
       command: |
         . venv/bin/activate
-        python -m tests -v case sql_functions.test_sql_functions_cli.TestPostgresCliFunctions
+        python -m tests -v case sql_functions.test_cli_sql_functions.TestPostgresFunctions
   - &run_mysql_connection_test
     run:
       name: run mysql connection test
@@ -254,7 +254,7 @@ commonYAMLStructure:
       name: run mysql cli test
       command: |
         . venv/bin/activate
-        python -m tests -v case sql_functions.test_sql_functions_cli.TestMySQLCliFunctions
+        python -m tests -v case sql_functions.test_cli_sql_functions.TestMySQLFunctions
   - &store_log_files
     store_artifacts:
       path: ./.logs
