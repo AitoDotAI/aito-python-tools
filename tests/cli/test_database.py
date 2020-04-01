@@ -6,8 +6,8 @@ from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
-from aito.utils.aito_client import AitoClient
-from aito.utils.aito_client import RequestError
+from aito.sdk.aito_client import AitoClient
+from aito.sdk.aito_client import RequestError
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 

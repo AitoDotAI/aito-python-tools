@@ -32,7 +32,7 @@ The example below assumes that you already have a DataFrame named :ref:`reddit_d
 
 .. code:: python
 
-  from aito.utils.schema_handler import SchemaHandler
+  from aito.sdk.schema_handler import SchemaHandler
   schema_handler = SchemaHandler()
   reddit_schema = schema_handler.infer_table_schema_from_pandas_data_frame(reddit_df)
 
@@ -59,7 +59,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 
 .. code:: python
 
-  from aito.utils.aito_client import AitoClient
+  from aito.sdk.aito_client import AitoClient
   aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
 
 - `Create a table schema <https://aito.ai/docs/api/#put-api-v1-schema-table>`_
@@ -130,7 +130,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 
 .. code:: python
 
-  from aito.utils.aito_client import AitoClient
+  from aito.sdk.aito_client import AitoClient
   aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
 
 - `Upload a list of table entries <https://aito.ai/docs/api/#post-api-v1-data-table-batch>`__
@@ -174,8 +174,8 @@ You can delete data with the :ref:`apiAitoClient`.
 
 Your AitoClient must be set up with the READ-WRITE API key
 
-- Delete a table: :meth:`aito.utils.aito_client.AitoClient.delete_table`
-- Delete the entire database :meth:`aito.utils.aito_client.AitoClient.delete_table`
+- Delete a table: :meth:`aito.sdk.aito_client.AitoClient.delete_table`
+- Delete the entire database :meth:`aito.sdk.aito_client.AitoClient.delete_table`
 
 .. _Pandas DataFrame: https://pandas.pydata.org/pandas-docs/stable/reference/frame.html
 
@@ -187,7 +187,7 @@ You can execute queries with the :ref:`apiAitoClient`.
 
 Your AitoClient can be set up with the READ-ONLY API key
 
-:meth:`Query a Table Entries <aito.utils.aito_client.AitoClient.query_entries>`
+:meth:`Query a Table Entries <aito.sdk.aito_client.AitoClient.query_entries>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
@@ -195,7 +195,7 @@ Your AitoClient can be set up with the READ-ONLY API key
   # query the first 10 entries of a table
   aito_client.query_entries(table_name='table_name')
 
-:meth:`Custom Query <aito.utils.aito_client.AitoClient.request>`
+:meth:`Custom Query <aito.sdk.aito_client.AitoClient.request>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
@@ -213,7 +213,7 @@ Your AitoClient can be set up with the READ-ONLY API key
     }
   )
 
-:meth:`Executing multiple queries asynchronously <aito.utils.aito_client.AitoClient.async_requests>`
+:meth:`Executing multiple queries asynchronously <aito.sdk.aito_client.AitoClient.async_requests>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python

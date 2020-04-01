@@ -3,7 +3,7 @@
 SchemaHandler
 -------------
 
-.. automodule:: aito.utils.schema_handler
+.. automodule:: aito.sdk.schema_handler
    :members:
    :undoc-members:
    :show-inheritance:

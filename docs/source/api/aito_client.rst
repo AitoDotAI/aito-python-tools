@@ -3,7 +3,7 @@
 AitoClient
 ==========
 
-.. automodule:: aito.utils.aito_client
+.. automodule:: aito.sdk.aito_client
    :members:
    :undoc-members:
    :show-inheritance:

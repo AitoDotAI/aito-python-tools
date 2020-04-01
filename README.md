@@ -65,7 +65,7 @@ For more information on the Aito schema can be found [here](https://aito.ai/docs
 You can download the example file from [here](https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv).
 ```python
 import pandas as pd
-from aito.utils.schema_handler import SchemaHandler
+from aito.sdk.schema_handler import SchemaHandler
 
 # Load a CSV into a pandas Dataframe
 dataframe = pd.read_csv("reddit_sample.csv", delimiter=",")
@@ -83,7 +83,7 @@ To upload your Aito schema, you will need the url of your Aito instance and the 
 
 ##### Upload Aito table schema
 ```python
-from aito.utils.aito_client import AitoClient
+from aito.sdk.aito_client import AitoClient
 
 aito_table_name = "your-table-name-in-aito-schema"
 
@@ -111,7 +111,7 @@ aito_client.get_table_schema(table_name=aito_table_name)
 
 ##### Upload full Aito schema
 ```python
-from aito.utils.aito_client import AitoClient
+from aito.sdk.aito_client import AitoClient
 
 # Aito DB schema example
 database_schema = {
@@ -160,7 +160,7 @@ You can download the example file from [here](https://raw.githubusercontent.com/
 ##### Upload data in memory
 ```python
 import pandas as pd
-from aito.utils.aito_client import AitoClient
+from aito.sdk.aito_client import AitoClient
 
 # Define the table you want to upload data into
 aito_table_name = "your-table-name-in-aito-schema"
@@ -189,7 +189,7 @@ import pandas as pd
 import gzip
 import ndjson
 from pathlib import Path
-from aito.utils.aito_client import AitoClient
+from aito.sdk.aito_client import AitoClient
 
 # Load a CSV into a pandas Dataframe
 dataframe = pd.read_csv("reddit_sample.csv", delimiter=",")
@@ -226,7 +226,7 @@ To delete data from Aito you will need the name of your Aito instance and the re
 
 #### Delete table
 ```python
-from aito.utils.aito_client import AitoClient
+from aito.sdk.aito_client import AitoClient
 
 aito_table_name = "your-table-name-in-aito-schema"
 
@@ -235,7 +235,7 @@ aito_client.delete_table(table_name=aito_table_name)
 ```
 #### Delete entire database
 ```python
-from aito.utils.aito_client import AitoClient
+from aito.sdk.aito_client import AitoClient
 
 aito_client = AitoClient(instance_url="your-aito-instance-url", api_key="your-rw-api-key")
 aito_client.delete_database()

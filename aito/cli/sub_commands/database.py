@@ -2,8 +2,8 @@ import tempfile
 from os import unlink
 from typing import Dict, List
 
-from aito.utils.data_frame_handler import DataFrameHandler
-from aito.utils.schema_handler import SchemaHandler
+from aito.sdk.data_frame_handler import DataFrameHandler
+from aito.sdk.schema_handler import SchemaHandler
 from .sub_command import SubCommand
 from ..parser import PathArgType, InputArgType, ParseError
 from ..parser_utils import create_client_from_parsed_args, load_json_from_parsed_input_arg, \

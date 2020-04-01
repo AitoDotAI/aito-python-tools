@@ -128,7 +128,7 @@ The :ref:`apiSchemaHandler` can infer table schema from a DataFrame:
 
   .. code:: python
 
-    from aito.utils.schema_handler import SchemaHandler
+    from aito.sdk.schema_handler import SchemaHandler
     schema_handler = SchemaHandler()
     inferred_schema = schema_handler.infer_table_schema_from_pandas_data_frame(data_frame)
 
@@ -155,7 +155,7 @@ The :ref:`apiAitoClient` can create a table using a table name and a table schem
 
   .. code:: python
 
-    from aito.utils.aito_client import AitoClient
+    from aito.sdk.aito_client import AitoClient
     table_schema = {
       "type": "table",
       "columns": {
@@ -194,7 +194,7 @@ A DataFrame can be converted to:
 
     .. code:: python
 
-      from aito.utils.data_frame_handler import DataFrameHandler
+      from aito.sdk.data_frame_handler import DataFrameHandler
       data_frame_handler = DataFrameHandler()
       data_frame_handler.df_to_format(
         df=data_frame,
@@ -212,7 +212,7 @@ The :ref:`apiAitoClient` can upload the data with either `Batch Upload`_ or `Fil
 
 .. code:: python
 
-  from aito.utils.aito_client import AitoClient
+  from aito.sdk.aito_client import AitoClient
   aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
 
   # Batch upload

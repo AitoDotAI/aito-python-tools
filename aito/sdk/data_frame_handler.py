@@ -1,12 +1,11 @@
-import io
 import logging
 from typing import List, Dict, Callable
 
 import numpy as np
 import pandas as pd
 
-from aito.utils._typing import *
-from aito.utils.schema_handler import SchemaHandler
+from aito.common._typing import *
+from aito.sdk.schema_handler import SchemaHandler
 
 
 class DataFrameHandler:

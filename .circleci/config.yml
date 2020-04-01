@@ -222,14 +222,14 @@ commonYAMLStructure:
       name: run all tests execluding sql functions tests
       command: |
         . venv/bin/activate
-        python -m tests -v suite utils
+        python -m tests -v suite sdk
         python -m tests -v suite cli
   - &run_tests_exc_sql_functions_tests_win
     run:
       name: run all tests execluding sql functions tests
       command: |
         venv\Scripts\activate.ps1
-        python -m tests -v suite utils
+        python -m tests -v suite sdk
         python -m tests -v suite cli
   - &run_postgres_connection_test
     run:

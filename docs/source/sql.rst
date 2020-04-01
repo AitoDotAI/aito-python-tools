@@ -163,7 +163,7 @@ You can connect to your SQL Database using the :ref:`apiSQLConnection`. The exam
 
 .. code:: python
 
-  from aito.utils.sql_connection import SQLConnection
+  from aito.sdk.sql_connection import SQLConnection
   connection = SQLConnection(
     sql_driver='PostgreSQL Unicode',
     sql_server='localhost',

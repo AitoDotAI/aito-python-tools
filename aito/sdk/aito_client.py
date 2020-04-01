@@ -8,7 +8,7 @@ from typing import Dict, List, BinaryIO, Union, Tuple
 import requests
 from aiohttp import ClientSession, ClientResponseError
 
-from .file_utils import gzip_file, check_file_is_gzipped
+from aito.common.file_utils import gzip_file, check_file_is_gzipped
 
 LOG = logging.getLogger('AitoClient')
 

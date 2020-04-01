@@ -3,7 +3,7 @@
 DataFrameHandler
 ----------------
 
-.. automodule:: aito.utils.data_frame_handler
+.. automodule:: aito.sdk.data_frame_handler
    :members:
    :undoc-members:
    :show-inheritance:

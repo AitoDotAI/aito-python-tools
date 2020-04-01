@@ -3,7 +3,7 @@
 SQLConnection
 -------------
 
-.. automodule:: aito.utils.sql_connection
+.. automodule:: aito.sdk.sql_connection
    :members:
    :undoc-members:
    :show-inheritance:
