@@ -25,7 +25,7 @@ class TestParser(CompareTestCase):
             self.input_folder.parent
         )
         with self.assertRaises(SystemExit):
-            self.parser.parse_args([f'{self.input_folder}'])
+            self.parser.parse_args([str(self.input_folder / 'a_file')])
 
     def test_path_type_must_exists(self):
         self.parser.add_argument('path', type=PathArgType(must_exist=True))
@@ -54,4 +54,4 @@ class TestParser(CompareTestCase):
             self.input_folder.parent
         )
         with self.assertRaises(SystemExit):
-            self.parser.parse_args([str(self.input_folder)])
+            self.parser.parse_args([str(self.input_folder / 'a_file')])
