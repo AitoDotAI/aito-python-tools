@@ -6,17 +6,15 @@ from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
-from aito.cli.main_parser import MainParser
 from aito.utils.aito_client import AitoClient
 from aito.utils.aito_client import RequestError
-from tests.cases import CompareTestCase
+from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 
-class TestDatabase(CompareTestCase):
+class TestDatabase(ParserAndCLITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.parser = MainParser()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.default_main_parser_args = {
             'command': 'database', 'verbose': False, 'version': False, 'quiet': False,
@@ -26,22 +24,6 @@ class TestDatabase(CompareTestCase):
         with (cls.input_folder / "invoice_aito_schema.json").open() as f:
             cls.default_table_schema = json.load(f)
         cls.default_table_name = f"invoice_{uuid4()}"
-
-    def assert_parse_then_execute(
-            self, parsing_args, expected_args, stub_stdin=None, stub_stdout=None, execute_exception=None
-    ):
-        self.assertDictEqual(vars(self.parser.parse_args(parsing_args)), expected_args)
-
-        if stub_stdin:
-            self.stub_stdin(stub_stdin)
-        if stub_stdout:
-            self.stub_stdout(stub_stdout)
-        # re run parse_args to use the new stubbed stdio
-        if execute_exception:
-            with self.assertRaises(execute_exception):
-                self.parser.parse_and_execute(vars(self.parser.parse_args(parsing_args)))
-        else:
-            self.parser.parse_and_execute(vars(self.parser.parse_args(parsing_args)))
 
     def create_table(self):
         self.client.create_table(self.default_table_name, self.default_table_schema)
@@ -67,7 +49,7 @@ class TestDatabase(CompareTestCase):
             **self.default_main_parser_args
         }
 
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'upload-entries', self.default_table_name, str(self.input_folder / 'invoice.json')],
             expected_args,
             execute_exception=RequestError
@@ -82,7 +64,7 @@ class TestDatabase(CompareTestCase):
             **self.default_main_parser_args
         }
 
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'upload-entries', self.default_table_name, str(self.input_folder / 'invoice.ndjson')],
             expected_args,
             execute_exception=SystemExit
@@ -97,7 +79,7 @@ class TestDatabase(CompareTestCase):
             **self.default_main_parser_args
         }
 
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'upload-entries', self.default_table_name, str(self.input_folder / 'invoice.json')],
             expected_args,
         )
@@ -115,7 +97,7 @@ class TestDatabase(CompareTestCase):
         }
 
         with (self.input_folder / 'invoice.json').open() as in_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['database', 'upload-entries', self.default_table_name],
                 expected_args, stub_stdin=in_f
             )
@@ -132,7 +114,7 @@ class TestDatabase(CompareTestCase):
             **self.default_main_parser_args
         }
 
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'upload-file', self.default_table_name, str(self.input_folder / 'invoice.ndjson')],
             expected_args,
             execute_exception=RequestError
@@ -147,7 +129,7 @@ class TestDatabase(CompareTestCase):
             'file_format': 'infer',
             **self.default_main_parser_args
         }
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'upload-file', self.default_table_name, str(self.input_folder / 'invoice.ndjson')],
             expected_args
         )
@@ -164,7 +146,7 @@ class TestDatabase(CompareTestCase):
             'file_format': 'csv',
             **self.default_main_parser_args
         }
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'upload-file', '-f', 'csv', self.default_table_name, str(self.input_folder / 'invoice.csv')],
             expected_args
         )
@@ -181,7 +163,7 @@ class TestDatabase(CompareTestCase):
             'file_format': 'infer',
             **self.default_main_parser_args
         }
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'upload-file', self.default_table_name, str(self.input_folder / 'invoice.csv')],
             expected_args
         )
@@ -196,7 +178,7 @@ class TestDatabase(CompareTestCase):
             'input': self.input_folder / 'invoice_aito_schema.json',
             **self.default_main_parser_args
         }
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'create-table', self.default_table_name, f'{self.input_folder}/invoice_aito_schema.json'],
             expected_args
         )
@@ -210,7 +192,7 @@ class TestDatabase(CompareTestCase):
             **self.default_main_parser_args
         }
         with (self.input_folder / 'invoice_aito_schema.json').open() as in_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['database', 'create-table', self.default_table_name], expected_args, stub_stdin=in_f
             )
         self.assertTrue(self.client.check_table_exists(self.default_table_name))
@@ -223,7 +205,7 @@ class TestDatabase(CompareTestCase):
             **self.default_main_parser_args
         }
         with patch('builtins.input', return_value='yes'):
-            self.assert_parse_then_execute(['database', 'delete-table', self.default_table_name], expected_args)
+            self.parse_and_execute(['database', 'delete-table', self.default_table_name], expected_args)
         self.assertFalse(self.client.check_table_exists(self.default_table_name))
 
     def test_quick_add_table(self):
@@ -239,7 +221,7 @@ class TestDatabase(CompareTestCase):
         default_table_name_file = self.input_folder / f'{self.default_table_name}.csv'
         import shutil
         shutil.copyfile(self.input_folder / 'invoice.csv', default_table_name_file)
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'quick-add-table', str(default_table_name_file)],
             expected_args
         )
@@ -255,7 +237,7 @@ class TestDatabase(CompareTestCase):
             'input-file': self.input_folder / 'invoice.json',
             **self.default_main_parser_args
         }
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['database', 'quick-add-table', '-n', self.default_table_name, '-f', 'json',
              str(self.input_folder / 'invoice.json')],
             expected_args
@@ -271,10 +253,10 @@ class TestDatabase(CompareTestCase):
         self.client.create_table('invoice_altered', another_tbl_schema)
 
         expected_args = {
-            'operation': 'delete-database'
+            'operation': 'delete-database',
             **self.default_main_parser_args
         }
         with patch('builtins.input', return_value='yes'):
-            self.assert_parse_then_execute(['database', 'delete-database'], expected_args)
+            self.parse_and_execute(['database', 'delete-database'], expected_args)
         self.assertFalse(self.client.check_table_exists(self.default_table_name))
         self.assertFalse(self.client.check_table_exists('invoice_altered'))

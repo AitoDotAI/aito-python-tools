@@ -1,6 +1,6 @@
 from tests.cases import CompareTestCase
 from argparse import ArgumentParser
-from aito.cli.parser import ParseError, PathArgType, InputArgType, OutputArgType
+from aito.cli.parser import PathArgType, InputArgType, OutputArgType
 from pathlib import Path
 import sys
 

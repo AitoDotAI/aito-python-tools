@@ -1,35 +1,17 @@
 import sys
 
-from aito.cli.main_parser import MainParser
 from aito.cli.sub_commands.convert import ConvertFromFormatSubCommand
-from tests.cases import CompareTestCase
+from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 
-class TestConvert(CompareTestCase):
+class TestConvert(ParserAndCLITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.parser = MainParser()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.default_main_parser_args = {
             'encoding': 'utf-8', 'command': 'convert', 'verbose': False, 'version': False, 'quiet': False
         }
-
-    def assert_parse_then_execute(
-            self, parsing_args, expected_args, stub_stdin=None, stub_stdout=None, execute_exception=None
-    ):
-        self.assertDictEqual(vars(self.parser.parse_args(parsing_args)), expected_args)
-
-        if stub_stdin:
-            self.stub_stdin(stub_stdin)
-        if stub_stdout:
-            self.stub_stdout(stub_stdout)
-        # re run parse_args to use the new stubbed stdio
-        if execute_exception:
-            with self.assertRaises(execute_exception):
-                self.parser.parse_and_execute(vars(self.parser.parse_args(parsing_args)))
-        else:
-            self.parser.parse_and_execute(vars(self.parser.parse_args(parsing_args)))
 
     def test_parse_args_to_df_handler_convert_args(self):
         import json
@@ -110,7 +92,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with (self.input_folder / 'invoice.json').open() as in_f, self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(['convert', 'json'], expected_args, in_f, out_f)
+            self.parse_and_execute(['convert', 'json'], expected_args, in_f, out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_json_to_ndjson_file_path(self):
@@ -123,7 +105,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'json', f'{self.input_folder}/invoice.json'], expected_args, None, out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
@@ -140,7 +122,7 @@ class TestConvert(CompareTestCase):
         }
 
         with (self.input_folder / 'invoice.csv').open() as in_f, self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(['convert', 'csv'], expected_args, in_f, out_f)
+            self.parse_and_execute(['convert', 'csv'], expected_args, in_f, out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_csv_to_ndjson_file_path(self):
@@ -155,7 +137,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'csv', f'{self.input_folder}/invoice.csv'], expected_args, stub_stdout=out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
@@ -171,7 +153,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'csv', '-j', f'{self.input_folder}/invoice.csv'], expected_args, stub_stdout=out_f
             )
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
@@ -189,7 +171,7 @@ class TestConvert(CompareTestCase):
         }
         with (self.input_folder / 'invoice_semicolon_delimiter.csv').open() as in_f, \
                 self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(['convert', 'csv', '-d', ';'], expected_args, in_f, out_f)
+            self.parse_and_execute(['convert', 'csv', '-d', ';'], expected_args, in_f, out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_csv_semicolon_to_json(self):
@@ -204,7 +186,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'csv', '-d', ';', '--json', f'{self.input_folder}/invoice_semicolon_delimiter.csv'],
                 expected_args,
                 stub_stdout=out_f
@@ -224,7 +206,7 @@ class TestConvert(CompareTestCase):
         }
         with (self.input_folder / 'invoice_semicolon_delimiter_comma_decimal.csv').open() as in_f, \
                 self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(['convert', 'csv', '-d', ';', '-p', ','], expected_args, in_f, out_f)
+            self.parse_and_execute(['convert', 'csv', '-d', ';', '-p', ','], expected_args, in_f, out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
 
     def test_csv_semicolon_comma_decimal_to_json(self):
@@ -240,7 +222,7 @@ class TestConvert(CompareTestCase):
         }
         with (self.input_folder / 'invoice_semicolon_delimiter_comma_decimal.csv').open() as in_f, \
                 self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(['convert', 'csv', '-d', ';', '-p', ',', '-j'], expected_args, in_f, out_f)
+            self.parse_and_execute(['convert', 'csv', '-d', ';', '-p', ',', '-j'], expected_args, in_f, out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
 
     def test_excel_to_ndjson_stdin(self):
@@ -253,7 +235,7 @@ class TestConvert(CompareTestCase):
             'create_table_schema': None,
             **self.default_main_parser_args
         }
-        self.assert_parse_then_execute(['convert', 'excel'], expected_args, execute_exception=SystemExit)
+        self.parse_and_execute(['convert', 'excel'], expected_args, execute_exception=SystemExit)
 
     def test_excel_to_ndjson_file_path(self):
         expected_args = {
@@ -267,7 +249,7 @@ class TestConvert(CompareTestCase):
         }
 
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'excel', f'{self.input_folder}/invoice.xlsx'], expected_args, stub_stdout=out_f
             )
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
@@ -284,7 +266,7 @@ class TestConvert(CompareTestCase):
         }
 
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'excel', f'{self.input_folder}/invoice_multi_sheets.xlsx'], expected_args, stub_stdout=out_f
             )
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
@@ -303,7 +285,7 @@ class TestConvert(CompareTestCase):
         }
 
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'excel', '-o', 'Sheet2', f'{self.input_folder}/invoice_multi_sheets.xlsx'],
                 expected_args,
                 stub_stdout=out_f
@@ -325,7 +307,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'excel', '-j', f'{self.input_folder}/invoice_multi_sheets.xlsx'],
                 expected_args,
                 stub_stdout=out_f
@@ -343,7 +325,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'excel', '-j', '-o', 'Sheet2', f'{self.input_folder}/invoice_multi_sheets.xlsx'],
                 expected_args,
                 stub_stdout=out_f
@@ -363,7 +345,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with (self.input_folder / 'invoice.csv').open() as in_f, self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'csv', '-c', str(generated_schema_path)], expected_args, in_f, out_f
             )
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
@@ -381,7 +363,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'excel', '-c', str(generated_schema_path), str(self.input_folder / 'invoice.xlsx')],
                 expected_args,
                 stub_stdout=out_f
@@ -400,7 +382,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with (self.input_folder / 'invoice.json').open() as in_f, self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'json', '-c', str(generated_schema_path)], expected_args, in_f, out_f
             )
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.ndjson', is_ndjson_file=True)
@@ -418,7 +400,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'ndjson', '-j', '-c', str(generated_schema_path), str(in_fp)],
                 expected_args,
                 stub_stdout=out_f
@@ -446,7 +428,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with (self.input_folder / 'invoice.csv').open() as in_f, self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'csv', '-s', str(self.input_folder / 'invoice_aito_schema_altered.json')],
                 expected_args, in_f, out_f
             )
@@ -463,7 +445,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute([
+            self.parse_and_execute([
                 'convert', 'excel', '-s', str(self.input_folder / 'invoice_aito_schema_altered.json'),
                 str(self.input_folder / 'invoice.xlsx')
             ], expected_args, stub_stdout=out_f)
@@ -479,7 +461,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with (self.input_folder / 'invoice.json').open() as in_f, self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['convert', 'json', '-s', str(self.input_folder / 'invoice_aito_schema_altered.json')],
                 expected_args, in_f, out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_altered.ndjson', is_ndjson_file=True)
@@ -494,7 +476,7 @@ class TestConvert(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute([
+            self.parse_and_execute([
                 'convert', 'ndjson', '-j', '-s', str(self.input_folder / 'invoice_aito_schema_altered.json'),
                 str(self.input_folder / 'invoice.ndjson')],
                 expected_args, stub_stdout=out_f

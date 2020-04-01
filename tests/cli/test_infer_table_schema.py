@@ -1,35 +1,17 @@
 import sys
 
-from aito.cli.main_parser import MainParser
 from aito.cli.sub_commands.infer_table_schema import InferFromFormatSubCommand
-from tests.cases import CompareTestCase
+from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 
-class TestInferTableSchema(CompareTestCase):
+class TestInferTableSchema(ParserAndCLITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.parser = MainParser()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.default_main_parser_args = {
             'encoding': 'utf-8', 'command': 'infer-table-schema', 'verbose': False, 'version': False, 'quiet': False
         }
-
-    def assert_parse_then_execute(
-            self, parsing_args, expected_args, stub_stdin=None, stub_stdout=None, execute_exception=None
-    ):
-        self.assertDictEqual(vars(self.parser.parse_args(parsing_args)), expected_args)
-
-        if stub_stdin:
-            self.stub_stdin(stub_stdin)
-        if stub_stdout:
-            self.stub_stdout(stub_stdout)
-        # re run parse_args to use the new stubbed stdio
-        if execute_exception:
-            with self.assertRaises(execute_exception):
-                self.parser.parse_and_execute(vars(self.parser.parse_args(parsing_args)))
-        else:
-            self.parser.parse_and_execute(vars(self.parser.parse_args(parsing_args)))
 
     def test_parsed_args_to_df_handler_read_args(self):
         self.assertEqual(
@@ -85,7 +67,7 @@ class TestInferTableSchema(CompareTestCase):
             **self.default_main_parser_args
         }
         with (self.input_folder / 'invoice.csv').open() as in_f, self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(['infer-table-schema', 'csv'], expected_args, in_f, out_f)
+            self.parse_and_execute(['infer-table-schema', 'csv'], expected_args, in_f, out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema.json')
 
     def test_infer_schema_from_csv_file_path(self):
@@ -97,7 +79,7 @@ class TestInferTableSchema(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['infer-table-schema', 'csv', f'{self.input_folder}/invoice.csv'],
                 expected_args, stub_stdout=out_f
             )
@@ -112,7 +94,7 @@ class TestInferTableSchema(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['infer-table-schema', 'csv', '-d', ';', str(self.input_folder / 'invoice_semicolon_delimiter.csv')],
                 expected_args, stub_stdout=out_f
             )
@@ -127,7 +109,7 @@ class TestInferTableSchema(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['infer-table-schema', 'csv', '-d', ';', '-p', ',',
                  str((self.input_folder / 'invoice_semicolon_delimiter_comma_decimal.csv'))],
                 expected_args, stub_stdout=out_f
@@ -135,7 +117,7 @@ class TestInferTableSchema(CompareTestCase):
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema.json')
 
     def test_infer_schema_from_excel_stdin(self):
-        self.assert_parse_then_execute(
+        self.parse_and_execute(
             ['infer-table-schema', 'excel'],
             {'one_sheet': None, 'input': sys.stdin, 'input-format': 'excel', **self.default_main_parser_args},
             execute_exception=SystemExit
@@ -149,7 +131,7 @@ class TestInferTableSchema(CompareTestCase):
             **self.default_main_parser_args
         }
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['infer-table-schema', 'excel', f'{self.input_folder}/invoice.xlsx'],
                 expected_args, stub_stdout=out_f
             )
@@ -164,7 +146,7 @@ class TestInferTableSchema(CompareTestCase):
         }
 
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['infer-table-schema', 'excel', '-o', 'Sheet2', str(self.input_folder / 'invoice_multi_sheets.xlsx')],
                 expected_args,
                 stub_stdout=out_f
@@ -173,7 +155,7 @@ class TestInferTableSchema(CompareTestCase):
 
     def test_infer_schema_from_json(self):
         with (self.input_folder / 'invoice.json').open() as in_f, self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['infer-table-schema', 'json'],
                 {'input': sys.stdin, 'input-format': 'json', **self.default_main_parser_args},
                 in_f, out_f
@@ -182,7 +164,7 @@ class TestInferTableSchema(CompareTestCase):
 
     def test_infer_schema_from_json_file_path(self):
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['infer-table-schema', 'json', str(self.input_folder / 'invoice.json')],
                 {'input': self.input_folder / 'invoice.json', 'input-format': 'json', **self.default_main_parser_args},
                 stub_stdout=out_f
@@ -191,7 +173,7 @@ class TestInferTableSchema(CompareTestCase):
 
     def test_infer_schema_from_ndjson(self):
         with (self.input_folder / 'invoice.ndjson').open() as in_f, self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['infer-table-schema', 'ndjson'],
                 {'input': sys.stdin, 'input-format': 'ndjson', **self.default_main_parser_args},
                 in_f, out_f
@@ -201,7 +183,7 @@ class TestInferTableSchema(CompareTestCase):
     def test_infer_schema_from_ndjson_file_path(self):
         in_fp = self.input_folder / 'invoice.ndjson'
         with self.out_file_path.open('w') as out_f:
-            self.assert_parse_then_execute(
+            self.parse_and_execute(
                 ['infer-table-schema', 'ndjson', str(in_fp)],
                 {'input': in_fp, 'input-format': 'ndjson', **self.default_main_parser_args},
                 stub_stdout=out_f
