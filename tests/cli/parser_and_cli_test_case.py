@@ -14,7 +14,11 @@ class ParserAndCLITestCase(CompareTestCase):
             self, parsing_args, expected_args, stub_stdin=None, stub_stdout=None, execute_exception=None
     ):
         if os.getenv('TEST_BUILT_PACKAGE'):
-            subprocess.run(['aito', 'convert', 'json'], stdin=stub_stdin, stdout=stub_stdout)
+            if execute_exception:
+                with self.assertRaises(subprocess.CalledProcessError):
+                    subprocess.run(['aito'] + parsing_args, stdin=stub_stdin, stdout=stub_stdout, check=True)
+            else:
+                subprocess.run(['aito'] + parsing_args, stdin=stub_stdin, stdout=stub_stdout, check=True)
         else:
             self.assertDictEqual(vars(self.parser.parse_args(parsing_args)), expected_args)
             if stub_stdin:

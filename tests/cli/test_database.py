@@ -204,8 +204,15 @@ class TestDatabase(ParserAndCLITestCase):
             'table-name': self.default_table_name,
             **self.default_main_parser_args
         }
-        with patch('builtins.input', return_value='yes'):
-            self.parse_and_execute(['database', 'delete-table', self.default_table_name], expected_args)
+        # Manually run test built pacakge to communicate
+        if os.environ.get('TEST_BUILT_PACKAGE'):
+            import subprocess
+            proc = subprocess.Popen(['aito', 'database', 'delete-table', self.default_table_name],
+                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            proc.communicate(b"yes")
+        else:
+            with patch('builtins.input', return_value='yes'):
+                self.parse_and_execute(['database', 'delete-table', self.default_table_name], expected_args)
         self.assertFalse(self.client.check_table_exists(self.default_table_name))
 
     def test_quick_add_table(self):

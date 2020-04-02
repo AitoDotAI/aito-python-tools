@@ -46,31 +46,9 @@ workflows:
       - run_sdk_and_cli_tests_win_py_38:
           requires:
             - run_sdk_and_cli_tests_win_py_36
-
-  deploy_to_test_pypi_and_test_package:
-    jobs:
-      - deploy_to_test_pypi:
-          filters:
-            branches:
-              only: master
-      - run_sdk_and_cli_tests_built_package:
-          requires:
-          - deploy_to_test_pypi
-          filters:
-            branches:
-              only: master
-      - run_postgres_tests_built_package:
-          requires:
-            - deploy_to_test_pypi
-          filters:
-            branches:
-              only: master
-      - run_mysql_tests_built_package:
-          requires:
-            - deploy_to_test_pypi
-          filters:
-            branches:
-              only: master
+      - run_sdk_and_cli_tests_built_package
+      - run_postgres_tests_built_package
+      - run_mysql_tests_built_package
 
 commonYAMLStructure:
   - &install_pyenv_osx
@@ -300,19 +278,13 @@ commonYAMLStructure:
   - &store_log_files
     store_artifacts:
       path: ./.logs
-  - &run_deploy_script_to_test_pypi
+  - &build_and_install_package
     run:
       name: deploy to test pypi
       command: |
         . venv/bin/activate
-        ./scripts/deploy test.pypi
-  - &install_built_package
-    run:
-      name: install built package from test pypi
-      command: |
-        . venv/bin/activate
-        pip install -i https://test.pypi.org/simple/ aitoai --no-deps
-        pip install aitoai
+        ./scripts/deploy test.pypi -l dev --no-publish
+        pip install dist/*.whl
 
 jobs:
   run_sdk_and_cli_tests_linux_py_36: &run_sdk_and_cli_tests_linux_template
@@ -548,19 +520,6 @@ jobs:
     environment:
       PYTHON_VERSION: 3.8.0
 
-  deploy_to_test_pypi:
-    docker:
-      - image: circleci/python:3.6.9
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - *restore_venv_cache_deploy
-      - *create_venv_and_install_dependencies_deploy
-      - *save_venv_cache_deploy
-      - *run_deploy_script_to_test_pypi
-      - store_artifacts:
-          path: ./dist
-
   run_sdk_and_cli_tests_built_package:
     docker:
       - image: circleci/python:3.6.9
@@ -568,7 +527,11 @@ jobs:
       TEST_BUILT_PACKAGE: True
     working_directory: ~/repo
     steps:
-      - *install_built_package
+      - checkout
+      - *restore_venv_cache_deploy
+      - *create_venv_and_install_dependencies_deploy
+      - *save_venv_cache_deploy
+      - *build_and_install_package
       - *run_sdk_and_cli_tests
       - *store_log_files
 
@@ -590,9 +553,13 @@ jobs:
       TEST_BUILT_PACKAGE: True
     working_directory: ~/repo
     steps:
+      - checkout
+      - *restore_venv_cache_deploy
+      - *create_venv_and_install_dependencies_deploy
+      - *save_venv_cache_deploy
+      - *build_and_install_package
       - *install_odbc_driver_linux
       - *install_postgres_odbc_driver_linux
-      - *install_built_package
       - *install_pyodbc
       - *wait_postgres
       - *run_postgres_connection_test
@@ -619,9 +586,12 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - *restore_venv_cache_deploy
+      - *create_venv_and_install_dependencies_deploy
+      - *save_venv_cache_deploy
+      - *build_and_install_package
       - *install_odbc_driver_linux
       - *install_mysql_odbc_driver_linux
-      - *install_built_package
       - *install_pyodbc
       - *wait_mysql
       - *run_mysql_connection_test
