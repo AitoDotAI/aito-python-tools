@@ -195,7 +195,8 @@ commonYAMLStructure:
   - &start_postgres
     run:
       name: start postgres
-      command:
+      command: |
+        initdb -D /usr/local/var/postgres/
         brew services start postgresql
   - &wait_postgres
     run:
