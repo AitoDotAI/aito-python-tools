@@ -8,13 +8,15 @@ from aito.common._typing import *
 from aito.sdk.schema_handler import SchemaHandler
 
 
+LOG = logging.getLogger('DataFrameHandler')
+
+
 class DataFrameHandler:
     """Pandas DataFrame handler
     """
     allowed_format = ['csv', 'json', 'excel', 'ndjson']
 
     def __init__(self):
-        self.logger = logging.getLogger('DataFrameHandler')
         self.default_options = {
             'csv': {},
             'excel': {},
@@ -87,28 +89,29 @@ class DataFrameHandler:
         table_schema_columns = set(columns_schema.keys())
 
         for col in (df_columns - table_schema_columns):
-            self.logger.warning(f"Column '{col}' found in the input data but not found in the input schema")
+            LOG.warning(f'column `{col}` found in the input data but not found in the input schema')
         for col in (table_schema_columns - df_columns):
-            self.logger.warning(f"Column '{col}' found in the input schema but not found in the input data")
+            LOG.warning(f'column `{col}` found in the input schema but not found in the input data')
 
         for col in table_schema_columns.intersection(df_columns):
             col_schema = columns_schema[col]
             col_schema_nullable = True if ('nullable' not in col_schema or col_schema['nullable']) else False
             if not col_schema_nullable and df[col].isna().any():
-                raise ValueError(f"Column '{col}' is nullable but stated non-nullable in the input schema")
+                raise ValueError(f'column `{col}` is nullable but stated non-nullable in the input schema')
             col_aito_type = col_schema['type']
             col_inferred_aito_type = self.schema_handler.infer_aito_types_from_pandas_series(df[col])
-            self.logger.debug(f"Column '{col}' inferred aito type is {col_inferred_aito_type}")
+            LOG.debug(f'column `{col}` inferred aito type: {col_inferred_aito_type}')
             if col_inferred_aito_type != col_aito_type and \
                     not {col_aito_type, col_inferred_aito_type}.issubset({'Text', 'String'}):
                 col_python_type = self.schema_handler.aito_types_to_python_types[col_aito_type]
-                self.logger.info(f"Converting column '{col}' to {col_aito_type} type according to the schema")
-                self.logger.debug(f"Casting column '{col}' to {col_python_type}")
+                LOG.debug(f'converting column `{col}` to `{col_aito_type}` type according to the schema...')
+                LOG.debug(f'casting column `{col}` to `{col_python_type}`')
                 try:
                     df[col] = df[col].apply(lambda cell: col_python_type(cell) if not np.isnan(cell) else np.nan)
                 except Exception as e:
-                    self.logger.error(f'Conversion error: {e}')
+                    LOG.error(f'failed to convert column `{col}` to `{col_aito_type}`: {e}')
                     raise e
+                LOG.info(f'convert column `{col}` to `{col_aito_type}`')
         return df
 
     def read_file_to_df(self, read_input: FilePathOrBuffer, in_format: str, read_options: Dict = None) -> pd.DataFrame:
@@ -123,7 +126,7 @@ class DataFrameHandler:
         :return: read DataFrame
         :rtype: pd.DataFrame
         """
-        self.logger.debug(f'Star reading from {read_input}...')
+        LOG.debug(f'reading data from {read_input} to df...')
         read_functions = {'csv': pd.read_csv, 'excel': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
 
         if not read_options:
@@ -140,7 +143,7 @@ class DataFrameHandler:
             out_format: str,
             write_output: FilePathOrBuffer,
             convert_options: Dict = None
-        ):
+    ):
         """Write a Pandas DataFrame
 
         :param df: input DataFrame
@@ -152,7 +155,7 @@ class DataFrameHandler:
         :param convert_options: dictionary contains arguments for pandas write function, defaults to None
         :type convert_options: Dict, optional
         """
-        self.logger.info(f"Start converting to {out_format} and writing to output...")
+        LOG.debug(f'converting to {out_format} and writing to {write_output}...')
         convert_functions = {'csv': df.to_csv, 'excel': df.to_excel, 'json': df.to_json, 'ndjson': df.to_json}
         if not convert_options:
             options = self.default_options[out_format]
@@ -172,7 +175,7 @@ class DataFrameHandler:
             convert_options: Dict = None,
             apply_functions: List[Callable[..., pd.DataFrame]] = None,
             use_table_schema: Dict = None
-        ) -> pd.DataFrame:
+    ) -> pd.DataFrame:
         """Converting input file to expected format, generate or use Aito table schema if specified
 
         :param read_input: read input

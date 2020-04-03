@@ -5,9 +5,11 @@ import pandas as pd
 from langdetect import detect
 
 
+LOG = logging.getLogger("SchemaHandler")
+
+
 class SchemaHandler:
     def __init__(self):
-        self.logger = logging.getLogger("SchemaHandler")
         self.pandas_dtypes_name_to_aito_type = {
             'string': 'Text',
             'bytes': 'Text',
@@ -61,9 +63,11 @@ class SchemaHandler:
         :rtype: str
         """
         sampled_values = series.values if len(series) < sample_size else series.sample(sample_size).values
+        LOG.debug('inferring dtype from sample values...')
         inferred_dtype = pd.api.types.infer_dtype(sampled_values)
+        LOG.debug(f'inferred dtype: {inferred_dtype}')
         if inferred_dtype not in self.pandas_dtypes_name_to_aito_type:
-            raise Exception(f"Cannot not infer aito type from dtype {inferred_dtype}")
+            raise Exception(f'failed to infer aito type from dtype {inferred_dtype}')
         return self.pandas_dtypes_name_to_aito_type[inferred_dtype]
 
     def infer_table_schema_from_pandas_data_frame(self, df: pd.DataFrame) -> Dict:
@@ -75,8 +79,7 @@ class SchemaHandler:
         :return: inferred table schema
         :rtype: Dict
         """
-        self.logger.info("Start inferring schema...")
-
+        LOG.debug('inferring table schema...')
         rows_count = df.shape[0]
 
         columns_schema = {}
@@ -85,7 +88,7 @@ class SchemaHandler:
             try:
                 col_aito_type = self.infer_aito_types_from_pandas_series(df[col], self.sample_size)
             except Exception as e:
-                raise Exception(f"Cannot infer aito type of column {col}: {e}")
+                raise Exception(f'failed to infer aito type of column `{col}`: {e}')
             col_na_count = col_df.isna().sum()
             col_schema = {
                 'nullable': True if col_na_count > 0 else False,
@@ -102,7 +105,8 @@ class SchemaHandler:
                         detected_lang = detect(col_text)
                         if detected_lang in self.lang_detect_code_to_aito_code:
                             detected_lang = self.lang_detect_code_to_aito_code[detected_lang]
-                    except:
+                    except Exception as e:
+                        LOG.debug(f'failed to detect language: {e}')
                         detected_lang = None
                     if detected_lang and detected_lang in self.supported_alias_analyzer:
                         col_schema['analyzer'] = detected_lang
@@ -110,7 +114,7 @@ class SchemaHandler:
             columns_schema[col] = col_schema
 
         table_schema = {'type': 'table', 'columns': columns_schema}
-        self.logger.info("Finished inferring schema")
+        LOG.info('inferred table schema')
         return table_schema
 
     def validate_table_schema(self, table_schema: Dict) -> Dict:
@@ -144,12 +148,12 @@ class SchemaHandler:
             if arg_name in object_dict and arg_type:
                 validate_arg_type(object_name, object_dict, arg_name, arg_type, accepted_values)
 
-        self.logger.info("Start validating schema...")
+        LOG.debug('validating table schema..."')
         validate_arg('table', table_schema, 'type', True, str, ['table'])
         validate_arg('table', table_schema, 'columns', True, dict)
         for col in table_schema['columns']:
             col_schema = table_schema['columns'][col]
             validate_arg(col, col_schema, 'type', True, str, list(self.aito_types_to_python_types.keys()))
             validate_arg(col, col_schema, 'nullable', False, bool)
-        self.logger.info("Finished validating schema")
+        LOG.info('validated table schem')
         return table_schema

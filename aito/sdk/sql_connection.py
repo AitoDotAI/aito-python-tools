@@ -3,6 +3,9 @@ import pandas as pd
 import logging
 
 
+LOG = logging.getLogger('SQLConnection')
+
+
 class SQLConnectionError(Exception):
     def __init__(self, message):
         super().__init__(message)
@@ -36,7 +39,6 @@ class SQLConnection:
         :type sql_password: str, optional
         :raises SQLConnectionError: An error occurred during the establishment of the connection
         """
-        self.logger = logging.getLogger('SQLConnection')
         if not sql_driver:
             raise SQLConnectionError(f"Missing Driver")
         available_drivers = pyodbc.drivers()
@@ -67,7 +69,8 @@ class SQLConnection:
 
         self.connection = connection
 
-    def save_cursor_result_to_df(self, cursor: pyodbc.Cursor) -> pd.DataFrame:
+    @staticmethod
+    def save_cursor_result_to_df(cursor: pyodbc.Cursor) -> pd.DataFrame:
         """Save the executed query cursor to a pandas DataFrame
 
         :param cursor: query cursor
@@ -78,7 +81,7 @@ class SQLConnection:
         descriptions = cursor.description
         col_names = [desc[0] for desc in descriptions]
         df = pd.DataFrame.from_records(cursor.fetchall(), columns=col_names)
-        self.logger.debug('Query result saved to Dataframe')
+        LOG.debug('saved cursor to DataFrame')
         return df
 
     def execute_query(self, query_string: str) -> pyodbc.Cursor:
@@ -90,11 +93,12 @@ class SQLConnection:
         :return: cursor
         :rtype: pyodbc.Cursor
         """
+        LOG.debug(f'executing query: {query_string}')
         try:
             cursor = self.connection.execute(query_string)
         except Exception as e:
             raise SQLConnectionError(f"Failed to execute query {query_string}: {e}")
-        self.logger.debug('Query executed')
+        LOG.debug('executed query')
         return cursor
 
     def execute_query_and_save_result(self, query: str) -> pd.DataFrame:
