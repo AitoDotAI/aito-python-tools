@@ -1,7 +1,7 @@
-from setuptools import setup, find_packages
-import os
 import re
 from pathlib import Path
+
+from setuptools import setup, find_packages
 
 PROJECT_ROOT_PATH = Path(__file__).parent
 VERSION_FILE_PATH = PROJECT_ROOT_PATH / 'aito' / '__init__.py'
@@ -25,22 +25,23 @@ def fetch_requirements(requirements_file_path: Path):
             requirements.append(line.strip())
     return requirements
 
-default_description = "Please go to our Homepage at https://github.com/AitoDotAI/aito-python-tools " \
-                      "for more detailed documentation.\n"
-if os.environ.get('CONVERT_README'):
-    import pypandoc
-    long_description = default_description + pypandoc.convert('README.md', 'rst')
-else:
-    long_description = default_description
+
+with (PROJECT_ROOT_PATH / 'README.rst').open() as f:
+    long_description = f.read()
 
 setup(
     name='aitoai',
     version=find_current_version(VERSION_FILE_PATH),
     author='aito.ai',
     author_email='admin@aito.ai',
-    description='A collection of python support tools and scripts for Aito.ai',
+    description='Aito.ai Python SDK',
     long_description=long_description,
     url='https://github.com/AitoDotAI/aito-python-tools',
+    project_urls={
+        'Documentation': 'https://aitodotai.github.io/aito-python-tools.',
+        'Source': 'https://github.com/AitoDotAI/aito-python-tools',
+        'Tracker': 'https://github.com/AitoDotAI/aito-python-tools/issues',
+    },
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=fetch_requirements(REQUIREMENTS_FILE_PATH),
     classifiers=[
@@ -48,6 +49,11 @@ setup(
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'License :: OSI Approved :: MIT License',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX',
+        'Operating System :: POSIX :: BSD',
+        'Operating System :: POSIX :: Linux'
+        'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
