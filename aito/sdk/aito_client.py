@@ -279,8 +279,7 @@ class AitoClient:
         :type table_name: str
         :param entries: list of the table entries
         :type entries: List[Dict]
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__
-        the table on finished, default to True
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, default to True
         :type optimize_on_finished: bool
         """
         if len(entries) > 1000:
@@ -307,8 +306,7 @@ class AitoClient:
         :type entries: List[Dict]
         :param batch_size: the batch size, defaults to 1000
         :type batch_size: int, optional
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__
-        the table on finished, default to True
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, default to True
         :type optimize_on_finished: bool
         """
         LOG.debug(f'uploading {len(entries)} entries to table `{table_name}` with batch size of {batch_size}...')
@@ -342,8 +340,7 @@ class AitoClient:
         :type table_name: str
         :param binary_file: binary file object
         :type binary_file: BinaryIO
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__
-        the table on finished, default to True
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, default to True
         :type optimize_on_finished: bool
         :param polling_time: polling wait time
         :type polling_time: int
@@ -394,8 +391,7 @@ class AitoClient:
         :type table_name: str
         :param file_path: path to uploading file
         :type file_path: PathLike
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__
-        the table on finished, default to True
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, default to True
         :type optimize_on_finished: bool
         :param polling_time: polling wait time
         :type polling_time: int
@@ -475,7 +471,7 @@ class AitoClient:
         :param table_name: the name of the table
         :type table_name: str
         :return: number of entries in the table
-        :rtype int
+        :rtype: int
         """
         return self.request('POST', '/api/v1/_query', {'from': table_name})['total']
 
@@ -505,7 +501,7 @@ class AitoClient:
         :param batch_size: number of entries to be queried at once
         :type batch_size: int
         :return: list of all entries in the table
-        :rtype List[Dict]
+        :rtype: List[Dict]
         """
         LOG.debug(f'getting all entries of table {table_name} in batch of {batch_size}...')
         table_size = self.get_table_size(table_name)

@@ -13,7 +13,7 @@ Changelog
 
 - Fix a bug that requires database name for sql\_function
 - No longer requires both read-only and read-write key for setting up the credentials.
-   (Use ``AITO\_API\_KEY`` instead of ``AITO\_RW\_KEY`` and ``AITO\_RO\_KEY``)
+   (Use ``AITO\_API\_KEY`` instead of ``AITO_RW_KEY`` and ``AITO_RO_KEY``)
 
 0.1.0
 ^^^^^
