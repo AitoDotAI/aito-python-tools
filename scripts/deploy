@@ -50,6 +50,7 @@ def generate_new_version(latest_version: str, repo: str, level: Optional[str]) -
         new_parts = latest_parts[:idx] + [str(int(latest_parts[idx]) + 1)] + ['0'] * (2 - idx)
         if repo == 'test.pypi':
             new_parts.append('dev1')
+        return '.'.join(new_parts)
     elif level == 'dev':
         if len(latest_parts) < 4:
             new_parts = latest_parts + ['dev1']
@@ -58,9 +59,9 @@ def generate_new_version(latest_version: str, repo: str, level: Optional[str]) -
                 new_parts = latest_parts[:3] + [f'dev{int(latest_parts[3].split("dev")[1]) + 1}']
             else:
                 new_parts = latest_parts[:3] + ['dev1']
+        return '.'.join(new_parts)
     else:
         RuntimeError(f'unexpected level {level}')
-    return '.'.join(new_parts)
 
 
 def build_package_and_check():
@@ -124,6 +125,9 @@ class DeployParser(argparse.ArgumentParser):
         )
 
     def __call__(self):
+        if not (PROJECT_ROOT_PATH / 'aito' / '__init__.py').exists():
+            sys.exit('this script must be run from the project root')
+
         parsed_args = vars(self.parse_args())
 
         check_git_tree()
@@ -151,6 +155,7 @@ class DeployParser(argparse.ArgumentParser):
             if repo == 'pypi':
                 check_version_change_log(CHANGE_LOG_FILE_PATH, new_version)
                 git_bump_version_and_tag(new_version)
+                subprocess.run(['./scripts/deploy_docs.sh', new_version], check=True)
             publish(repo)
 
 

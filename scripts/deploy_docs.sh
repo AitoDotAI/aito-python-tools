@@ -1,3 +1,5 @@
+#!/bin/bash -e
+
 function usage {
   echo "usage: $(basename "$0") <verion>
 
