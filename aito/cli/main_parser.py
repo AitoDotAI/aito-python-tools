@@ -7,6 +7,7 @@ from aito.common.generic_utils import logging_config
 from .parser import ArgParser, ParseError
 from .sub_commands import *
 from typing import Dict, Optional
+import sys
 
 
 class MainParser(ArgParser):
@@ -54,3 +55,8 @@ class MainParser(ArgParser):
         except ParseError as e:
             self.error(e.message)
         return 0
+
+
+def main():
+    parser = MainParser()
+    sys.exit(parser.parse_and_execute())

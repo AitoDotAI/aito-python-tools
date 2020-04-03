@@ -1,4 +1,4 @@
-from .main_parser import MainParser
+from .main_parser import main
 
-parser = MainParser()
-parser.parse_and_execute()
+if __name__ == "__main__":
+    main()

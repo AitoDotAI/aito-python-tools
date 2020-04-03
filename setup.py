@@ -55,5 +55,5 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     python_requires='>=3.6',
-    entry_points={'console_scripts': ['aito = aito.cli.main_parser_wrapper:main']}
+    entry_points={'console_scripts': ['aito = aito.cli.main_parser:main']}
 )
