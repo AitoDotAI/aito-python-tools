@@ -50,6 +50,13 @@ workflows:
       - run_postgres_tests_built_package
       - run_mysql_tests_built_package
 
+  deploy_beta:
+    jobs:
+      - build_and_deploy_to_test_pypi:
+          filters:
+            branches:
+              only: master
+
 commonYAMLStructure:
   - &install_pyenv_osx
     run:
@@ -599,3 +606,20 @@ jobs:
       - *prepare_data_mysql
       - *run_mysql_cli_test
       - *store_log_files
+
+  build_and_deploy_to_test_pypi:
+    docker:
+      - image: circleci/python:3.6.9
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *restore_venv_cache_deploy
+      - *create_venv_and_install_dependencies_deploy
+      - *save_venv_cache_deploy
+      - run:
+          name: build package and deploy to test pypi
+          command: |
+            venv/bin/activate
+            ./scripts/deploy test.pypi -l dev
+      - store_artifacts:
+          path: ./dist
