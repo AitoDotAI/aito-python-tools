@@ -3,6 +3,10 @@ from abc import ABC, abstractmethod
 from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
 from pathlib import Path
 from typing import Union, TextIO
+import logging
+
+
+LOG = logging.getLogger('Parser')
 
 
 class ArgParser(ArgumentParser):
@@ -69,8 +73,9 @@ If no Aito credential flag is given, the following environment variables are use
 
 class ParseError(Exception):
     def __init__(self, message):
-        self.message = message
         super().__init__(message)
+        self.message = message
+        LOG.debug(message, stack_info=True)
 
 
 class ArgType(ABC):

@@ -5,6 +5,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Dict, List, BinaryIO, Union, Tuple
 
+import ndjson
 import requests
 from aiohttp import ClientSession, ClientResponseError
 
@@ -52,7 +53,7 @@ class AitoClient:
         :type instance_url: str
         :param api_key: Aito instance API key
         :type api_key: str
-        :param check_credentials: check the given credentials by requesting the Aito instance version, default to True
+        :param check_credentials: check the given credentials by requesting the Aito instance version, defaults to True
         :type check_credentials: bool
         :raises BaseError: an error occurred during the creation of AitoClient
         """
@@ -120,7 +121,7 @@ class AitoClient:
         :type endpoints: List[str]
         :param queries: list of request queries
         :type queries: List[Dict]
-        :param batch_size: number of queries to be sent at a time
+        :param batch_size: the number of queries to be sent per batch
         :type batch_size: int
         :return: list of request response or exception if a request did not succeed
         :rtype: List[Dict]
@@ -253,7 +254,7 @@ class AitoClient:
         return list(self.get_database_schema()['schema'].keys())
 
     def check_table_exists(self, table_name: str) -> bool:
-        """check if a table exist in the instance
+        """check if a table exists in the instance
 
         :param table_name: the name of the table
         :type table_name: str
@@ -279,7 +280,7 @@ class AitoClient:
         :type table_name: str
         :param entries: list of the table entries
         :type entries: List[Dict]
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, default to True
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
         :type optimize_on_finished: bool
         """
         if len(entries) > 1000:
@@ -306,7 +307,7 @@ class AitoClient:
         :type entries: List[Dict]
         :param batch_size: the batch size, defaults to 1000
         :type batch_size: int, optional
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, default to True
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
         :type optimize_on_finished: bool
         """
         LOG.debug(f'uploading {len(entries)} entries to table `{table_name}` with batch size of {batch_size}...')
@@ -340,7 +341,7 @@ class AitoClient:
         :type table_name: str
         :param binary_file: binary file object
         :type binary_file: BinaryIO
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, default to True
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
         :type optimize_on_finished: bool
         :param polling_time: polling wait time
         :type polling_time: int
@@ -361,7 +362,7 @@ class AitoClient:
             r = requests.request(upload_req_method, s3_url, data=binary_file)
             r.raise_for_status()
         except Exception as e:
-            raise BaseError(f'fail to upload file to S3: {e}')
+            raise BaseError(f'failed to upload file to S3: {e}')
         LOG.debug('uploaded file to S3')
         LOG.debug('triggering file processing...')
         self.request('POST', session_end_point)
@@ -389,22 +390,22 @@ class AitoClient:
 
         :param table_name: the name of the table
         :type table_name: str
-        :param file_path: path to uploading file
+        :param file_path: path to the file to be uploaded
         :type file_path: PathLike
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, default to True
+        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
         :type optimize_on_finished: bool
         :param polling_time: polling wait time
         :type polling_time: int
-        :raises BaseError: the uploading file is not a ndjson.gz file
+        :raises BaseError: incorrect file extension, should be .ndjson.gz
         :raises RequestError: an error occurred during the upload of the file to S3
         """
         if not check_file_is_gzipped(file_path):
-            raise BaseError(f'uploading file {file_path} is not a gzip compressed ndjson file')
+            raise BaseError(f'file {file_path} is not a gzip-compressed ndjson file')
         with open(file_path, 'rb') as f:
             self.upload_binary_file(table_name, f, optimize_on_finished, polling_time)
 
     def create_job(self, job_endpoint: str, query: Union[List, Dict]) -> Dict:
-        """Create a job for queries that takes longer than 30 seconds to run
+        """Create a job for queries that take longer than 30 seconds to run
 
         `API doc <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
         :param job_endpoint: job endpoint
@@ -443,15 +444,15 @@ class AitoClient:
     ) -> Dict:
         """Make a request to an Aito API endpoint using job
 
-        This method should be used for request that takes longer than 30 seconds, e.g: evaluate
+        This method should be used for requests that take longer than 30 seconds, e.g: evaluate
 
         :param job_endpoint: job end point
         :type job_endpoint: str
         :param query: an Aito query, defaults to None
         :type query: Union[Dict, List], optional
-        :param polling_time: polling wait time, default to 10
+        :param polling_time: polling wait time, defaults to 10
         :type polling_time: int
-        :raises RequestError: an error occurred during the execution of job
+        :raises RequestError: an error occurred during the execution of the job
         :return: request JSON content
         :rtype: Dict
         """
@@ -470,7 +471,7 @@ class AitoClient:
 
         :param table_name: the name of the table
         :type table_name: str
-        :return: number of entries in the table
+        :return: the number of entries in the table
         :rtype: int
         """
         return self.request('POST', '/api/v1/_query', {'from': table_name})['total']
@@ -498,7 +499,7 @@ class AitoClient:
 
         :param table_name: the name of the table
         :type table_name: str
-        :param batch_size: number of entries to be queried at once
+        :param batch_size: the number of entries to be queried at once
         :type batch_size: int
         :return: list of all entries in the table
         :rtype: List[Dict]
@@ -530,16 +531,15 @@ class AitoClient:
 
         :param table_name: the name of the table
         :type table_name: str
-        :param output_folder: the folder that contains the output file
+        :param output_folder: the folder where the output file is written to
         :type output_folder: PathLike
-        :parm file_name: the name of the output file, default to None. If not name is given, use the table name
+        :parm file_name: the name of the output file, defaults to None in which the table name is used the file name
         :type file_name: str
-        :param batch_size: number of entries to be downloaded at once, default to 5000
+        :param batch_size: the number of entries to be downloaded at once, defaults to 5000
         :type batch_size: int
-        :param gzip_output: gzip the output file, default to False
+        :param gzip_output: gzip the output file, defaults to False
         :type gzip_output: bool
         """
-        import ndjson
         if not file_name:
             file_name = table_name
         out_file_path = Path(output_folder) / f'{file_name}.ndjson'

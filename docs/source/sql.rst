@@ -121,7 +121,7 @@ Similar to setting up the Aito credentials, there are 3 ways to set up the SQL D
 
   You can set up the credentials using:
 
-    - ``-D`` flag fro the name of the driver
+    - ``-D`` flag for the name of the driver
     - ``-s`` flag for the server
     - ``-P`` flag for the port
     - ``-d`` flag for the database

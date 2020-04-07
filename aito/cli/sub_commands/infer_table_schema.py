@@ -66,12 +66,11 @@ class InferFromExcelSubCommand(InferFromFormatSubCommand):
     def build_parser(self, parser):
         super().build_parser(parser)
         parser.add_excel_format_default_arguments()
-        parser.description = 'Infer table schema from EXCEL data, accept both xls and xlsx'
 
 
 class InferFromSQLSubCommand(SubCommand):
     def __init__(self):
-        super().__init__('from-sql', 'infer table schema the result of a SQL query')
+        super().__init__('from-sql', 'infer a table schema from the result of a SQL query')
 
     def build_parser(self, parser):
         parser.add_sql_default_credentials_arguments(add_use_env_arg=True)
