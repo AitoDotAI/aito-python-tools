@@ -48,45 +48,53 @@ You can use our test cli to run tests::
 
 There are multiple test suites:
 
-  1. CLI suite::
+1. CLI suite:
 
-      $ python -m tests -v suite cli
+  .. code-block:: console
+
+    $ python -m tests -v suite cli
+
+  .. note::
 
     You need an Aito instance and set up the credentials with ```AITO_INSTANCE_URL``` and ```AITO_API_KEY``` to test some functions.
 
-  2. SDK suite::
+2. SDK suite:
 
-      $ python -m tests -v suite sdk
+  .. code-block:: console
 
-    .. note::
+    $ python -m tests -v suite sdk
 
-      You need an Aito instance and set up the credentials with ```AITO_INSTANCE_URL``` and ```AITO_API_KEY``` to test some functions
+  .. note::
 
-  3. SQL functions tests:
+    You need an Aito instance and set up the credentials with ```AITO_INSTANCE_URL``` and ```AITO_API_KEY``` to test some functions
 
-    - Test against Postgres::
+3. SQL functions tests:
 
-      $ python -m tests -v case sql_functions.test_connection.TestPostgresConnection
-      $ python -m tests -v case sql_functions.test_cli_sql_functions.TestPostgresFunctions
+  - Test against Postgres::
 
-    - Test against MySQL::
+    $ python -m tests -v case sql_functions.test_connection.TestPostgresConnection
+    $ python -m tests -v case sql_functions.test_cli_sql_functions.TestPostgresFunctions
+
+  - Test against MySQL:
+
+    .. code-block:: console
 
       $ python -m tests -v case sql_functions.test_connection.TestMySQLConnection
       $ python -m tests -v case sql_functions.test_cli_sql_functions.TestMySQLFunctions
 
-    ,, note::
+  .. note::
 
-      To test the SQL functions, you need to install `pyodbc <https://pypi.org/project/pyodbc/>`_ and the specific database ODBC driver.
+    To test the SQL functions, you need to install `pyodbc <https://pypi.org/project/pyodbc/>`_ and the specific database ODBC driver.
 
-  4. Build and test built package:
+4. Build and test built package:
 
-    - To build packge::
+  - To build the package::
 
-      $ pip install -r requirements_deploy.txt
-      $ ./scripts/deploy test.pypi --no-publish
+    $ pip install -r requirements_deploy.txt
+    $ ./scripts/deploy test.pypi --no-publish
 
-    - The built wheel should be at ```dist/```. To instal:
+  - The built wheel should be at ```dist/```. To install::
 
-      $ pip install dist/aitoai-<version>.whl
+    $ pip install dist/aitoai-<version>.whl
 
-    - To test the built package, create an environment variable ```TEST_BUILT_PACKAGE``` and run the above tests
+  - To test the built package, create an environment variable ```TEST_BUILT_PACKAGE``` and run the above tests
