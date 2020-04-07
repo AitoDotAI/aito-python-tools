@@ -19,18 +19,18 @@ function check_git_tree {
 function check_at_top {
   if [[ ! -f aito/__init__.py ]]; then
     echo "this script must be run from the project directory"
-    exit 3
+    exit 1
   fi
 }
 
-function sphinx_build_html {
-  cd docs || return
-  make clean html
-  cd ..
-  mv docs/build/html .
-}
-
 function clean_and_update_gh_pages_branch {
+  if [[ "$(ls -A docs/build/html)" ]]
+  then
+    mv docs/build/html .
+  else
+    echo "built html folder is empty or not exist"
+    exit 1
+  fi
   git checkout gh-pages
   find . -maxdepth 1 -not -name '.git' -not -name 'html' -exec rm -rf {} \;
   mv html/* .
@@ -48,9 +48,8 @@ else
   VERSION=$1
 fi
 
-check_git_tree
 check_at_top
-sphinx_build_html
+check_git_tree
 clean_and_update_gh_pages_branch
 git add .
 git commit -m "publish doc $VERSION"

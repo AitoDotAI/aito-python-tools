@@ -5,12 +5,19 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
+import os
 
 import requests
 
 PROJECT_ROOT_PATH = Path(__file__).parent.parent
 VERSION_FILE_PATH = PROJECT_ROOT_PATH / 'aito' / '__init__.py'
 CHANGE_LOG_FILE_PATH = PROJECT_ROOT_PATH / 'docs' / 'source' / 'changelog.rst'
+
+
+def check_at_top():
+    cwd = Path(os.getcwd())
+    if not (cwd / 'aito' / '__init__.py').exists():
+        raise RuntimeError("this script must be run from the project directory")
 
 
 def find_current_version(version_file_path: Path) -> str:
@@ -61,7 +68,7 @@ def generate_new_version(latest_version: str, repo: str, level: Optional[str]) -
                 new_parts = latest_parts[:3] + ['dev1']
         return '.'.join(new_parts)
     else:
-        RuntimeError(f'unexpected level {level}')
+        raise RuntimeError(f'unexpected level {level}')
 
 
 def build_package_and_check():
@@ -85,13 +92,12 @@ def check_version_change_log(change_log_file_path: Path, new_version: str):
     with change_log_file_path.open() as in_f:
         change_log_content = in_f.read()
     if not re.search(f'^{new_version}', change_log_content, re.M):
-        return False
-    return True
+        raise RuntimeError(f'version {new_version} changelog not found')
 
 
 def git_bump_version_and_tag(new_version):
     subprocess.run(['git', 'commit', '-am', f'Bump to {new_version}'], check=True)
-    subprocess.run(['git', 'tag', '$NEW_VERSION'], check=True)
+    subprocess.run(['git', 'tag', new_version], check=True)
     subprocess.run(['git', 'push'], check=True)
     subprocess.run(['git', 'push', '--tags'], check=True)
 
@@ -99,7 +105,7 @@ def git_bump_version_and_tag(new_version):
 def check_git_tree():
     process = subprocess.run(['git', 'status', '--porcelain'], check=True, stdout=subprocess.PIPE)
     if process.stdout:
-        sys.exit('tree is dirty, please commit changes before deployment')
+        raise RuntimeError('tree is dirty, please commit changes before deployment')
 
 
 class DeployParser(argparse.ArgumentParser):
@@ -125,8 +131,7 @@ class DeployParser(argparse.ArgumentParser):
         )
 
     def __call__(self):
-        if not (PROJECT_ROOT_PATH / 'aito' / '__init__.py').exists():
-            sys.exit('this script must be run from the project root')
+        check_at_top()
 
         parsed_args = vars(self.parse_args())
 
@@ -155,8 +160,11 @@ class DeployParser(argparse.ArgumentParser):
             if repo == 'pypi':
                 check_version_change_log(CHANGE_LOG_FILE_PATH, new_version)
                 git_bump_version_and_tag(new_version)
-                subprocess.run(['./scripts/deploy_docs.sh', new_version], check=True)
-            publish(repo)
+                subprocess.run(['./scripts/build_docs.sh'], check=True)
+                publish(repo)
+                subprocess.run(['./scripts/publish_docs.sh', new_version], check=True)
+            else:
+                publish(repo)
 
 
 DeployParser()()
