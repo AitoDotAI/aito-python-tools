@@ -49,6 +49,7 @@ workflows:
       - run_sdk_and_cli_tests_built_package
       - run_postgres_tests_built_package
       - run_mysql_tests_built_package
+      - build_docs
       - build_and_deploy_to_test_pypi:
           requires:
             - run_sdk_and_cli_tests_linux_py_37
@@ -117,12 +118,12 @@ commonYAMLStructure:
   - &restore_venv_cache_deploy
     restore_cache:
       keys:
-        - v2-dependencies-{{ checksum "requirements_deploy.txt" }}-{{ .Environment.CIRCLE_JOB }}
+        - v2-dependencies-{{ checksum "requirements_deploy.txt" }}
   - &save_venv_cache_deploy
     save_cache:
       paths:
         - ./venv
-      key: v2-dependencies-{{ checksum "requirements_deploy.txt" }}-{{ .Environment.CIRCLE_JOB }}
+      key: v2-dependencies-{{ checksum "requirements_deploy.txt" }}
   - &create_venv_and_install_dependencies_deploy
     run:
       name: create virtualenv and install dependencies
@@ -619,6 +620,24 @@ jobs:
       - *run_mysql_cli_test
       - *store_log_files
 
+  build_docs:
+    docker:
+      - image: circleci/python:3.6.9
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *restore_venv_cache_deploy
+      - *create_venv_and_install_dependencies_deploy
+      - *save_venv_cache_deploy
+      - run:
+          name: build docs only if there is any changes to the docs dir
+          command: |
+            [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- docs && echo "NO CHANGE" && exit 0
+            . venv/bin/activate
+            ./scripts/build_docs.sh
+      - store_artifacts:
+          path: ./docs/build
+
   build_and_deploy_to_test_pypi:
     docker:
       - image: circleci/python:3.6.9
@@ -629,8 +648,9 @@ jobs:
       - *create_venv_and_install_dependencies_deploy
       - *save_venv_cache_deploy
       - run:
-          name: build package and deploy to test pypi
+          name: build package and deploy to test pypi only if there is any changes to the aito dir
           command: |
+            [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- aito && echo "NO CHANGE" && exit 0
             . venv/bin/activate
             ./scripts/deploy test.pypi -l dev
       - store_artifacts:

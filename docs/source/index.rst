@@ -56,6 +56,7 @@ Some common features:
 1. :ref:`sdkInferTableSchema`
 2. :ref:`sdkCreateTable`
 3. :ref:`sdkUploadData`
+4. :ref:`sdkExecuteQuery`
 
 .. toctree::
   :hidden:
