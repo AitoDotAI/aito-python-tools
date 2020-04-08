@@ -84,7 +84,7 @@ Your AitoClient must be set up with the READ-WRITE API key
       }
     }
 
-    aito_client.put_table_schema(table_name='reddit', table_schema=table_schema)
+    aito_client.create_table(table_name='reddit', table_schema=table_schema)
 
     # Check your table schema in Aito
     aito_client.get_table_schema(table_name=table_name)
@@ -202,7 +202,7 @@ Your AitoClient can be set up with the READ-ONLY API key
 
   # make a prediction
   response = aito_client.request(
-    req_method='POST',
+    method='POST',
     endpoint='/api/v1/_predict',
     query={
       'from': 'invoice',

@@ -24,7 +24,7 @@ Installation
 
 Aito Python SDK can be installed with `pip <http://pypi.python.org/pypi/pip>`_::
 
-  $ pip install aito
+  $ pip install aitoai
 
 Check our `installation guide <https://aitodotai.github.io/aito-python-tools/install.html>`_ for more information
 

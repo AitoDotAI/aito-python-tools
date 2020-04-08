@@ -166,7 +166,7 @@ The :ref:`apiAitoClient` can create a table using a table name and a table schem
       }
     }
     aito_client = AitoClient(instance_url='your_aito_instance_url', api_key='your_rw_api_key')
-    aito_client.put_table_schema(table_name='your-table-name', table_schema=table_schema)
+    aito_client.create_table(table_name='your-table-name', table_schema=table_schema)
 
 .. _sdkQuickstartConvertData:
 
