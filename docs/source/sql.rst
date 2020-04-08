@@ -1,7 +1,7 @@
 SQL Database Integration
 ========================
 
-The Aito Python SDK supports integration between your SQL database and the Aito database
+The Aito Python SDK supports integration with your SQL database so that you can upload the result of your SQL query to Aito.
 
 .. _sqlInstallation:
 
