@@ -180,6 +180,8 @@ Your AitoClient must be set up with the READ-WRITE API key
 .. _Pandas DataFrame: https://pandas.pydata.org/pandas-docs/stable/reference/frame.html
 
 
+.. _sdkExecuteQuery:
+
 Execute Queries
 ---------------
 
@@ -187,21 +189,14 @@ You can execute queries with the :ref:`apiAitoClient`.
 
 Your AitoClient can be set up with the READ-ONLY API key
 
-:meth:`Query a Table Entries <aito.sdk.aito_client.AitoClient.query_entries>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:meth:`Request to an endpoint <aito.sdk.aito_client.AitoClient.request>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The example below show how you could send a predict query to Aito:
 
 .. code:: python
 
-  # query the first 10 entries of a table
-  aito_client.query_entries(table_name='table_name')
-
-:meth:`Custom Query <aito.sdk.aito_client.AitoClient.request>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: python
-
-  # make a prediction
-  response = aito_client.request(
+  aito_client.request(
     method='POST',
     endpoint='/api/v1/_predict',
     query={
@@ -212,6 +207,15 @@ Your AitoClient can be set up with the READ-ONLY API key
       'predict': 'sales_rep'
     }
   )
+
+:meth:`Query a Table Entries <aito.sdk.aito_client.AitoClient.query_entries>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+  # query the first 10 entries of a table
+  aito_client.query_entries(table_name='table_name')
+
 
 :meth:`Executing multiple queries asynchronously <aito.sdk.aito_client.AitoClient.async_requests>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,4 +239,30 @@ Your AitoClient can be set up with the READ-ONLY API key
       }
       for desc in descriptions
     ]
+  )
+
+:meth:`Sending a job request for query that takes longer than 30 seconds <aito.sdk.aito_client.AitoClient.job_request>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some queries might take longer than 30 seconds to run (e.g: `Evaluate <https://aito.ai/docs/api/#post-api-v1-evaluate>`_).
+You can use the job request for these queries. For example:
+
+.. code:: python
+
+  response = aito_client.job_request(
+    job_endpoint='/api/v1/jobs/_evaluate',
+    query={
+      "test": {
+        "$index": {
+          "$mod": [4, 0]
+        }
+      },
+      "evaluate": {
+        "from": "invoice",
+        "where": {
+          "description": { "$get": "description" }
+        },
+        "predict": "sales_rep"
+      }
+    }
   )
