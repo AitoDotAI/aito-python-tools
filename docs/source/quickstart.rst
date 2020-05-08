@@ -18,6 +18,14 @@ Essentially, uploading data into Aito can be broken down into the following step
 
 If you don't have a data file, you can download our `example file <https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv>`_ and follow the guide.
 
+Setup Aito credentials
+----------------------
+
+  :ref:`cliSetUpAitoCredentials`. The easiest way to set-up the credentials is by using environment variables::
+
+    $ export AITO_INSTANCE_URL=your-instance-url
+    $ export AITO_API_KEY=your-api-key
+
 Upload Data with the CLI
 ------------------------
 
@@ -89,11 +97,6 @@ Upload the Data
 ~~~~~~~~~~~~~~~
 
   You can upload data with the CLI by using the :ref:`cliDatabase`.
-
-  First, :ref:`cliSetUpAitoCredentials`. The easiest way is by using the environment variables::
-
-    $ export AITO_INSTANCE_URL=your-instance-url
-    $ export AITO_API_KEY=your-api-key
 
   You can then upload the data by either:
 
