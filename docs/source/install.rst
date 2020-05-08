@@ -9,6 +9,10 @@ Install with `pip <https://pip.pypa.io/en/stable/>`_:
 
   $ pip install aitoai
 
+
+.. note::
+  Aitoai is only available in Python version 3.6 or higher.
+
 Development Version
 --------------------
 Aito Python SDK is actively developed on GitHub, where the code is `always available
