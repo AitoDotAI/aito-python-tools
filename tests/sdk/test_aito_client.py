@@ -46,7 +46,11 @@ class TestAitoClient(CompareTestCase):
 
     def upload_by_batch_step(self):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(4)]
-        self.client.upload_entries_by_batches(self.default_table_name, entries, 2, False)
+        self.client.upload_entries(
+            table_name=self.default_table_name,
+            entries=entries,
+            batch_size=2,
+            optimize_on_finished=False)
 
     def query_table_entries_step(self):
         entries = self.client.query_entries(self.default_table_name, 2, 2)['hits']
@@ -90,7 +94,11 @@ class TestAitoClient(CompareTestCase):
 
     def optimize_step(self):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(4, 8)]
-        self.client.upload_entries_by_batches(self.default_table_name, entries, 1, False)
+        self.client.upload_entries(
+            table_name=self.default_table_name,
+            entries=entries,
+            batch_size=1,
+            optimize_on_finished=False)
         self.client.optimize_table(self.default_table_name)
 
     def get_all_table_entries_step(self):

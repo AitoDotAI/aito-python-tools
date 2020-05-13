@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.1
+-----
+
+- upload_entries now accepts genetors as well as lists
+- upload_entries_by_batches has been deprecated
+
+
 0.2.0
 -----
 

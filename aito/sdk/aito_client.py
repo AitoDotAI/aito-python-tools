@@ -3,7 +3,7 @@ import logging
 import time
 from os import PathLike
 from pathlib import Path
-from typing import Dict, List, BinaryIO, Union, Tuple
+from typing import Dict, List, BinaryIO, Union, Tuple, Generator
 
 import ndjson
 import requests
@@ -270,64 +270,63 @@ class AitoClient:
             LOG.error(f'failed to optimize: {e}')
         LOG.info(f'table {table_name} optimized')
 
-    def upload_entries(self, table_name: str, entries: List[Dict], optimize_on_finished: bool = True):
-        """populate a list of entries to a table API doc
-
-        `API doc <https://aito.ai/docs/api/#post-api-v1-data-table-batch>`__
-        if the list contains more than 1000 entries, upload the entries by batches of 1000
-
-        :param table_name: the name of the table
-        :type table_name: str
-        :param entries: list of the table entries
-        :type entries: List[Dict]
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
-        :type optimize_on_finished: bool
-        """
-        if len(entries) > 1000:
-            self.upload_entries_by_batches(table_name, entries, optimize_on_finished)
-        else:
-            LOG.debug(f'uploading {len(entries)} to table `{table_name}`...')
-            self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
-            LOG.info(f'uploaded {len(entries)} entries to table `{table_name}`')
-            if optimize_on_finished:
-                self.optimize_table(table_name)
-
-    def upload_entries_by_batches(
+    def upload_entries(
             self,
             table_name: str,
-            entries: List[Dict],
+            entries: Generator,
             batch_size: int = 1000,
             optimize_on_finished: bool = True
     ):
         """populate a list of table entries by batches of batch_size
-
         :param table_name: the name of the table
         :type table_name: str
         :param entries: list of the table entries
-        :type entries: List[Dict]
+        :type entries: Generator
         :param batch_size: the batch size, defaults to 1000
         :type batch_size: int, optional
         :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
         :type optimize_on_finished: bool
         """
-        LOG.debug(f'uploading {len(entries)} entries to table `{table_name}` with batch size of {batch_size}...')
+        LOG.info(f'uploading entries to table `{table_name}` with batch size of {batch_size}...')
+
         begin_idx = 0
         populated = 0
-        while begin_idx < len(entries):
-            last_idx = begin_idx + batch_size
-            if last_idx > len(entries):
-                last_idx = len(entries)
-            entries_batch = entries[begin_idx:last_idx]
+        last_idx = 0
+        entries_batch = []
+
+        for entry in entries:
+
+            entries_batch.append(entry)
+
+            last_idx += 1
+
+            if last_idx % batch_size == 0:
+                try:
+                    LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
+                    LOG.debug(f'uploading entries to table `{table_name}`...')
+                    self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
+                    populated += len(entries_batch)
+                    LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
+                except Exception as e:
+                    LOG.error(f'batch {begin_idx}:{last_idx} failed: {e}')
+                begin_idx = last_idx
+                entries_batch = []
+
+        if len(entries_batch) < batch_size:
             try:
                 LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-                self.upload_entries(table_name, entries_batch)
+                LOG.debug(f'uploading entries to table `{table_name}`...')
+                self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
                 populated += len(entries_batch)
                 LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
             except Exception as e:
                 LOG.error(f'batch {begin_idx}:{last_idx} failed: {e}')
-            begin_idx = last_idx
 
-        LOG.info(f'uploaded {populated}/{len(entries)} entries to table `{table_name}`')
+        if populated == 0:
+            raise BaseError("failed to upload any data into Aito")
+
+        LOG.info(f'uploaded {populated}/{last_idx} entries to table `{table_name}`')
+
 
         if optimize_on_finished:
             self.optimize_table(table_name)

@@ -7,7 +7,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from aito.sdk.aito_client import AitoClient
-from aito.sdk.aito_client import RequestError
+from aito.sdk.aito_client import RequestError, BaseError
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 
@@ -52,7 +52,7 @@ class TestDatabase(ParserAndCLITestCase):
         self.parse_and_execute(
             ['database', 'upload-entries', self.default_table_name, str(self.input_folder / 'invoice.json')],
             expected_args,
-            execute_exception=RequestError
+            execute_exception=BaseError
         )
 
     def test_upload_batch_invalid_entries(self):

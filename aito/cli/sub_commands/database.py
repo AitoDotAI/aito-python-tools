@@ -120,7 +120,7 @@ class UploadEntriesSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         table_entries = load_json_from_parsed_input_arg(parsed_args['input'])
-        client.upload_entries(table_name, table_entries)
+        client.upload_entries(table_name=table_name, entries=table_entries)
         return 0
 
 
