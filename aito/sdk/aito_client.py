@@ -3,7 +3,7 @@ import logging
 import time
 from os import PathLike
 from pathlib import Path
-from typing import Dict, List, BinaryIO, Union, Tuple, Generator
+from typing import Dict, List, BinaryIO, Union, Tuple, Iterator
 
 import ndjson
 import requests
@@ -27,7 +27,8 @@ class BaseError(Exception):
 class RequestError(BaseError):
     def __init__(self, method: str, endpoint: str, query: Union[List, Dict], error: Exception):
         if isinstance(error, requests.HTTPError):
-            error_msg = error.response.json()['message']
+            resp = error.response.json()
+            error_msg = resp['message'] if 'message' in resp else resp
         elif isinstance(error, ClientResponseError):
             error_msg = error.message
         else:
@@ -57,7 +58,7 @@ class AitoClient:
         :type check_credentials: bool
         :raises BaseError: an error occurred during the creation of AitoClient
         """
-        self.url = instance_url
+        self.url = instance_url.strip("/")
         self.headers = {'Content-Type': 'application/json', 'x-api-key': api_key}
         if check_credentials:
             try:
@@ -273,7 +274,7 @@ class AitoClient:
     def upload_entries(
             self,
             table_name: str,
-            entries: Generator,
+            entries: Iterator[Dict],
             batch_size: int = 1000,
             optimize_on_finished: bool = True
     ):
@@ -281,7 +282,7 @@ class AitoClient:
         :param table_name: the name of the table
         :type table_name: str
         :param entries: list of the table entries
-        :type entries: Generator
+        :type entries: Iterator[Dict]
         :param batch_size: the batch size, defaults to 1000
         :type batch_size: int, optional
         :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
@@ -295,28 +296,25 @@ class AitoClient:
         entries_batch = []
 
         for entry in entries:
-
             entries_batch.append(entry)
-
             last_idx += 1
 
             if last_idx % batch_size == 0:
                 try:
                     LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-                    LOG.debug(f'uploading entries to table `{table_name}`...')
-                    self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
+                    self.request('POST', f"/api/v1/data/{table_name}/batch", entries_batch)
                     populated += len(entries_batch)
                     LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
                 except Exception as e:
                     LOG.error(f'batch {begin_idx}:{last_idx} failed: {e}')
+
                 begin_idx = last_idx
                 entries_batch = []
 
-        if len(entries_batch) < batch_size:
+        if last_idx % batch_size != 0:
             try:
                 LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-                LOG.debug(f'uploading entries to table `{table_name}`...')
-                self.request('POST', f"/api/v1/data/{table_name}/batch", entries)
+                self.request('POST', f"/api/v1/data/{table_name}/batch", entries_batch)
                 populated += len(entries_batch)
                 LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
             except Exception as e:
@@ -326,7 +324,6 @@ class AitoClient:
             raise BaseError("failed to upload any data into Aito")
 
         LOG.info(f'uploaded {populated}/{last_idx} entries to table `{table_name}`')
-
 
         if optimize_on_finished:
             self.optimize_table(table_name)
