@@ -155,5 +155,5 @@ class SchemaHandler:
             col_schema = table_schema['columns'][col]
             validate_arg(col, col_schema, 'type', True, str, list(self.aito_types_to_python_types.keys()))
             validate_arg(col, col_schema, 'nullable', False, bool)
-        LOG.info('validated table schem')
+        LOG.info('validated table schema')
         return table_schema
