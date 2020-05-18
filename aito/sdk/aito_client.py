@@ -271,6 +271,20 @@ class AitoClient:
             LOG.error(f'failed to optimize: {e}')
         LOG.info(f'table {table_name} optimized')
 
+    def upload_entries_by_batches(
+            self,
+            table_name: str,
+            entries: Iterator[Dict],
+            batch_size: int = 1000,
+            optimize_on_finished: bool = True
+    ):
+        warnings.warn(
+            'The AitoClient.upload_entries_by_batches is deprecated and will be removed '
+            'in a future version. Use AitoClient.upload_entries instead',
+            category=FutureWarning
+        )
+        self.upload_entries(table_name, entries, batch_size, optimize_on_finished)
+
     def upload_entries(
             self,
             table_name: str,

@@ -121,9 +121,6 @@ class TestAitoClient(CompareTestCase):
 
     def get_all_table_entries_step(self, start, end):
         entries = self.client.query_all_entries(self.default_table_name)
-        print("ENTRIES")
-        print(entries)
-        print([{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)])
         self.assertEqual(entries, [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)])
 
     def download_table_step(self, start, end):
