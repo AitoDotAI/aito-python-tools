@@ -96,7 +96,7 @@ def check_version_change_log(change_log_file_path: Path, new_version: str):
 
 
 def git_bump_version_and_tag(new_version):
-    subprocess.run(['git', 'commit', '-am', f'Bump to {new_version}'], check=True)
+    subprocess.run(['git', 'commit', '--allow-empty', '-m', f'Bump to {new_version}'], check=True)
     subprocess.run(['git', 'tag', new_version], check=True)
     subprocess.run(['git', 'push'], check=True)
     subprocess.run(['git', 'push', '--tags'], check=True)
