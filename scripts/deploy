@@ -173,10 +173,10 @@ class DeployParser(argparse.ArgumentParser):
         if not parsed_args['no_publish']:
             if repo == 'pypi':
                 check_version_change_log_exist(CHANGE_LOG_FILE_PATH, new_version)
-                git_bump_version_and_tag(new_version)
                 subprocess.run(['./scripts/build_docs.sh'], check=True)
                 publish(repo)
                 subprocess.run(['./scripts/publish_docs.sh', new_version], check=True)
+                git_bump_version_and_tag(new_version)
             else:
                 publish(repo)
 
