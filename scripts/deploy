@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import argparse
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
-import os
 
 import requests
 
@@ -30,7 +29,7 @@ def find_current_version(version_file_path: Path) -> str:
     raise RuntimeError("Unable to find version string.")
 
 
-def update_version(version_file_path: Path, new_version: str):
+def update_version_file(version_file_path: Path, new_version: str):
     with version_file_path.open() as f:
         init_content = f.read()
     with version_file_path.open('w') as f:
@@ -39,36 +38,38 @@ def update_version(version_file_path: Path, new_version: str):
     assert find_current_version(version_file_path) == new_version, 'version is not updated'
 
 
-def get_latest_version(repo):
+def get_all_versions(repo):
     url = f'https://{repo}.org/pypi/aitoai/json'
     package_info = requests.get(url).json()
-    return sorted(package_info['releases'].keys(), reverse=True)[0]
+    return package_info['releases'].keys()
 
 
-def generate_new_version(latest_version: str, repo: str, level: Optional[str]) -> str:
-    levels_idx = {
+def bump_version(version: str, mechanism: str) -> str:
+    mechanism_part_idx = {
         'major': 0,
         'minor': 1,
-        'micro': 2
+        'micro': 2,
+        'dev': 3,
+        'rc': 3,
+        'post': 3
     }
-    latest_parts = latest_version.split('.')
-    if level in levels_idx:
-        idx = levels_idx[level]
-        new_parts = latest_parts[:idx] + [str(int(latest_parts[idx]) + 1)] + ['0'] * (2 - idx)
-        if repo == 'test.pypi':
-            new_parts.append('dev1')
-        return '.'.join(new_parts)
-    elif level == 'dev':
-        if len(latest_parts) < 4:
-            new_parts = latest_parts + ['dev1']
+    parts = version.split('.')
+    if mechanism in mechanism_part_idx:
+        idx = mechanism_part_idx[mechanism]
+        if idx != 3:
+            new_parts = parts[:idx] + [str(int(parts[idx]) + 1)] + ['0'] * (2 - idx)
         else:
-            if latest_parts[3].startswith('dev'):
-                new_parts = latest_parts[:3] + [f'dev{int(latest_parts[3].split("dev")[1]) + 1}']
+            if len(parts) < 4:
+                new_parts = parts + [f'{mechanism}1']
             else:
-                new_parts = latest_parts[:3] + ['dev1']
+                if parts[3].startswith(mechanism):
+                    prev_v = parts[3].split(mechanism)[1]
+                    new_parts = parts[:3] + [f'{mechanism}{int(prev_v) + 1}']
+                else:
+                    new_parts = parts[:3] + [f'{mechanism}1']
         return '.'.join(new_parts)
     else:
-        raise RuntimeError(f'unexpected level {level}')
+        raise RuntimeError(f'unexpected level {mechanism}')
 
 
 def build_package_and_check():
@@ -119,12 +120,15 @@ class DeployParser(argparse.ArgumentParser):
 
         self.add_argument('repo', type=str, choices=['test.pypi', 'pypi'], help='repo to be published to')
         group = self.add_mutually_exclusive_group()
-        group.required = True
 
         group.add_argument('-v', '--version', type=str, help='deploy a specific version')
         group.add_argument(
-            '-l', '--level', type=str, choices=['keep', 'dev', 'micro', 'minor', 'major'],
-            help='specify the level to be bumped from current version (default to keep the current version)'
+            '-b', '--bump-mechanism', type=str, choices=['dev', 'rc', 'post', 'micro', 'minor', 'major'],
+            help='specify the mechanism to bump the current version'
+        )
+        self.add_argument(
+            '-s', '--step', type=int, default=1,
+            help='the number of steps to be bumped if use bump version (default to 1: rc1 => rc2)'
         )
         self.add_argument(
             '-n', '--no-publish', action='store_true', help='not publish to repo'
@@ -132,37 +136,36 @@ class DeployParser(argparse.ArgumentParser):
 
     def __call__(self):
         check_at_top()
+        check_git_tree()
 
         parsed_args = vars(self.parse_args())
-
-        check_git_tree()
         repo = parsed_args['repo']
 
-        latest_version = get_latest_version(repo)
+        all_versions = get_all_versions(repo)
+        # FIXME: comparison between 2 versions
+        latest_version = sorted(all_versions, reverse=True)[0]
+        deploy_version = find_current_version(VERSION_FILE_PATH)
         if parsed_args['version']:
-            new_version = parsed_args['version']
-        else:
-            level = parsed_args['level']
-            if level == 'dev' and repo == 'pypi':
-                self.error('cannot use dev level for pypi')
-            if level == 'keep':
-                new_version = find_current_version(VERSION_FILE_PATH)
-            else:
-                new_version = generate_new_version(latest_version, repo, level)
+            deploy_version = parsed_args['version']
+        elif parsed_args['bump_version']:
+            mechanism = parsed_args['bump_version']
+            deploy_version = bump_version(deploy_version, mechanism)
+        if deploy_version in all_versions:
+            self.error(f'deploy version {deploy_version} already exist')
+        # FIXME:
+        if deploy_version <= latest_version:
+            self.error(f'deploy version {deploy_version} < latest version {latest_version}')
 
-        if new_version <= latest_version:
-            sys.exit(f'deploy version {new_version} < latest version {latest_version}')
-
-        update_version(VERSION_FILE_PATH, new_version)
+        update_version_file(VERSION_FILE_PATH, deploy_version)
         build_package_and_check()
 
         if not parsed_args['no_publish']:
             if repo == 'pypi':
-                check_version_change_log(CHANGE_LOG_FILE_PATH, new_version)
-                git_bump_version_and_tag(new_version)
+                check_version_change_log(CHANGE_LOG_FILE_PATH, deploy_version)
+                git_bump_version_and_tag(deploy_version)
                 subprocess.run(['./scripts/build_docs.sh'], check=True)
                 publish(repo)
-                subprocess.run(['./scripts/publish_docs.sh', new_version], check=True)
+                subprocess.run(['./scripts/publish_docs.sh', deploy_version], check=True)
             else:
                 publish(repo)
 
