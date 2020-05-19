@@ -1,17 +1,23 @@
 #!/usr/bin/env python
 import argparse
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
-import os
+from typing import List
 
 import requests
+from packaging.version import Version
 
 PROJECT_ROOT_PATH = Path(__file__).parent.parent
 VERSION_FILE_PATH = PROJECT_ROOT_PATH / 'aito' / '__init__.py'
 CHANGE_LOG_FILE_PATH = PROJECT_ROOT_PATH / 'docs' / 'source' / 'changelog.rst'
+DEFAULT_SPECIAL_RELEASE_LETTER = {
+    'pre': 'rc',
+    'dev': 'dev',
+    'post': 'post'
+}
 
 
 def check_at_top():
@@ -20,17 +26,19 @@ def check_at_top():
         raise RuntimeError("this script must be run from the project directory")
 
 
-def find_current_version(version_file_path: Path) -> str:
+def find_current_version(version_file_path: Path) -> Version:
     with version_file_path.open() as f:
         init_content = f.read()
 
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", init_content, re.M)
     if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+        version_str = version_match.group(1)
+    else:
+        raise ValueError(f'Unable to find version string in {version_file_path}')
+    return Version(version_str)
 
 
-def update_version(version_file_path: Path, new_version: str):
+def update_version_file(version_file_path: Path, new_version: Version):
     with version_file_path.open() as f:
         init_content = f.read()
     with version_file_path.open('w') as f:
@@ -39,36 +47,45 @@ def update_version(version_file_path: Path, new_version: str):
     assert find_current_version(version_file_path) == new_version, 'version is not updated'
 
 
-def get_latest_version(repo):
+def get_all_existing_versions(repo) -> List[Version]:
     url = f'https://{repo}.org/pypi/aitoai/json'
     package_info = requests.get(url).json()
-    return sorted(package_info['releases'].keys(), reverse=True)[0]
+    return [Version(v) for v in package_info['releases'].keys()]
 
 
-def generate_new_version(latest_version: str, repo: str, level: Optional[str]) -> str:
-    levels_idx = {
-        'major': 0,
-        'minor': 1,
-        'micro': 2
-    }
-    latest_parts = latest_version.split('.')
-    if level in levels_idx:
-        idx = levels_idx[level]
-        new_parts = latest_parts[:idx] + [str(int(latest_parts[idx]) + 1)] + ['0'] * (2 - idx)
-        if repo == 'test.pypi':
-            new_parts.append('dev1')
-        return '.'.join(new_parts)
-    elif level == 'dev':
-        if len(latest_parts) < 4:
-            new_parts = latest_parts + ['dev1']
+def bump_version(current_version: Version, bump_part: str) -> Version:
+    final_releases_parts = ['major', 'minor', 'micro']
+    parts = [
+        str(getattr(current_version, part) + 1) if part == bump_part else str(getattr(current_version, part))
+        for part in final_releases_parts
+    ]
+    if bump_part in DEFAULT_SPECIAL_RELEASE_LETTER:
+        special_version_number = getattr(current_version, bump_part)
+        # only pre-release version return tuples, others return number
+        if special_version_number and bump_part == 'pre':
+            special_version_number = special_version_number[1]
+        if not special_version_number:
+            parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}1')
         else:
-            if latest_parts[3].startswith('dev'):
-                new_parts = latest_parts[:3] + [f'dev{int(latest_parts[3].split("dev")[1]) + 1}']
-            else:
-                new_parts = latest_parts[:3] + ['dev1']
-        return '.'.join(new_parts)
-    else:
-        raise RuntimeError(f'unexpected level {level}')
+            parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}{special_version_number + 1}')
+    return Version('.'.join(parts))
+
+
+def validate_new_version(new_version: Version, all_existing_versions: List[Version]):
+    if new_version in all_existing_versions:
+        raise ValueError(f'new version {new_version} already exists')
+    latest_version = sorted(all_existing_versions, reverse=True)[0]
+    if new_version < latest_version and not new_version.is_postrelease:
+        raise ValueError(f'new version {new_version} is not a post release and < latest version {latest_version}')
+    if new_version.is_prerelease or new_version.is_devrelease:
+        new_v_base = new_version.base_version
+        if Version(new_v_base) in all_existing_versions:
+            raise ValueError(f'new version {new_version} is a pre or dev release of a released version({new_v_base})')
+    if new_version.is_postrelease:
+        new_v_base = new_version.base_version
+        if Version(new_v_base) not in all_existing_versions:
+            raise ValueError(f'new version {new_version} is a post release of a non-existing version({new_v_base})')
+    return True
 
 
 def build_package_and_check():
@@ -81,18 +98,20 @@ def build_package_and_check():
     subprocess.run(['twine', 'check', 'dist/*'], check=True)
 
 
-def publish(repo):
+def publish(repo: str):
     if repo == 'test.pypi':
         subprocess.run(['twine', 'upload', '--repository-url', 'https://test.pypi.org/legacy/', 'dist/*'], check=True)
     elif repo == 'pypi':
         subprocess.run(['twine', 'upload', 'dist/*'], check=True)
 
 
-def check_version_change_log(change_log_file_path: Path, new_version: str):
+def check_version_change_log_exist(change_log_file_path: Path, new_version: Version):
+    if not change_log_file_path.exists():
+        raise ValueError(f'Change log file {change_log_file_path} does not exist')
     with change_log_file_path.open() as in_f:
         change_log_content = in_f.read()
     if not re.search(f'^{new_version}', change_log_content, re.M):
-        raise RuntimeError(f'version {new_version} changelog not found')
+        raise ValueError(f'version {new_version} changelog not found')
 
 
 def git_bump_version_and_tag(new_version):
@@ -118,13 +137,13 @@ class DeployParser(argparse.ArgumentParser):
         super().__init__()
 
         self.add_argument('repo', type=str, choices=['test.pypi', 'pypi'], help='repo to be published to')
-        group = self.add_mutually_exclusive_group()
-        group.required = True
+        m_e_group = self.add_mutually_exclusive_group()
 
-        group.add_argument('-v', '--version', type=str, help='deploy a specific version')
-        group.add_argument(
-            '-l', '--level', type=str, choices=['keep', 'dev', 'micro', 'minor', 'major'],
-            help='specify the level to be bumped from current version (default to keep the current version)'
+        m_e_group.add_argument('-v', '--version', type=str, help='deploy with the specified version')
+
+        m_e_group.add_argument(
+            '-b', '--bump-version', type=str, choices=['dev', 'pre', 'post', 'micro', 'minor', 'major'],
+            help='bump the current version with the specified part'
         )
         self.add_argument(
             '-n', '--no-publish', action='store_true', help='not publish to repo'
@@ -132,37 +151,32 @@ class DeployParser(argparse.ArgumentParser):
 
     def __call__(self):
         check_at_top()
+        check_git_tree()
 
         parsed_args = vars(self.parse_args())
 
-        check_git_tree()
-        repo = parsed_args['repo']
-
-        latest_version = get_latest_version(repo)
+        current_version = find_current_version(VERSION_FILE_PATH)
         if parsed_args['version']:
-            new_version = parsed_args['version']
+            new_version = Version(parsed_args['version'])
+        elif parsed_args['bump_version']:
+            bump_part = parsed_args['bump_version']
+            new_version = bump_version(current_version, bump_part)
         else:
-            level = parsed_args['level']
-            if level == 'dev' and repo == 'pypi':
-                self.error('cannot use dev level for pypi')
-            if level == 'keep':
-                new_version = find_current_version(VERSION_FILE_PATH)
-            else:
-                new_version = generate_new_version(latest_version, repo, level)
+            new_version = current_version
 
-        if new_version <= latest_version:
-            sys.exit(f'deploy version {new_version} < latest version {latest_version}')
-
-        update_version(VERSION_FILE_PATH, new_version)
+        repo = parsed_args['repo']
+        all_existing_versions = get_all_existing_versions(repo)
+        validate_new_version(new_version, all_existing_versions)
+        update_version_file(VERSION_FILE_PATH, new_version)
         build_package_and_check()
 
         if not parsed_args['no_publish']:
             if repo == 'pypi':
-                check_version_change_log(CHANGE_LOG_FILE_PATH, new_version)
-                git_bump_version_and_tag(new_version)
+                check_version_change_log_exist(CHANGE_LOG_FILE_PATH, new_version)
                 subprocess.run(['./scripts/build_docs.sh'], check=True)
                 publish(repo)
                 subprocess.run(['./scripts/publish_docs.sh', new_version], check=True)
+                git_bump_version_and_tag(new_version)
             else:
                 publish(repo)
 
