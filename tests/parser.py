@@ -90,6 +90,7 @@ class TestParser(argparse.ArgumentParser):
             '-l', '--logDirPath', type=str, default='.logs',
             help=f"Path to log dir containing debug log (default: .logs)"
         )
+        self.add_argument('-s', '--logStdout', action='store_true', help='log to stdout as well as to a log file')
         self.add_argument(
             '-v', '--verbose', action='store_true',
             help=f"Make the test verbose (default False)"
@@ -119,14 +120,24 @@ class TestParser(argparse.ArgumentParser):
 
         log_dir = ROOT_PATH.joinpath(args.logDirPath)
         log_dir.mkdir(exist_ok=True)
+
         os.environ['METRICS_LOG_PATH'] = str(log_dir / 'test_metrics.log')
+
+        log_config_kwargs = {
+            'format': '%(asctime)s %(name)-20s %(levelname)-10s %(message)s',
+            'datefmt': "%Y-%m-%dT%H:%M:%S%z",
+            'handlers': [logging.FileHandler(str(log_dir / 'test.log')), logging.StreamHandler()]
+            if args.logStdout else [logging.FileHandler(str(log_dir / 'test.log'))]
+        }
         if args.verbose:
-            logging.basicConfig(filename=str(log_dir / 'test.log'), level=logging.DEBUG)
+            log_config_kwargs['level'] = logging.DEBUG
             verbosity = 2
         else:
-            logging.basicConfig(filename=str(log_dir / 'test.log'))
+            log_config_kwargs['level'] = logging.INFO
             verbosity = 1
+        logging.basicConfig(**log_config_kwargs)
         logging.Formatter.converter = time.gmtime
+
         result_class = TestResultCompareFileMeld if args.meld else TestResultLogMetrics
         runner = unittest.TextTestRunner(verbosity=verbosity, resultclass=result_class)
 
