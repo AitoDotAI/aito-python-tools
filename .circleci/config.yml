@@ -303,7 +303,7 @@ commonYAMLStructure:
       name: deploy to test pypi
       command: |
         . venv/bin/activate
-        ./scripts/deploy test.pypi -l dev --no-publish
+        ./scripts/deploy test.pypi --no-publish
         pip install dist/*.whl
 
 jobs:
@@ -652,6 +652,6 @@ jobs:
           command: |
             [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- aito && echo "NO CHANGE" && exit 0
             . venv/bin/activate
-            ./scripts/deploy test.pypi -l dev
+            ./scripts/deploy test.pypi -b dev
       - store_artifacts:
           path: ./dist
