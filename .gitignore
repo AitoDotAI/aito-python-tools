@@ -112,3 +112,9 @@ venv.bak/
 
 # test ouput file
 *_out.*
+aito/rpa/myaito.env
+aito/rpa/libtest.robot
+aito/rpa/testinvoice.txt
+aito/rpa/log.html
+aito/rpa/report.html
+aito/rpa/output.xml
