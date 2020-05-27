@@ -281,7 +281,7 @@ class AitoClient:
     ):
         """
         .. deprecated:: 0.2.1
-        
+
         Use :func:`upload_entries` instead
         """
         warnings.warn(
@@ -306,7 +306,7 @@ class AitoClient:
         :type entries: Iterator[Dict]
         :param batch_size: the batch size, defaults to 1000
         :type batch_size: int, optional
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
+        :param optimize_on_finished: `optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__ the table on finished, defaults to True
         :type optimize_on_finished: bool
         """
         LOG.info(f'uploading entries to table `{table_name}` with batch size of {batch_size}...')
@@ -358,7 +358,7 @@ class AitoClient:
         :type table_name: str
         :param binary_file: binary file object
         :type binary_file: BinaryIO
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
+        :param optimize_on_finished: `optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__ the table on finished, defaults to True
         :type optimize_on_finished: bool
         :param polling_time: polling wait time
         :type polling_time: int
@@ -409,7 +409,7 @@ class AitoClient:
         :type table_name: str
         :param file_path: path to the file to be uploaded
         :type file_path: PathLike
-        :param optimize_on_finished: `optimize https://aito.ai/docs/api/#post-api-v1-data-table-optimize`__ the table on finished, defaults to True
+        :param optimize_on_finished: `optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__ the table on finished, defaults to True
         :type optimize_on_finished: bool
         :param polling_time: polling wait time
         :type polling_time: int

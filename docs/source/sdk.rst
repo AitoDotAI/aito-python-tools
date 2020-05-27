@@ -1,7 +1,7 @@
-SDK Quickstart
+Aito SDK
 ==============
 
-:ref:`Quickstart guide to upload data <sdkQuickStartUploadData>`
+:ref:`Quickstart guide to upload data <sdkQuickstartUpload>`
 
 Load a Data File to Pandas DataFrame
 ------------------------------------
