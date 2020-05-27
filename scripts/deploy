@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import List
+from datetime import datetime
 
 import requests
 from packaging.version import Version
@@ -60,14 +61,9 @@ def bump_version(current_version: Version, bump_part: str) -> Version:
         for part in final_releases_parts
     ]
     if bump_part in DEFAULT_SPECIAL_RELEASE_LETTER:
-        special_version_number = getattr(current_version, bump_part)
-        # only pre-release version return tuples, others return number
-        if special_version_number and bump_part == 'pre':
-            special_version_number = special_version_number[1]
-        if not special_version_number:
-            parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}1')
-        else:
-            parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}{special_version_number + 1}')
+        now = datetime.now()
+        dt_string = now.strftime("%Y%m%d%H%M%S")
+        parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}{dt_string}')
     return Version('.'.join(parts))
 
 
@@ -146,7 +142,7 @@ class DeployParser(argparse.ArgumentParser):
             help='bump the current version with the specified part'
         )
         self.add_argument(
-            '-n', '--no-publish', action='store_true', help='not publish to repo'
+            '-n', '--no-publish', action='store_true', help='Do not publish to repo'
         )
 
     def __call__(self):
