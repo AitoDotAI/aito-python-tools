@@ -18,7 +18,7 @@ class TestSQLFunctions(ParserAndCLITestCase):
         }
         cls.default_database_args = {'api_key': '.env', 'instance_url': '.env'}
         cls.client = AitoClient(os.environ['AITO_INSTANCE_URL'], os.environ['AITO_API_KEY'])
-        cls.default_table_name = f"invoice_{uuid4()}"
+        cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
 
     def tearDown(self):
         super().tearDown()

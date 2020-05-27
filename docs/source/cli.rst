@@ -39,8 +39,8 @@ Supported input formats:
 - JSON_
 - NDJSON_
 
-Usage
-~~~~~
+Infer table schema usage
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 To see help::
 
@@ -51,8 +51,8 @@ To see help for a specific input format::
   $ aito infer-table-schema <input-format> -h
 
 
-Redirection
-~~~~~~~~~~~
+Infer table schema redirection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, the command takes standard input and standard output. To redirect::
 
@@ -141,8 +141,8 @@ Supported input formats:
 - JSON_
 - NDJSON_
 
-Usage
-~~~~~
+Convert usage
+~~~~~~~~~~~~~
 
 To see help::
 
@@ -152,8 +152,8 @@ To see help for a specific input format::
 
   $ aito convert <input-format> -h
 
-Redirection
-~~~~~~~~~~~
+Convert redirection
+~~~~~~~~~~~~~~~~~~~
 
 By default, the command takes standard input and standard output. To redirect::
 

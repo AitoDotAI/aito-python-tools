@@ -49,7 +49,7 @@ For examples, infer a table schema from a csv file::
 .. _cliQuickstartChangeSchema:
 
 Change the Schema
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
 or add an Analyzer_ to a ``Text`` column. In that case, just make changes to the inferred schema JSON file.
@@ -108,6 +108,7 @@ Upload the Data
 
         $ aito database upload-file tableName tableEntries.ndjson.gz
 
+.. _sdkQuickstartUpload:
 
 Upload Data with the SDK
 ------------------------
@@ -137,8 +138,8 @@ The :ref:`apiSchemaHandler` can infer table schema from a DataFrame:
 
 .. _sdkQuickstartChangeSchema:
 
-Change the Schema
-~~~~~~~~~~~~~~~~~
+Change the Schema 
+~~~~~~~~~~~~~~~~~~
 
 You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
 or add a Analyzer_ to a ``Text`` column.
@@ -223,6 +224,33 @@ The :ref:`apiAitoClient` can upload the data with either `Batch Upload`_ or `Fil
 
   # File Upload
   aito_client.upload_file(table_name='table_name', file_path=file_path)
+
+The `Batch Upload`_ can also be done using a generator:
+
+  .. code-block:: python
+
+    import os
+    from aito.sdk.aito_client import AitoClient
+
+    def example_generator(start, end):
+        for idx in range(start, end):
+            entry = {'id': idx}
+            yield entry
+
+    env_var = os.environ
+    aito_client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
+
+    schema = {"type": "table", "columns": {"id": {"nullable": True,"type": "Int"}}}
+
+    table_name = "table_name"
+
+    aito_client.create_table(table_name=table_name, table_schema=schema)
+
+    aito_client.upload_entries(
+        table_name=table_name,
+        entries=example_generator(start=0, end=4),
+        batch_size=2,
+        optimize_on_finished=False)
 
 .. _Analyzer: https://aito.ai/docs/api/#schema-analyzer
 .. _Batch Upload: https://aito.ai/docs/api/#post-api-v1-data-table-batch
