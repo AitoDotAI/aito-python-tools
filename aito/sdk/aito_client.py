@@ -7,6 +7,7 @@ from typing import Dict, List, BinaryIO, Union, Tuple, Iterator
 
 import ndjson
 import requests
+import warnings
 from aiohttp import ClientSession, ClientResponseError
 
 from aito.common.file_utils import gzip_file, check_file_is_gzipped
@@ -278,6 +279,11 @@ class AitoClient:
             batch_size: int = 1000,
             optimize_on_finished: bool = True
     ):
+        """
+        .. deprecated:: 0.2.1
+        
+        Use :func:`upload_entries` instead
+        """
         warnings.warn(
             'The AitoClient.upload_entries_by_batches is deprecated and will be removed '
             'in a future version. Use AitoClient.upload_entries instead',
@@ -293,6 +299,7 @@ class AitoClient:
             optimize_on_finished: bool = True
     ):
         """populate a list of table entries by batches of batch_size
+
         :param table_name: the name of the table
         :type table_name: str
         :param entries: list of the table entries

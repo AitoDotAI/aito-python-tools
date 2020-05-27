@@ -167,6 +167,33 @@ Your AitoClient must be set up with the READ-WRITE API key
 
     aito_client.upload_file(table_name='table_name', file_path=file_path)
 
+- Upload using generator
+
+  .. code-block:: python
+
+    import os
+    from aito.sdk.aito_client import AitoClient
+
+    def example_generator(start, end):
+        for idx in range(start, end):
+            entry = {'id': idx}
+            yield entry
+
+    env_var = os.environ
+    aito_client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
+
+    schema = {"type": "table", "columns": {"id": {"nullable": True,"type": "Int"}}}
+
+    table_name = "table_name"
+
+    aito_client.create_table(table_name=table_name, table_schema=schema)
+
+    aito_client.upload_entries(
+        table_name=table_name,
+        entries=example_generator(start=0, end=4),
+        batch_size=2,
+        optimize_on_finished=False)
+
 Delete data
 -----------
 

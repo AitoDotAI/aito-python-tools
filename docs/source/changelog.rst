@@ -1,11 +1,18 @@
 Changelog
 =========
 
+0.2.2
+-----
+
+- Added missing import warnings to Aito client.
+- Updated AitoClient API documentation.
+
 0.2.1
 -----
 
-- upload_entries now accepts genetors as well as lists
-- upload_entries_by_batches has been deprecated
+- AitoClient upload_entries now accepts `generators`_ as well as lists.
+
+- AitoClient upload_entries_by_batches is deprecated and will be removed in an upcoming release, so switch to use AitoClient upload_entries function instead.
 
 
 0.2.0
@@ -104,3 +111,6 @@ Supported database:
 - Remove the option to create and use table schema from file-upload
 - Convert always use standard out
 - Improved documentation
+
+
+.. _generators: https://aitodotai.github.io/aito-python-tools/quickstart.html#sdkquickstartuploaddata

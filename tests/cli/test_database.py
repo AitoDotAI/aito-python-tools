@@ -23,7 +23,7 @@ class TestDatabase(ParserAndCLITestCase):
         cls.client = AitoClient(os.environ['AITO_INSTANCE_URL'], os.environ['AITO_API_KEY'])
         with (cls.input_folder / "invoice_aito_schema.json").open() as f:
             cls.default_table_schema = json.load(f)
-        cls.default_table_name = f"invoice_{uuid4()}"
+        cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
 
     def create_table(self):
         self.client.create_table(self.default_table_name, self.default_table_schema)

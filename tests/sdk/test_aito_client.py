@@ -13,10 +13,14 @@ class TestAitoClient(CompareTestCase):
         super().setUpClass()
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
-        cls.default_table_name = f"invoice_{uuid4()}"
+        cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         with (cls.input_folder / 'invoice_aito_schema.json').open() as f:
             cls.default_schema = json.load(f)
+
+    def tearDown(self):
+        super().tearDown()
+        self.client.delete_table(self.default_table_name)
 
     def test_error_instance_url(self):
         with self.assertRaises(BaseError):
@@ -36,9 +40,11 @@ class TestAitoClient(CompareTestCase):
 
     def delete_table_step(self):
         self.client.delete_table(self.default_table_name)
+        self.assertEqual(self.client.check_table_exists(self.default_table_name), False)
 
     def create_table_step(self):
         self.client.create_table(self.default_table_name, self.default_schema)
+        self.assertEqual(self.client.check_table_exists(self.default_table_name), True)
 
     def get_table_schema_step(self):
         tbl_schema = self.client.get_table_schema(self.default_table_name)
@@ -152,4 +158,18 @@ class TestAitoClient(CompareTestCase):
         self.download_table_step(start=0, end=12)
         self.download_table_gzipped_step(start=0, end=12)
         self.delete_table_step()
+
+
+    def test_tobe_deprecated_upload(self):
+        self.create_table_step()
+        self.query_table_all_entries_step(expected_result=0)
+        entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(0, 4)]
+        self.client.upload_entries_by_batches(
+            table_name=self.default_table_name,
+            entries=entries,
+            batch_size=2,
+            optimize_on_finished=False)
+        self.query_table_all_entries_step(expected_result=4)
+        self.delete_table_step()
+
 
