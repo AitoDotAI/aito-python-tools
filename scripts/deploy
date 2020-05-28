@@ -61,9 +61,25 @@ def bump_version(current_version: Version, bump_part: str) -> Version:
         for part in final_releases_parts
     ]
     if bump_part in DEFAULT_SPECIAL_RELEASE_LETTER:
-        now = datetime.now()
-        dt_string = now.strftime("%Y%m%d%H%M%S")
-        parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}{dt_string}')
+        # dev versioning has date intead of integer
+        if bump_part == "dev":
+            now = datetime.now()
+            dt_string = now.strftime("%Y%m%d%H%M%S")
+            parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}{dt_string}')
+            return Version('.'.join(parts))
+
+        special_version_number = getattr(current_version, bump_part)
+
+        # only pre-release version return tuples, others return number
+        if special_version_number and bump_part == 'pre':
+            special_version_number = special_version_number[1]
+
+        if not special_version_number:
+            parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}1')
+
+        else:
+            parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}{special_version_number + 1}')
+        
     return Version('.'.join(parts))
 
 
@@ -150,17 +166,17 @@ class DeployParser(argparse.ArgumentParser):
         check_git_tree()
 
         parsed_args = vars(self.parse_args())
+        repo = parsed_args['repo']
 
-        current_version = find_current_version(VERSION_FILE_PATH)
+        all_existing_versions = get_all_existing_versions(repo)
+        current_version = all_existing_versions[-1]
+
         if parsed_args['version']:
             new_version = Version(parsed_args['version'])
         elif parsed_args['bump_version']:
             bump_part = parsed_args['bump_version']
             new_version = bump_version(current_version, bump_part)
-        else:
-            new_version = current_version
 
-        repo = parsed_args['repo']
         all_existing_versions = get_all_existing_versions(repo)
         validate_new_version(new_version, all_existing_versions)
         update_version_file(VERSION_FILE_PATH, new_version)
