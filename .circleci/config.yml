@@ -303,7 +303,7 @@ commonYAMLStructure:
       name: deploy to test pypi
       command: |
         . venv/bin/activate
-        ./scripts/deploy test.pypi --no-publish
+        ./scripts/deploy test.pypi --no-publish --bump-version dev
         pip install dist/*.whl
 
 jobs:
