@@ -139,6 +139,30 @@ def check_git_tree():
         raise RuntimeError('tree is dirty, please commit changes before deployment')
 
 
+def prompt_confirmation(content, default: bool = None) -> bool:
+    valid_responses = {
+        'yes': True,
+        'y': True,
+        'no': False,
+        'n': False
+    }
+    if default is None:
+        prompt = '[y/n]'
+    elif default:
+        prompt = '[Y/n]'
+    else:
+        prompt = '[y/N]'
+    while True:
+        sys.stdout.write(f"{content} {prompt}")
+        response = input().lower()
+        if default and response == '':
+            return default
+        elif response in valid_responses:
+            return valid_responses[response]
+        else:
+            sys.stdout.write("Please respond with yes(y) or no(n)'\n")
+
+
 class DeployParser(argparse.ArgumentParser):
     def error(self, message):
         sys.stderr.write(f"error: {message}\n")
@@ -183,13 +207,13 @@ class DeployParser(argparse.ArgumentParser):
         build_package_and_check()
 
         if not parsed_args['no_publish']:
-            if repo == 'pypi':
+            if repo == 'pypi' and prompt_confirmation(content=f"Publishing version {new_version} into {repo}, are you sure?"):
                 check_version_change_log_exist(CHANGE_LOG_FILE_PATH, new_version)
                 subprocess.run(['./scripts/build_docs.sh'], check=True)
                 publish(repo)
                 subprocess.run(['./scripts/publish_docs.sh', new_version], check=True)
                 git_bump_version_and_tag(new_version)
-            else:
+            elif repo=='test.pypi':
                 publish(repo)
 
 
