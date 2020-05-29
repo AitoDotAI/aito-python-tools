@@ -51,7 +51,7 @@ def update_version_file(version_file_path: Path, new_version: Version):
 def get_all_existing_versions(repo) -> List[Version]:
     url = f'https://{repo}.org/pypi/aitoai/json'
     package_info = requests.get(url).json()
-    return [Version(v) for v in package_info['releases'].keys()]
+    return sorted([Version(v) for v in package_info['releases'].keys()])
 
 
 def bump_version(current_version: Version, bump_part: str) -> Version:
@@ -149,13 +149,13 @@ class DeployParser(argparse.ArgumentParser):
         super().__init__()
 
         self.add_argument('repo', type=str, choices=['test.pypi', 'pypi'], help='repo to be published to')
-        m_e_group = self.add_mutually_exclusive_group()
+        m_e_group = self.add_mutually_exclusive_group(required=True)
 
         m_e_group.add_argument('-v', '--version', type=str, help='deploy with the specified version')
 
         m_e_group.add_argument(
             '-b', '--bump-version', type=str, choices=['dev', 'pre', 'post', 'micro', 'minor', 'major'],
-            help='bump the current version with the specified part'
+            help='bump the current version with the specified part, dev will be updated with the current date and other version parts are bumped automatically by one.'
         )
         self.add_argument(
             '-n', '--no-publish', action='store_true', help='Do not publish to repo'
