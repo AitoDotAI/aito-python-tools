@@ -36,6 +36,7 @@ setup(
     author_email='admin@aito.ai',
     description='Aito.ai Python SDK',
     long_description=long_description,
+    long_description_content_type="text/x-rst",
     url='https://github.com/AitoDotAI/aito-python-tools',
     project_urls={
         'Documentation': 'https://aitodotai.github.io/aito-python-tools.',

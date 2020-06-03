@@ -300,10 +300,10 @@ commonYAMLStructure:
       path: ./.logs
   - &build_and_install_package
     run:
-      name: deploy to test pypi
+      name: build and install package
       command: |
         . venv/bin/activate
-        ./scripts/deploy test.pypi --no-publish
+        ./scripts/deploy test.pypi --no-publish --bump-version dev
         pip install dist/*.whl
 
 jobs:
