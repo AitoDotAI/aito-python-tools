@@ -91,7 +91,7 @@ class SchemaHandler:
         return self._pandas_dtypes_name_to_aito_type[inferred_dtype]
 
     def infer_column_type(self, samples: Iterable, max_sample_size: int = 100000):
-        """infer Aito `column type <https://aito.ai/docs/api/#schema-column-type>__` from the given samples
+        """infer Aito `Column Type <https://aito.ai/docs/api/#schema-column-type>`__ from the given samples
 
         :param samples: iterable of sample
         :type samples: Iterable
@@ -141,6 +141,15 @@ class SchemaHandler:
         return None
 
     def infer_text_analyzer(self, samples: Iterable[str], max_sample_size: int = 10000) -> Optional[Union[str, Dict]]:
+        """Infer Aito Text Type `Analyzer <https://aito.ai/docs/api/#schema-analyzer>`__ from the given samples
+
+        :param samples: iterable of sample
+        :type samples: Iterable
+        :param max_sample_size: at most first max_sample_size will be used for inference, defaults to 10000
+        :type max_sample_size: int
+        :return: inferred Analyzer type
+        :rtype: Optional[Union[str, Dict]]
+        """
         sliced_samples = list(itertools.islice(samples, max_sample_size))
         detected_delimiter = self._infer_delimiter(sliced_samples)
         if detected_delimiter is None or detected_delimiter.isalnum():
