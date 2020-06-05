@@ -99,7 +99,7 @@ class DataFrameHandler:
             if not col_schema_nullable and df[col].isna().any():
                 raise ValueError(f'column `{col}` is nullable but stated non-nullable in the input schema')
             col_aito_type = col_schema['type']
-            col_inferred_aito_type = self.schema_handler.infer_aito_types_from_pandas_series(df[col])
+            col_inferred_aito_type = self.schema_handler.infer_column_type(df[col])
             LOG.debug(f'column `{col}` inferred aito type: {col_inferred_aito_type}')
             if col_inferred_aito_type != col_aito_type and \
                     not {col_aito_type, col_inferred_aito_type}.issubset({'Text', 'String'}):
