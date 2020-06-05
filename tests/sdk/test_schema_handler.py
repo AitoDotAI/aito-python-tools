@@ -35,6 +35,58 @@ class TestInferAitoType(BaseTestCase):
         self._assert_inferred([1, 0, 0, True, False], 'Text')
 
 
+class TestInferAnalyzer(BaseTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.schema_handler = SchemaHandler()
+
+    def _assert_inferred(self, samples, expect_type):
+        self.assertEqual(self.schema_handler.infer_text_analyzer(samples), expect_type)
+
+    def test_infer_delimited_text(self):
+        self._assert_inferred(
+            ['random, seperated, text', 'another, random, separated'],
+            {'type': 'delimiter', 'delimiter': ','}
+        )
+        self._assert_inferred(
+            ['random| seperated|text', 'another|random |separated'],
+            {'type': 'delimiter', 'delimiter': '|'}
+        )
+        self._assert_inferred(
+            ['random  -seperated- text', 'normal text', 'just-   enough -f  or-   hyphen'],
+            {'type': 'delimiter', 'delimiter': '-'}
+        )
+        self._assert_inferred(
+            ['tab\tseperated\ttext', 'another\tone'],
+            {'type': 'delimiter', 'delimiter': '\t'}
+        )
+        self._assert_inferred(
+            ['abc abca abcab', 'abcd dcba'],
+            'Whitespace'
+        )
+
+    def test_infer_language_analyzer(self):
+        self._assert_inferred(
+            ['is this in english?', 'it definitely is'],
+            'en'
+        )
+        self._assert_inferred(
+            ['onko suomeksi?', 'ei todellakaan'],
+            'fi'
+        )
+        self._assert_inferred(
+            ['Bonjour monsieur', 'aimez-vous la baguette'],
+            'fr'
+        )
+
+    def test_not_supported_language(self):
+        self._assert_inferred(
+            ['đây là tiếng việt', 'đúng rồi'],
+            'Whitespace'
+        )
+
+
 class TestSchemaHandler(CompareTestCase):
     @classmethod
     def setUpClass(cls):
