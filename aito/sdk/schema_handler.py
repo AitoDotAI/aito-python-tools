@@ -1,11 +1,12 @@
-import logging
-from typing import List, Dict, Iterable
 import itertools
+import logging
+import warnings
+from collections import Counter
+from csv import Sniffer, Error as csvError
+from typing import List, Dict, Iterable, Optional, Union
 
 import pandas as pd
-from langdetect import detect
-import warnings
-
+from langdetect import detect_langs, detect
 
 LOG = logging.getLogger("SchemaHandler")
 
@@ -55,6 +56,8 @@ class SchemaHandler:
             'th', 'tr'
         ]
 
+        self._csv_sniffer = Sniffer()
+
     def infer_aito_types_from_pandas_series(self, series: pd.Series, sample_size: int = 100000) -> str:
         """
         .. deprecated:: 0.3.0
@@ -68,18 +71,18 @@ class SchemaHandler:
         )
         return self._infer_column_type_from_pandas_series(series, sample_size)
 
-    def _infer_column_type_from_pandas_series(self, series: pd.Series, sample_size: int = 100000) -> str:
+    def _infer_column_type_from_pandas_series(self, series: pd.Series, max_sample_size: int = 100000) -> str:
         """Infer aito column type from a Pandas Series
 
         :param series: input Pandas Series
         :type series: pd.Series
-        :param sample_size: maximum sample size that will be used for type inference, defaults to 100000
-        :type sample_size: int, optional
+        :param max_sample_size: maximum sample size that will be used for type inference, defaults to 100000
+        :type max_sample_size: int, optional
         :raises Exception: fail to infer type
         :return: inferred Aito type
         :rtype: str
         """
-        sampled_values = series.values if len(series) < sample_size else series.sample(sample_size).values
+        sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
         LOG.debug('inferring dtype from sample values...')
         inferred_dtype = pd.api.types.infer_dtype(sampled_values)
         LOG.debug(f'inferred dtype: {inferred_dtype}')
@@ -104,7 +107,52 @@ class SchemaHandler:
             raise Exception(f'failed to infer aito type')
         return self._infer_column_type_from_pandas_series(casted_samples)
 
-    def infer_table_schema_from_pandas_data_frame(self, df: pd.DataFrame) -> Dict:
+    def _try_sniff_delimiter(self, sample: str, candidates='-,;:|\t') -> Optional[str]:
+        try:
+            return str(self._csv_sniffer.sniff(sample, candidates).delimiter)
+        except csvError:
+            # deprio whitespace in case tokens has trailing or leading whitespace
+            try:
+                return str(self._csv_sniffer.sniff(sample, ' ').delimiter)
+            except csvError:
+                LOG.debug(f'failed to sniff delimiter of {sample}: e')
+        return None
+
+    def _infer_delimiter(self, samples: Iterable[str]) -> Optional[str]:
+        """returns the most common inferred delimiter from the samples"""
+        inferred_delimiter_counter = Counter([self._try_sniff_delimiter(smpl) for smpl in samples])
+        most_common_delimiter_and_count = inferred_delimiter_counter.most_common(1)[0]
+        LOG.debug(f'most common inferred delimiter and count: {most_common_delimiter_and_count}')
+        return most_common_delimiter_and_count[0]
+
+    def _infer_language(self, samples: Iterable[str]) -> Optional[str]:
+        """infer language from samples"""
+        concatenated_sample_text = ' '.join(samples)
+        detected_langs_and_probs = detect_langs(concatenated_sample_text)
+        if detected_langs_and_probs:
+            LOG.debug(f'inferred languages and probabilities: {detected_langs_and_probs}')
+            most_probable_lang_and_prob = detected_langs_and_probs[0]
+            if most_probable_lang_and_prob.prob > 0.9:
+                most_probable_lang = most_probable_lang_and_prob.lang
+                if most_probable_lang in self._lang_detect_code_to_aito_code:
+                    most_probable_lang = self._lang_detect_code_to_aito_code[most_probable_lang]
+                if most_probable_lang in self._supported_alias_analyzer:
+                    return most_probable_lang
+        return None
+
+    def infer_text_analyzer(self, samples: Iterable[str], max_sample_size: int = 10000) -> Optional[Union[str, Dict]]:
+        sliced_samples = list(itertools.islice(samples, max_sample_size))
+        detected_delimiter = self._infer_delimiter(sliced_samples)
+        if detected_delimiter is None or detected_delimiter.isalnum():
+            return None
+        if detected_delimiter == ' ':
+            detected_language = self._infer_language(sliced_samples)
+            return detected_language if detected_language else "Whitespace"
+        return {
+            "type": "delimiter",
+            "delimiter": detected_delimiter
+        }
+
         """Infer a table schema from a Pandas DataFrame
 
         :param df: input Pandas DataFrame
