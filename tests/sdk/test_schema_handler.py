@@ -1,7 +1,38 @@
 import json
 from aito.sdk.schema_handler import SchemaHandler
 from aito.sdk.data_frame_handler import DataFrameHandler
-from tests.cases import CompareTestCase
+from tests.cases import BaseTestCase, CompareTestCase
+import datetime
+
+
+class TestInferAitoType(BaseTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.schema_handler = SchemaHandler()
+
+    def _assert_inferred(self, samples, expect_type):
+        self.assertEqual(self.schema_handler.infer_column_type(samples), expect_type)
+
+    def test_infer_from_datetime_type(self):
+        self._assert_inferred([datetime.date(1981, 9, 21), datetime.date.today()], 'String')
+        self._assert_inferred([datetime.time(), datetime.time(23, 59, 59)], 'String')
+        self._assert_inferred([datetime.datetime.now(), datetime.datetime.utcnow()], 'String')
+        self._assert_inferred(
+            [datetime.date.today() - datetime.date(1981, 9, 21), datetime.timedelta(seconds=20)], 'String'
+        )
+
+    def test_infer_from_numeric_type(self):
+        self._assert_inferred([1, 2, 3], 'Int')
+        self._assert_inferred([1.0, 2.0, 3.0], 'Decimal')
+        self._assert_inferred([1, 2, 3.0], 'Decimal')
+
+    def test_infer_from_boolean_type(self):
+        self._assert_inferred([True, False, False], 'Boolean')
+
+    def test_infer_from_mixed_type(self):
+        self._assert_inferred(['good', 1, 'bad'], 'Text')
+        self._assert_inferred([1, 0, 0, True, False], 'Text')
 
 
 class TestSchemaHandler(CompareTestCase):
