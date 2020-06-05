@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.3.0
+-----
+- :ref:`apiSchemaHandler` *infer_aito_types_from_pandas_series* is deperecated and will be removed in an upcoming release, use *infer_column_type* instead
+- Aito `Column Type`_  inference is improved
+
 0.2.2
 -----
 
@@ -10,9 +15,9 @@ Changelog
 0.2.1
 -----
 
-- AitoClient upload_entries now accepts `generators`_ as well as lists.
+- :ref:`apiAitoClient` *upload_entries* now accepts `generators`_ as well as lists.
 
-- AitoClient upload_entries_by_batches is deprecated and will be removed in an upcoming release, so switch to use AitoClient upload_entries function instead.
+- :ref:`apiAitoClient` *upload_entries_by_batches* is deprecated and will be removed in an upcoming release, use *upload_entries* instead.
 
 
 0.2.0
@@ -114,3 +119,4 @@ Supported database:
 
 
 .. _generators: https://aitodotai.github.io/aito-python-tools/quickstart.html#sdkquickstartuploaddata
+.. _Column Type: https://aito.ai/docs/api/#schema-column-type
