@@ -6,6 +6,7 @@ Changelog
 - Improved :ref:`apiSchemaHandler` `Column Type`_  inference and is now exposed at :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_column_type`
 - :ref:`apiSchemaHandler` *infer_aito_types_from_pandas_series* is deperecated and will be removed in an upcoming release, use :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_column_type` instead
 - Improved `Analyzer`_ inference with `Delimiter Analyzer`_ detection and is now exposed at :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_text_analyzer`
+- Added *max_sample_size* keyword argument to :meth:`aito.sdk.schema_handler.SchemaHandler.infer_table_schema_from_pandas_data_frame` to control the maximum sample size that will be used for inference
 
 0.2.2
 -----
