@@ -162,10 +162,13 @@ class SchemaHandler:
             "delimiter": detected_delimiter
         }
 
+    def infer_table_schema_from_pandas_data_frame(self, df: pd.DataFrame, max_sample_size: int = 100000) -> Dict:
         """Infer a table schema from a Pandas DataFrame
 
         :param df: input Pandas DataFrame
         :type df: pd.DataFrame
+        :param max_sample_size: maximum sample size that will be used for inference, defaults to 100000
+        :type max_sample_size: int, optional
         :raises Exception: an error occurred during column type inference
         :return: inferred table schema
         :rtype: Dict
@@ -175,33 +178,23 @@ class SchemaHandler:
 
         columns_schema = {}
         for col in df.columns.values:
-            col_df = df[col]
+            col_df_samples = df[col] if len(df[col]) < max_sample_size else df[col].sample(max_sample_size)
             try:
-                col_aito_type = self._infer_column_type_from_pandas_series(df[col], self.sample_size)
+                col_aito_type = self._infer_column_type_from_pandas_series(col_df_samples, max_sample_size)
             except Exception as e:
-                raise Exception(f'failed to infer aito type of column `{col}`: {e}')
-            col_na_count = col_df.isna().sum()
+                raise Exception(f'failed to infer aito column type of column `{col}`: {e}')
+            col_na_count = col_df_samples.isna().sum()
             col_schema = {
                 'nullable': True if col_na_count > 0 else False,
                 'type': col_aito_type
             }
             if col_schema['type'] == 'Text':
-                col_unique_val_count = col_df.nunique()
-                col_non_na_count = rows_count - col_na_count
-                if (col_non_na_count / col_unique_val_count) > 2:
-                    col_schema['type'] = 'String'
+                col_df_samples.dropna(inplace=True)
+                inferred_analyzer = self.infer_text_analyzer(col_df_samples.__iter__())
+                if inferred_analyzer:
+                    col_schema['analyzer'] = inferred_analyzer
                 else:
-                    col_text = col_df.str.cat(sep=' ')
-                    try:
-                        detected_lang = detect(col_text)
-                        if detected_lang in self._lang_detect_code_to_aito_code:
-                            detected_lang = self._lang_detect_code_to_aito_code[detected_lang]
-                    except Exception as e:
-                        LOG.debug(f'failed to detect language: {e}')
-                        detected_lang = None
-                    if detected_lang and detected_lang in self._supported_alias_analyzer:
-                        col_schema['analyzer'] = detected_lang
-
+                    col_schema['type'] = 'String'
             columns_schema[col] = col_schema
 
         table_schema = {'type': 'table', 'columns': columns_schema}

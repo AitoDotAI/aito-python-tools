@@ -87,7 +87,7 @@ class TestInferAnalyzer(BaseTestCase):
         )
 
 
-class TestSchemaHandler(CompareTestCase):
+class TestHandlingTableSchema(CompareTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -98,7 +98,7 @@ class TestSchemaHandler(CompareTestCase):
         super().setUp()
         self.out_file_path = self.output_folder / f"{self.method_name}_out.ndjson"
 
-    def test_generate_table_schema_from_df(self):
+    def test_infer_table_schema_from_df(self):
         df_handler = DataFrameHandler()
         df = df_handler.read_file_to_df(self.input_folder / 'invoice.csv', 'csv')
         table_schema = self.schema_handler.infer_table_schema_from_pandas_data_frame(df)
