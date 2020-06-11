@@ -6,15 +6,15 @@ from tests.cases import BaseTestCase
 
 class TestAnalyzerSchema(BaseTestCase):
     @parameterized.expand([
-        ('alias', 'whitespace', AliasAnalyzerSchema(alias='whitespace')),
-        ('alias_lang', 'en', AliasAnalyzerSchema(alias="english")),
-        ('language', {'type': 'language', 'language': 'english'}, LanguageAnalyzerSchema(language='english')),
-        ('delimiter', {'type': 'delimiter', 'delimiter': ','}, DelimiterAnalyzerSchema(delimiter=',')),
-        ('char-ngram', {'type': 'char-ngram', 'minGram': 1, 'maxGram': 2}, CharNGramAnalyzerSchema(1, 2)),
+        ('alias', 'whitespace', AitoAliasAnalyzerSchema(alias='whitespace')),
+        ('alias_lang', 'en', AitoAliasAnalyzerSchema(alias="english")),
+        ('language', {'type': 'language', 'language': 'english'}, AitoLanguageAnalyzerSchema(language='english')),
+        ('delimiter', {'type': 'delimiter', 'delimiter': ','}, AitoDelimiterAnalyzerSchema(delimiter=',')),
+        ('char-ngram', {'type': 'char-ngram', 'minGram': 1, 'maxGram': 2}, AitoCharNGramAnalyzerSchema(1, 2)),
         (
-            'token-ngram',
-            {'type': 'token-ngram', 'source': {'type': 'language', 'language': 'french'}, 'minGram': 1, 'maxGram' : 2},
-            TokenNgramAnalyzerSchema(source=AliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' ')
+                'token-ngram',
+                {'type': 'token-ngram', 'source': {'type': 'language', 'language': 'french'}, 'minGram': 1, 'maxGram' : 2},
+                AitoTokenNgramAnalyzerSchema(source=AitoAliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' ')
         ),
         (
                 'token_ngram_inception',
@@ -24,9 +24,9 @@ class TestAnalyzerSchema(BaseTestCase):
                     'minGram': 2,
                     'maxGram': 3
                 },
-                TokenNgramAnalyzerSchema(
-                    source=TokenNgramAnalyzerSchema(
-                        AliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' '
+                AitoTokenNgramAnalyzerSchema(
+                    source=AitoTokenNgramAnalyzerSchema(
+                        AitoAliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' '
                     ),
                     min_gram=2,
                     max_gram=3,
@@ -34,7 +34,7 @@ class TestAnalyzerSchema(BaseTestCase):
         ),
     ])
     def test_from_deserialized_object(self, test_name, deserialized_obj, expected):
-        self.assertEqual(AnalyzerSchema.from_deserialized_object(deserialized_obj), expected)
+        self.assertEqual(AitoAnalyzerSchema.from_deserialized_object(deserialized_obj), expected)
 
     @parameterized.expand([
         ('invalid_alias', 'spacewhite', ValueError),
@@ -45,14 +45,14 @@ class TestAnalyzerSchema(BaseTestCase):
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
         with self.assertRaises(error):
-            AnalyzerSchema.from_deserialized_object(deserialized_obj)
+            AitoAnalyzerSchema.from_deserialized_object(deserialized_obj)
 
     @parameterized.expand([
-        ('alias', AliasAnalyzerSchema(alias='whitespace'), 'whitespace'),
-        ('alias_lang', AliasAnalyzerSchema(alias="english"), 'english'),
+        ('alias', AitoAliasAnalyzerSchema(alias='whitespace'), 'whitespace'),
+        ('alias_lang', AitoAliasAnalyzerSchema(alias="english"), 'english'),
         (
                 'language',
-                LanguageAnalyzerSchema(language='english'),
+                AitoLanguageAnalyzerSchema(language='english'),
                 {
                     'type': 'language',
                     'language': 'english',
@@ -63,13 +63,13 @@ class TestAnalyzerSchema(BaseTestCase):
         ),
         (
                 'delimiter',
-                DelimiterAnalyzerSchema(delimiter=','),
+                AitoDelimiterAnalyzerSchema(delimiter=','),
                 {'type': 'delimiter', 'delimiter': ',', 'trimWhiteSpace': True}
         ),
-        ('char-ngram', CharNGramAnalyzerSchema(1, 2), {'type': 'char-ngram', 'minGram': 1, 'maxGram': 2}),
+        ('char-ngram', AitoCharNGramAnalyzerSchema(1, 2), {'type': 'char-ngram', 'minGram': 1, 'maxGram': 2}),
         (
                 'token-ngram',
-                TokenNgramAnalyzerSchema(source=AliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' '),
+                AitoTokenNgramAnalyzerSchema(source=AitoAliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' '),
                 {'type': 'token-ngram', 'source': 'french', 'minGram': 1, 'maxGram': 2, 'tokenSeparator': ' '},
         )
     ])
@@ -77,16 +77,16 @@ class TestAnalyzerSchema(BaseTestCase):
         self.assertEqual(analyzer.to_json_serializable(), expected)
 
     @parameterized.expand([
-        ('diff_analyzer_type', AliasAnalyzerSchema('fr'), DelimiterAnalyzerSchema(','), False),
-        ('diff_prop', DelimiterAnalyzerSchema(','), DelimiterAnalyzerSchema(',', trim_white_space=False), False),
+        ('diff_analyzer_type', AitoAliasAnalyzerSchema('fr'), AitoDelimiterAnalyzerSchema(','), False),
+        ('diff_prop', AitoDelimiterAnalyzerSchema(','), AitoDelimiterAnalyzerSchema(',', trim_white_space=False), False),
         (
                 'same',
-                LanguageAnalyzerSchema('fr', custom_key_words=['baguette']),
-                LanguageAnalyzerSchema('french', use_default_stop_words=False, custom_key_words=['baguette']),
+                AitoLanguageAnalyzerSchema('fr', custom_key_words=['baguette']),
+                AitoLanguageAnalyzerSchema('french', use_default_stop_words=False, custom_key_words=['baguette']),
                 True
         ),
-        ('alias_lang', AliasAnalyzerSchema('fr'), LanguageAnalyzerSchema('french'), True),
-        ('alias_lang', AliasAnalyzerSchema('fr'), LanguageAnalyzerSchema('french'), True),
+        ('alias_lang', AitoAliasAnalyzerSchema('fr'), AitoLanguageAnalyzerSchema('french'), True),
+        ('alias_lang', AitoAliasAnalyzerSchema('fr'), AitoLanguageAnalyzerSchema('french'), True),
     ])
     def test_comparison(self, test_name, first, second, is_equal):
         self.assertEqual(first == second, is_equal)
@@ -94,13 +94,25 @@ class TestAnalyzerSchema(BaseTestCase):
 
 class TestColumnTypeSchema(BaseTestCase):
     @parameterized.expand([
-        ('string', {'type': 'String'}, ColumnTypeSchema(data_type='String', nullable=False)),
-        ('text', {'type': 'Text', 'analyzer': 'fi'}, ColumnTypeSchema('Text', analyzer=AliasAnalyzerSchema('finnish'))),
-        ('nullable', {'type': 'Int', 'nullable': True}, ColumnTypeSchema('Int', nullable=True)),
-        ('link', {'type': 'Int', 'link': 'infinity.beyond'}, ColumnTypeSchema('Int', link='infinity.beyond')),
+        ('string', {'type': 'String'}, AitoColumnTypeSchema(AitoStringType(), nullable=False)),
+        (
+                'text',
+                {'type': 'Text', 'analyzer': 'fi'},
+                AitoColumnTypeSchema(AitoTextType(), analyzer=AitoAliasAnalyzerSchema('finnish'))
+        ),
+        (
+                'nullable',
+                {'type': 'Int', 'nullable': True},
+                AitoColumnTypeSchema(AitoIntType(), nullable=True)
+        ),
+        (
+                'link',
+                {'type': 'Int', 'link': 'infinity.beyond'},
+                AitoColumnTypeSchema(AitoIntType(), link='infinity.beyond')
+        )
     ])
     def test_from_deserialized_object(self, test_name, deserialized_obj, expected):
-        self.assertEqual(ColumnTypeSchema.from_deserialized_object(deserialized_obj), expected)
+        self.assertEqual(AitoColumnTypeSchema.from_deserialized_object(deserialized_obj), expected)
 
     @parameterized.expand([
         ('missing_type', {'analyzer': 'fi'}, ValueError),
@@ -111,39 +123,47 @@ class TestColumnTypeSchema(BaseTestCase):
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
         with self.assertRaises(error):
-            ColumnTypeSchema.from_deserialized_object(deserialized_obj)
+            AitoColumnTypeSchema.from_deserialized_object(deserialized_obj)
 
     @parameterized.expand([
-        ('string', ColumnTypeSchema(data_type='String'), {'type': 'String', 'nullable': False}),
+        ('string', AitoColumnTypeSchema(AitoStringType()), {'type': 'String', 'nullable': False}),
         (
                 'text',
-                ColumnTypeSchema('Text', analyzer=AliasAnalyzerSchema('finnish')),
+                AitoColumnTypeSchema(AitoTextType(), analyzer=AitoAliasAnalyzerSchema('finnish')),
                 {'type': 'Text', 'nullable': False, 'analyzer': 'finnish'}
         ),
         (
                 'link',
-                ColumnTypeSchema('Int', link='infinity.beyond'),
+                AitoColumnTypeSchema(AitoIntType(), link='infinity.beyond'),
                 {'type': 'Int', 'nullable': False, 'link': 'infinity.beyond'}
         )
     ])
     def test_to_json_serializable(self, test_name, column_type, expected):
         self.assertEqual(column_type.to_json_serializable(), expected)
 
+    def test_xd(self):
+        self.assertEqual(
+            AitoColumnTypeSchema(AitoStringType()).to_json_serializable(),
+            {'type': 'String', 'nullable': False}
+        )
+
     def test_comparison(self):
         self.assertEqual(
-            ColumnTypeSchema('Text', analyzer=AliasAnalyzerSchema('fr'), link='table.column'),
-            ColumnTypeSchema('Text', nullable=False, analyzer=LanguageAnalyzerSchema('french'), link='table.column')
+            AitoColumnTypeSchema(AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link='table.column'),
+            AitoColumnTypeSchema(
+                AitoTextType(), nullable=False, analyzer=AitoLanguageAnalyzerSchema('french'), link='table.column'
+            )
         )
         self.assertNotEqual(
-            ColumnTypeSchema('Text', analyzer=AliasAnalyzerSchema('fr'), link='table.column'),
-            AnalyzerSchema.from_deserialized_object('fi')
+            AitoColumnTypeSchema(AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link='table.column'),
+            AitoAnalyzerSchema.from_deserialized_object('fi')
         )
 
 
 class TestTableSchema(BaseTestCase):
     def test_from_deserialized_object(self):
         self.assertEqual(
-            TableSchema.from_deserialized_object({
+            AitoTableSchema.from_deserialized_object({
                 'type': 'table',
                 'columns': {
                     'col1': {'type': 'Int'},
@@ -155,10 +175,10 @@ class TestTableSchema(BaseTestCase):
                     }
                 }
             }),
-            TableSchema({
-                'col1': ColumnTypeSchema('Int'),
-                'col2': ColumnTypeSchema(
-                    data_type='Text', nullable=True, analyzer=LanguageAnalyzerSchema('finnish'), link='another.one'
+            AitoTableSchema({
+                'col1': AitoColumnTypeSchema(AitoIntType()),
+                'col2': AitoColumnTypeSchema(
+                    AitoTextType(), nullable=True, analyzer=AitoLanguageAnalyzerSchema('finnish'), link='another.one'
                 )
             })
         )
@@ -171,13 +191,13 @@ class TestTableSchema(BaseTestCase):
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
         with self.assertRaises(error):
-            TableSchema.from_deserialized_object(deserialized_obj)
+            AitoTableSchema.from_deserialized_object(deserialized_obj)
 
     def test_to_json_serializable(self):
         self.assertDictEqual(
-            TableSchema({
-                'col': ColumnTypeSchema(
-                    data_type='Text', nullable=True, analyzer=AliasAnalyzerSchema('fi'), link='another.one'
+            AitoTableSchema({
+                'col': AitoColumnTypeSchema(
+                    AitoTextType(), nullable=True, analyzer=AitoAliasAnalyzerSchema('fi'), link='another.one'
                 )
             }).to_json_serializable(),
             {
@@ -195,23 +215,23 @@ class TestTableSchema(BaseTestCase):
 
     def test_comparison(self):
         self.assertEqual(
-            TableSchema({'col': ColumnTypeSchema('Int')}),
-            TableSchema({'col': ColumnTypeSchema('Int')}),
+            AitoTableSchema({'col': AitoColumnTypeSchema(AitoIntType())}),
+            AitoTableSchema({'col': AitoColumnTypeSchema(AitoIntType())}),
         )
         self.assertNotEqual(
-            TableSchema({'col': ColumnTypeSchema('Int')}),
-            TableSchema({'col': ColumnTypeSchema('String')}),
+            AitoTableSchema({'col': AitoColumnTypeSchema(AitoIntType())}),
+            AitoTableSchema({'col': AitoColumnTypeSchema(AitoStringType())}),
         )
         self.assertNotEqual(
-            TableSchema({'col': ColumnTypeSchema('Int')}),
-            TableSchema({'col1': ColumnTypeSchema('Int')}),
+            AitoTableSchema({'col': AitoColumnTypeSchema(AitoIntType())}),
+            AitoTableSchema({'col1': AitoColumnTypeSchema(AitoIntType())}),
         )
 
 
 class TestDatabaseSchema(BaseTestCase):
     def test_from_deserialized_object(self):
         self.assertEqual(
-            DatabaseSchema.from_deserialized_object({
+            AitoDatabaseSchema.from_deserialized_object({
                 'schema': {
                     'tbl1': {
                         'type': 'table',
@@ -223,9 +243,9 @@ class TestDatabaseSchema(BaseTestCase):
                     }
                 }
             }),
-            DatabaseSchema(tables={
-                'tbl1': TableSchema(columns={'col1': ColumnTypeSchema(data_type='Boolean')}),
-                'tbl2': TableSchema(columns={'col2': ColumnTypeSchema(data_type='String')})
+            AitoDatabaseSchema(tables={
+                'tbl1': AitoTableSchema(columns={'col1': AitoColumnTypeSchema(AitoBooleanType())}),
+                'tbl2': AitoTableSchema(columns={'col2': AitoColumnTypeSchema(AitoStringType())})
             })
         )
 
@@ -236,16 +256,19 @@ class TestDatabaseSchema(BaseTestCase):
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
         with self.assertRaises(error):
-            DatabaseSchema.from_deserialized_object(deserialized_obj)
+            AitoDatabaseSchema.from_deserialized_object(deserialized_obj)
 
     def test_to_json_serializable(self):
         self.assertEqual(
-            DatabaseSchema(
+            AitoDatabaseSchema(
                 tables={
-                    'tbl': TableSchema(
+                    'tbl': AitoTableSchema(
                         columns={
-                            'col': ColumnTypeSchema(
-                                data_type='Text', nullable=True, analyzer=AliasAnalyzerSchema('fi'), link='another.one'
+                            'col': AitoColumnTypeSchema(
+                                AitoTextType(),
+                                nullable=True,
+                                analyzer=AitoAliasAnalyzerSchema('fi'),
+                                link='another.one'
                             )
                         }
                     ),
@@ -270,14 +293,14 @@ class TestDatabaseSchema(BaseTestCase):
 
     def test_comparison(self):
         self.assertEqual(
-            DatabaseSchema(tables={'tbl1': TableSchema(columns={'col1': ColumnTypeSchema(data_type='Boolean')})}),
-            DatabaseSchema(tables={'tbl1': TableSchema(columns={'col1': ColumnTypeSchema(data_type='Boolean')})})
+            AitoDatabaseSchema(tables={'tbl1': AitoTableSchema(columns={'col1': AitoColumnTypeSchema(AitoBooleanType())})}),
+            AitoDatabaseSchema(tables={'tbl1': AitoTableSchema(columns={'col1': AitoColumnTypeSchema(AitoBooleanType())})})
         )
         self.assertNotEqual(
-            DatabaseSchema(tables={'tbl1': TableSchema(columns={'col1': ColumnTypeSchema(data_type='Boolean')})}),
-            DatabaseSchema(tables={'tbl2': TableSchema(columns={'col1': ColumnTypeSchema(data_type='Boolean')})})
+            AitoDatabaseSchema(tables={'tbl1': AitoTableSchema(columns={'col1': AitoColumnTypeSchema(AitoBooleanType())})}),
+            AitoDatabaseSchema(tables={'tbl2': AitoTableSchema(columns={'col1': AitoColumnTypeSchema(AitoBooleanType())})})
         )
         self.assertNotEqual(
-            DatabaseSchema(tables={'tbl1': TableSchema(columns={'col1': ColumnTypeSchema(data_type='Boolean')})}),
-            DatabaseSchema(tables={'tbl1': TableSchema(columns={'col2': ColumnTypeSchema(data_type='Boolean')})})
+            AitoDatabaseSchema(tables={'tbl1': AitoTableSchema(columns={'col1': AitoColumnTypeSchema(AitoBooleanType())})}),
+            AitoDatabaseSchema(tables={'tbl1': AitoTableSchema(columns={'col2': AitoColumnTypeSchema(AitoBooleanType())})})
         )
