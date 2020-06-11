@@ -68,27 +68,38 @@ class AitoSchema(ABC):
     supported_analyzer_aliases = ['standard', 'whitespace'] + supported_analyzer_language_aliases
 
     def __init__(self, typ):
+        """constructor method
+
+        :param typ: the type of the schema
+        :type typ: str
+        """
         self._typ = typ
 
     @property
     def type(self):
+        """the type of the schema
+        :rtype: str
+        """
         return self._typ
 
     @abstractmethod
     def to_json_serializable(self):
+        """convert the AitoSchema object to a json serializable object (dict, in most case)
+        """
         pass
 
     @classmethod
     @abstractmethod
-    def from_deserialized_object(cls, data):
+    def from_deserialized_object(cls, obj):
+        """create an AitoSchema object from a JSON deserialized object
+        """
         pass
 
     @property
     @abstractmethod
     def comparison_properties(self) -> Iterable[str]:
-        """
+        """iterable of the properties that will be used for comparison
 
-        :return: iterable of the analyzer properties that will be used for comparison
         :rtype: Iterable[str]
         """
         pass
@@ -120,21 +131,21 @@ class AnalyzerSchema(AitoSchema, ABC):
 
     @classmethod
     @abstractmethod
-    def from_deserialized_object(cls, data):
-        if isinstance(data, str):
-            return AliasAnalyzerSchema.from_deserialized_object(data)
+    def from_deserialized_object(cls, obj):
+        if isinstance(obj, str):
+            return AliasAnalyzerSchema.from_deserialized_object(obj)
         else:
-            analyzer_type = _get_required_kwarg_of('AnalyzerSchema', data, 'type')
+            analyzer_type = _get_required_kwarg_of('AnalyzerSchema', obj, 'type')
             if analyzer_type not in cls.supported_analyzer_type:
                 raise ValueError(f'unsupported analyzer of type {analyzer_type}')
             if analyzer_type == 'language':
-                return LanguageAnalyzerSchema.from_deserialized_object(data)
+                return LanguageAnalyzerSchema.from_deserialized_object(obj)
             if analyzer_type == 'delimiter':
-                return DelimiterAnalyzerSchema.from_deserialized_object(data)
+                return DelimiterAnalyzerSchema.from_deserialized_object(obj)
             if analyzer_type == 'char-ngram':
-                return CharNGramAnalyzerSchema.from_deserialized_object(data)
+                return CharNGramAnalyzerSchema.from_deserialized_object(obj)
             if analyzer_type == 'token-ngram':
-                return TokenNgramAnalyzerSchema.from_deserialized_object(data)
+                return TokenNgramAnalyzerSchema.from_deserialized_object(obj)
 
     def __eq__(self, other):
         self._compare_type(other)
@@ -179,9 +190,9 @@ class AliasAnalyzerSchema(AnalyzerSchema):
         return ['alias']
 
     @classmethod
-    def from_deserialized_object(cls, data: str):
-        _check_object_type('AliasAnalyzerSchema object', data, str)
-        return cls(alias=data)
+    def from_deserialized_object(cls, obj: str):
+        _check_object_type('AliasAnalyzerSchema object', obj, str)
+        return cls(alias=obj)
 
     def to_json_serializable(self) -> str:
         return self._alias
@@ -274,14 +285,14 @@ class LanguageAnalyzerSchema(AnalyzerSchema):
         return ['language', 'use_default_stop_words', 'custom_stop_words', 'custom_key_words']
 
     @classmethod
-    def from_deserialized_object(cls, data: Dict):
-        _check_object_type('LanguageAnalyzerSchema object', data, dict)
-        _get_required_kwarg_of('LanguageAnalyzerSchema', data, 'type', True, 'language')
+    def from_deserialized_object(cls, obj: Dict):
+        _check_object_type('LanguageAnalyzerSchema object', obj, dict)
+        _get_required_kwarg_of('LanguageAnalyzerSchema', obj, 'type', True, 'language')
         return cls(
-            language=_get_required_kwarg_of('LanguageAnalyzerSchema', data, 'language'),
-            use_default_stop_words=data.get('useDefaultStopWords'),
-            custom_stop_words=data.get('customStopWords'),
-            custom_key_words=data.get('customKeyWords')
+            language=_get_required_kwarg_of('LanguageAnalyzerSchema', obj, 'language'),
+            use_default_stop_words=obj.get('useDefaultStopWords'),
+            custom_stop_words=obj.get('customStopWords'),
+            custom_key_words=obj.get('customKeyWords')
         )
 
     def to_json_serializable(self) -> Dict:
@@ -339,12 +350,12 @@ class DelimiterAnalyzerSchema(AnalyzerSchema):
         }
 
     @classmethod
-    def from_deserialized_object(cls, data):
-        _check_object_type('DelimiterAnalyzerSchema object', data, dict)
-        _get_required_kwarg_of('DelimiterAnalyzerSchema', data, 'type', True, 'delimiter')
+    def from_deserialized_object(cls, obj):
+        _check_object_type('DelimiterAnalyzerSchema object', obj, dict)
+        _get_required_kwarg_of('DelimiterAnalyzerSchema', obj, 'type', True, 'delimiter')
         return cls(
-            delimiter=_get_required_kwarg_of('DelimiterAnalyzerSchema', data, 'delimiter'),
-            trim_white_space=data.get('trimWhiteSpace')
+            delimiter=_get_required_kwarg_of('DelimiterAnalyzerSchema', obj, 'delimiter'),
+            trim_white_space=obj.get('trimWhiteSpace')
         )
 
 
@@ -392,12 +403,12 @@ class CharNGramAnalyzerSchema(AnalyzerSchema):
         }
 
     @classmethod
-    def from_deserialized_object(cls, data):
-        _check_object_type('CharNGramAnalyzerSchema object', data, dict)
-        _get_required_kwarg_of('CharNGramAnalyzerSchema', data, 'type', True, 'char-ngram')
+    def from_deserialized_object(cls, obj):
+        _check_object_type('CharNGramAnalyzerSchema object', obj, dict)
+        _get_required_kwarg_of('CharNGramAnalyzerSchema', obj, 'type', True, 'char-ngram')
         return cls(
-            min_gram=_get_required_kwarg_of('CharNGramAnalyzerSchema', data, 'minGram'),
-            max_gram=_get_required_kwarg_of('CharNGramAnalyzerSchema', data, 'maxGram')
+            min_gram=_get_required_kwarg_of('CharNGramAnalyzerSchema', obj, 'minGram'),
+            max_gram=_get_required_kwarg_of('CharNGramAnalyzerSchema', obj, 'maxGram')
         )
 
 
@@ -470,16 +481,16 @@ class TokenNgramAnalyzerSchema(AnalyzerSchema):
         }
 
     @classmethod
-    def from_deserialized_object(cls, data):
-        _check_object_type('TokenNGramAnalyzerSchema object', data, dict)
-        _get_required_kwarg_of('TokenNGramAnalyzerSchema', data, 'type', True, 'token-ngram')
+    def from_deserialized_object(cls, obj):
+        _check_object_type('TokenNGramAnalyzerSchema object', obj, dict)
+        _get_required_kwarg_of('TokenNGramAnalyzerSchema', obj, 'type', True, 'token-ngram')
         return cls(
             source=AnalyzerSchema.from_deserialized_object(
-                _get_required_kwarg_of('TokenNGramAnalyzerSchema', data, 'source')
+                _get_required_kwarg_of('TokenNGramAnalyzerSchema', obj, 'source')
             ),
-            min_gram=_get_required_kwarg_of('TokenNGramAnalyzerSchema', data, 'minGram'),
-            max_gram=_get_required_kwarg_of('TokenNGramAnalyzerSchema', data, 'maxGram'),
-            token_separator=data.get('tokenSeparator')
+            min_gram=_get_required_kwarg_of('TokenNGramAnalyzerSchema', obj, 'minGram'),
+            max_gram=_get_required_kwarg_of('TokenNGramAnalyzerSchema', obj, 'maxGram'),
+            token_separator=obj.get('tokenSeparator')
         )
 
 
@@ -564,12 +575,12 @@ class ColumnTypeSchema(AitoSchema):
         }
 
     @classmethod
-    def from_deserialized_object(cls, data: Dict):
-        _check_object_type('ColumnTypeSchema object', data, dict)
-        data_type = _get_required_kwarg_of('ColumnSchema', data, 'type')
-        analyzer_data = data.get('analyzer')
+    def from_deserialized_object(cls, obj: Dict):
+        _check_object_type('ColumnTypeSchema object', obj, dict)
+        data_type = _get_required_kwarg_of('ColumnSchema', obj, 'type')
+        analyzer_data = obj.get('analyzer')
         analyzer = AnalyzerSchema.from_deserialized_object(analyzer_data) if analyzer_data else analyzer_data
-        return cls(data_type=data_type, nullable=data.get('nullable'), link=data.get('link'), analyzer=analyzer)
+        return cls(data_type=data_type, nullable=obj.get('nullable'), link=obj.get('link'), analyzer=analyzer)
 
 
 class TableSchema(AitoSchema):
@@ -609,12 +620,12 @@ class TableSchema(AitoSchema):
         }
 
     @classmethod
-    def from_deserialized_object(cls, data):
-        _check_object_type('TableSchema object', data, dict)
+    def from_deserialized_object(cls, obj):
+        _check_object_type('TableSchema object', obj, dict)
         _get_required_kwarg_of(
-            '`Table`', data, 'type', assert_equal=True, assert_equal_val='table'
+            '`Table`', obj, 'type', assert_equal=True, assert_equal_val='table'
         )
-        columns_data = _get_required_kwarg_of('`TableSchema`', data, 'columns')
+        columns_data = _get_required_kwarg_of('`TableSchema`', obj, 'columns')
         _check_object_type('TableSchema columns object', columns_data, dict)
         columns = {
             col_name: ColumnTypeSchema.from_deserialized_object(col_data)
@@ -653,9 +664,9 @@ class DatabaseSchema(AitoSchema):
         }
 
     @classmethod
-    def from_deserialized_object(cls, data):
-        _check_object_type('DatabaseSchema object', data, dict)
-        schema_data = _get_required_kwarg_of('`DatabaseSchema`', data, 'schema')
+    def from_deserialized_object(cls, obj):
+        _check_object_type('DatabaseSchema object', obj, dict)
+        schema_data = _get_required_kwarg_of('`DatabaseSchema`', obj, 'schema')
         _check_object_type('DatabaseSchema schema objects', schema_data, dict)
         tables = {
             tbl_name: TableSchema.from_deserialized_object(tbl_data) for tbl_name, tbl_data in schema_data.items()
