@@ -63,6 +63,7 @@ workflows:
             - run_postgres_tests_osx_py_38
             - run_sdk_and_cli_tests_win_py_37
             - run_sdk_and_cli_tests_win_py_38
+            - build_docs
             - run_sdk_and_cli_tests_built_package
             - run_postgres_tests_built_package
             - run_mysql_tests_built_package
@@ -89,23 +90,23 @@ commonYAMLStructure:
       name: install python with pyenv
       command: |
         pyenv install $PYTHON_VERSION -s
-  - &restore_venv_cache
+  - &restore_venv_cache_build_and_test
     restore_cache:
-      keys:
-        - v2-dependencies-{{ checksum "requirements.txt" }}-{{ .Environment.CIRCLE_JOB }}
-  - &save_venv_cache
+      keys: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ .Environment.CIRCLE_JOB }}
+  - &save_venv_cache_build_and_test
     save_cache:
       paths:
         - ./venv
-      key: v2-dependencies-{{ checksum "requirements.txt" }}-{{ .Environment.CIRCLE_JOB }}
-  - &create_venv_and_install_dependencies_linux
+      key: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ .Environment.CIRCLE_JOB }}
+  - &create_venv_and_install_build_and_test_dependencies_linux
     run:
       name: create virtualenv and install dependencies
       command: |
         python -m venv venv
         . venv/bin/activate
-        pip install -r requirements.txt
-  - &create_venv_and_install_dependencies_osx
+        pip install -r requirements/build.txt
+        pip install -r requirements/test.txt
+  - &create_venv_and_install_build_and_test_dependencies_osx
     run:
       name: create virtualenv and install dependencies
       command: |
@@ -114,24 +115,25 @@ commonYAMLStructure:
         python --version
         python -m venv venv
         . venv/bin/activate
-        pip install -r requirements.txt
-  - &restore_venv_cache_deploy
+        pip install -r requirements/build.txt
+        pip install -r requirements/test.txt
+  - &restore_venv_cache_deploy_and_test
     restore_cache:
-      keys:
-        - v2-dependencies-{{ checksum "requirements_deploy.txt" }}
-  - &save_venv_cache_deploy
+      keys: v2-dependencies-{{ checksum "requirements/deploy.txt" }}-{{ checksum "requirements/test.txt" }}
+  - &save_venv_cache_deploy_and_test
     save_cache:
       paths:
         - ./venv
-      key: v2-dependencies-{{ checksum "requirements_deploy.txt" }}
-  - &create_venv_and_install_dependencies_deploy
+      key: v2-dependencies-{{ checksum "requirements/deploy.txt" }}-{{ checksum "requirements/test.txt" }}
+  - &create_venv_and_install_deploy_and_test_dependencies
     run:
       name: create virtualenv and install dependencies
       command: |
         python -m venv venv
         . venv/bin/activate
-        pip install -r requirements_deploy.txt
-  - &install_python_and_dependencies_win
+        pip install -r requirements/deploy.txt
+        pip install -r requirements/test.txt
+  - &install_python_and_build_and_test_dependencies_win
     run:
       name: create virtualenv and install dependencie
       command: |
@@ -141,7 +143,8 @@ commonYAMLStructure:
         .\python\tools\python.exe -m virtualenv venv
         venv\Scripts\activate.ps1
         python --version
-        pip install -r requirements.txt
+        pip install -r requirements/build.txt
+        pip install -r requirements/test.txt
   - &install_odbc_driver_linux
     run:
       name: install odbc driver
@@ -313,9 +316,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_venv_cache
-      - *create_venv_and_install_dependencies_linux
-      - *save_venv_cache
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_linux
+      - *save_venv_cache_build_and_test
       - *run_sdk_and_cli_tests
       - *store_log_files
 
@@ -349,10 +352,10 @@ jobs:
       - checkout
       - *install_odbc_driver_linux
       - *install_postgres_odbc_driver_linux
-      - *restore_venv_cache
-      - *create_venv_and_install_dependencies_linux
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_linux
       - *install_pyodbc
-      - *save_venv_cache
+      - *save_venv_cache_build_and_test
       - *wait_postgres
       - *run_postgres_connection_test
       - *install_postgres_cli_linux
@@ -397,9 +400,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_venv_cache
-      - *create_venv_and_install_dependencies_linux
-      - *save_venv_cache
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_linux
+      - *save_venv_cache_build_and_test
       - *install_odbc_driver_linux
       - *install_mysql_odbc_driver_linux
       - *install_pyodbc
@@ -443,9 +446,9 @@ jobs:
       - *restore_pyenv_cache
       - *install_python_pyenv
       - *save_pyenv_cache
-      - *restore_venv_cache
-      - *create_venv_and_install_dependencies_osx
-      - *save_venv_cache
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_osx
+      - *save_venv_cache_build_and_test
       - *run_sdk_and_cli_tests
       - *store_log_files
 
@@ -481,10 +484,10 @@ jobs:
       - *restore_pyenv_cache
       - *install_python_pyenv
       - *save_pyenv_cache
-      - *restore_venv_cache
-      - *create_venv_and_install_dependencies_osx
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_osx
       - *install_pyodbc
-      - *save_venv_cache
+      - *save_venv_cache_build_and_test
       - *start_postgres
       - *wait_postgres
       - *setup_credentials_postgres
@@ -526,7 +529,7 @@ jobs:
           name: stop git from adding carriage return in windows
           command: git config --global core.autocrlf false
       - checkout
-      - *install_python_and_dependencies_win
+      - *install_python_and_build_and_test_dependencies_win
       - *run_sdk_and_cli_tests_windows
       - *store_log_files
 
@@ -548,9 +551,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_venv_cache_deploy
-      - *create_venv_and_install_dependencies_deploy
-      - *save_venv_cache_deploy
+      - *restore_venv_cache_deploy_and_test
+      - *create_venv_and_install_deploy_and_test_dependencies
+      - *save_venv_cache_deploy_and_test
       - *build_and_install_package
       - *run_sdk_and_cli_tests
       - *store_log_files
@@ -574,9 +577,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_venv_cache_deploy
-      - *create_venv_and_install_dependencies_deploy
-      - *save_venv_cache_deploy
+      - *restore_venv_cache_deploy_and_test
+      - *create_venv_and_install_deploy_and_test_dependencies
+      - *save_venv_cache_deploy_and_test
       - *build_and_install_package
       - *install_odbc_driver_linux
       - *install_postgres_odbc_driver_linux
@@ -606,9 +609,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_venv_cache_deploy
-      - *create_venv_and_install_dependencies_deploy
-      - *save_venv_cache_deploy
+      - *restore_venv_cache_deploy_and_test
+      - *create_venv_and_install_deploy_and_test_dependencies
+      - *save_venv_cache_deploy_and_test
       - *build_and_install_package
       - *install_odbc_driver_linux
       - *install_mysql_odbc_driver_linux
@@ -626,9 +629,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_venv_cache_deploy
-      - *create_venv_and_install_dependencies_deploy
-      - *save_venv_cache_deploy
+      - *restore_venv_cache_deploy_and_test
+      - *create_venv_and_install_deploy_and_test_dependencies
+      - *save_venv_cache_deploy_and_test
       - run:
           name: build docs only if there is any changes to the docs dir
           command: |
@@ -644,9 +647,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_venv_cache_deploy
-      - *create_venv_and_install_dependencies_deploy
-      - *save_venv_cache_deploy
+      - *restore_venv_cache_deploy_and_test
+      - *create_venv_and_install_deploy_and_test_dependencies
+      - *save_venv_cache_deploy_and_test
       - run:
           name: build package and deploy to test pypi only if there is any changes to the aito dir
           command: |

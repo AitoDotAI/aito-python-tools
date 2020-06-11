@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 PROJECT_ROOT_PATH = Path(__file__).parent
 VERSION_FILE_PATH = PROJECT_ROOT_PATH / 'aito' / '__init__.py'
-REQUIREMENTS_FILE_PATH = PROJECT_ROOT_PATH / 'requirements.txt'
+REQUIREMENTS_FILE_PATH = PROJECT_ROOT_PATH / 'requirements' / 'build.txt'
 
 
 def find_current_version(version_file_path: Path) -> str:
