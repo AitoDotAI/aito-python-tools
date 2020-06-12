@@ -15,7 +15,7 @@
         },
         "name": {
             "analyzer": "en",
-            "type": "String"
+            "type": "Text"
         }
     },
     "type": "table"

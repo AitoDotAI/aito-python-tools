@@ -5,8 +5,7 @@ import numpy as np
 import pandas as pd
 
 from aito.common._typing import *
-from aito.sdk.schema_handler import SchemaHandler
-
+from .aito_schema import AitoTableSchema, AitoDataTypeSchema, AitoTextType, AitoStringType
 
 LOG = logging.getLogger('DataFrameHandler')
 
@@ -24,7 +23,6 @@ class DataFrameHandler:
             'ndjson': {'orient': 'records', 'lines': True}
         }
         self.default_apply_functions = [self.datetime_to_string]
-        self.schema_handler = SchemaHandler()
 
     def validate_in_out_format(self, in_format: str, out_format: str):
         """Validate the file parameters of the converter
@@ -82,37 +80,33 @@ class DataFrameHandler:
         :return: converted DataFrame
         :rtype: pd.DataFrame
         """
-        self.schema_handler.validate_table_schema(table_schema)
+        table_schema = AitoTableSchema.from_deserialized_object(table_schema)
 
-        columns_schema = table_schema['columns']
         df_columns = set(df.columns.values)
-        table_schema_columns = set(columns_schema.keys())
+        table_schema_columns = set(table_schema.columns)
 
-        for col in (df_columns - table_schema_columns):
-            LOG.warning(f'column `{col}` found in the input data but not found in the input schema')
-        for col in (table_schema_columns - df_columns):
-            LOG.warning(f'column `{col}` found in the input schema but not found in the input data')
+        for col_name in (df_columns - table_schema_columns):
+            LOG.warning(f'column `{col_name}` found in the input data but not found in the input schema')
+        for col_name in (table_schema_columns - df_columns):
+            LOG.warning(f'column `{col_name}` found in the input schema but not found in the input data')
 
-        for col in table_schema_columns.intersection(df_columns):
-            col_schema = columns_schema[col]
-            col_schema_nullable = True if ('nullable' not in col_schema or col_schema['nullable']) else False
-            if not col_schema_nullable and df[col].isna().any():
-                raise ValueError(f'column `{col}` is nullable but stated non-nullable in the input schema')
-            col_aito_type = col_schema['type']
-            col_inferred_aito_type = self.schema_handler.infer_column_type(df[col])
-            LOG.debug(f'column `{col}` inferred aito type: {col_inferred_aito_type}')
-            if col_inferred_aito_type != col_aito_type and \
-                    not {col_aito_type, col_inferred_aito_type}.issubset({'Text', 'String'}):
-                col_python_type = self.schema_handler.aito_types_to_python_types[col_aito_type]
-                LOG.debug(f'converting column `{col}` to `{col_aito_type}` type according to the schema...')
-                LOG.debug(f'casting column `{col}` to `{col_python_type}`')
-                try:
-                    df[col] = df[col].apply(lambda cell: col_python_type(cell) if not np.isnan(cell) else np.nan)
-                except Exception as e:
-                    LOG.error(f'failed to convert column `{col}` to `{col_aito_type}`: {e}')
-                    raise e
-                LOG.info(f'convert column `{col}` to `{col_aito_type}`')
-        return df
+        cast_type_map = {}
+        for col_name in table_schema_columns.intersection(df_columns):
+            col_schema = table_schema[col_name]
+            col_df_nullable = df[col_name].isna().any()
+            if col_df_nullable and not col_schema.nullable:
+                raise ValueError(f'column `{col_name}` is nullable but stated non-nullable in the input schema')
+            col_df_aito_type = AitoDataTypeSchema._infer_from_pandas_series(df[col_name])
+            LOG.debug(f'column `{col_name}` inferred aito type: {col_df_aito_type}')
+            col_schema_aito_type = col_schema.data_type
+            if col_df_aito_type != col_schema_aito_type and \
+                    col_df_aito_type.to_python_type() != col_schema_aito_type.to_python_type():
+                cast_type_map[col_name] = col_schema_aito_type.to_python_type()
+
+        LOG.debug(f'casting dataframe columns: {cast_type_map}')
+        converted_df = df.astype(dtype=cast_type_map)
+        LOG.info(f'converted the dataframe according to the schema')
+        return converted_df
 
     def read_file_to_df(self, read_input: FilePathOrBuffer, in_format: str, read_options: Dict = None) -> pd.DataFrame:
         """Read input to a Pandas DataFrame

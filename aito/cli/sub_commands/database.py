@@ -3,7 +3,7 @@ from os import unlink
 from typing import Dict, List
 
 from aito.sdk.data_frame_handler import DataFrameHandler
-from aito.sdk.schema_handler import SchemaHandler
+from aito.sdk.aito_schema import AitoTableSchema
 from .sub_command import SubCommand
 from ..parser import PathArgType, InputArgType, ParseError
 from ..parser_utils import create_client_from_parsed_args, load_json_from_parsed_input_arg, \
@@ -47,10 +47,9 @@ class QuickAddTableSubCommand(SubCommand):
         converted_df = df_handler.convert_file(**convert_options)
         converted_tmp_file.close()
 
-        schema_handler = SchemaHandler()
-        inferred_schema = schema_handler.infer_table_schema_from_pandas_data_frame(converted_df)
+        inferred_schema = AitoTableSchema.infer_from_pandas_dataframe(converted_df)
         client = create_client_from_parsed_args(parsed_args)
-        client.create_table(table_name, inferred_schema)
+        client.create_table(table_name, inferred_schema.to_json_serializable())
 
         with open(converted_tmp_file.name, 'rb') as in_f:
             client.upload_binary_file(table_name, in_f)
@@ -217,13 +216,13 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
         connection = create_sql_connecting_from_parsed_args(parsed_args)
 
         result_df = connection.execute_query_and_save_result(parsed_args['query'])
-        inferred_schema = SchemaHandler().infer_table_schema_from_pandas_data_frame(result_df)
+        inferred_schema = AitoTableSchema.infer_from_pandas_dataframe(result_df)
 
         converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
         DataFrameHandler().df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
         converted_tmp_file.close()
 
-        client.create_table(table_name, inferred_schema)
+        client.create_table(table_name, inferred_schema.to_json_serializable())
         with open(converted_tmp_file.name, 'rb') as in_f:
             client.upload_binary_file(table_name, in_f)
         converted_tmp_file.close()

@@ -1,6 +1,15 @@
-from abc import abstractmethod, ABC
-from typing import Optional, Dict, Iterable, List
+import itertools
 import json
+import logging
+from abc import abstractmethod, ABC
+from collections import Counter
+from csv import Sniffer, Error as csvError
+from typing import List, Dict, Iterable, Optional
+
+import pandas as pd
+from langdetect import detect_langs
+
+LOG = logging.getLogger('AitoSchema')
 
 
 def _check_object_type(obj_name, data, typ):
@@ -30,7 +39,7 @@ def _compare_optional_arg(first, second, default_value):
 class AitoSchema(ABC):
     supported_analyzer_type = ['char-ngram', 'delimiter', 'language', 'token-ngram']
     supported_data_types = ("Boolean", "Decimal", "Int", "String", "Text")
-    supported_analyzer_language_iso_code_to_name = {
+    supported_language_analyzer_iso_code_to_name = {
         'ar': 'arabic',
         'bg': 'bulgarian',
         'ca': 'catalan',
@@ -63,9 +72,9 @@ class AitoSchema(ABC):
         'th': 'thai',
         'tr': 'turkish'
     }
-    supported_analyzer_language_aliases = [
-        al for iso_code_and_lang in supported_analyzer_language_iso_code_to_name.items() for al in iso_code_and_lang]
-    supported_analyzer_aliases = ['standard', 'whitespace'] + supported_analyzer_language_aliases
+    supported_language_analyzer_aliases = [
+        al for iso_code_and_lang in supported_language_analyzer_iso_code_to_name.items() for al in iso_code_and_lang]
+    supported_analyzer_aliases = ['standard', 'whitespace'] + supported_language_analyzer_aliases
 
     def __init__(self, typ):
         """
@@ -121,6 +130,13 @@ class AitoSchema(ABC):
 
 
 class AitoAnalyzerSchema(AitoSchema, ABC):
+    _lang_detect_code_to_aito_code = {
+        'ko': 'cjk',
+        'ja': 'cjk',
+        'zh-cn': 'cjk',
+        'zh-tw': 'cjk',
+        'pt': 'pt-br'
+    }
     def __init__(self, analyzer_type: str):
         super().__init__('analyzer')
         self._analyzer_type = analyzer_type
@@ -151,10 +167,78 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
         self._compare_type(other)
         if self.analyzer_type != other.analyzer_type:
             if {self.analyzer_type, other.analyzer_type} == {'alias', 'language'}:
-                return self.compare_with_language_analyzer(other) if self.analyzer_type == 'alias' \
-                    else other.compare_with_language_analyzer(self)
+                alias_analyzer, language_analyzer = (self, other) if self.analyzer_type == 'alias' else (other, self)
+                language_analyzer_args = [
+                    getattr(language_analyzer, key)
+                    for key in ('use_default_stop_words', 'custom_stop_words', 'custom_key_words')
+                ]
+                # if language_analyzer has the same language and use the default parameters
+                if alias_analyzer.alias == language_analyzer.language and language_analyzer_args == [False, [], []]:
+                    return True
+            if {self.analyzer_type, other.analyzer_type} == {'alias', 'delimiter'}:
+                alias_analyzer, delimiter_analyzer = (self, other) if self.analyzer_type == 'alias' else (other, self)
+                if alias_analyzer.alias == 'whitespace' and delimiter_analyzer.delimiter == ' ' and \
+                        delimiter_analyzer.trim_white_space:
+                    return True
             return False
         return self._compare_properties(other)
+
+    @staticmethod
+    def _try_sniff_delimiter(sample: str, candidates='-,;:|\t') -> Optional[str]:
+        try:
+            return str(Sniffer().sniff(sample, candidates).delimiter)
+        except csvError:
+            # deprio whitespace in case tokens has trailing or leading whitespace
+            try:
+                return str(Sniffer().sniff(sample, ' ').delimiter)
+            except csvError:
+                LOG.debug(f'failed to sniff delimiter of {sample}: e')
+        return None
+
+    @classmethod
+    def _infer_delimiter(cls, samples: Iterable[str]) -> Optional[str]:
+        """returns the most common inferred delimiter from the samples"""
+        inferred_delimiter_counter = Counter([cls._try_sniff_delimiter(smpl) for smpl in samples])
+        most_common_delimiter_and_count = inferred_delimiter_counter.most_common(1)[0]
+        LOG.debug(f'most common inferred delimiter and count: {most_common_delimiter_and_count}')
+        return most_common_delimiter_and_count[0]
+
+    @classmethod
+    def _infer_language(cls, samples: Iterable[str]) -> Optional[str]:
+        """infer language from samples"""
+        concatenated_sample_text = ' '.join(samples)
+        detected_langs_and_probs = detect_langs(concatenated_sample_text)
+        if detected_langs_and_probs:
+            LOG.debug(f'inferred languages and probabilities: {detected_langs_and_probs}')
+            most_probable_lang_and_prob = detected_langs_and_probs[0]
+            if most_probable_lang_and_prob.prob > 0.9:
+                most_probable_lang = most_probable_lang_and_prob.lang
+                if most_probable_lang in cls._lang_detect_code_to_aito_code:
+                    most_probable_lang = cls._lang_detect_code_to_aito_code[most_probable_lang]
+                if most_probable_lang in cls.supported_language_analyzer_iso_code_to_name:
+                    return most_probable_lang
+        return None
+
+    @classmethod
+    def infer_from_samples(cls, samples: Iterable[str], max_sample_size: int = 10000):
+        """Infer an analyzer from the given samples
+
+        :param samples: iterable of sample
+        :type samples: Iterable
+        :param max_sample_size: at most first max_sample_size will be used for inference, defaults to 10000
+        :type max_sample_size: int
+        :return: inferred Analyzer or None if no analyzer is applicable
+        :rtype: Optional[AitoAnalyzerSchema]
+        """
+        sliced_samples = list(itertools.islice(samples, max_sample_size))
+        detected_delimiter = cls._infer_delimiter(sliced_samples)
+        if detected_delimiter is None or detected_delimiter.isalnum():
+            return None
+        if detected_delimiter == ' ':
+            detected_language = cls._infer_language(sliced_samples)
+            return AitoLanguageAnalyzerSchema(language=detected_language) if detected_language \
+                else AitoAliasAnalyzerSchema(alias='whitespace')
+        return AitoDelimiterAnalyzerSchema(delimiter=detected_delimiter)
 
 
 class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
@@ -172,8 +256,8 @@ class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
         alias = alias.lower().strip()
         if alias not in self.supported_analyzer_aliases:
             raise ValueError(f"unsupported alias {alias}")
-        if alias in self.supported_analyzer_language_iso_code_to_name:
-            alias = self.supported_analyzer_language_iso_code_to_name[alias]
+        if alias in self.supported_language_analyzer_iso_code_to_name:
+            alias = self.supported_language_analyzer_iso_code_to_name[alias]
         self._alias = alias
 
     @property
@@ -196,23 +280,6 @@ class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
 
     def to_json_serializable(self) -> str:
         return self._alias
-
-    def compare_with_language_analyzer(self, language_analyzer):
-        """ compare with a language another
-
-        :param language_analyzer: the comparing language analyzer schema
-        :type language_analyzer: AitoLanguageAnalyzerSchema
-        :return: True if this alias schema is the same as the comparing language analyzer schema
-        :rtype: bool
-        """
-        language_analyzer_args = [
-            getattr(language_analyzer, key)
-            for key in ('use_default_stop_words', 'custom_stop_words', 'custom_key_words')
-        ]
-        # if language_analyzer has the same language and use the default parameters
-        if self.alias == language_analyzer.language and language_analyzer_args == [False, [], []]:
-            return True
-        return False
 
 
 class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
@@ -239,10 +306,10 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
         """
         super().__init__('language')
         language = language.lower().strip()
-        if language not in self.supported_analyzer_language_aliases:
+        if language not in self.supported_language_analyzer_aliases:
             raise ValueError(f'unsupported language {language}')
-        if language in self.supported_analyzer_language_iso_code_to_name:
-            language = self.supported_analyzer_language_iso_code_to_name[language]
+        if language in self.supported_language_analyzer_iso_code_to_name:
+            language = self.supported_language_analyzer_iso_code_to_name[language]
         self._language = language
         self._use_default_stop_words = use_default_stop_words if use_default_stop_words is not None else False
         self._custom_stop_words = list(custom_stop_words) if custom_stop_words else []
@@ -497,10 +564,31 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
 class AitoDataTypeSchema(AitoSchema, ABC):
     """Aito DataType"""
 
+    _pandas_dtypes_name_to_aito_type = {
+        'string': 'Text',
+        'bytes': 'String',
+        'floating': 'Decimal',
+        'integer': 'Int',
+        'mixed-integer': 'Text',
+        'mixed-integer-float': 'Decimal',
+        'decimal': 'Decimal',
+        'complex': 'Decimal',
+        'categorical': 'String',
+        'boolean': 'Boolean',
+        'datetime64': 'String',
+        'datetime': 'String',
+        'date': 'String',
+        'timedelta64': 'String',
+        'timedelta': 'String',
+        'time': 'String',
+        'period': 'String',
+        'mixed': 'Text'
+    }
+
     def __init__(self, aito_dtype: str):
         """
 
-        :param aito_dtype: the aito data type
+        :param aito_dtype: the Aito data type
         :type aito_dtype: str
         """
         super().__init__('dtype')
@@ -512,11 +600,31 @@ class AitoDataTypeSchema(AitoSchema, ABC):
 
     @property
     def aito_dtype(self) -> str:
-        """the data type of the column
+        """the data type
 
         :rtype: str
         """
         return self._aito_dtype
+
+    @property
+    def is_string(self) -> bool:
+        return self._aito_dtype == 'String'
+
+    @property
+    def is_text(self) -> bool:
+        return self._aito_dtype == 'Text'
+
+    @property
+    def is_bool(self) -> bool:
+        return self._aito_dtype == 'Boolean'
+
+    @property
+    def is_int(self) -> bool:
+        return self._aito_dtype == 'Int'
+
+    @property
+    def is_decimal(self) -> bool:
+        return self._aito_dtype == 'Decimal'
 
     def to_json_serializable(self) -> str:
         return self._aito_dtype
@@ -526,7 +634,7 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         pass
 
     @classmethod
-    def from_deserialized_object(cls, obj: str):
+    def from_deserialized_object(cls, obj: str) -> 'AitoDataTypeSchema':
         _check_object_type('DataTypeSchema object', obj, str)
         if obj == 'Boolean':
             return AitoBooleanType()
@@ -545,6 +653,45 @@ class AitoDataTypeSchema(AitoSchema, ABC):
     @property
     def comparison_properties(self) -> Iterable[str]:
         return ['aito_dtype']
+
+    @classmethod
+    def _infer_from_pandas_series(cls, series: pd.Series, max_sample_size: int = 100000) -> 'AitoDataTypeSchema':
+        """Infer aito column type from a Pandas Series
+
+        :param series: input Pandas Series
+        :type series: pd.Series
+        :param max_sample_size: maximum sample size that will be used for type inference, defaults to 100000
+        :type max_sample_size: int, optional
+        :raises Exception: fail to infer type
+        :return: inferred Aito type
+        :rtype: str
+        """
+        sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
+        LOG.debug('inferring pandas dtype from sample values...')
+        inferred_dtype = pd.api.types.infer_dtype(sampled_values)
+        LOG.debug(f'inferred pandas dtype: {inferred_dtype}')
+        if inferred_dtype not in cls._pandas_dtypes_name_to_aito_type:
+            LOG.debug(f'failed to convert pandas dtype {inferred_dtype} to aito dtype')
+            raise Exception(f'failed to infer aito data type')
+        return cls.from_deserialized_object(cls._pandas_dtypes_name_to_aito_type[inferred_dtype])
+
+    @classmethod
+    def infer_from_samples(cls, samples: Iterable, max_sample_size: int = 100000) -> 'AitoDataTypeSchema':
+        """infer AitoDataType from the given samples
+
+        :param samples: iterable of sample
+        :type samples: Iterable
+        :param max_sample_size: at most first max_sample_size will be used for inference, defaults to 100000
+        :type max_sample_size: int
+        :return: inferred Aito column type
+        :rtype: str
+        """
+        try:
+            casted_samples = pd.Series(itertools.islice(samples, max_sample_size))
+        except Exception as e:
+            LOG.debug(f'failed to cast samples ({list(itertools.islice(samples, 10))}, ...)  to pandas Series: {e}')
+            raise Exception(f'failed to infer aito type')
+        return cls._infer_from_pandas_series(casted_samples)
 
 
 class AitoBooleanType(AitoDataTypeSchema):
@@ -611,8 +758,8 @@ class AitoColumnTypeSchema(AitoSchema):
         :type analyzer: AnalyzerSchema, optional
         """
         super().__init__('column')
-        if analyzer and data_type != AitoTextType():
-            raise ValueError(f"only Text type supports analyzer")
+        if analyzer and not data_type.is_text:
+            raise ValueError(f"{data_type} does not support analyzer")
         self._data_type = data_type
         self._nullable = nullable if nullable is not None else False
         if link and '.' not in link:
@@ -679,7 +826,7 @@ class AitoColumnTypeSchema(AitoSchema):
 
 
 class AitoTableSchema(AitoSchema):
-    """Aito Table schema
+    """Aito Table schema contains the columns and their schema
 
     """
     def __init__(self, columns: Dict[str, AitoColumnTypeSchema]):
@@ -694,17 +841,8 @@ class AitoTableSchema(AitoSchema):
         self._columns = columns
 
     @property
-    def columns(self) -> Dict[str, AitoColumnTypeSchema]:
-        """
-
-        :return: the table's columns and its schema
-        :rtype: Dict[str, AitoColumnTypeSchema]
-        """
-        return self._columns
-
-    @property
     def comparison_properties(self) -> Iterable[str]:
-        return ['columns']
+        return ['columns_schemas']
 
     def to_json_serializable(self):
         return {
@@ -713,6 +851,38 @@ class AitoTableSchema(AitoSchema):
                 col_name: col_type.to_json_serializable() for col_name, col_type in self._columns.items()
             }
         }
+
+    @property
+    def columns(self) -> List[str]:
+        """
+
+        :return: list of the table's columns name
+        :rtype: List[str]
+        """
+        return list(self._columns.keys())
+
+    @property
+    def columns_schemas(self) -> Dict[str, AitoColumnTypeSchema]:
+        """
+
+        :return: the table columns and its schemas
+        :rtype: List[str]
+        """
+        return self._columns
+
+    def __getitem__(self, column_name: str):
+        """ access a column schema with the specified column name
+
+        :param column_name: the name of the column
+        :type column_name: str
+        :return: the column schema
+        :rtype: AitoColumnTypeSchema
+        """
+        if not isinstance(column_name, str):
+            raise KeyError('the name of the column must be of type string')
+        if column_name not in self._columns:
+            raise KeyError(f'the table schema does not contain column {column_name} ')
+        return self._columns[column_name]
 
     @classmethod
     def from_deserialized_object(cls, obj):
@@ -728,6 +898,43 @@ class AitoTableSchema(AitoSchema):
         }
         return cls(columns=columns)
 
+    @classmethod
+    def infer_from_pandas_dataframe(cls, df: pd.DataFrame, max_sample_size: int = 100000) -> 'AitoTableSchema':
+        """Infer a TableSchema from a Pandas DataFrame
+
+        :param df: input Pandas DataFrame
+        :type df: pd.DataFrame
+        :param max_sample_size: maximum number of rows that will be used for inference, defaults to 100000
+        :type max_sample_size: int, optional
+        :raises Exception: an error occurred during column type inference
+        :return: inferred table schema
+        :rtype: Dict
+        """
+        LOG.debug('inferring table schema...')
+        columns_schema = {}
+        for col in df.columns.values:
+            col_df_samples = df[col] if len(df[col]) < max_sample_size else df[col].sample(max_sample_size)
+            col_nullable = True if col_df_samples.isna().sum() > 0 else False
+            col_analyzer = None
+            try:
+                col_aito_type = AitoDataTypeSchema.infer_from_samples(col_df_samples, max_sample_size)
+            except Exception as e:
+                LOG.debug(f'failed to infer aito col type from col {col} samples: {col_df_samples[:10].values}: {e}')
+                raise Exception(f'failed to infer aito column type of column `{col}`')
+            # avoid numpy type
+            if col_aito_type.is_text:
+                col_df_samples.dropna(inplace=True)
+                col_analyzer = AitoAnalyzerSchema.infer_from_samples(col_df_samples.__iter__())
+                if not col_analyzer:
+                    col_aito_type = AitoStringType()
+            col_type_schema = AitoColumnTypeSchema(
+                data_type=col_aito_type, nullable=col_nullable, analyzer=col_analyzer
+            )
+            columns_schema[col] = col_type_schema
+        table_schema = cls(columns=columns_schema)
+        LOG.info('inferred table schema')
+        return table_schema
+
 
 class AitoDatabaseSchema(AitoSchema):
     """Aito Database Schema
@@ -740,23 +947,47 @@ class AitoDatabaseSchema(AitoSchema):
         self._tables = tables
 
     @property
-    def tables(self) -> Dict[str, AitoTableSchema]:
-        """the database's tables and its schemas
+    def tables(self) -> List[str]:
+        """
 
+        :return: list of the database's table name
+        :rtype:
+        """
+        return list(self._tables.keys())
+
+    @property
+    def tables_schemas(self) -> Dict[str, AitoTableSchema]:
+        """
+
+        :return: the database tables and its schemas
         :rtype: Dict[str, AitoTableSchema]
         """
         return self._tables
 
     @property
     def comparison_properties(self) -> Iterable[str]:
-        return ['tables']
+        return ['tables_schemas']
 
     def to_json_serializable(self):
         return {
             "schema": {
-                tbl_name: tbl_schema.to_json_serializable() for tbl_name, tbl_schema in self.tables.items()
+                tbl_name: tbl_schema.to_json_serializable() for tbl_name, tbl_schema in self._tables.items()
             }
         }
+
+    def __getitem__(self, table_name: str):
+        """ access a table schema with the specified column name
+
+        :param table_name: the name of the column
+        :type table_name: str
+        :return: the column schema
+        :rtype: AitoColumnTypeSchema
+        """
+        if not isinstance(table_name, str):
+            raise KeyError('the name of the column must be of type string')
+        if table_name not in self._tables:
+            raise KeyError(f'the table schema does not contain column {table_name} ')
+        return self._tables[table_name]
 
     @classmethod
     def from_deserialized_object(cls, obj):
