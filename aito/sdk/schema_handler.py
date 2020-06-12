@@ -1,12 +1,11 @@
-import itertools
+import logging
 import logging
 import warnings
-from collections import Counter
-from csv import Sniffer, Error as csvError
-from typing import List, Dict, Iterable, Optional, Union
+from typing import Dict
 
 import pandas as pd
-from langdetect import detect_langs, detect
+
+from aito.sdk.aito_schema import AitoTableSchema, AitoDataTypeSchema
 
 LOG = logging.getLogger("SchemaHandler")
 
@@ -21,185 +20,32 @@ class SchemaHandler:
             'Text': str
         }
 
-        self._pandas_dtypes_name_to_aito_type = {
-            'string': 'Text',
-            'bytes': 'String',
-            'floating': 'Decimal',
-            'integer': 'Int',
-            'mixed-integer': 'Text',
-            'mixed-integer-float': 'Decimal',
-            'decimal': 'Decimal',
-            'complex': 'Decimal',
-            'categorical': 'String',
-            'boolean': 'Boolean',
-            'datetime64': 'String',
-            'datetime': 'String',
-            'date': 'String',
-            'timedelta64': 'String',
-            'timedelta': 'String',
-            'time': 'String',
-            'period': 'String',
-            'mixed': 'Text'
-        }
-
-        self._lang_detect_code_to_aito_code = {
-            'ko': 'cjk',
-            'ja': 'cjk',
-            'zh-cn': 'cjk',
-            'zh-tw': 'cjk',
-            'pt': 'pt-br'
-        }
-
-        self._supported_alias_analyzer = [
-            'standard', 'whitespace', 'ar', 'hy', 'eu', 'pt-br', 'bg', 'ca', 'cjk', 'cs', 'da', 'nl', 'en', 'fi',
-            'fr', 'gl', 'de', 'el', 'hi', 'hu', 'id', 'ga', 'it', 'lv', 'no', 'fa', 'pt', 'ro', 'ru', 'es', 'sv',
-            'th', 'tr'
-        ]
-
-        self._csv_sniffer = Sniffer()
-
     def infer_aito_types_from_pandas_series(self, series: pd.Series, sample_size: int = 100000) -> str:
         """
         .. deprecated:: 0.3.0
 
-        Use :func:`infer_aito_type` instead
+        Use :func:`~aito.sdk.aito_schema.AitoDataTypeSchema.infer_from_samples` instead
         """
         warnings.warn(
-            'The AitoClient.upload_entries_by_batches is deprecated and will be removed '
-            'in a future version. Use AitoClient.upload_entries instead',
+            'The function SchemaHandler.infer_aito_types_from_pandas_series is deprecated and will be removed '
+            'in a future version. Use AitoDataTypeSchema.infer_from_samples instead',
             category=FutureWarning
         )
-        return self._infer_column_type_from_pandas_series(series, sample_size)
+        return AitoDataTypeSchema._infer_from_pandas_series(series, sample_size).aito_dtype
 
-    def _infer_column_type_from_pandas_series(self, series: pd.Series, max_sample_size: int = 100000) -> str:
-        """Infer aito column type from a Pandas Series
-
-        :param series: input Pandas Series
-        :type series: pd.Series
-        :param max_sample_size: maximum sample size that will be used for type inference, defaults to 100000
-        :type max_sample_size: int, optional
-        :raises Exception: fail to infer type
-        :return: inferred Aito type
-        :rtype: str
+    def infer_table_schema_from_pandas_data_frame(self, df: pd.DataFrame) -> Dict:
         """
-        sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
-        LOG.debug('inferring dtype from sample values...')
-        inferred_dtype = pd.api.types.infer_dtype(sampled_values)
-        LOG.debug(f'inferred dtype: {inferred_dtype}')
-        if inferred_dtype not in self._pandas_dtypes_name_to_aito_type:
-            raise Exception(f'failed to infer aito type from dtype {inferred_dtype}')
-        return self._pandas_dtypes_name_to_aito_type[inferred_dtype]
 
-    def infer_column_type(self, samples: Iterable, max_sample_size: int = 100000):
-        """infer Aito `Column Type <https://aito.ai/docs/api/#schema-column-type>`__ from the given samples
+        .. deprecated: 0.3.0
 
-        :param samples: iterable of sample
-        :type samples: Iterable
-        :param max_sample_size: at most first max_sample_size will be used for inference, defaults to 100000
-        :type max_sample_size: int
-        :return: inferred Aito column type
-        :rtype: str
+        Use :func:`~aito.sdk.aito_schema.AitoTableSchema.infer_from_pandas_dataframe` instead
         """
-        try:
-            casted_samples = pd.Series(itertools.islice(samples, max_sample_size))
-        except Exception as e:
-            LOG.debug(f'failed to cast samples ({list(itertools.islice(samples, 10))}, ...)  to pandas Series: {e}')
-            raise Exception(f'failed to infer aito type')
-        return self._infer_column_type_from_pandas_series(casted_samples)
-
-    def _try_sniff_delimiter(self, sample: str, candidates='-,;:|\t') -> Optional[str]:
-        try:
-            return str(self._csv_sniffer.sniff(sample, candidates).delimiter)
-        except csvError:
-            # deprio whitespace in case tokens has trailing or leading whitespace
-            try:
-                return str(self._csv_sniffer.sniff(sample, ' ').delimiter)
-            except csvError:
-                LOG.debug(f'failed to sniff delimiter of {sample}: e')
-        return None
-
-    def _infer_delimiter(self, samples: Iterable[str]) -> Optional[str]:
-        """returns the most common inferred delimiter from the samples"""
-        inferred_delimiter_counter = Counter([self._try_sniff_delimiter(smpl) for smpl in samples])
-        most_common_delimiter_and_count = inferred_delimiter_counter.most_common(1)[0]
-        LOG.debug(f'most common inferred delimiter and count: {most_common_delimiter_and_count}')
-        return most_common_delimiter_and_count[0]
-
-    def _infer_language(self, samples: Iterable[str]) -> Optional[str]:
-        """infer language from samples"""
-        concatenated_sample_text = ' '.join(samples)
-        detected_langs_and_probs = detect_langs(concatenated_sample_text)
-        if detected_langs_and_probs:
-            LOG.debug(f'inferred languages and probabilities: {detected_langs_and_probs}')
-            most_probable_lang_and_prob = detected_langs_and_probs[0]
-            if most_probable_lang_and_prob.prob > 0.9:
-                most_probable_lang = most_probable_lang_and_prob.lang
-                if most_probable_lang in self._lang_detect_code_to_aito_code:
-                    most_probable_lang = self._lang_detect_code_to_aito_code[most_probable_lang]
-                if most_probable_lang in self._supported_alias_analyzer:
-                    return most_probable_lang
-        return None
-
-    def infer_text_analyzer(self, samples: Iterable[str], max_sample_size: int = 10000) -> Optional[Union[str, Dict]]:
-        """Infer Aito Text Type `Analyzer <https://aito.ai/docs/api/#schema-analyzer>`__ from the given samples
-
-        :param samples: iterable of sample
-        :type samples: Iterable
-        :param max_sample_size: at most first max_sample_size will be used for inference, defaults to 10000
-        :type max_sample_size: int
-        :return: inferred Analyzer type
-        :rtype: Optional[Union[str, Dict]]
-        """
-        sliced_samples = list(itertools.islice(samples, max_sample_size))
-        detected_delimiter = self._infer_delimiter(sliced_samples)
-        if detected_delimiter is None or detected_delimiter.isalnum():
-            return None
-        if detected_delimiter == ' ':
-            detected_language = self._infer_language(sliced_samples)
-            return detected_language if detected_language else "Whitespace"
-        return {
-            "type": "delimiter",
-            "delimiter": detected_delimiter
-        }
-
-    def infer_table_schema_from_pandas_data_frame(self, df: pd.DataFrame, max_sample_size: int = 100000) -> Dict:
-        """Infer a table schema from a Pandas DataFrame
-
-        :param df: input Pandas DataFrame
-        :type df: pd.DataFrame
-        :param max_sample_size: maximum sample size that will be used for inference, defaults to 100000
-        :type max_sample_size: int, optional
-        :raises Exception: an error occurred during column type inference
-        :return: inferred table schema
-        :rtype: Dict
-        """
-        LOG.debug('inferring table schema...')
-        rows_count = df.shape[0]
-
-        columns_schema = {}
-        for col in df.columns.values:
-            col_df_samples = df[col] if len(df[col]) < max_sample_size else df[col].sample(max_sample_size)
-            try:
-                col_aito_type = self._infer_column_type_from_pandas_series(col_df_samples, max_sample_size)
-            except Exception as e:
-                raise Exception(f'failed to infer aito column type of column `{col}`: {e}')
-            col_na_count = col_df_samples.isna().sum()
-            col_schema = {
-                'nullable': True if col_na_count > 0 else False,
-                'type': col_aito_type
-            }
-            if col_schema['type'] == 'Text':
-                col_df_samples.dropna(inplace=True)
-                inferred_analyzer = self.infer_text_analyzer(col_df_samples.__iter__())
-                if inferred_analyzer:
-                    col_schema['analyzer'] = inferred_analyzer
-                else:
-                    col_schema['type'] = 'String'
-            columns_schema[col] = col_schema
-
-        table_schema = {'type': 'table', 'columns': columns_schema}
-        LOG.info('inferred table schema')
-        return table_schema
+        warnings.warn(
+            'The function SchemaHandler.infer_table_schema_from_pandas_data_frame is deprecated and will be removed '
+            'in a future version. Use AitoTableSchema.infer_from_pandas_dataframe instead',
+            category=FutureWarning
+        )
+        return AitoTableSchema.infer_from_pandas_dataframe(df).to_json_serializable()
 
     def validate_table_schema(self, table_schema: Dict) -> Dict:
         """Validate Aito Schema
@@ -210,34 +56,9 @@ class SchemaHandler:
         :return: table schema if valid
         :rtype: Dict
         """
-        def validate_required_arg(object_name: str, object_dict: Dict, arg_name: str):
-            if arg_name not in object_dict:
-                raise ValueError(f"{object_name} missing '{arg_name}'")
-
-        def validate_arg_type(object_name: str, object_dict: Dict, arg_name: str, arg_type: type,
-                              accepted_values: List = None):
-            arg_value = object_dict[arg_name]
-            if not isinstance(arg_value, arg_type):
-                raise ValueError(f"Invalid {object_name} {arg_name} type")
-            if accepted_values:
-                if arg_value not in accepted_values:
-                    accepted_values_str = accepted_values[0] if len(accepted_values) == 1 \
-                        else f"one of {accepted_values}"
-                    raise ValueError(f"{object_name} '{arg_name}' must be {accepted_values_str}")
-
-        def validate_arg(object_name: str, object_dict: Dict, arg_name: str, required: bool = False,
-                         arg_type: type = None, accepted_values: List = None):
-            if required:
-                validate_required_arg(object_name, object_dict, arg_name)
-            if arg_name in object_dict and arg_type:
-                validate_arg_type(object_name, object_dict, arg_name, arg_type, accepted_values)
-
-        LOG.debug('validating table schema..."')
-        validate_arg('table', table_schema, 'type', True, str, ['table'])
-        validate_arg('table', table_schema, 'columns', True, dict)
-        for col in table_schema['columns']:
-            col_schema = table_schema['columns'][col]
-            validate_arg(col, col_schema, 'type', True, str, list(self.aito_types_to_python_types.keys()))
-            validate_arg(col, col_schema, 'nullable', False, bool)
-        LOG.info('validated table schema')
-        return table_schema
+        warnings.warn(
+            'The function SchemaHandler.validate_table_schema is deprecated and will be removed '
+            'in a future version. Use AitoTableSchema.from_deserialized_object instead',
+            category=FutureWarning
+        )
+        return AitoTableSchema.from_deserialized_object(table_schema).to_json_serializable()

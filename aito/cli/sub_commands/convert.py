@@ -2,8 +2,8 @@ import json
 import sys
 from typing import Dict, List
 
+from aito.sdk.aito_schema import AitoTableSchema
 from aito.sdk.data_frame_handler import DataFrameHandler
-from aito.sdk.schema_handler import SchemaHandler
 from .sub_command import SubCommand
 from ..parser import PathArgType, InputArgType, ParseError
 from ..parser_utils import try_json_load
@@ -64,9 +64,9 @@ class ConvertFromFormatSubCommand(SubCommand):
 
         converted_df = DataFrameHandler().convert_file(**parsed_convert_args)
         if output_schema_path:
-            inferred_schema = SchemaHandler().infer_table_schema_from_pandas_data_frame(converted_df)
+            inferred_schema = AitoTableSchema.infer_from_pandas_dataframe(converted_df)
             with output_schema_path.open(mode='w') as f:
-                json.dump(inferred_schema, f, indent=2, sort_keys=True)
+                json.dump(inferred_schema.to_json_serializable(), f, indent=2, sort_keys=True)
         return 0
 
 
