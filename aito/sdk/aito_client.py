@@ -11,6 +11,7 @@ import warnings
 from aiohttp import ClientSession, ClientResponseError
 
 from aito.common.file_utils import gzip_file, check_file_is_gzipped
+from aito.sdk.aito_schema import AitoTableSchema
 
 LOG = logging.getLogger('AitoClient')
 
@@ -209,7 +210,7 @@ class AitoClient:
         LOG.info('database deleted')
         return r
 
-    def create_table(self, table_name: str, table_schema: Dict) -> Dict:
+    def create_table(self, table_name: str, table_schema: Union[AitoTableSchema, Dict]) -> Dict:
         """create a table with the given table schema `API doc <https://aito.ai/docs/api/#put-api-v1-schema-table>`__
 
         update the table if the table already exists and does not contain any data
@@ -217,10 +218,14 @@ class AitoClient:
         :param table_name: the name of the table
         :type table_name: str
         :param table_schema: Aito table schema
-        :type table_schema: Dict
+        :type table_schema: an AitoTableSchema object or a Dict, optional
         :return: the table schema
         :rtype: Dict
         """
+        if not isinstance(table_schema, AitoTableSchema):
+            if not isinstance(table_schema, dict):
+                raise ValueError("the input table schema must be either an AitoTableSchema object or a dict")
+            table_schema = AitoTableSchema.from_deserialized_object(table_schema)
         r = self.request('PUT', f'/api/v1/schema/{table_name}', table_schema)
         LOG.info(f'table `{table_name}` created')
         return r
