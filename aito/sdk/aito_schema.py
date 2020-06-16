@@ -4,7 +4,7 @@ import logging
 from abc import abstractmethod, ABC
 from collections import Counter
 from csv import Sniffer, Error as csvError
-from typing import List, Dict, Iterable, Optional
+from typing import List, Dict, Iterable, Optional, Tuple
 
 import pandas as pd
 from langdetect import detect_langs
@@ -14,7 +14,7 @@ LOG = logging.getLogger('AitoSchema')
 
 def _check_object_type(obj_name, data, typ):
     if not isinstance(data, typ):
-        raise ValueError(f"{obj_name} must be of type {typ}")
+        raise TypeError(f"{obj_name} must be of type {typ}")
 
 
 def _get_required_kwarg_of(obj_name, data, kwarg_name, assert_equal=False, assert_equal_val=None):
@@ -734,6 +734,47 @@ class AitoTextType(AitoDataTypeSchema):
         return str
 
 
+class AitoColumnLink(AitoSchema):
+    def __init__(self, linked_table_name: str, linked_field_name: str):
+        super().__init__('columnLink')
+        self._linked_table_name = linked_table_name
+        self._linked_field_name = linked_field_name
+
+    @property
+    def linked_table_name(self) -> str:
+        """
+
+        :return: the name of the linked table
+        :rtype: str
+        """
+        return self._linked_table_name
+
+    @property
+    def linked_field_name(self) -> str:
+        """
+
+        :return: the name of the linked field
+        :rtype: str
+        """
+        return self._linked_field_name
+
+    def to_json_serializable(self):
+        return f"{self._linked_table_name}.{self._linked_field_name}"
+
+    @classmethod
+    def from_deserialized_object(cls, obj: str) -> "AitoColumnLink":
+        splitted = tuple(obj.split('.'))
+        if not splitted or len(splitted) != 2:
+            raise ValueError(
+                f'invalid link. The link must contain table and column in the format `<table_name>.<column_name>`'
+            )
+        return cls(splitted[0], splitted[1])
+
+    @property
+    def comparison_properties(self) -> Iterable[str]:
+        return ['linked_table_name', 'linked_field_name']
+
+
 class AitoColumnTypeSchema(AitoSchema):
     """Aito `ColumnType <https://aito.ai/docs/api/#schema-column-type>`__ schema
 
@@ -743,7 +784,7 @@ class AitoColumnTypeSchema(AitoSchema):
             self,
             data_type: AitoDataTypeSchema,
             nullable: bool = None,
-            link: str = None,
+            link: AitoColumnLink = None,
             analyzer: AitoAnalyzerSchema = None
     ):
         """
@@ -753,7 +794,7 @@ class AitoColumnTypeSchema(AitoSchema):
         :param nullable: when true, `null` values are allowed
         :type nullable: bool, default to False
         :param link: path to a linked column
-        :type link: str, optional
+        :type link: AitoColumnLink, optional
         :param analyzer: the analyzer of the column if the column is of type Text
         :type analyzer: AnalyzerSchema, optional
         """
@@ -762,10 +803,6 @@ class AitoColumnTypeSchema(AitoSchema):
             raise ValueError(f"{data_type} does not support analyzer")
         self._data_type = data_type
         self._nullable = nullable if nullable is not None else False
-        if link and '.' not in link:
-            raise ValueError(
-                f'invalid link. The link must contain table and column in the format `<table_name>.<column_name>`'
-            )
         self._link = link
         self._analyzer = analyzer
 
@@ -786,12 +823,17 @@ class AitoColumnTypeSchema(AitoSchema):
         return self._nullable
 
     @property
-    def link(self) -> Optional[str]:
-        """the path to a linked column
+    def link(self) -> Optional[AitoColumnLink]:
+        """the column link
 
         :rtype:
         """
         return self._link
+
+    @property
+    def has_link(self) -> bool:
+        """return true if the column is linked to another column"""
+        return self._link is not None
 
     @property
     def analyzer(self) -> Optional[AitoAnalyzerSchema]:
@@ -809,7 +851,7 @@ class AitoColumnTypeSchema(AitoSchema):
         data = {
             'type': self._data_type.to_json_serializable(),
             'nullable': self.nullable,
-            'link': self.link,
+            'link': self.link.to_json_serializable() if self._link is not None else None,
             'analyzer': self.analyzer.to_json_serializable() if self.analyzer else self.analyzer
         }
         return {
@@ -821,8 +863,10 @@ class AitoColumnTypeSchema(AitoSchema):
         _check_object_type('ColumnTypeSchema object', obj, dict)
         data_type = AitoDataTypeSchema.from_deserialized_object(_get_required_kwarg_of('ColumnSchema', obj, 'type'))
         analyzer_data = obj.get('analyzer')
-        analyzer = AitoAnalyzerSchema.from_deserialized_object(analyzer_data) if analyzer_data else analyzer_data
-        return cls(data_type=data_type, nullable=obj.get('nullable'), link=obj.get('link'), analyzer=analyzer)
+        analyzer = AitoAnalyzerSchema.from_deserialized_object(analyzer_data) if analyzer_data is not None else None
+        link_data = obj.get('link')
+        link = AitoColumnLink.from_deserialized_object(link_data) if link_data is not None else None
+        return cls(data_type=data_type, nullable=obj.get('nullable'), link=link, analyzer=analyzer)
 
 
 class AitoTableSchema(AitoSchema):
@@ -870,6 +914,15 @@ class AitoTableSchema(AitoSchema):
         """
         return self._columns
 
+    @property
+    def links(self) -> Optional[Dict[str, AitoColumnLink]]:
+        """
+
+        :return: dictionary of the table column and its link
+        :rtype: Dict[str, AitoColumnLink]
+        """
+        return {col_name: col_schema.link for col_name, col_schema in self._columns.items() if col_schema.has_link}
+
     def __getitem__(self, column_name: str):
         """ access a column schema with the specified column name
 
@@ -879,9 +932,9 @@ class AitoTableSchema(AitoSchema):
         :rtype: AitoColumnTypeSchema
         """
         if not isinstance(column_name, str):
-            raise KeyError('the name of the column must be of type string')
+            raise TypeError('the name of the column must be of type string')
         if column_name not in self._columns:
-            raise KeyError(f'the table schema does not contain column {column_name} ')
+            raise KeyError(f'column `{column_name}` does not exist')
         return self._columns[column_name]
 
     @classmethod
@@ -975,18 +1028,18 @@ class AitoDatabaseSchema(AitoSchema):
             }
         }
 
-    def __getitem__(self, table_name: str):
+    def __getitem__(self, table_name: str) -> AitoTableSchema:
         """ access a table schema with the specified column name
 
         :param table_name: the name of the column
         :type table_name: str
-        :return: the column schema
-        :rtype: AitoColumnTypeSchema
+        :return: the table schema
+        :rtype: AitoTableSchema
         """
         if not isinstance(table_name, str):
-            raise KeyError('the name of the column must be of type string')
+            raise TypeError('the name of the column must be of type string')
         if table_name not in self._tables:
-            raise KeyError(f'the table schema does not contain column {table_name} ')
+            raise KeyError(f'table `{table_name}` does not exist')
         return self._tables[table_name]
 
     @classmethod
@@ -998,3 +1051,25 @@ class AitoDatabaseSchema(AitoSchema):
             tbl_name: AitoTableSchema.from_deserialized_object(tbl_data) for tbl_name, tbl_data in schema_data.items()
         }
         return cls(tables=tables)
+
+    def get_linked_columns(self, table_name) -> List[str]:
+        """return the columns name of the linked table of a table
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :return: list of linked columns
+        :rtype: List[str]
+        """
+        table_schema = self.__getitem__(table_name)
+        linked_columns = []
+        for col_name, col_schema in table_schema.columns_schemas.items():
+            if col_schema.has_link:
+                col_link = col_schema.link
+                col_linked_table_name = col_link.linked_table_name
+                if col_linked_table_name not in self.tables:
+                    raise ValueError(f'column {col_name} link to non-exist table{col_linked_table_name}')
+                linked_columns += [
+                    f'{col_linked_table_name}.{linked_tbl_col}'
+                    for linked_tbl_col in self.__getitem__(col_linked_table_name).columns
+                ]
+        return linked_columns
