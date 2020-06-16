@@ -226,7 +226,7 @@ class AitoClient:
             if not isinstance(table_schema, dict):
                 raise ValueError("the input table schema must be either an AitoTableSchema object or a dict")
             table_schema = AitoTableSchema.from_deserialized_object(table_schema)
-        r = self.request('PUT', f'/api/v1/schema/{table_name}', table_schema)
+        r = self.request('PUT', f'/api/v1/schema/{table_name}', table_schema.to_json_serializable())
         LOG.info(f'table `{table_name}` created')
         return r
 
