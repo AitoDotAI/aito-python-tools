@@ -11,7 +11,7 @@ import warnings
 from aiohttp import ClientSession, ClientResponseError
 
 from aito.common.file_utils import gzip_file, check_file_is_gzipped
-from aito.sdk.aito_schema import AitoTableSchema
+from aito.sdk.aito_schema import AitoTableSchema, AitoDatabaseSchema
 
 LOG = logging.getLogger('AitoClient')
 
@@ -585,3 +585,61 @@ class AitoClient:
         if gzip_output:
             gzip_file(out_file_path, keep=False)
         LOG.info(f'downloaded table `{table_name}` to {out_file_path}')
+
+    def naive_predict(
+            self,
+            predicting_field: str,
+            from_table: str,
+            use_database_schema: AitoDatabaseSchema = None
+    ) -> Tuple[Dict, Dict, Dict]:
+        """generate an example predict query to predict a field
+
+        The example query will use all fields of the table as the hypothesis and the first entry of the table as the input data
+
+        :param predicting_field: the predicting field name. If the field belong to a linked table,
+            it should be in the format of <column_with_link>.<field_name>
+        :type predicting_field: str
+        :param from_table: the name of the table the will be use as context for prediction.
+            The predicting field should be "reachable" from the table (i.e: the predicting field should be a column
+            in the table or a table that is linked to this table)
+        :type from_table: str
+        :param use_database_schema: use an existing database schema if do not want to re-fetch the database schema
+        :type use_database_schema: AitoDatabaseSchema
+        :return: a tuple contains the predict query and the prediction result
+        :rtype: Tuple[Dict, Dict, Dict]
+        """
+        database_schema = use_database_schema if use_database_schema else \
+            AitoDatabaseSchema.from_deserialized_object(self.get_database_schema())
+        table_schema = database_schema[from_table]
+
+        predicting_field_splitted = predicting_field.split('.')
+        is_predicting_a_linked_field = len(predicting_field_splitted) == 2
+
+        if is_predicting_a_linked_field:
+            (predicting_col, linked_col) = predicting_field_splitted
+            if predicting_col not in table_schema.columns:
+                raise ValueError(f"table `{from_table}` does not have column `{predicting_col}`")
+            linked_table = table_schema.links[predicting_col].linked_table_name
+            if linked_col not in database_schema[linked_table].columns:
+                raise ValueError(f"linked table `{linked_table}` does not have column `{linked_col}`")
+        else:
+            if predicting_field not in table_schema.columns:
+                raise ValueError(f"table `{from_table}` does not have column `{predicting_field}`")
+            predicting_col = predicting_field
+
+        table_first_entry_res = self.query_entries(from_table, limit=1)
+        if not table_first_entry_res['hits']:
+            raise ValueError(f"table `{from_table}` is empty, cannot generate example query")
+        table_first_entry = table_first_entry_res['hits'][0]
+
+        predict_query = {
+            'from': from_table,
+            'where': {
+                col: table_first_entry.get(col) for col in table_schema.columns if col != predicting_col
+            },
+            'predict': predicting_field,
+            'select': ['$p', 'feature', '$why']
+        }
+        actual_result = table_first_entry.get(predicting_col)
+        predict_result = self.request('POST', '/api/v1/_predict', predict_query)
+        return predict_query, predict_result, actual_result
