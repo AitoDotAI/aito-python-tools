@@ -14,25 +14,27 @@ class TestAitoAnalyzerSchema(BaseTestCase):
         ('delimiter', {'type': 'delimiter', 'delimiter': ','}, AitoDelimiterAnalyzerSchema(delimiter=',')),
         ('char-ngram', {'type': 'char-ngram', 'minGram': 1, 'maxGram': 2}, AitoCharNGramAnalyzerSchema(1, 2)),
         (
-                'token-ngram',
-                {'type': 'token-ngram', 'source': {'type': 'language', 'language': 'french'}, 'minGram': 1, 'maxGram' : 2},
-                AitoTokenNgramAnalyzerSchema(source=AitoAliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' ')
+            'token-ngram',
+            {'type': 'token-ngram', 'source': {'type': 'language', 'language': 'french'}, 'minGram': 1, 'maxGram': 2},
+            AitoTokenNgramAnalyzerSchema(
+                source=AitoAliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' '
+            )
         ),
         (
-                'token_ngram_inception',
-                {
-                    'type': 'token-ngram',
-                    'source': {'type': 'token-ngram', 'source': 'french', 'minGram': 1, 'maxGram': 2},
-                    'minGram': 2,
-                    'maxGram': 3
-                },
-                AitoTokenNgramAnalyzerSchema(
-                    source=AitoTokenNgramAnalyzerSchema(
-                        AitoAliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' '
-                    ),
-                    min_gram=2,
-                    max_gram=3,
-                    token_separator=' ')
+            'token_ngram_inception',
+            {
+                'type': 'token-ngram',
+                'source': {'type': 'token-ngram', 'source': 'french', 'minGram': 1, 'maxGram': 2},
+                'minGram': 2,
+                'maxGram': 3
+            },
+            AitoTokenNgramAnalyzerSchema(
+                source=AitoTokenNgramAnalyzerSchema(
+                    AitoAliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' '
+                ),
+                min_gram=2,
+                max_gram=3,
+                token_separator=' ')
         ),
     ])
     def test_from_deserialized_object(self, test_name, deserialized_obj, expected):
@@ -179,6 +181,19 @@ class TestAitoDataType(BaseTestCase):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
 
 
+class TestAitoColumnLink(BaseTestCase):
+    def test_from_deserialized_object(self):
+        self.assertEqual(AitoColumnLink.from_deserialized_object('tbl.col'), AitoColumnLink('tbl', 'col'))
+
+    def test_to_serialized_object(self):
+        self.assertEqual(AitoColumnLink('tbl', 'col').to_json_serializable(), 'tbl.col')
+
+    def test_comparison(self):
+        self.assertEqual(AitoColumnLink('tbl', 'col'), AitoColumnLink('tbl', 'col'))
+        self.assertNotEqual(AitoColumnLink('tbl', 'col'), AitoColumnLink.from_deserialized_object('tbl.col1'))
+        self.assertNotEqual(AitoColumnLink.from_deserialized_object('tbl1.col'), AitoColumnLink('tbl', 'col'))
+
+
 class TestAitoColumnTypeSchema(BaseTestCase):
     @parameterized.expand([
         ('string', {'type': 'String'}, AitoColumnTypeSchema(AitoStringType(), nullable=False)),
@@ -195,7 +210,7 @@ class TestAitoColumnTypeSchema(BaseTestCase):
         (
                 'link',
                 {'type': 'Int', 'link': 'infinity.beyond'},
-                AitoColumnTypeSchema(AitoIntType(), link='infinity.beyond')
+                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('infinity', 'beyond'))
         )
     ])
     def test_from_deserialized_object(self, test_name, deserialized_obj, expected):
@@ -221,7 +236,7 @@ class TestAitoColumnTypeSchema(BaseTestCase):
         ),
         (
                 'link',
-                AitoColumnTypeSchema(AitoIntType(), link='infinity.beyond'),
+                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('infinity', 'beyond')),
                 {'type': 'Int', 'nullable': False, 'link': 'infinity.beyond'}
         )
     ])
@@ -230,15 +245,28 @@ class TestAitoColumnTypeSchema(BaseTestCase):
 
     def test_comparison(self):
         self.assertEqual(
-            AitoColumnTypeSchema(AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link='table.column'),
             AitoColumnTypeSchema(
-                AitoTextType(), nullable=False, analyzer=AitoLanguageAnalyzerSchema('french'), link='table.column'
+                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLink('table', 'column')),
+            AitoColumnTypeSchema(
+                AitoTextType(),
+                nullable=False,
+                analyzer=AitoLanguageAnalyzerSchema('french'),
+                link=AitoColumnLink('table', 'column')
             )
         )
         self.assertNotEqual(
-            AitoColumnTypeSchema(AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link='table.column'),
-            AitoAnalyzerSchema.from_deserialized_object('fi')
+            AitoColumnTypeSchema(
+                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLink('table', 'column')
+            ),
+            AitoColumnTypeSchema(
+                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('french')
+            ),
         )
+
+    def test_link(self):
+        col_schema_1 = AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('infinity', 'beyond'))
+        self.assertTrue(col_schema_1.has_link)
+        self.assertEqual(col_schema_1.link, AitoColumnLink('infinity', 'beyond'))
 
 
 class TestAitoTableSchema(BaseTestCase):
@@ -259,7 +287,10 @@ class TestAitoTableSchema(BaseTestCase):
             AitoTableSchema({
                 'col1': AitoColumnTypeSchema(AitoIntType()),
                 'col2': AitoColumnTypeSchema(
-                    AitoTextType(), nullable=True, analyzer=AitoLanguageAnalyzerSchema('finnish'), link='another.one'
+                    AitoTextType(),
+                    nullable=True,
+                    analyzer=AitoLanguageAnalyzerSchema('finnish'),
+                    link=AitoColumnLink('another', 'one')
                 )
             })
         )
@@ -278,7 +309,10 @@ class TestAitoTableSchema(BaseTestCase):
         self.assertDictEqual(
             AitoTableSchema({
                 'col': AitoColumnTypeSchema(
-                    AitoTextType(), nullable=True, analyzer=AitoAliasAnalyzerSchema('fi'), link='another.one'
+                    AitoTextType(),
+                    nullable=True,
+                    analyzer=AitoAliasAnalyzerSchema('fi'),
+                    link=AitoColumnLink('another', 'one')
                 )
             }).to_json_serializable(),
             {
@@ -306,6 +340,16 @@ class TestAitoTableSchema(BaseTestCase):
         self.assertNotEqual(
             AitoTableSchema({'col': AitoColumnTypeSchema(AitoIntType())}),
             AitoTableSchema({'col1': AitoColumnTypeSchema(AitoIntType())}),
+        )
+
+    def test_link(self):
+        table_schema = AitoTableSchema({
+            'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('first', 'link')),
+            'col2': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('second', 'link'))
+        })
+        self.assertEqual(
+            table_schema.links,
+            {'col1': AitoColumnLink('first', 'link'), 'col2': AitoColumnLink('second', 'link')}
         )
 
 
@@ -349,7 +393,7 @@ class TestAitoDatabaseSchema(BaseTestCase):
                                 AitoTextType(),
                                 nullable=True,
                                 analyzer=AitoAliasAnalyzerSchema('fi'),
-                                link='another.one'
+                                link=AitoColumnLink('another', 'one')
                             )
                         }
                     ),
@@ -384,4 +428,19 @@ class TestAitoDatabaseSchema(BaseTestCase):
         self.assertNotEqual(
             AitoDatabaseSchema({'tbl1': AitoTableSchema({'col1': AitoColumnTypeSchema(AitoBooleanType())})}),
             AitoDatabaseSchema({'tbl1': AitoTableSchema({'col2': AitoColumnTypeSchema(AitoBooleanType())})})
+        )
+
+    def test_link(self):
+        db_schema = AitoDatabaseSchema(tables={
+            'tbl1': AitoTableSchema(columns={
+                'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('tbl2', 'col1'))
+            }),
+            'tbl2': AitoTableSchema(columns={
+                'col1': AitoColumnTypeSchema(AitoIntType()),
+                'col2': AitoColumnTypeSchema(AitoStringType())
+            })
+        })
+        self.assertEqual(
+            db_schema.get_linked_columns('tbl1'),
+            ['col1', 'tbl2.col1', 'tbl2.col2']
         )
