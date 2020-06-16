@@ -442,5 +442,5 @@ class TestAitoDatabaseSchema(BaseTestCase):
         })
         self.assertEqual(
             db_schema.get_linked_columns('tbl1'),
-            ['col1', 'tbl2.col1', 'tbl2.col2']
+            ['tbl2.col1', 'tbl2.col2']
         )
