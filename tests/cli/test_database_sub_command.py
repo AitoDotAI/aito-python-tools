@@ -11,7 +11,37 @@ from aito.sdk.aito_client import RequestError, BaseError
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 
-class TestDatabase(ParserAndCLITestCase):
+class TestDatabaseSubCommand(ParserAndCLITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.default_main_parser_args = {
+            'command': 'database', 'verbose': False, 'version': False, 'quiet': False,
+            'api_key': '.env', 'instance_url': '.env', 'use_env_file': None
+        }
+
+    @patch('builtins.input', return_value='yes')
+    def test_login(self, mock_input):
+        expected_args = {
+            'operation': 'login',
+            **self.default_main_parser_args
+        }
+        instance_url = os.environ['AITO_INSTANCE_URL']
+        api_key = os.environ['AITO_API_KEY']
+        if os.environ.get('TEST_BUILT_PACKAGE'):
+            import subprocess
+            proc = subprocess.Popen(['aito', 'database', 'login'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            proc.stdin.write(b"yes")
+            proc.stdin.write(instance_url.encode())
+            proc.stdin.write(api_key.encode())
+        else:
+            with patch('getpass.getpass', side_effect=[instance_url, api_key]):
+                self.parse_and_execute(['database', 'login'], expected_args)
+        self.assertEqual(os.environ['AITO_INSTANCE_URL'], instance_url)
+        self.assertEqual(os.environ['AITO_API_KEY'], api_key)
+
+
+class TestDatabaseSubCommandWithData(ParserAndCLITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

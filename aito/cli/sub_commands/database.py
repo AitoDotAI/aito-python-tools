@@ -1,13 +1,39 @@
 import tempfile
-from os import unlink
+from os import unlink, environ
 from typing import Dict, List
 
 from aito.sdk.data_frame_handler import DataFrameHandler
 from aito.sdk.aito_schema import AitoTableSchema
+from aito.sdk.aito_client import AitoClient, BaseError
 from .sub_command import SubCommand
 from ..parser import PathArgType, InputArgType, ParseError
 from ..parser_utils import create_client_from_parsed_args, load_json_from_parsed_input_arg, \
     prompt_confirmation, create_sql_connecting_from_parsed_args
+import getpass
+
+
+class LoginSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('login', 'login to your Aito instance')
+
+    def build_parser(self, parser):
+        pass
+
+    def parse_and_execute(self, parsed_args: Dict):
+        if environ.get('AITO_INSTANCE_URL') is not None or environ.get('AITO_API_KEY') is not None:
+            if not prompt_confirmation(
+                "Aito credentials environment variables already exists, do you want to overwrite?"
+            ):
+                return 0
+
+        instance_url = getpass.getpass(prompt='instance url: ')
+        api_key = getpass.getpass(prompt='api key: ')
+        try:
+            AitoClient(instance_url=instance_url, api_key=api_key, check_credentials=True)
+        except BaseError:
+            raise ParseError('invalid credentials, please try again')
+        environ['AITO_INSTANCE_URL'] = instance_url
+        environ['AITO_API_KEY'] = api_key
 
 
 class QuickAddTableSubCommand(SubCommand):
@@ -232,6 +258,7 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
 
 class DatabaseSubCommand(SubCommand):
     _default_sub_sub_commands = [
+        LoginSubCommand(),
         QuickAddTableSubCommand(),
         CreateTableSubCommand(),
         DeleteTableSubCommand(),
