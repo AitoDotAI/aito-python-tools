@@ -78,8 +78,7 @@ commonYAMLStructure:
       command: brew install pyenv
   - &restore_pyenv_cache
     restore_cache:
-      keys:
-        - pyenv-{{ .Environment.CIRCLE_JOB }}
+      key: pyenv-{{ .Environment.CIRCLE_JOB }}
   - &save_pyenv_cache
     save_cache:
       paths:
@@ -92,7 +91,7 @@ commonYAMLStructure:
         pyenv install $PYTHON_VERSION -s
   - &restore_venv_cache_build_and_test
     restore_cache:
-      keys: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ .Environment.CIRCLE_JOB }}
+      key: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ .Environment.CIRCLE_JOB }}
   - &save_venv_cache_build_and_test
     save_cache:
       paths:
@@ -119,7 +118,7 @@ commonYAMLStructure:
         pip install -r requirements/test.txt
   - &restore_venv_cache_deploy_and_test
     restore_cache:
-      keys: v2-dependencies-{{ checksum "requirements/deploy.txt" }}-{{ checksum "requirements/test.txt" }}
+      key: v2-dependencies-{{ checksum "requirements/deploy.txt" }}-{{ checksum "requirements/test.txt" }}
   - &save_venv_cache_deploy_and_test
     save_cache:
       paths:
