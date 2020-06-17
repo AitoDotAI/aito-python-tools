@@ -1,6 +1,6 @@
 import sys
 
-from aito.cli.sub_commands.infer_table_schema import InferFromFormatSubCommand
+from aito.cli.sub_commands.infer_table_schema_sub_command import InferFromFormatSubCommand
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 
