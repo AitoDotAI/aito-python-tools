@@ -107,13 +107,49 @@ class DeleteTableSubCommand(SubCommand):
         super().__init__('delete-table', 'delete a table schema and all content inside the table')
 
     def build_parser(self, parser):
-        parser.add_argument('table-name', type=str, help="name of the table to be deleted")
+        parser.add_argument('table-name', type=str, help="the name of the table to be deleted")
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         if prompt_confirmation(f'Confirm delete table `{table_name}`? The action is irreversible', False):
             client.delete_table(table_name)
+        return 0
+
+
+class CopyTableSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('copy-table', 'copy a table')
+
+    def build_parser(self, parser):
+        parser.add_argument('table-name', type=str, help="the name of the table to be copied")
+        parser.add_argument('copy-table-name', type=str, help="the name of the new copy table")
+        parser.add_argument(
+            '--replace', action='store_true',
+            help="replace an existing table of which name is the name of the copy table"
+        )
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        client.copy_table(parsed_args['table-name'], parsed_args['copy-table-name'], parsed_args['replace'])
+        return 0
+
+
+class RenameTableSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('rename-table', 'rename a table')
+
+    def build_parser(self, parser):
+        parser.add_argument('old-name', type=str, help="the name of the table to be renamed")
+        parser.add_argument('new-name', type=str, help="the new name of the table")
+        parser.add_argument(
+            '--replace', action='store_true',
+            help="replace an existing table of which name is the new name"
+        )
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        client.rename_table(parsed_args['old-name'], parsed_args['new-name'], parsed_args['replace'])
         return 0
 
 
@@ -262,6 +298,8 @@ class DatabaseSubCommand(SubCommand):
         QuickAddTableSubCommand(),
         CreateTableSubCommand(),
         DeleteTableSubCommand(),
+        CopyTableSubCommand(),
+        RenameTableSubCommand(),
         DeleteDatabaseSubCommand(),
         UploadEntriesSubCommand(),
         UploadBatchSubCommand(),

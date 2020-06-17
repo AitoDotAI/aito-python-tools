@@ -249,6 +249,42 @@ class TestMainParserDatabaseSubCommand(ParserAndCLITestCase):
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
         )
 
+    def test_copy_table(self):
+        self.create_table()
+        copy_table_name = f'{self.default_table_name}_copy'
+        self.expected_args.update({
+            'operation': 'copy-table',
+            'table-name': self.default_table_name,
+            'copy-table-name': copy_table_name,
+            'replace': False
+        })
+        self.parse_and_execute(
+            self.command + ['copy-table', self.default_table_name, copy_table_name],
+            self.expected_args
+        )
+        db_tables = self.client.get_existing_tables()
+        self.assertIn(self.default_table_name, db_tables)
+        self.assertIn(copy_table_name, db_tables)
+        self.client.delete_table(copy_table_name)
+
+    def test_rename_table(self):
+        self.create_table()
+        rename_table_name = f'{self.default_table_name}_rename'
+        self.expected_args.update({
+            'operation': 'rename-table',
+            'old-name': self.default_table_name,
+            'new-name': rename_table_name,
+            'replace': False
+        })
+        self.parse_and_execute(
+            self.command + ['rename-table', self.default_table_name, rename_table_name],
+            self.expected_args
+        )
+        db_tables = self.client.get_existing_tables()
+        self.assertIn(rename_table_name, db_tables)
+        self.assertNotIn(self.default_table_name, db_tables)
+        self.client.delete_table(rename_table_name)
+
     @unittest.skipUnless(os.environ.get('RUN_DELETE_DATABASE_TEST'), "Avoid delete DB when running other tests")
     def test_delete_database(self):
         self.create_table()

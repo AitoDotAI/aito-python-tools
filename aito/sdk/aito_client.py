@@ -276,7 +276,7 @@ class AitoClient:
     def rename_table(self, old_name: str, new_name: str, replace: bool = False):
         """`rename a table <https://aito.ai/docs/api/#post-api-v1-schema-rename>`__
 
-        :param old_name: the old name of the table
+        :param old_name: the name of the table to be renamed
         :type old_name: str
         :param new_name: the new name of the table
         :type new_name: str
@@ -290,7 +290,7 @@ class AitoClient:
 
         :param table_name: the name of the table to be copied
         :type table_name: str
-        :param copy_table_name: the name of the copy table
+        :param copy_table_name: the name of the new copy table
         :type copy_table_name: str
         :param replace: replace an existing table of which name is the name of the copy table, defaults to False
         :type replace: bool, optional
