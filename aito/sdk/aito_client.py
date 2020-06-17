@@ -192,13 +192,14 @@ class AitoClient:
         LOG.info('database schema created')
         return r
 
-    def get_database_schema(self) -> Dict:
+    def get_database_schema(self) -> AitoDatabaseSchema:
         """get the schema of the database `API doc <https://aito.ai/docs/api/#get-api-v1-schema>`__
 
         :return: Aito database schema
         :rtype: Dict
         """
-        return self.request('GET', '/api/v1/schema')
+        json_response = self.request('GET', '/api/v1/schema')
+        return AitoDatabaseSchema.from_deserialized_object(json_response)
 
     def delete_database(self) -> Dict:
         """delete the whole database `API doc <https://aito.ai/docs/api/#delete-api-v1-schema>`__
@@ -230,15 +231,16 @@ class AitoClient:
         LOG.info(f'table `{table_name}` created')
         return r
 
-    def get_table_schema(self, table_name: str) -> Dict:
+    def get_table_schema(self, table_name: str) -> AitoTableSchema:
         """get a table schema
 
         :param table_name: the name of the table
         :type table_name: str
         :return: the table schema
-        :rtype: Dict
+        :rtype: AitoTableSchema
         """
-        return self.request('GET', f'/api/v1/schema/{table_name}')
+        json_response = self.request('GET', f'/api/v1/schema/{table_name}')
+        return AitoTableSchema.from_deserialized_object(json_response)
 
     def delete_table(self, table_name: str) -> Dict:
         """delete a table `API doc <https://aito.ai/docs/api/#delete-api-v1-schema>`__
@@ -258,7 +260,7 @@ class AitoClient:
         :return: list of the names of existing tables
         :rtype: List[str]
         """
-        return list(self.get_database_schema()['schema'].keys())
+        return self.get_database_schema().tables
 
     def check_table_exists(self, table_name: str) -> bool:
         """check if a table exists in the instance
@@ -608,8 +610,7 @@ class AitoClient:
         :return: a tuple contains the predict query and the prediction result
         :rtype: Tuple[Dict, Dict, Dict]
         """
-        database_schema = use_database_schema if use_database_schema else \
-            AitoDatabaseSchema.from_deserialized_object(self.get_database_schema())
+        database_schema = use_database_schema if use_database_schema else self.get_database_schema()
         table_schema = database_schema[from_table]
 
         predicting_field_splitted = predicting_field.split('.')
