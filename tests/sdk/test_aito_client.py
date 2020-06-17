@@ -50,7 +50,7 @@ class TestAitoClient(CompareTestCase):
 
     def get_table_schema_step(self):
         tbl_schema = self.client.get_table_schema(self.default_table_name)
-        self.assertDictEqual(tbl_schema, self.default_schema)
+        self.assertDictEqual(tbl_schema.to_json_serializable(), self.default_schema)
 
     def upload_by_batch_step(self, start, end):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)]
@@ -180,7 +180,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
         super().setUpClass()
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_GROCERY_DEMO_INSTANCE_URL'], env_var['AITO_GROCERY_DEMO_API_KEY'])
-        cls.database_schema = AitoDatabaseSchema.from_deserialized_object(cls.client.get_database_schema())
+        cls.database_schema = cls.client.get_database_schema()
 
     @parameterized.expand([
         ('same_table', 'tags', 'products', True, ['category', 'id', 'name', 'price'], None),
