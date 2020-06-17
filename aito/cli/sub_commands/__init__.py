@@ -1,4 +1,4 @@
-from .infer_table_schema import InferTableSchemaSubCommand
-from .convert import ConvertSubCommand
-from .database import DatabaseSubCommand
+from .infer_table_schema_sub_command import InferTableSchemaSubCommand
+from .convert_sub_command import ConvertSubCommand
+from .database_sub_command import DatabaseSubCommand
 from .sub_command import SubCommand

@@ -6,7 +6,7 @@ from aito.sdk.data_frame_handler import DataFrameHandler
 from aito.sdk.aito_schema import AitoTableSchema
 from aito.sdk.aito_client import AitoClient, BaseError
 from .sub_command import SubCommand
-from ..parser import PathArgType, InputArgType, ParseError
+from ..parser import PathArgType, InputArgType, ParseError, ArgParser
 from ..parser_utils import create_client_from_parsed_args, load_json_from_parsed_input_arg, \
     prompt_confirmation, create_sql_connecting_from_parsed_args
 import getpass
@@ -279,12 +279,13 @@ class DatabaseSubCommand(SubCommand):
     def build_parser(self, parser):
         parser.add_aito_default_credentials_arguments()
         parser.epilog = '''To see help for a specific operation:
-  aito database <operation> -h
+  aitodb <operation> -h
 '''
         sub_sub_commands_subparsers = parser.add_subparsers(
             title='operation',
             dest='operation',
-            metavar='<operation>'
+            metavar='<operation>',
+            parser_class=ArgParser
         )
         sub_sub_commands_subparsers.required = True
 
