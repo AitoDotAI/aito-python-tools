@@ -4,7 +4,7 @@ import logging
 from abc import abstractmethod, ABC
 from collections import Counter
 from csv import Sniffer, Error as csvError
-from typing import List, Dict, Iterable, Optional, Tuple
+from typing import List, Dict, Iterable, Optional
 
 import pandas as pd
 from langdetect import detect_langs

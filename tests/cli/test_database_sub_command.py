@@ -45,7 +45,7 @@ class TestMainParserDatabaseSubCommand(ParserAndCLITestCase):
             self.logger.error(f"failed to delete table in tearDown: {e}")
 
     def compare_table_entries_to_file_content(self, table_name: str, exp_file_path: Path, compare_order: bool = False):
-        table_entries = self.client.query_entries(table_name)['hits']
+        table_entries = self.client.query_entries(table_name)
         with exp_file_path.open() as exp_f:
             file_content = json.load(exp_f)
         if compare_order:

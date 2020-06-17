@@ -97,7 +97,7 @@ class TestPostgresFunctions(TestSQLFunctions):
         self.parse_and_execute_upload_data_from_query()
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
-            self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
+            self.assertCountEqual(result_table_entries, json.load(exp_f))
 
     def test_upload_data_from_query_table_not_exist(self):
         self.parse_and_execute_upload_data_from_query_table_not_exist()
@@ -106,7 +106,7 @@ class TestPostgresFunctions(TestSQLFunctions):
         self.parse_and_execute_quick_add_table()
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
-            self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
+            self.assertCountEqual(result_table_entries, json.load(exp_f))
 
 
 class TestMySQLFunctions(TestSQLFunctions):
@@ -124,7 +124,7 @@ class TestMySQLFunctions(TestSQLFunctions):
         self.parse_and_execute_upload_data_from_query()
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
-            self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
+            self.assertCountEqual(result_table_entries, json.load(exp_f))
 
     def test_upload_data_from_query_table_not_exist(self):
         self.parse_and_execute_upload_data_from_query_table_not_exist()
@@ -133,4 +133,4 @@ class TestMySQLFunctions(TestSQLFunctions):
         self.parse_and_execute_quick_add_table()
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
-            self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
+            self.assertCountEqual(result_table_entries, json.load(exp_f))

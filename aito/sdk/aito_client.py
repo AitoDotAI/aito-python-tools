@@ -506,31 +506,40 @@ class AitoClient:
         """
         return self.request('POST', '/api/v1/_query', {'from': table_name})['total']
 
-    def query_entries(self, table_name: str, offset: int = 0, limit: int = 10) -> Dict:
+    def query_entries(self, table_name: str, offset: int = 0, limit: int = 10, select: List[str] = None) -> List[Dict]:
         """`query <https://aito.ai/docs/api/#post-api-v1-query>`__ entries of the specified table
 
         use offset and limit for `pagination <https://aito.ai/docs/api/#pagination>`__
 
         :param table_name: the name of the table
         :type table_name: str
-        :param offset: offset, defaults to 0
+        :param offset: the offset of the first entry, defaults to 0
         :type offset: int, optional
-        :param limit: limit, defaults to 10
+        :param limit: the number of entries to be returned, defaults to 10
         :type limit: int, optional
+        :param select: specify the fields of the entry, including link fields, to be returned
+        :type select: List[str], optional
         :return: the table entries
-        :rtype: Dict
+        :rtype: List[Dict]
         """
 
-        query = {'from': table_name, 'offset': offset, 'limit': limit}
-        return self.request('POST', '/api/v1/_query', query)
+        query = {'from': table_name, 'offset': offset, 'limit': limit, 'select': select}
+        return self.request('POST', '/api/v1/_query', query)['hits']
 
-    def query_all_entries(self, table_name: str, batch_size: int = 5000) -> List[Dict]:
+    def query_all_entries(
+            self,
+            table_name: str,
+            select: List[str] = None,
+            batch_size: int = 5000
+    ) -> List[Dict]:
         """`query <https://aito.ai/docs/api/#post-api-v1-query>`__  all entries of the specified table
 
         :param table_name: the name of the table
         :type table_name: str
-        :param batch_size: the number of entries to be queried at once
-        :type batch_size: int
+        :param select: specify the fields of the entry, including link fields, to be returned
+        :type select: List[str], optional
+        :param batch_size: the number of entries to be queried at once, defaults to 5000
+        :type batch_size: int, optional
         :return: list of all entries in the table
         :rtype: List[Dict]
         """
@@ -541,9 +550,7 @@ class AitoClient:
         while begin_idx < table_size:
             last_idx = begin_idx + batch_size if begin_idx + batch_size <= table_size else table_size
             LOG.debug(f'getting table chunk {begin_idx}:{last_idx}...')
-            all_entries += self.request(
-                'POST', '/api/v1/_query', {'from': table_name, 'offset': begin_idx, 'limit': batch_size}
-            )['hits']
+            all_entries += self.query_entries(table_name, offset=begin_idx, limit=batch_size, select=select)
             LOG.debug(f'queried chunk {begin_idx}:{last_idx}')
             begin_idx += batch_size
         LOG.info(f'queried all entries of table `{table_name}`')
@@ -635,9 +642,9 @@ class AitoClient:
             predicting_col = predicting_field
 
         table_first_entry_res = self.query_entries(from_table, limit=1)
-        if not table_first_entry_res['hits']:
+        if not table_first_entry_res:
             raise ValueError(f"table `{from_table}` is empty, cannot generate example query")
-        table_first_entry = table_first_entry_res['hits'][0]
+        table_first_entry = table_first_entry_res[0]
 
         predict_query = {
             'from': from_table,

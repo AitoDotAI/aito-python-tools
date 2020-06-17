@@ -75,14 +75,14 @@ class TestAitoClient(CompareTestCase):
             optimize_on_finished=False)
 
     def query_table_entries_step(self):
-        entries = self.client.query_entries(self.default_table_name, 2, 2)['hits']
+        entries = self.client.query_entries(self.default_table_name, 2, 2)
         self.assertEqual(entries, [
             {'id': 2, 'name': 'some_name', 'amount': 2},
             {'id': 3, 'name': 'some_name', 'amount': 3}
         ])
 
     def query_table_all_entries_step(self, expected_result):
-        entries = self.client.query_entries(self.default_table_name)['hits']
+        entries = self.client.query_entries(self.default_table_name)
         self.assertEqual(len(entries), expected_result)
 
     def async_query_step(self):
