@@ -161,6 +161,20 @@ class TestAitoClient(CompareTestCase):
         self.download_table_gzipped_step(start=0, end=12)
         self.delete_table_step()
 
+    def test_alter_table(self):
+        self.create_table_step()
+        copy_table_name = f'{self.default_table_name}_copy'
+        self.client.copy_table(self.default_table_name, copy_table_name)
+        db_tables = self.client.get_existing_tables()
+        self.assertIn(self.default_table_name, db_tables)
+        self.assertIn(copy_table_name, db_tables)
+        rename_table_name = f'{self.default_table_name}_rename'
+        self.client.rename_table(copy_table_name, rename_table_name)
+        db_tables = self.client.get_existing_tables()
+        self.assertIn(self.default_table_name, db_tables)
+        self.assertIn(rename_table_name, db_tables)
+        self.assertNotIn(copy_table_name, db_tables)
+
     def test_tobe_deprecated_upload(self):
         self.create_table_step()
         self.query_table_all_entries_step(expected_result=0)

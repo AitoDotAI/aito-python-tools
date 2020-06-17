@@ -273,6 +273,32 @@ class AitoClient:
         """
         return table_name in self.get_existing_tables()
 
+    def rename_table(self, old_name: str, new_name: str, replace: bool = False):
+        """`rename a table <https://aito.ai/docs/api/#post-api-v1-schema-rename>`__
+
+        :param old_name: the old name of the table
+        :type old_name: str
+        :param new_name: the new name of the table
+        :type new_name: str
+        :param replace: replace an existing table of which name is the new name, defaults to False
+        :type replace: bool, optional
+        """
+        self.request('POST', '/api/v1/schema/_rename', {'from': old_name, 'rename': new_name, 'replace': replace})
+
+    def copy_table(self, table_name: str, copy_table_name: str, replace: bool = False):
+        """`copy a table <https://aito.ai/docs/api/#post-api-v1-schema-copy>`__
+
+        :param table_name: the name of the table to be copied
+        :type table_name: str
+        :param copy_table_name: the name of the copy table
+        :type copy_table_name: str
+        :param replace: replace an existing table of which name is the name of the copy table, defaults to False
+        :type replace: bool, optional
+        """
+        self.request(
+            'POST', '/api/v1/schema/_copy', {'from': table_name, 'copy': copy_table_name, 'replace': replace}
+        )
+
     def optimize_table(self, table_name):
         """`optimize the specified table <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
 
