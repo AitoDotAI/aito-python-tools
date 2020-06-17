@@ -3,7 +3,7 @@ import logging
 import time
 from os import PathLike
 from pathlib import Path
-from typing import Dict, List, BinaryIO, Union, Tuple, Iterator
+from typing import Dict, List, BinaryIO, Union, Tuple, Iterable
 
 import ndjson
 import requests
@@ -151,7 +151,7 @@ class AitoClient:
         return responses
 
     def request(self, method: str, endpoint: str, query: Union[Dict, List] = None) -> Dict:
-        """Make a request to an Aito API endpoint
+        """make a request to an Aito API endpoint
 
         :param method: request method
         :type method: str
@@ -182,18 +182,19 @@ class AitoClient:
         return self.request('GET', '/version')
 
     def create_database(self, database_schema: Dict) -> Dict:
-        """create database with the given database schema `API doc <https://aito.ai/docs/api/#put-api-v1-schema>`__
+        """`create a database <https://aito.ai/docs/api/#put-api-v1-schema>`__usingthe specified database schema
 
         :param database_schema: Aito database schema
         :type database_schema: Dict
         :return: the database schema
-        :rtype: Dict        """
+        :rtype: Dict
+        """
         r = self.request('PUT', '/api/v1/schema', database_schema)
         LOG.info('database schema created')
         return r
 
     def get_database_schema(self) -> AitoDatabaseSchema:
-        """get the schema of the database `API doc <https://aito.ai/docs/api/#get-api-v1-schema>`__
+        """`get the schema of the database <https://aito.ai/docs/api/#get-api-v1-schema>`__
 
         :return: Aito database schema
         :rtype: Dict
@@ -202,7 +203,7 @@ class AitoClient:
         return AitoDatabaseSchema.from_deserialized_object(json_response)
 
     def delete_database(self) -> Dict:
-        """delete the whole database `API doc <https://aito.ai/docs/api/#delete-api-v1-schema>`__
+        """`delete the whole database <https://aito.ai/docs/api/#delete-api-v1-schema>`__
 
         :return: deleted tables
         :rtype: Dict
@@ -212,7 +213,7 @@ class AitoClient:
         return r
 
     def create_table(self, table_name: str, table_schema: Union[AitoTableSchema, Dict]) -> Dict:
-        """create a table with the given table schema `API doc <https://aito.ai/docs/api/#put-api-v1-schema-table>`__
+        """`create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__ with the specified table name and schema
 
         update the table if the table already exists and does not contain any data
 
@@ -232,7 +233,7 @@ class AitoClient:
         return r
 
     def get_table_schema(self, table_name: str) -> AitoTableSchema:
-        """get a table schema
+        """`get the schema of the specified table <https://aito.ai/docs/api/#get-api-v1-schema-table>`__
 
         :param table_name: the name of the table
         :type table_name: str
@@ -243,7 +244,7 @@ class AitoClient:
         return AitoTableSchema.from_deserialized_object(json_response)
 
     def delete_table(self, table_name: str) -> Dict:
-        """delete a table `API doc <https://aito.ai/docs/api/#delete-api-v1-schema>`__
+        """`delete the specified table <https://aito.ai/docs/api/#delete-api-v1-schema>`__
 
         :param table_name: the name of the table
         :type table_name: str
@@ -273,6 +274,13 @@ class AitoClient:
         return table_name in self.get_existing_tables()
 
     def optimize_table(self, table_name):
+        """`optimize the specified table <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :return:
+        :rtype:
+        """
         try:
             self.request('POST', f'/api/v1/data/{table_name}/optimize', {})
         except Exception as e:
@@ -282,7 +290,7 @@ class AitoClient:
     def upload_entries_by_batches(
             self,
             table_name: str,
-            entries: Iterator[Dict],
+            entries: Iterable[Dict],
             batch_size: int = 1000,
             optimize_on_finished: bool = True
     ):
@@ -301,16 +309,16 @@ class AitoClient:
     def upload_entries(
             self,
             table_name: str,
-            entries: Iterator[Dict],
+            entries: Iterable[Dict],
             batch_size: int = 1000,
             optimize_on_finished: bool = True
     ):
-        """populate a list of table entries by batches of batch_size
+        """populate table entries by batches of batch_size
 
         :param table_name: the name of the table
         :type table_name: str
-        :param entries: list of the table entries
-        :type entries: Iterator[Dict]
+        :param entries: iterable of the table entries
+        :type entries: Iterable[Dict]
         :param batch_size: the batch size, defaults to 1000
         :type batch_size: int, optional
         :param optimize_on_finished: `optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__ the table on finished, defaults to True
@@ -359,13 +367,13 @@ class AitoClient:
     def upload_binary_file(
             self, table_name: str, binary_file: BinaryIO, optimize_on_finished: bool = True, polling_time: int = 10
     ):
-        """upload a binary file object to a table `API doc <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
+        """`upload a binary file object to a table <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
 
         :param table_name: the name of the table
         :type table_name: str
         :param binary_file: binary file object
         :type binary_file: BinaryIO
-        :param optimize_on_finished: `optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__ the table on finished, defaults to True
+        :param optimize_on_finished: :func:`optimize_table` when finished uploading, defaults to True
         :type optimize_on_finished: bool
         :param polling_time: polling wait time
         :type polling_time: int
@@ -410,13 +418,13 @@ class AitoClient:
 
     def upload_file(
             self, table_name: str, file_path: PathLike, optimize_on_finished: bool = True, polling_time: int = 10):
-        """upload a file to a table `API doc <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
+        """`upload a file <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__ to the specfied table
 
         :param table_name: the name of the table
         :type table_name: str
         :param file_path: path to the file to be uploaded
         :type file_path: PathLike
-        :param optimize_on_finished: `optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__ the table on finished, defaults to True
+        :param optimize_on_finished: :func:`optimize_table` when finished uploading, defaults to True
         :type optimize_on_finished: bool
         :param polling_time: polling wait time
         :type polling_time: int
@@ -429,9 +437,8 @@ class AitoClient:
             self.upload_binary_file(table_name, f, optimize_on_finished, polling_time)
 
     def create_job(self, job_endpoint: str, query: Union[List, Dict]) -> Dict:
-        """Create a job for queries that take longer than 30 seconds to run
+        """Create a `job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__ for a query that takes longer than 30 seconds to run
 
-        `API doc <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
         :param job_endpoint: job endpoint
         :type job_endpoint: str
         :param query: the query for the endpoint
@@ -442,7 +449,7 @@ class AitoClient:
         return self.request('POST', job_endpoint, query)
 
     def get_job_status(self, job_id: str) -> Dict:
-        """Get the status of a job with the given id
+        """`Get the status of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__ with the specified job id
 
         `API doc <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__
         :param job_id: the id of the job
@@ -453,9 +460,8 @@ class AitoClient:
         return self.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}')
 
     def get_job_result(self, job_id: str) -> Dict:
-        """Get the result of a job with the given id
+        """`Get the result of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid-result>`__ with the specified job id
 
-        `API doc <https://aito.ai/docs/api/#get-api-v1-jobs-uuid-result>`__
         :param job_id: the id of the job
         :type job_id: str
         :return: the job result
@@ -466,7 +472,7 @@ class AitoClient:
     def job_request(
             self, job_endpoint: str, query: Union[Dict, List] = None, polling_time: int = 10
     ) -> Dict:
-        """Make a request to an Aito API endpoint using job
+        """make a request to an Aito API endpoint using job
 
         This method should be used for requests that take longer than 30 seconds, e.g: evaluate
 
@@ -491,7 +497,7 @@ class AitoClient:
         return self.get_job_result(job_id)
 
     def get_table_size(self, table_name: str) -> int:
-        """return number of entries in a table
+        """return the number of entries of the specified table
 
         :param table_name: the name of the table
         :type table_name: str
@@ -501,7 +507,7 @@ class AitoClient:
         return self.request('POST', '/api/v1/_query', {'from': table_name})['total']
 
     def query_entries(self, table_name: str, offset: int = 0, limit: int = 10) -> Dict:
-        """query entries of a table `API doc <https://aito.ai/docs/api/#post-api-v1-query>`__
+        """`query <https://aito.ai/docs/api/#post-api-v1-query>`__ entries of the specified table
 
         use offset and limit for `pagination <https://aito.ai/docs/api/#pagination>`__
 
@@ -519,7 +525,7 @@ class AitoClient:
         return self.request('POST', '/api/v1/_query', query)
 
     def query_all_entries(self, table_name: str, batch_size: int = 5000) -> List[Dict]:
-        """query all entries in a table
+        """`query <https://aito.ai/docs/api/#post-api-v1-query>`__  all entries of the specified table
 
         :param table_name: the name of the table
         :type table_name: str
