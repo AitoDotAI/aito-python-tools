@@ -11,15 +11,6 @@ LOG = logging.getLogger("SchemaHandler")
 
 
 class SchemaHandler:
-    def __init__(self):
-        self.aito_types_to_python_types = {
-            'Boolean': bool,
-            'Decimal': float,
-            'Int': int,
-            'String': str,
-            'Text': str
-        }
-
     def infer_aito_types_from_pandas_series(self, series: pd.Series, sample_size: int = 100000) -> str:
         """
         .. deprecated:: 0.3.0
@@ -48,13 +39,11 @@ class SchemaHandler:
         return AitoTableSchema.infer_from_pandas_dataframe(df).to_json_serializable()
 
     def validate_table_schema(self, table_schema: Dict) -> Dict:
-        """Validate Aito Schema
+        """
 
-        :param table_schema: input table schema
-        :type table_schema: Dict
-        :raises ValueError: table schema is invalid
-        :return: table schema if valid
-        :rtype: Dict
+        .. deprecated: 0.3.0
+
+        Use :func:`~aito.sdk.aito_schema.AitoTableSchema.from_deserialized_object` instead
         """
         warnings.warn(
             'The function SchemaHandler.validate_table_schema is deprecated and will be removed '

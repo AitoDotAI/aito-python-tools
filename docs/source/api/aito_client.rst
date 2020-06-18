@@ -1,7 +1,7 @@
 .. _apiAitoClient:
 
 AitoClient
-==========
+----------
 
 .. automodule:: aito.sdk.aito_client
    :members:

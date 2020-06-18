@@ -182,7 +182,7 @@ class AitoClient:
         return self.request('GET', '/version')
 
     def create_database(self, database_schema: Dict) -> Dict:
-        """`create a database <https://aito.ai/docs/api/#put-api-v1-schema>`__usingthe specified database schema
+        """`create a database <https://aito.ai/docs/api/#put-api-v1-schema>`__ using the specified database schema
 
         :param database_schema: Aito database schema
         :type database_schema: Dict

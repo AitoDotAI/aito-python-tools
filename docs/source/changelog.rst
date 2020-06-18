@@ -3,10 +3,41 @@ Changelog
 
 0.3.0
 -----
-- Improved :ref:`apiSchemaHandler` `Column Type`_  inference and is now exposed at :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_column_type`
-- :ref:`apiSchemaHandler` *infer_aito_types_from_pandas_series* is deperecated and will be removed in an upcoming release, use :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_column_type` instead
-- Improved `Analyzer`_ inference with `Delimiter Analyzer`_ detection and is now exposed at :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_text_analyzer`
-- Added *max_sample_size* keyword argument to :meth:`aito.sdk.schema_handler.SchemaHandler.infer_table_schema_from_pandas_data_frame` to control the maximum sample size that will be used for inference
+
+SDK
+^^^
+- :ref:`apiAitoSchema`: The SDK now supports the component object of Aito schema including
+
+  - :py:class:`~aito.sdk.aito_schema.AitoAnalyzerSchema`
+  - :py:class:`~aito.sdk.aito_schema.AitoDataTypeSchema`
+  - :py:class:`~aito.sdk.aito_schema.AitoColumnTypeSchema`
+  - :py:class:`~aito.sdk.aito_schema.AitoTableSchema`
+  - :py:class:`~aito.sdk.aito_schema.AitoDatabaseSchema`
+
+- :ref:`apiSchemaHandler` is deprecated and will be removed in an upcoming release.
+
+  - :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_aito_types_from_pandas_series` -> :meth:`aito.sdk.aito_schema.AitoDataTypeSchema.infer_from_samples`
+  - :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_table_schema_from_pandas_data_frame` -> :meth:`aito.sdk.aito_schema.AitoTableSchema.infer_from_pandas_dataframe`
+  - :meth:`~aito.sdk.schema_handler.SchemaHandler.validate_table_schema` -> :meth:`aito.sdk.aito_schema.AitoTableSchema.from_deserialized_object`
+
+- Minor changes:
+
+  - Improved `Analyzer`_ inference: can now detect `Delimiter Analyzer`_ and is exposed at :meth:`aito.sdk.aito_schema.AitoAnalyzerSchema.infer_from_samples`
+  - :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.get_table_schema` and :meth:`~aito.sdk.aito_client.AitoClient.get_database_schema` now return the schema object instead of JSON response
+  - :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.create_table`, :ref:`apiDataFrameHandler` :meth:`~aito.sdk.data_frame_handler.DataFrameHandler.convert_df_using_aito_table_schema` and :meth:`~aito.sdk.data_frame_handler.DataFrameHandler.convert_file` now supports input of AitoTableSchema object
+  - :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.query_entries` now returns entries instead of JSON response
+  - :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.query_entries` and :meth:`~aito.sdk.aito_client.AitoClient.query_all_entries` now supports the ``select`` keyword to select the field in an entry
+
+
+CLI
+^^^
+- Added the shorthanded ``aitodb`` for the :ref:`cliDatabase` command. You can now perform database operation with ``aitodb <operation>`` instead of ``aito database <operation>``
+- Added the following database operations:
+
+  - ``login``: login to your Aito instance
+  - ``show-tables``: show the existing tables in the Aito instance
+  - ``copy-table``: copy a table
+  - ``rename-table``: rename a table
 
 0.2.2
 -----
@@ -19,7 +50,7 @@ Changelog
 
 - :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.upload_entries` now accepts `generators`_ as well as lists.
 
-- :ref:`apiAitoClient` *upload_entries_by_batches* is deprecated and will be removed in an upcoming release, use :meth:`~aito.sdk.aito_client.AitoClient.upload_entries` instead.
+- :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.upload_entries_by_batches` is deprecated and will be removed in an upcoming release, use :meth:`~aito.sdk.aito_client.AitoClient.upload_entries` instead.
 
 
 0.2.0
@@ -28,7 +59,7 @@ Changelog
 CLI
 ^^^
 
-- Add a version flag (``--version``) and verbosity level flags (``--verbose`` and ``--quiet``) to the CLI.
+- Added a version flag (``--version``) and verbosity level flags (``--verbose`` and ``--quiet``) to the CLI.
 - The CLI now returns more concise error messages. Use ``--verbose`` mode if you want to see the comprehensive error message with stack info.
 - The ODBC driver name for SQL functions is now specified by an environment variable (``SQL_DRIVER``) or a flag (``--driver``) instead of a required argument as before. For example::
 
@@ -42,7 +73,7 @@ CLI
 SDK
 ^^^
 
-- Rename the ``utils`` package to ``sdk``. Please change the import statement accordingly. For example::
+- Renamed the ``utils`` package to ``sdk``. Please change the import statement accordingly. For example::
 
     from aito.sdk.aito_client import AitoClient
 

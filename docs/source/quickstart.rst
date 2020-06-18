@@ -49,7 +49,7 @@ For examples, infer a table schema from a csv file::
 .. _cliQuickstartChangeSchema:
 
 Change the Schema
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
 or add an Analyzer_ to a ``Text`` column. In that case, just make changes to the inferred schema JSON file.
@@ -139,7 +139,7 @@ The :ref:`apiSchemaHandler` can infer table schema from a DataFrame:
 .. _sdkQuickstartChangeSchema:
 
 Change the Schema 
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
 or add a Analyzer_ to a ``Text`` column.
