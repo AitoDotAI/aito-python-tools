@@ -155,7 +155,7 @@ class RenameTableSubCommand(SubCommand):
 
 class ShowTablesSubCommand(SubCommand):
     def __init__(self):
-        super().__init__('show-tables', 'show the table in the Aito instance')
+        super().__init__('show-tables', 'show the existing tables in the Aito instance')
 
     def build_parser(self, parser):
         pass
