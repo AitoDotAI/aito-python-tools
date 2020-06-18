@@ -285,6 +285,21 @@ class TestMainParserDatabaseSubCommand(ParserAndCLITestCase):
         self.assertNotIn(self.default_table_name, db_tables)
         self.client.delete_table(rename_table_name)
 
+    def test_show_tables(self):
+        self.create_table()
+        self.expected_args.update({
+            'operation': 'show-tables',
+        })
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(self.command + ['show-tables'], self.expected_args, stub_stdout=out_f)
+
+        with self.out_file_path.open() as in_f:
+            content = in_f.read()
+
+        listed_tables = content.splitlines()
+
+        self.assertIn(self.default_table_name, listed_tables)
+
     @unittest.skipUnless(os.environ.get('RUN_DELETE_DATABASE_TEST'), "Avoid delete DB when running other tests")
     def test_delete_database(self):
         self.create_table()

@@ -153,6 +153,20 @@ class RenameTableSubCommand(SubCommand):
         return 0
 
 
+class ShowTablesSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('show-tables', 'show the table in the Aito instance')
+
+    def build_parser(self, parser):
+        pass
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        tables = client.get_existing_tables()
+        print(*sorted(tables), sep='\n')
+        pass
+
+
 class DeleteDatabaseSubCommand(SubCommand):
     def __init__(self):
         super().__init__('delete-database', 'delete the whole database')
@@ -300,6 +314,7 @@ class DatabaseSubCommand(SubCommand):
         DeleteTableSubCommand(),
         CopyTableSubCommand(),
         RenameTableSubCommand(),
+        ShowTablesSubCommand(),
         DeleteDatabaseSubCommand(),
         UploadEntriesSubCommand(),
         UploadBatchSubCommand(),
