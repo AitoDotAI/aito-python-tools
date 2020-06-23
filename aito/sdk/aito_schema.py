@@ -1,10 +1,15 @@
+"""
+
+Data structure for the Aito Database Schema
+"""
+
 import itertools
 import json
 import logging
 from abc import abstractmethod, ABC
 from collections import Counter
 from csv import Sniffer, Error as csvError
-from typing import List, Dict, Iterable, Optional
+from typing import List, Iterable, Dict, Optional
 
 import pandas as pd
 from langdetect import detect_langs
@@ -37,9 +42,12 @@ def _compare_optional_arg(first, second, default_value):
 
 
 class AitoSchema(ABC):
-    supported_analyzer_type = ['char-ngram', 'delimiter', 'language', 'token-ngram']
-    supported_data_types = ("Boolean", "Decimal", "Int", "String", "Text")
-    supported_language_analyzer_iso_code_to_name = {
+    """The base class for Aito schema component
+
+    """
+    _supported_analyzer_type = ['char-ngram', 'delimiter', 'language', 'token-ngram']
+    _supported_data_types = ("Boolean", "Decimal", "Int", "String", "Text")
+    _supported_language_analyzer_iso_code_to_name = {
         'ar': 'arabic',
         'bg': 'bulgarian',
         'ca': 'catalan',
@@ -72,22 +80,21 @@ class AitoSchema(ABC):
         'th': 'thai',
         'tr': 'turkish'
     }
-    supported_language_analyzer_aliases = [
-        al for iso_code_and_lang in supported_language_analyzer_iso_code_to_name.items() for al in iso_code_and_lang]
-    supported_analyzer_aliases = ['standard', 'whitespace'] + supported_language_analyzer_aliases
+    _supported_language_analyzer_aliases = [
+        al for iso_code_and_lang in _supported_language_analyzer_iso_code_to_name.items() for al in iso_code_and_lang]
+    _supported_analyzer_aliases = ['standard', 'whitespace'] + _supported_language_analyzer_aliases
 
     def __init__(self, typ):
         """
 
-        :param typ: the type of the schema
+        :param typ: the type of the schema component
         :type typ: str
         """
         self._typ = typ
 
     @property
     def type(self):
-        """the type of the schema
-        :rtype: str
+        """the type of the schema component
         """
         return self._typ
 
@@ -107,7 +114,7 @@ class AitoSchema(ABC):
     @property
     @abstractmethod
     def comparison_properties(self) -> Iterable[str]:
-        """iterable of the properties that will be used for comparison
+        """iterable of the properties that will be used for comparison with another schema object of the same type
 
         :rtype: Iterable[str]
         """
@@ -128,8 +135,13 @@ class AitoSchema(ABC):
     def __str__(self):
         return json.dumps(self.to_json_serializable())
 
+    def __repr__(self):
+        return json.dumps(self.to_json_serializable(), indent=4, sort_keys=True)
+
 
 class AitoAnalyzerSchema(AitoSchema, ABC):
+    """the base class for `Aito Analyzer <https://aito.ai/docs/api/#schema-analyzer>`__
+    """
     _lang_detect_code_to_aito_code = {
         'ko': 'cjk',
         'ja': 'cjk',
@@ -137,7 +149,13 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
         'zh-tw': 'cjk',
         'pt': 'pt-br'
     }
+
     def __init__(self, analyzer_type: str):
+        """
+
+        :param analyzer_type: the type of the analyzer
+        :type analyzer_type: str
+        """
         super().__init__('analyzer')
         self._analyzer_type = analyzer_type
 
@@ -152,7 +170,7 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
             return AitoAliasAnalyzerSchema.from_deserialized_object(obj)
         else:
             analyzer_type = _get_required_kwarg_of('AnalyzerSchema', obj, 'type')
-            if analyzer_type not in cls.supported_analyzer_type:
+            if analyzer_type not in cls._supported_analyzer_type:
                 raise ValueError(f'unsupported analyzer of type {analyzer_type}')
             if analyzer_type == 'language':
                 return AitoLanguageAnalyzerSchema.from_deserialized_object(obj)
@@ -215,7 +233,7 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
                 most_probable_lang = most_probable_lang_and_prob.lang
                 if most_probable_lang in cls._lang_detect_code_to_aito_code:
                     most_probable_lang = cls._lang_detect_code_to_aito_code[most_probable_lang]
-                if most_probable_lang in cls.supported_language_analyzer_iso_code_to_name:
+                if most_probable_lang in cls._supported_language_analyzer_iso_code_to_name:
                     return most_probable_lang
         return None
 
@@ -243,21 +261,22 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
 
 class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
     """Aito `AliasAnalyzer <https://aito.ai/docs/api/#schema-alias-analyzer>`__ schema
-
     """
 
     def __init__(self, alias: str):
         """
 
-        :param alias: the alias of the analyzer, standardize to language name if the alias is language ISO code
+        :param alias: the alias of the analyzer, standardize to the language name if the alias is a language ISO code
         :type alias: str
         """
         super().__init__(analyzer_type='alias')
+        if not isinstance(alias, str):
+            raise TypeError("alias must be of type str")
         alias = alias.lower().strip()
-        if alias not in self.supported_analyzer_aliases:
+        if alias not in self._supported_analyzer_aliases:
             raise ValueError(f"unsupported alias {alias}")
-        if alias in self.supported_language_analyzer_iso_code_to_name:
-            alias = self.supported_language_analyzer_iso_code_to_name[alias]
+        if alias in self._supported_language_analyzer_iso_code_to_name:
+            alias = self._supported_language_analyzer_iso_code_to_name[alias]
         self._alias = alias
 
     @property
@@ -290,62 +309,80 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
             self,
             language: str,
             use_default_stop_words: bool = None,
-            custom_stop_words: Iterable = None,
-            custom_key_words: Iterable = None
+            custom_stop_words: List[str] = None,
+            custom_key_words: List[str] = None
     ):
         """
 
         :param language: the name or the ISO code of the language
         :type language: str
-        :param use_default_stop_words: use the language default stop words
+        :param use_default_stop_words: filter the language default stop words
         :type use_default_stop_words: bool, defaults to False
         :param custom_stop_words: words that will be filtered
-        :type custom_stop_words: Iterable, defaults to []
+        :type custom_stop_words: List[str], defaults to []
         :param custom_key_words: words that will not be featurizerd
-        :type custom_key_words: Iterable, defaults to []
+        :type custom_key_words: List[str], defaults to []
         """
         super().__init__('language')
-        language = language.lower().strip()
-        if language not in self.supported_language_analyzer_aliases:
-            raise ValueError(f'unsupported language {language}')
-        if language in self.supported_language_analyzer_iso_code_to_name:
-            language = self.supported_language_analyzer_iso_code_to_name[language]
-        self._language = language
+        self.language = language
         self._use_default_stop_words = use_default_stop_words if use_default_stop_words is not None else False
-        self._custom_stop_words = list(custom_stop_words) if custom_stop_words else []
-        self._custom_key_words = list(custom_key_words) if custom_key_words else []
+        self._custom_stop_words = custom_stop_words if custom_stop_words is not None else []
+        self._custom_key_words = custom_key_words if custom_key_words is not None else []
 
     @property
     def language(self) -> str:
-        """the language
-
-        :rtype: str
-        """
+        """the language of the analyzer"""
         return self._language
+
+    @language.setter
+    def language(self, value):
+        if not isinstance(value, str):
+            raise TypeError("language must be of type str")
+        language = value.lower().strip()
+        if language not in self._supported_language_analyzer_aliases:
+            raise ValueError(f'unsupported language {language}')
+        if language in self._supported_language_analyzer_iso_code_to_name:
+            language = self._supported_language_analyzer_iso_code_to_name[language]
+        self._language = language
 
     @property
     def use_default_stop_words(self) -> bool:
-        """use the language default stop words
-
-        :rtype: bool
-        """
+        """filter the language default stop words"""
         return self._use_default_stop_words
+
+    @use_default_stop_words.setter
+    def use_default_stop_words(self, value):
+        if value is None:
+            value = False
+        elif not isinstance(value, bool):
+            raise TypeError('use_default_stop_words must be of type bool or None')
+        self._use_default_stop_words = value
 
     @property
     def custom_stop_words(self) -> List:
-        """list of words that will be filtered
-
-        :rtype: list
-        """
+        """list of words that will be filtered"""
         return self._custom_stop_words
+
+    @custom_stop_words.setter
+    def custom_stop_words(self, value):
+        if value is None:
+            value = []
+        elif not (isinstance(value, list) and all(isinstance(item, str) for item in value)):
+            raise TypeError('custom_stop_words must be of type list of string or None')
+        self._use_default_stop_words = value
 
     @property
     def custom_key_words(self) -> List:
-        """list of words that will not be featurizerd
-
-        :rtype: list
-        """
+        """list of words that will not be featurizerd"""
         return self._custom_key_words
+
+    @custom_key_words.setter
+    def custom_key_words(self, value):
+        if value is None:
+            value = []
+        elif not (isinstance(value, list) and all(isinstance(item, str) for item in value)):
+            raise TypeError('custom_key_words must be of type list of string or None')
+        self._custom_key_words = value
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -373,7 +410,7 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
 
 
 class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
-    """Aito `DelimiterAnalyzer <https://aito.ai/docs/api/#schema-delimiter-analyzer`__ schema
+    """Aito `DelimiterAnalyzer <https://aito.ai/docs/api/#schema-delimiter-analyzer>`__ schema
 
     """
 
@@ -386,24 +423,31 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
         :type trim_white_space: bool, defaults to True
         """
         super().__init__('delimiter')
-        self._delimiter = delimiter
-        self._trim_white_space = trim_white_space if trim_white_space is not None else True
+        self.delimiter = delimiter
+        self.trim_white_space = trim_white_space
 
     @property
-    def delimiter(self) -> str:
-        """the delimiter
-
-        :rtype: str
-        """
+    def delimiter(self):
         return self._delimiter
+
+    @delimiter.setter
+    def delimiter(self, value):
+        if not isinstance(value, str):
+            raise TypeError('delimiter must be of type str')
+        self._delimiter = value
 
     @property
     def trim_white_space(self) -> bool:
-        """trim leading and trailing whitespaces of the features
-
-        :rtype: bool
-        """
+        """trim leading and trailing whitespaces of the features"""
         return self._trim_white_space
+
+    @trim_white_space.setter
+    def trim_white_space(self, value):
+        if value is None:
+            value = True
+        elif not isinstance(value, bool):
+            raise TypeError('trim_white_space must be of type bool or None')
+        self._trim_white_space = value
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -412,8 +456,8 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
     def to_json_serializable(self):
         return {
             'type': 'delimiter',
-            'delimiter': self._delimiter,
-            'trimWhiteSpace': self._trim_white_space
+            'delimiter': self.delimiter,
+            'trimWhiteSpace': self.trim_white_space
         }
 
     @classmethod
@@ -430,6 +474,7 @@ class AitoCharNGramAnalyzerSchema(AitoAnalyzerSchema):
     """Aito `CharNGramAnalyzer <https://aito.ai/docs/api/#schema-char-n-gram-analyzer>`__ schema
 
     """
+
     def __init__(self, min_gram: int, max_gram: int):
         """
 
@@ -439,24 +484,8 @@ class AitoCharNGramAnalyzerSchema(AitoAnalyzerSchema):
         :type max_gram: int
         """
         super().__init__('char-ngram')
-        self._min_gram = min_gram
-        self._max_gram = max_gram
-
-    @property
-    def min_gram(self):
-        """ The minimum length of characters in a feature
-
-        :rtype: int
-        """
-        return self._min_gram
-
-    @property
-    def max_gram(self):
-        """ The maxium length of characters in a feature
-
-        :rtype: int
-        """
-        return self._max_gram
+        self.min_gram = min_gram
+        self.max_gram = max_gram
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -497,42 +526,23 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
         :type token_separator: str, defaults to ' '
         """
         super().__init__('token-ngram')
-        self._source = source
-        self._min_gram = min_gram
-        self._max_gram = max_gram
-        self._token_separator = token_separator if token_separator is not None else ' '
-
-    @property
-    def source(self) -> AitoAnalyzerSchema:
-        """the source analyzer
-
-        :rtype: AitoAnalyzerSchema
-        """
-        return self._source
-
-    @property
-    def min_gram(self) -> int:
-        """the minimum length of characters in a feature
-
-        :rtype: int
-        """
-        return self._min_gram
-
-    @property
-    def max_gram(self) -> int:
-        """the maximum length of characters in a feature
-
-        :rtype: int
-        """
-        return self._max_gram
+        self.source = source
+        self.min_gram = min_gram
+        self.max_gram = max_gram
+        self.token_separator = token_separator
 
     @property
     def token_separator(self) -> str:
-        """the string to join the features
-
-        :rtype: str
-        """
+        """the string to join the features"""
         return self._token_separator
+
+    @token_separator.setter
+    def token_separator(self, value):
+        if value is None:
+            value = ' '
+        elif not isinstance(value, str):
+            raise TypeError('token_separator must be of type str')
+        self._token_separator = value
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -562,7 +572,7 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
 
 
 class AitoDataTypeSchema(AitoSchema, ABC):
-    """Aito DataType"""
+    """The base class for Aito DataType"""
 
     _pandas_dtypes_name_to_aito_type = {
         'string': 'Text',
@@ -592,9 +602,9 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         :type aito_dtype: str
         """
         super().__init__('dtype')
-        if aito_dtype not in self.supported_data_types:
+        if aito_dtype not in self._supported_data_types:
             raise ValueError(
-                f"unrecognized data type `{aito_dtype}`. Data type must be one of {'|'.join(self.supported_data_types)}"
+                f"unrecognized data type `{aito_dtype}`. Data type must be one of {'|'.join(self._supported_data_types)}"
             )
         self._aito_dtype = aito_dtype
 
@@ -608,22 +618,32 @@ class AitoDataTypeSchema(AitoSchema, ABC):
 
     @property
     def is_string(self) -> bool:
+        """true if the data type is String
+        """
         return self._aito_dtype == 'String'
 
     @property
     def is_text(self) -> bool:
+        """true if the data type is Text
+        """
         return self._aito_dtype == 'Text'
 
     @property
     def is_bool(self) -> bool:
+        """true if the data type is Boolean
+        """
         return self._aito_dtype == 'Boolean'
 
     @property
     def is_int(self) -> bool:
+        """true if the data type is Int
+        """
         return self._aito_dtype == 'Int'
 
     @property
     def is_decimal(self) -> bool:
+        """true if the data type is Decimal
+        """
         return self._aito_dtype == 'Decimal'
 
     def to_json_serializable(self) -> str:
@@ -631,6 +651,8 @@ class AitoDataTypeSchema(AitoSchema, ABC):
 
     @abstractmethod
     def to_python_type(self):
+        """the equivalent python type
+        """
         pass
 
     @classmethod
@@ -647,7 +669,7 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         if obj == 'Text':
             return AitoTextType()
         raise ValueError(
-            f"unrecognized data type `{obj}`. Data type must be one of {'|'.join(cls.supported_data_types)}"
+            f"unrecognized data type `{obj}`. Data type must be one of {'|'.join(cls._supported_data_types)}"
         )
 
     @property
@@ -742,28 +764,20 @@ class AitoColumnLink(AitoSchema):
 
     @property
     def linked_table_name(self) -> str:
-        """
-
-        :return: the name of the linked table
-        :rtype: str
-        """
+        """the name of the linked table"""
         return self._linked_table_name
 
     @property
     def linked_field_name(self) -> str:
-        """
-
-        :return: the name of the linked field
-        :rtype: str
-        """
+        """the name of the linked field"""
         return self._linked_field_name
 
     def to_json_serializable(self):
-        return f"{self._linked_table_name}.{self._linked_field_name}"
+        return f"{self.linked_table_name}.{self.linked_field_name}"
 
     @classmethod
     def from_deserialized_object(cls, obj: str) -> "AitoColumnLink":
-        splitted = tuple(obj.split('.'))
+        splitted = obj.split('.')
         if not splitted or len(splitted) != 2:
             raise ValueError(
                 f'invalid link. The link must contain table and column in the format `<table_name>.<column_name>`'
@@ -779,7 +793,6 @@ class AitoColumnTypeSchema(AitoSchema):
     """Aito `ColumnType <https://aito.ai/docs/api/#schema-column-type>`__ schema
 
     """
-
     def __init__(
             self,
             data_type: AitoDataTypeSchema,
@@ -799,49 +812,55 @@ class AitoColumnTypeSchema(AitoSchema):
         :type analyzer: AnalyzerSchema, optional
         """
         super().__init__('column')
-        if analyzer and not data_type.is_text:
-            raise ValueError(f"{data_type} does not support analyzer")
         self._data_type = data_type
-        self._nullable = nullable if nullable is not None else False
-        self._link = link
         self._analyzer = analyzer
+        self.data_type = data_type
+        self.nullable = nullable
+        self.link = link
+        self.analyzer = analyzer
 
     @property
-    def data_type(self) -> AitoDataTypeSchema:
-        """the data type of the column
-
-        :rtype: str
-        """
+    def data_type(self):
         return self._data_type
+
+    @data_type.setter
+    def data_type(self, value):
+        if not isinstance(value, AitoDataTypeSchema):
+            raise TypeError('data_type must be of type AitoDataTypeSchema')
+        if self.analyzer and not value.is_text:
+            raise ValueError(f"{value} does not support analyzer")
+        self._data_type = value
+
+    @property
+    def analyzer(self):
+        return self._analyzer
+
+    @analyzer.setter
+    def analyzer(self, value):
+        if value:
+            if not isinstance(value, AitoAnalyzerSchema):
+                raise TypeError('analyzer must be of type AitoAnalyzerSchema')
+            if  not self.data_type.is_text:
+                raise ValueError(f"{self.data_type} does not support analyzer")
+        self._analyzer = value
 
     @property
     def nullable(self) -> bool:
-        """True if the column allow `null` value
-
-        :rtype: bool
-        """
+        """True if the column allow `null` value"""
         return self._nullable
 
-    @property
-    def link(self) -> Optional[AitoColumnLink]:
-        """the column link
-
-        :rtype:
-        """
-        return self._link
+    @nullable.setter
+    def nullable(self, value):
+        if value is None:
+            value = False
+        elif not isinstance(value, bool):
+            raise TypeError('nullable must be of type bool or None')
+        self._nullable = value
 
     @property
     def has_link(self) -> bool:
         """return true if the column is linked to another column"""
-        return self._link is not None
-
-    @property
-    def analyzer(self) -> Optional[AitoAnalyzerSchema]:
-        """the analyzer if the column type is Text
-
-        :rtype: AitoAnalyzerSchema
-        """
-        return self._analyzer
+        return self.link is not None
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -849,9 +868,9 @@ class AitoColumnTypeSchema(AitoSchema):
 
     def to_json_serializable(self):
         data = {
-            'type': self._data_type.to_json_serializable(),
+            'type': self.data_type.to_json_serializable(),
             'nullable': self.nullable,
-            'link': self.link.to_json_serializable() if self._link is not None else None,
+            'link': self.link.to_json_serializable() if self.link is not None else None,
             'analyzer': self.analyzer.to_json_serializable() if self.analyzer else self.analyzer
         }
         return {
@@ -872,7 +891,45 @@ class AitoColumnTypeSchema(AitoSchema):
 class AitoTableSchema(AitoSchema):
     """Aito Table schema contains the columns and their schema
 
+    Can be thought of as a dict-like container for AitoColumnTypeSchema objects
+
+    Examples
+    --------
+
+    Infer AitoTableSchema from a Pandas DataFrame
+
+    >>> df = pd.DataFrame(data={'id': [1, 2], 'name': ['Neil', 'Buzz']})
+    >>> table_schema = AitoTableSchema.infer_from_pandas_data_frame(df)
+    >>> table_schema
+    {
+        "columns": {
+            "id": {
+                "nullable": false,
+                "type": "Int"
+            },
+            "name": {
+                "nullable": false,
+                "type": "String"
+            }
+        },
+        "type": "table"
+    }
+    >>> table_schema['name']
+    {
+        "nullable": false,
+        "type": "String"
+    }
+    >>> table_schema['name'].nullable = True
+    >>> table_schema['name']
+    {
+        "nullable": true,
+        "type": "String"
+    }
+
+    change the property of a column
+
     """
+
     def __init__(self, columns: Dict[str, AitoColumnTypeSchema]):
         """
 
@@ -924,18 +981,24 @@ class AitoTableSchema(AitoSchema):
         return {col_name: col_schema.link for col_name, col_schema in self._columns.items() if col_schema.has_link}
 
     def __getitem__(self, column_name: str):
-        """ access a column schema with the specified column name
-
-        :param column_name: the name of the column
-        :type column_name: str
-        :return: the column schema
-        :rtype: AitoColumnTypeSchema
+        """get the column schema of the specified column name
         """
         if not isinstance(column_name, str):
             raise TypeError('the name of the column must be of type string')
         if column_name not in self._columns:
             raise KeyError(f'column `{column_name}` does not exist')
         return self._columns[column_name]
+
+    def __setitem__(self, column_name: str, value):
+        """update the column schema of the specified column name
+        """
+        if not isinstance(column_name, str):
+            raise TypeError('the name of the column must be of type string')
+        if column_name not in self._columns:
+            raise KeyError(f'column `{column_name}` does not exist')
+        if not isinstance(value, AitoColumnTypeSchema):
+            raise TypeError('column shchema must be of type AitoColumnTypeSchema')
+        self._columns[column_name] = value
 
     @classmethod
     def from_deserialized_object(cls, obj):
@@ -952,7 +1015,7 @@ class AitoTableSchema(AitoSchema):
         return cls(columns=columns)
 
     @classmethod
-    def infer_from_pandas_dataframe(cls, df: pd.DataFrame, max_sample_size: int = 100000) -> 'AitoTableSchema':
+    def infer_from_pandas_data_frame(cls, df: pd.DataFrame, max_sample_size: int = 100000) -> 'AitoTableSchema':
         """Infer a TableSchema from a Pandas DataFrame
 
         :param df: input Pandas DataFrame
@@ -992,6 +1055,7 @@ class AitoTableSchema(AitoSchema):
 class AitoDatabaseSchema(AitoSchema):
     """Aito Database Schema
 
+    Can be thought of as a dict-like container for AitoTableSchema objects
     """
     def __init__(self, tables: Dict[str, AitoTableSchema]):
         super().__init__('database')
@@ -1029,18 +1093,24 @@ class AitoDatabaseSchema(AitoSchema):
         }
 
     def __getitem__(self, table_name: str) -> AitoTableSchema:
-        """ access a table schema with the specified column name
-
-        :param table_name: the name of the column
-        :type table_name: str
-        :return: the table schema
-        :rtype: AitoTableSchema
+        """get the schema of the specified table
         """
         if not isinstance(table_name, str):
             raise TypeError('the name of the column must be of type string')
         if table_name not in self._tables:
             raise KeyError(f'table `{table_name}` does not exist')
         return self._tables[table_name]
+
+    def __setitem__(self, table_name: str, value):
+        """update the schema of the specified table
+        """
+        if not isinstance(table_name, str):
+            raise TypeError('the name of the column must be of type string')
+        if table_name not in self._tables:
+            raise KeyError(f'table `{table_name}` does not exist')
+        if not isinstance(value, AitoTableSchema):
+            raise TypeError('the table schema must be of type AitoTableSchema')
+        self._tables[table_name] = value
 
     @classmethod
     def from_deserialized_object(cls, obj):
