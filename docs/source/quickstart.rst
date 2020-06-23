@@ -128,13 +128,12 @@ The example below show how you can load a csv file into a DataFrame, please read
 :ref:`Infer a Table Schema <sdkInferTableSchema>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :ref:`apiSchemaHandler` can infer table schema from a DataFrame:
+You can infer a :py:class:`~aito.sdk.aito_schema.AitoTableSchema` from `Pandas DataFrame`_:
 
   .. code:: python
 
-    from aito.sdk.schema_handler import SchemaHandler
-    schema_handler = SchemaHandler()
-    inferred_schema = schema_handler.infer_table_schema_from_pandas_data_frame(data_frame)
+    from aito.sdk.aito_schema import AitoTableSchema
+    table_schema = AitoTableSchema.infer_from_pandas_dataframe(data_frame)
 
 .. _sdkQuickstartChangeSchema:
 
@@ -144,18 +143,17 @@ Change the Schema
 You might want to change the ColumnType_, e.g: The ``id`` column should be of type ``String`` instead of ``Int``,
 or add a Analyzer_ to a ``Text`` column.
 
-The return inferred schema from :ref:`apiSchemaHandler` is a `Python Dictionary Object`_ and hence, can be updated by updating the value:
+You can access and update the column schema by using the column name as the key:
 
   .. code :: python
-
-    inferred_schema['columns']['id']['type'] = 'String'
+    table_schema['id'].data_type = AitoStringType()
 
 .. _sdkQuickstartCreateTable:
 
 :ref:`Create a Table <sdkCreateTable>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :ref:`apiAitoClient` can create a table using a table name and a table schema:
+The :py:class:`~aito.sdk.aito_client.AitoClient` can create a table using a table name and a table schema:
 
   .. code:: python
 
@@ -212,7 +210,7 @@ A DataFrame can be converted to:
 :ref:`Upload the Data <sdkUploadData>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :ref:`apiAitoClient` can upload the data with either `Batch Upload`_ or `File Upload`_:
+The :py:class:`~aito.sdk.aito_client.AitoClient` can upload the data with either `Batch Upload`_ or `File Upload`_:
 
 .. code:: python
 

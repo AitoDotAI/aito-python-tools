@@ -17,7 +17,7 @@ You can download an example data file `here <https://raw.githubusercontent.com/A
 
   reddit_df = pd.read_csv('reddit_sample.csv')
 
-You can also use the :ref:`apiDataFrameHandler` to read data into pandas DataFrame
+You can also use the :py:class:`~aito.sdk.data_frame_handler.DataFrameHandler` to read data into pandas DataFrame
 
 .. _sdkInferTableSchema:
 
@@ -27,7 +27,7 @@ Infer a Table Schema
 An Aito table schema describes how the table should be constructed and processed internally.
 You can read more about the Aito schema `here <https://aito.ai/docs/articles/defining-a-database-schema/>`__
 
-The Aito Python SDK includes a :ref:`apiSchemaHandler` that can infer an Aito table schema from a `Pandas DataFrame`_.
+The :py:class:`~aito.sdk.aito_schema.AitoTableSchema` can be inferred from a `Pandas DataFrame`_.
 The example below assumes that you already have a DataFrame named :ref:`reddit_df DataFrame<Load a Data File to Pandas DataFrame>`.
 
 .. code:: python
@@ -50,10 +50,10 @@ The example below assumes that you already have a DataFrame named :ref:`reddit_d
 
 .. _sdkCreateTable:
 
-Create Aito Schema
-------------------
+Create a Table
+--------------
 
-You can create Aito schema with an :ref:`apiAitoClient`.
+You can `create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__ after you have the table schema with the :py:class:`~aito.sdk.aito_client.AitoClient`.
 
 Your AitoClient must be set up with the READ-WRITE API key
 
@@ -124,7 +124,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 Upload Data
 -----------
 
-You can create an Aito schema with the :ref:`apiAitoClient`.
+You can upload data to a table with the :py:class:`~aito.sdk.aito_client.AitoClient`.
 
 Your AitoClient must be set up with the READ-WRITE API key
 
@@ -197,7 +197,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 Delete data
 -----------
 
-You can delete data with the :ref:`apiAitoClient`.
+You can delete data with the :py:class:`~aito.sdk.aito_client.AitoClient`.
 
 Your AitoClient must be set up with the READ-WRITE API key
 
@@ -212,7 +212,7 @@ Your AitoClient must be set up with the READ-WRITE API key
 Execute Queries
 ---------------
 
-You can execute queries with the :ref:`apiAitoClient`.
+You can execute queries with the :py:class:`~aito.sdk.aito_client.AitoClient`.
 
 Your AitoClient can be set up with the READ-ONLY API key
 

@@ -31,11 +31,17 @@ version = release.split(".dev")[0]
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel', 'sphinx.ext.githubpages']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel', 'sphinx.ext.githubpages', 'sphinx.ext.autosummary']
 autodoc_mock_imports = [
     'pandas', 'dotenv', 'requests', 'aiohttp', 'ndjson', 'langdetect', 'argcomplete', 'xlrd', 'numpy', 'pyodbc'
 ]
+autodoc_default_flags = [
+    "members",
+    "show-inheritence"
+    "inherited-members"
+]
 autoclass_content = "both"
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
