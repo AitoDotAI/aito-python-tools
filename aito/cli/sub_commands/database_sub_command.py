@@ -73,7 +73,7 @@ class QuickAddTableSubCommand(SubCommand):
         converted_df = df_handler.convert_file(**convert_options)
         converted_tmp_file.close()
 
-        inferred_schema = AitoTableSchema.infer_from_pandas_dataframe(converted_df)
+        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(converted_df)
         client = create_client_from_parsed_args(parsed_args)
         client.create_table(table_name, inferred_schema.to_json_serializable())
 
@@ -292,7 +292,7 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
         connection = create_sql_connecting_from_parsed_args(parsed_args)
 
         result_df = connection.execute_query_and_save_result(parsed_args['query'])
-        inferred_schema = AitoTableSchema.infer_from_pandas_dataframe(result_df)
+        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(result_df)
 
         converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
         DataFrameHandler().df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})

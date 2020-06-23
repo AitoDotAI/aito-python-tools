@@ -11,6 +11,13 @@ LOG = logging.getLogger("SchemaHandler")
 
 
 class SchemaHandler:
+    """A handler that supports infer and validate Aito Schema
+
+    .. deprecated:: 0.3.0
+
+    Use :mod:`~aito.sdk.aito_schema` instead
+
+    """
     def infer_aito_types_from_pandas_series(self, series: pd.Series, sample_size: int = 100000) -> str:
         """
         .. deprecated:: 0.3.0
@@ -36,7 +43,7 @@ class SchemaHandler:
             'in a future version. Use AitoTableSchema.infer_from_pandas_dataframe instead',
             category=FutureWarning
         )
-        return AitoTableSchema.infer_from_pandas_dataframe(df).to_json_serializable()
+        return AitoTableSchema.infer_from_pandas_data_frame(df).to_json_serializable()
 
     def validate_table_schema(self, table_schema: Dict) -> Dict:
         """

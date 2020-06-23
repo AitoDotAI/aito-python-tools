@@ -45,7 +45,7 @@ class InferFromFormatSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         parsed_read_args = self.parsed_args_to_data_frame_handler_read_args(parsed_args)
         df = DataFrameHandler().read_file_to_df(**parsed_read_args)
-        inferred_schema = AitoTableSchema.infer_from_pandas_dataframe(df)
+        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(df)
         json.dump(inferred_schema.to_json_serializable(), sys.stdout, indent=4, sort_keys=True)
         return 0
 
@@ -79,7 +79,7 @@ class InferFromSQLSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         connection = create_sql_connecting_from_parsed_args(parsed_args)
         result_df = connection.execute_query_and_save_result(parsed_args['query'])
-        inferred_schema = AitoTableSchema.infer_from_pandas_dataframe(result_df)
+        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(result_df)
         json.dump(inferred_schema.to_json_serializable(), sys.stdout, indent=4, sort_keys=True)
         return 0
 
