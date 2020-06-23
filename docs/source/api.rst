@@ -3,10 +3,11 @@
 API Documentation
 =================
 
-.. toctree::
+.. autosummary::
+  :toctree: api_stubs
 
-  api/aito_client
-  api/aito_schema
-  api/data_frame_handler
-  api/schema_handler
-  api/sql_connection
+  aito.sdk.aito_schema
+  aito.sdk.aito_client
+  aito.sdk.data_frame_handler.DataFrameHandler
+  aito.sdk.schema_handler.SchemaHandler
+  aito.sdk.sql_connection.SQLConnection
