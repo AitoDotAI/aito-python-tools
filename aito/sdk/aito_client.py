@@ -1,3 +1,7 @@
+"""A versatile client that connects to the Aito Database Instance
+
+"""
+
 import asyncio
 import logging
 import time
@@ -17,6 +21,9 @@ LOG = logging.getLogger('AitoClient')
 
 
 class BaseError(Exception):
+    """An error occurred when using the client
+
+    """
     def __init__(self, message):
         LOG.error(message)
         LOG.debug(message, stack_info=True)
@@ -27,6 +34,9 @@ class BaseError(Exception):
 
 
 class RequestError(BaseError):
+    """An error occurred when sending a request to the Aito instance
+
+    """
     def __init__(self, method: str, endpoint: str, query: Union[List, Dict], error: Exception):
         if isinstance(error, requests.HTTPError):
             resp = error.response.json()
@@ -39,7 +49,7 @@ class RequestError(BaseError):
 
 
 class AitoClient:
-    """A versatile client for your Aito Database Instance
+    """A versatile client that connects to the Aito Database Instance
 
     """
     _request_methods = {
@@ -51,7 +61,8 @@ class AitoClient:
     _job_endpoint = '/api/v1/jobs'
 
     def __init__(self, instance_url: str, api_key: str, check_credentials: bool = True):
-        """Constructor method
+        """
+
         :param instance_url: Aito instance url
         :type instance_url: str
         :param api_key: Aito instance API key

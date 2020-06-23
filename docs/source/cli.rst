@@ -306,6 +306,7 @@ Infer a table schema based on the given file, create a table using the file name
 
 Create a Table
 ~~~~~~~~~~~~~~
+
 Create a table using the given Aito table schema::
 
   $ aitodb create-table tableName path/to/tableSchema.json

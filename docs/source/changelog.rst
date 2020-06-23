@@ -6,7 +6,7 @@ Changelog
 
 SDK
 ^^^
-- :ref:`apiAitoSchema`: The SDK now supports the component object of Aito schema including
+- :py:mod:`aito.sdk.aito_schema`: The SDK now supports the component object of the Aito schema including:
 
   - :py:class:`~aito.sdk.aito_schema.AitoAnalyzerSchema`
   - :py:class:`~aito.sdk.aito_schema.AitoDataTypeSchema`
@@ -14,7 +14,9 @@ SDK
   - :py:class:`~aito.sdk.aito_schema.AitoTableSchema`
   - :py:class:`~aito.sdk.aito_schema.AitoDatabaseSchema`
 
-- :ref:`apiSchemaHandler` is deprecated and will be removed in an upcoming release.
+  Please go to the module page for a full list of the supported components
+
+- :py:class`aito.sdk.schema_handler.SchemaHandler` is deprecated and will be removed in an upcoming release.
 
   - :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_aito_types_from_pandas_series` -> :meth:`aito.sdk.aito_schema.AitoDataTypeSchema.infer_from_samples`
   - :meth:`~aito.sdk.schema_handler.SchemaHandler.infer_table_schema_from_pandas_data_frame` -> :meth:`aito.sdk.aito_schema.AitoTableSchema.infer_from_pandas_dataframe`
@@ -23,10 +25,10 @@ SDK
 - Minor changes:
 
   - Improved `Analyzer`_ inference: can now detect `Delimiter Analyzer`_ and is exposed at :meth:`aito.sdk.aito_schema.AitoAnalyzerSchema.infer_from_samples`
-  - :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.get_table_schema` and :meth:`~aito.sdk.aito_client.AitoClient.get_database_schema` now return the schema object instead of JSON response
-  - :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.create_table`, :ref:`apiDataFrameHandler` :meth:`~aito.sdk.data_frame_handler.DataFrameHandler.convert_df_using_aito_table_schema` and :meth:`~aito.sdk.data_frame_handler.DataFrameHandler.convert_file` now supports input of AitoTableSchema object
-  - :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.query_entries` now returns entries instead of JSON response
-  - :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.query_entries` and :meth:`~aito.sdk.aito_client.AitoClient.query_all_entries` now supports the ``select`` keyword to select the field in an entry
+  - :py:class:`~aito.sdk.aito_client.AitoClient` :meth:`~aito.sdk.aito_client.AitoClient.get_table_schema` and :meth:`~aito.sdk.aito_client.AitoClient.get_database_schema` now return the schema object instead of JSON response
+  - :py:class:`~aito.sdk.aito_client.AitoClient` :meth:`~aito.sdk.aito_client.AitoClient.create_table`, :py:class`aito.sdk.schema_handler.SchemaHandler` :meth:`~aito.sdk.data_frame_handler.DataFrameHandler.convert_df_using_aito_table_schema` and :meth:`~aito.sdk.data_frame_handler.DataFrameHandler.convert_file` now supports input of AitoTableSchema object
+  - :py:class:`~aito.sdk.aito_client.AitoClient` :meth:`~aito.sdk.aito_client.AitoClient.query_entries` now returns entries instead of JSON response
+  - :py:class:`~aito.sdk.aito_client.AitoClient` :meth:`~aito.sdk.aito_client.AitoClient.query_entries` and :meth:`~aito.sdk.aito_client.AitoClient.query_all_entries` now supports the ``select`` keyword to select the field in an entry
 
 
 CLI
@@ -48,9 +50,9 @@ CLI
 0.2.1
 -----
 
-- :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.upload_entries` now accepts `generators`_ as well as lists.
+- - :py:class:`~aito.sdk.aito_client.AitoClient` :meth:`~aito.sdk.aito_client.AitoClient.upload_entries` now accepts `generators`_ as well as lists.
 
-- :ref:`apiAitoClient` :meth:`~aito.sdk.aito_client.AitoClient.upload_entries_by_batches` is deprecated and will be removed in an upcoming release, use :meth:`~aito.sdk.aito_client.AitoClient.upload_entries` instead.
+- - :py:class:`~aito.sdk.aito_client.AitoClient` :meth:`~aito.sdk.aito_client.AitoClient.upload_entries_by_batches` is deprecated and will be removed in an upcoming release, use :meth:`~aito.sdk.aito_client.AitoClient.upload_entries` instead.
 
 
 0.2.0

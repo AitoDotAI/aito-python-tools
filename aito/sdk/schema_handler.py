@@ -11,18 +11,23 @@ LOG = logging.getLogger("SchemaHandler")
 
 
 class SchemaHandler:
-    """A handler that supports infer and validate Aito Schema
-
+    """
     .. deprecated:: 0.3.0
 
     Use :mod:`~aito.sdk.aito_schema` instead
 
     """
+    def __init__(self):
+        warnings.warn(
+            'SchemaHandler is deprecated and will be removed in a future version. Use the aito_schema module instead',
+            category=FutureWarning
+        )
+
     def infer_aito_types_from_pandas_series(self, series: pd.Series, sample_size: int = 100000) -> str:
         """
         .. deprecated:: 0.3.0
 
-        Use :func:`~aito.sdk.aito_schema.AitoDataTypeSchema.infer_from_samples` instead
+        Use :func:`aito.sdk.aito_schema.AitoDataTypeSchema.infer_from_samples` instead
         """
         warnings.warn(
             'The function SchemaHandler.infer_aito_types_from_pandas_series is deprecated and will be removed '
@@ -36,7 +41,7 @@ class SchemaHandler:
 
         .. deprecated: 0.3.0
 
-        Use :func:`~aito.sdk.aito_schema.AitoTableSchema.infer_from_pandas_dataframe` instead
+        Use :func:`aito.sdk.aito_schema.AitoTableSchema.infer_from_pandas_dataframe` instead
         """
         warnings.warn(
             'The function SchemaHandler.infer_table_schema_from_pandas_data_frame is deprecated and will be removed '
@@ -50,7 +55,7 @@ class SchemaHandler:
 
         .. deprecated: 0.3.0
 
-        Use :func:`~aito.sdk.aito_schema.AitoTableSchema.from_deserialized_object` instead
+        Use :func:`aito.sdk.aito_schema.AitoTableSchema.from_deserialized_object` instead
         """
         warnings.warn(
             'The function SchemaHandler.validate_table_schema is deprecated and will be removed '
