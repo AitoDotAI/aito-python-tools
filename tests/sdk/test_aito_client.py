@@ -2,9 +2,8 @@ import json
 import os
 from uuid import uuid4
 
-from aito.sdk.aito_client import AitoClient, BaseError, RequestError
+from aito.client import AitoClient, BaseError, RequestError
 from aito.common.file_utils import read_ndjson_gz_file
-from aito.sdk.aito_schema import AitoDatabaseSchema
 from tests.cases import CompareTestCase
 from parameterized import parameterized
 

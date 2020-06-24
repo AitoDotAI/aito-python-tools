@@ -2,7 +2,7 @@ import json
 import os
 from uuid import uuid4
 
-from aito.sdk.aito_client import AitoClient, RequestError
+from aito.client import AitoClient, RequestError
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 

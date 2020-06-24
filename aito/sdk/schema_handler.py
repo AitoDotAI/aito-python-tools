@@ -1,11 +1,10 @@
 import logging
-import logging
 import warnings
 from typing import Dict
 
 import pandas as pd
 
-from aito.sdk.aito_schema import AitoTableSchema, AitoDataTypeSchema
+from aito.schema import AitoTableSchema, AitoDataTypeSchema
 
 LOG = logging.getLogger("SchemaHandler")
 
