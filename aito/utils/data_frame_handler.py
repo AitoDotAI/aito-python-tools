@@ -3,7 +3,7 @@ from typing import List, Dict, Callable
 
 import pandas as pd
 
-from aito.common._typing import *
+from aito.utils._typing import *
 from aito.schema import AitoTableSchema, AitoDataTypeSchema
 
 LOG = logging.getLogger('DataFrameHandler')

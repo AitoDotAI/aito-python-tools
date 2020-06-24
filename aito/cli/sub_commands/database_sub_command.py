@@ -2,7 +2,7 @@ import tempfile
 from os import unlink, environ
 from typing import Dict, List
 
-from aito.common.data_frame_handler import DataFrameHandler
+from aito.utils.data_frame_handler import DataFrameHandler
 from aito.schema import AitoTableSchema
 from aito.client import AitoClient, BaseError
 from .sub_command import SubCommand

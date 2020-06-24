@@ -14,7 +14,7 @@ import requests
 import warnings
 from aiohttp import ClientSession, ClientResponseError
 
-from aito.common.file_utils import gzip_file, check_file_is_gzipped
+from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 from aito.schema import AitoTableSchema, AitoDatabaseSchema
 
 LOG = logging.getLogger('AitoClient')

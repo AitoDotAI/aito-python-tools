@@ -3,7 +3,7 @@ import os
 from uuid import uuid4
 
 from aito.client import AitoClient, BaseError, RequestError
-from aito.common.file_utils import read_ndjson_gz_file
+from aito.utils._file_utils import read_ndjson_gz_file
 from tests.cases import CompareTestCase
 from parameterized import parameterized
 

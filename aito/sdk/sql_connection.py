@@ -1,1 +1,1 @@
-from aito.common.sql_connection import SQLConnectionError, SQLConnection
+from aito.utils.sql_connection import SQLConnectionError, SQLConnection

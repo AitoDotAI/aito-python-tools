@@ -1,7 +1,7 @@
 import json
 
 from aito.schema import AitoTableSchema
-from aito.common.data_frame_handler import DataFrameHandler
+from aito.utils.data_frame_handler import DataFrameHandler
 from aito.sdk.schema_handler import SchemaHandler
 from tests.cases import CompareTestCase
 
