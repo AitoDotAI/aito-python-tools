@@ -3,7 +3,7 @@ import sys
 from typing import Dict, List
 
 from aito.schema import AitoTableSchema
-from aito.common.data_frame_handler import DataFrameHandler
+from aito.utils.data_frame_handler import DataFrameHandler
 from .sub_command import SubCommand
 from ..parser import PathArgType, InputArgType, ParseError
 from ..parser_utils import try_json_load

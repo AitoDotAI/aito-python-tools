@@ -3,7 +3,7 @@ from typing import List
 import argcomplete
 
 from aito import __version__
-from aito.common.generic_utils import logging_config
+from aito.utils._generic_utils import logging_config
 from .parser import ArgParser, ParseError
 from .sub_commands import *
 from typing import Dict, Optional

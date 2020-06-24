@@ -1,7 +1,7 @@
 import json
 import os
 
-from aito.common.sql_connection import SQLConnection
+from aito.utils.sql_connection import SQLConnection
 from tests.cases import CompareTestCase
 
 

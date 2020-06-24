@@ -4,7 +4,7 @@ from typing import Dict
 from typing import List
 
 from aito.schema import AitoTableSchema
-from aito.common.data_frame_handler import DataFrameHandler
+from aito.utils.data_frame_handler import DataFrameHandler
 from .sub_command import SubCommand
 from ..parser import InputArgType, ParseError
 from ..parser_utils import create_sql_connecting_from_parsed_args
