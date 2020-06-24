@@ -159,11 +159,11 @@ Supported Functions
 SDK Integration
 ---------------
 
-You can connect to your SQL Database using the :py:class:`~aito.sdk.sql_connection.SQLConnection`. The example below shows how you can upload a SQL query results to an Aito table:
+You can connect to your SQL Database using the :py:class:`~aito.utils.sql_connection.SQLConnection`. The example below shows how you can upload a SQL query results to an Aito table:
 
 .. code:: python
 
-  from aito.sdk.sql_connection import SQLConnection
+  from aito.utils.sql_connection import SQLConnection
   connection = SQLConnection(
     sql_driver='PostgreSQL Unicode',
     sql_server='localhost',

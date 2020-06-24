@@ -1,3 +1,6 @@
+"""A utility to read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema
+"""
+
 import logging
 from typing import List, Dict, Callable
 
