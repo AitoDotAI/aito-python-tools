@@ -1,3 +1,7 @@
+"""A utility to connect to a SQL Database
+
+"""
+
 import pyodbc
 import pandas as pd
 import logging
@@ -12,7 +16,7 @@ class SQLConnectionError(Exception):
 
 
 class SQLConnection:
-    """Connection to SQL Database using pyodbc module
+    """Connection to a SQL Database using the pyodbc module
     """
     def __init__(
             self,
@@ -23,7 +27,7 @@ class SQLConnection:
             sql_username: str = None,
             sql_password: str = None
     ):
-        """Constructor method
+        """
 
         :param sql_driver: ODBC driver name
         :type sql_driver: str
