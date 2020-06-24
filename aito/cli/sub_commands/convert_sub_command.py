@@ -2,8 +2,8 @@ import json
 import sys
 from typing import Dict, List
 
-from aito.sdk.aito_schema import AitoTableSchema
-from aito.sdk.data_frame_handler import DataFrameHandler
+from aito.schema import AitoTableSchema
+from aito.common.data_frame_handler import DataFrameHandler
 from .sub_command import SubCommand
 from ..parser import PathArgType, InputArgType, ParseError
 from ..parser_utils import try_json_load

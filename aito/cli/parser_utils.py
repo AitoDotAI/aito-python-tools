@@ -6,7 +6,7 @@ from typing import Union, TextIO
 
 from dotenv import load_dotenv
 
-from aito.sdk.aito_client import AitoClient
+from aito.client import AitoClient
 from .parser import ParseError
 
 
@@ -102,5 +102,5 @@ def create_sql_connecting_from_parsed_args(parsed_args):
         connection_arg_name = f"sql_{arg}"
         connection_args[connection_arg_name] = parse_env_variable(connection_arg_name.upper()) if \
             parsed_args[arg] == '.env' else parsed_args[arg]
-    from aito.sdk.sql_connection import SQLConnection
+    from aito.common.sql_connection import SQLConnection
     return SQLConnection(**connection_args)

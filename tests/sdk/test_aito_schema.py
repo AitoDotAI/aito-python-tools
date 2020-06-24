@@ -2,7 +2,7 @@ import datetime
 
 from parameterized import parameterized
 
-from aito.sdk.aito_schema import *
+from aito.schema import *
 from tests.cases import BaseTestCase
 
 

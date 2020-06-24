@@ -9,8 +9,8 @@ import subprocess
 import shutil
 
 from aito.cli.database_parser import DatabaseParser
-from aito.sdk.aito_client import AitoClient
-from aito.sdk.aito_client import RequestError, BaseError
+from aito.client import AitoClient
+from aito.client import RequestError, BaseError
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 

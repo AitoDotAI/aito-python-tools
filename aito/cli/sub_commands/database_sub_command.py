@@ -2,9 +2,9 @@ import tempfile
 from os import unlink, environ
 from typing import Dict, List
 
-from aito.sdk.data_frame_handler import DataFrameHandler
-from aito.sdk.aito_schema import AitoTableSchema
-from aito.sdk.aito_client import AitoClient, BaseError
+from aito.common.data_frame_handler import DataFrameHandler
+from aito.schema import AitoTableSchema
+from aito.client import AitoClient, BaseError
 from .sub_command import SubCommand
 from ..parser import PathArgType, InputArgType, ParseError, ArgParser
 from ..parser_utils import create_client_from_parsed_args, load_json_from_parsed_input_arg, \
