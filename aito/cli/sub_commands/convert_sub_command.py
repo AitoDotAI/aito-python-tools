@@ -5,8 +5,7 @@ from typing import Dict, List
 from aito.schema import AitoTableSchema
 from aito.utils.data_frame_handler import DataFrameHandler
 from .sub_command import SubCommand
-from ..parser import PathArgType, InputArgType, ParseError
-from ..parser_utils import try_json_load
+from ..parser import PathArgType, InputArgType, ParseError, try_load_json
 
 
 class ConvertFromFormatSubCommand(SubCommand):
@@ -44,7 +43,7 @@ class ConvertFromFormatSubCommand(SubCommand):
 
         if parsed_args['use_table_schema']:
             with parsed_args['use_table_schema'].open() as f:
-                table_schema = try_json_load(f, 'table schema')
+                table_schema = try_load_json(f, 'table schema')
             convert_args['use_table_schema'] = table_schema
 
         if in_format == 'csv':

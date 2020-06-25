@@ -6,9 +6,8 @@ from aito.utils.data_frame_handler import DataFrameHandler
 from aito.schema import AitoTableSchema
 from aito.client import AitoClient, BaseError
 from .sub_command import SubCommand
-from ..parser import PathArgType, InputArgType, ParseError, ArgParser
-from ..parser_utils import create_client_from_parsed_args, load_json_from_parsed_input_arg, \
-    prompt_confirmation, create_sql_connecting_from_parsed_args
+from ..parser import PathArgType, InputArgType, ParseError, ArgParser, prompt_confirmation, \
+    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args
 import getpass
 
 

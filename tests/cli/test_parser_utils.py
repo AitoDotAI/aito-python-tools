@@ -1,5 +1,4 @@
-from aito.cli.parser import ParseError, ArgParser
-from aito.cli.parser_utils import parse_env_variable, create_client_from_parsed_args
+from aito.cli.parser import ParseError, ArgParser, parse_env_variable, create_client_from_parsed_args
 from aito.client import AitoClient, BaseError
 from tests.cases import CompareTestCase
 
