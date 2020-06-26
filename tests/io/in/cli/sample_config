@@ -1,0 +1,7 @@
+[default]
+instance_url = space_oddity
+api_key = star_man
+
+[space_oddity]
+instance_url = ground_control
+api_key = major_tom

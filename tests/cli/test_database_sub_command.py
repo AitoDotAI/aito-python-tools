@@ -21,7 +21,7 @@ class TestMainParserDatabaseSubCommand(ParserAndCLITestCase):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.default_parser_args = {
             'command': 'database', 'verbose': False, 'version': False, 'quiet': False,
-            'api_key': '.env', 'instance_url': '.env', 'use_env_file': None
+            'profile': 'default', 'api_key': '.env', 'instance_url': '.env'
         }
         # hacky way to remove this for aitodb test
         cls.command = ['database']

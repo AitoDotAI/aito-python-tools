@@ -8,8 +8,6 @@ from pathlib import Path
 from typing import Union, TextIO
 import configparser
 
-from dotenv import load_dotenv
-
 from aito.client import AitoClient
 
 DEFAULT_CONFIG_DIR = Path.home() / '.config' / 'aito'
@@ -23,7 +21,7 @@ class ArgParser(ArgumentParser):
 
     """
     def __init__(self, **kwargs):
-        super().__init__(formatter_class=RawTextHelpFormatter, **kwargs)
+                            super().__init__(formatter_class=RawTextHelpFormatter, **kwargs)
 
     def error(self, message):
         sys.stderr.write(f"error: {message}\n")
@@ -31,35 +29,26 @@ class ArgParser(ArgumentParser):
         sys.exit(2)
 
     def add_aito_default_credentials_arguments(self):
+        """aito credentials (instance_url and api_key) default arguments
+        """
         args = self.add_argument_group("aito credential arguments")
         args.add_argument(
-            '-e', '--use-env-file', type=PathArgType(must_exist=True), metavar='env-input-file',
-            help='set up the credentials using a .env file containing the required env variables'
+            '--profile', type=str, default="default",
+            help='use the credentials of the specified profile from the credentials file'
         )
         args.add_argument('-i', '--instance-url', type=str, default='.env', help='specify aito instance url')
         args.add_argument(
             '-k', '--api-key', type=str, default='.env', help='specify aito read-write or read-only API key'
         )
         epilog_str = '''You must provide your Aito credentials to execute database operations.
-If no Aito credential flag is given, the following environment variables are used:
-  AITO_INSTANCE_URL, AITO_API_KEY
+The CLI checks for flag options, environment variables, and credentials of the specified profile in that order
 '''
-        if not self.epilog:
-            self.epilog = epilog_str
-        else:
-            self.epilog += epilog_str
+        self.epilog = epilog_str if not self.epilog else self.epilog + epilog_str
 
-    def add_sql_default_credentials_arguments(self, add_use_env_arg: bool = False):
+    def add_sql_default_credentials_arguments(self):
         """sql connection default arguments
-
-        :param add_use_env_arg: disable use env file to avoid conflict with database aito credentials arguments
-        :return:
         """
         args = self.add_argument_group('database connection arguments')
-        if add_use_env_arg:
-            args.add_argument('-e', '--use-env-file', type=PathArgType(must_exist=True), metavar='env-input-file',
-                              help='set up the credentials using a .env file containing the required env variables')
-
         args.add_argument('--driver', '-D', type=str, help='the name of the ODBC driver', default='.env')
         args.add_argument('--server', '-s', type=str, help='server to connect to', default='.env')
         args.add_argument('--port', '-P', type=str, help='port to connect to', default='.env')
@@ -70,10 +59,7 @@ If no Aito credential flag is given, the following environment variables are use
         epilog_str = '''If no database credentials flag is given, the following environment variable are used: 
   SQL_DRIVER, SQL_SERVER, SQL_PORT, SQL_DATABASE, SQL_USERNAME, SQL_PASSWORD
 '''
-        if not self.epilog:
-            self.epilog = epilog_str
-        else:
-            self.epilog += epilog_str
+        self.epilog = epilog_str if not self.epilog else self.epilog + epilog_str
 
     def add_csv_format_default_arguments(self):
         self.add_argument('-d', '--delimiter', type=str, default=',', help="delimiter character(default: ',')")
@@ -224,16 +210,68 @@ def pyodbc_is_installed() -> bool:
     return True if importlib.util.find_spec('pyodbc') else False
 
 
+def get_credentials_file_config(credentials_file_path=None):
+    if not credentials_file_path:
+        credentials_file_path = DEFAULT_CREDENTIAL_FILE
+
+    if not credentials_file_path.exists():
+        raise ParseError("credentials file not found. Please set up the credentials file or run `aito configure`")
+    config = configparser.ConfigParser()
+    try:
+        config.read(str(credentials_file_path))
+    except Exception as e:
+        raise ParseError(f"failed to parse credentials file: {e}\n"
+                         f"Please edit the credentials file or run `aito configure`")
+    return config
+
+
+def write_credentials_file_profile(
+        profile_name, instance_url, api_key, credentials_file_path=None
+):
+    if not credentials_file_path:
+        credentials_file_path = DEFAULT_CREDENTIAL_FILE
+
+    if not credentials_file_path.exists():
+        if not credentials_file_path.parent.exists():
+            credentials_file_path.parent.mkdir(parents=True)
+        existing_config = configparser.ConfigParser()
+    else:
+        existing_config = get_credentials_file_config(credentials_file_path)
+    if not existing_config.has_section(profile_name):
+         existing_config.add_section(profile_name)
+    existing_config.set(section=profile_name, option='instance_url', value=instance_url)
+    existing_config.set(section=profile_name, option='api_key', value=api_key)
+    with credentials_file_path.open('w') as f:
+        existing_config.write(f)
+
+
 def create_client_from_parsed_args(parsed_args, check_credentials=True) -> AitoClient:
-    if parsed_args['use_env_file']:
-        env_file_path = parse_path_value(parsed_args['use_env_file'], True)
-        load_dotenv(str(env_file_path), override=True)
+    """create client from parsed args with the default aito credentials arguments from
+    add_aito_default_credentials_arguments
+
+    """
+    def check_flag_env_var_default_credential(flag_name, env_var_name, credential_key):
+        if parsed_args[flag_name] != '.env':
+            return parsed_args[flag_name]
+        if parse_env_variable(env_var_name):
+            return parse_env_variable(env_var_name)
+        LOG.debug(f"{env_var_name} environment variable not found. Checking credentials file")
+        config = get_credentials_file_config()
+        profile = parsed_args['profile']
+        if not config.has_section(profile):
+            raise ParseError(f"profile `{profile}` not found. "
+                             f"Please edit the credentials file or run `aito configure`")
+        if credential_key not in config[profile]:
+            raise ParseError(f"{credential_key} not found in profile `{profile}`."
+                             f"Please edit the credentials file or run `aito configure`")
+        return config[profile][credential_key]
+
+    instance_url = check_flag_env_var_default_credential('instance_url', 'AITO_INSTANCE_URL', 'instance_url')
+    api_key = check_flag_env_var_default_credential('api_key', 'AITO_API_KEY', 'api_key')
 
     client_args = {
-        'instance_url': parse_env_variable('AITO_INSTANCE_URL', required=True) if parsed_args['instance_url'] == '.env'
-        else parsed_args['instance_url'],
-        'api_key': parse_env_variable('AITO_API_KEY', required=True) if parsed_args['api_key'] == '.env'
-        else parsed_args['api_key'],
+        'instance_url': instance_url,
+        'api_key': api_key,
         'check_credentials': check_credentials
     }
     return AitoClient(**client_args)
@@ -247,9 +285,6 @@ def create_sql_connecting_from_parsed_args(parsed_args):
     if not pyodbc_is_installed():
         raise ParseError('pyodbc is not installed. Please refer to our documentation: '
                          'https://aitodotai.github.io/aito-python-tools/sql.html#additional-installation')
-    if parsed_args['use_env_file']:
-        env_file_path = parse_path_value(parsed_args['use_env_file'], True)
-        load_dotenv(str(env_file_path), override=True)
     connection_args = {}
     for arg in ('driver', 'server', 'port', 'database', 'username', 'password'):
         connection_arg_name = f"sql_{arg}"

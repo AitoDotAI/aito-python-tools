@@ -12,11 +12,11 @@ class TestSQLFunctions(ParserAndCLITestCase):
         super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.default_main_parser_args = {
-            'verbose': False, 'version': False, 'quiet': False, 'use_env_file': None,
+            'verbose': False, 'version': False, 'quiet': False,
             'driver': '.env', 'server': '.env', 'port': '.env', 'database': '.env', 'username': '.env',
             'password': '.env'
         }
-        cls.default_database_args = {'api_key': '.env', 'instance_url': '.env'}
+        cls.default_client_args = {'profile': 'default', 'api_key': '.env', 'instance_url': '.env'}
         cls.client = AitoClient(os.environ['AITO_INSTANCE_URL'], os.environ['AITO_API_KEY'])
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
 
@@ -45,7 +45,7 @@ class TestSQLFunctions(ParserAndCLITestCase):
             'table-name': self.default_table_name,
             'query': 'SELECT * FROM invoice',
             **self.default_main_parser_args,
-            **self.default_database_args
+            **self.default_client_args
         }
         self.parse_and_execute(
             ['database', 'upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
@@ -59,7 +59,7 @@ class TestSQLFunctions(ParserAndCLITestCase):
             'table-name': self.default_table_name,
             'query': 'SELECT * FROM invoice',
             **self.default_main_parser_args,
-            **self.default_database_args
+            **self.default_client_args
         }
         self.parse_and_execute(
             ['database', 'upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
@@ -74,7 +74,7 @@ class TestSQLFunctions(ParserAndCLITestCase):
             'table-name': self.default_table_name,
             'query': 'SELECT * FROM invoice',
             **self.default_main_parser_args,
-            **self.default_database_args
+            **self.default_client_args
         }
         self.parse_and_execute(
             ['database', 'quick-add-table-from-sql', self.default_table_name, 'SELECT * FROM invoice'],

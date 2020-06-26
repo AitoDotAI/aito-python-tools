@@ -253,7 +253,7 @@ class UploadDataFromSQLSubCommand(SubCommand):
         super().__init__('upload-data-from-sql', 'populate the result of a SQL query to an existing table')
 
     def build_parser(self, parser):
-        parser.add_sql_default_credentials_arguments(add_use_env_arg=False)
+        parser.add_sql_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
         parser.add_argument('query', type=str, help='query to get the data from your SQL database')
 
@@ -281,7 +281,7 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
         )
 
     def build_parser(self, parser):
-        parser.add_sql_default_credentials_arguments(add_use_env_arg=False)
+        parser.add_sql_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help='name of the table to be created and added data to')
         parser.add_argument('query', type=str, help='query to get the data from your SQL database')
 
