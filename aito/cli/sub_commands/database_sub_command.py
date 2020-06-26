@@ -7,32 +7,49 @@ from aito.schema import AitoTableSchema
 from aito.client import AitoClient, BaseError
 from .sub_command import SubCommand
 from ..parser import PathArgType, InputArgType, ParseError, ArgParser, prompt_confirmation, \
-    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args
+    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, get_credentials_file_config, write_credentials_file_profile
 import getpass
 
 
-class LoginSubCommand(SubCommand):
+class ConfigureSubCommand(SubCommand):
     def __init__(self):
-        super().__init__('login', 'login to your Aito instance')
+        super().__init__('configure', 'configure your Aito instance')
 
     def build_parser(self, parser):
-        pass
+        parser.add_argument(
+            '--profile', type=str, default="default",
+            help='the named profile for the config (default: default)'
+        )
 
     def parse_and_execute(self, parsed_args: Dict):
-        if environ.get('AITO_INSTANCE_URL') is not None or environ.get('AITO_API_KEY') is not None:
-            if not prompt_confirmation(
-                "Aito credentials environment variables already exists, do you want to overwrite?"
-            ):
-                return 0
+        def mask(string):
+            if string is None:
+                return None
+            return (len(string) - 4) * '*' + string[:-4]
 
-        instance_url = getpass.getpass(prompt='instance url: ')
-        api_key = getpass.getpass(prompt='api key: ')
+        def get_existing_credentials():
+            config = get_credentials_file_config()
+            profile = parsed_args['profile']
+            if profile not in config.sections():
+                return None, None
+            else:
+                return mask(config.get(profile, 'instance_url', fallback=None)), \
+                       mask(config.get(profile, 'api_key', fallback=None))
+
+        existing_instance_url, existing_api_key = get_existing_credentials()
+        new_instance_url = getpass.getpass(prompt=f'instance url [{existing_instance_url}]: ')
+        if not new_instance_url:
+            new_instance_url = existing_instance_url
+        new_api_key = getpass.getpass(prompt=f'api key [{existing_api_key}]: ')
+        if not new_api_key:
+            new_api_key = existing_api_key
+
         try:
-            AitoClient(instance_url=instance_url, api_key=api_key, check_credentials=True)
+            AitoClient(instance_url=new_instance_url, api_key=new_api_key, check_credentials=True)
         except BaseError:
             raise ParseError('invalid credentials, please try again')
-        environ['AITO_INSTANCE_URL'] = instance_url
-        environ['AITO_API_KEY'] = api_key
+
+        write_credentials_file_profile(parsed_args['profile'], new_instance_url, new_api_key)
 
 
 class QuickAddTableSubCommand(SubCommand):
@@ -307,7 +324,7 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
 
 class DatabaseSubCommand(SubCommand):
     _default_sub_sub_commands = [
-        LoginSubCommand(),
+        ConfigureSubCommand(),
         QuickAddTableSubCommand(),
         CreateTableSubCommand(),
         DeleteTableSubCommand(),

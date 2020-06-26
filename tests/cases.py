@@ -56,6 +56,10 @@ class CompareTestCase(BaseTestCase):
         self.exp_file_path = self.output_folder / (self.method_name + '_exp.txt')
         self.logger = logging.getLogger(self.method_name)
 
+    def delete_out_file(self):
+        if self.out_file_path.exists():
+            self.out_file_path.unlink()
+
     def compare_file(self, out_file_path: Path, exp_file_path: Path, msg=None):
         self.logger.debug(f'Comparing {out_file_path} with {exp_file_path}')
         if not msg:
