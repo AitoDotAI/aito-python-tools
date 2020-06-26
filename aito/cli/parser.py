@@ -213,15 +213,12 @@ def pyodbc_is_installed() -> bool:
 def get_credentials_file_config(credentials_file_path=None):
     if not credentials_file_path:
         credentials_file_path = DEFAULT_CREDENTIAL_FILE
-
-    if not credentials_file_path.exists():
-        raise ParseError("credentials file not found. Please set up the credentials file or run `aito configure`")
     config = configparser.ConfigParser()
     try:
         config.read(str(credentials_file_path))
     except Exception as e:
         raise ParseError(f"failed to parse credentials file: {e}\n"
-                         f"Please edit the credentials file or run `aito configure`")
+                         f"Please edit or delete the credentials file then run `aito configure`")
     return config
 
 
