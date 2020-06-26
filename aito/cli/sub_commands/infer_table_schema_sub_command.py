@@ -72,7 +72,7 @@ class InferFromSQLSubCommand(SubCommand):
         super().__init__('from-sql', 'infer a table schema from the result of a SQL query')
 
     def build_parser(self, parser):
-        parser.add_sql_default_credentials_arguments(add_use_env_arg=True)
+        parser.add_sql_default_credentials_arguments()
         parser.add_argument('query', type=str, help='query to get the data from your database')
 
     def parse_and_execute(self, parsed_args: Dict):
