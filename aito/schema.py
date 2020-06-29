@@ -998,6 +998,28 @@ class AitoTableSchema(AitoSchema):
             raise TypeError('column shchema must be of type AitoColumnTypeSchema')
         self._columns[column_name] = value
 
+    def has_column(self, column_name: str) -> bool:
+        """check if the table has the specified column
+
+        :param column_name: the name of the column
+        :type column_name: str
+        :return: true if the table has the specified column
+        :rtype: bool
+        """
+        return column_name in self._columns
+
+    def add_column(self, column_name: str, column_schema: AitoColumnTypeSchema):
+        """add a column to the table schema
+
+        :param column_name: the name of the added column
+        :type column_name: str
+        :param column_schema: the schema of the added column
+        :type column_schema: AitoColumnTypeSchema
+        """
+        if self.has_column(column_name):
+            raise ValueError(f'column `{column_name}` already exists')
+        self._columns[column_name] = column_schema
+
     @classmethod
     def from_deserialized_object(cls, obj):
         _check_object_type('TableSchema object', obj, dict)
@@ -1107,6 +1129,28 @@ class AitoDatabaseSchema(AitoSchema):
         if not isinstance(value, AitoTableSchema):
             raise TypeError('the table schema must be of type AitoTableSchema')
         self._tables[table_name] = value
+
+    def has_table(self, table_name: str) -> bool:
+        """check if the database has the specified table
+
+        :param table_name: the name of the column
+        :type table_name: str
+        :return: true if the table has the specified column
+        :rtype: bool
+        """
+        return table_name in self._tables
+
+    def add_column(self, table_name: str, table_schema: AitoTableSchema):
+        """add a column to the table schema
+
+        :param table_name: the name of the added table
+        :type table_name: str
+        :param table_schema: the schema of the added table
+        :type table_schema: AitoTableSchema
+        """
+        if self.has_table(table_name):
+            raise ValueError(f'table `{table_name}` already exists')
+        self._tables[table_name] = table_schema
 
     @classmethod
     def from_deserialized_object(cls, obj):
