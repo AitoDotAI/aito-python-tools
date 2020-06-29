@@ -297,7 +297,7 @@ class TestAitoTableSchema(BaseTestCase):
 
     @parameterized.expand([
         ('missing_type', {'columns': {'col1': {'type': 'Int'}}}, ValueError),
-        ('no_column', {'type': 'table', 'columns': {}}, ValueError),
+        ('wrong_type', {'type': 'something_else', 'columns': {}}, ValueError),
         ('invalid_column', {'type': 'table', 'columns': {'col2': {'type': 'array'}}}, ValueError)
 
     ])
@@ -376,8 +376,7 @@ class TestAitoDatabaseSchema(BaseTestCase):
 
     @parameterized.expand([
         ('missing_schema', {'tbl1': {'type': 'table', 'columns': {'col1': {'type': 'Boolean'}}}}, ValueError),
-        ('no_table', {'schema': {}}, ValueError),
-        ('invalid_table', {'schema': {'tbl1': {'type': 'table', 'columns': {}}}}, ValueError)
+        ('invalid_table', {'schema': {'tbl1': {'type': 'table', 'columns': {'col1': {}}}}}, ValueError)
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
         with self.assertRaises(error):
