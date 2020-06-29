@@ -40,44 +40,41 @@ class TestSQLFunctions(ParserAndCLITestCase):
 
     def parse_and_execute_upload_data_from_query(self):
         expected_args = {
-            'command': 'database',
-            'operation': 'upload-data-from-sql',
+            'command': 'upload-data-from-sql',
             'table-name': self.default_table_name,
             'query': 'SELECT * FROM invoice',
             **self.default_main_parser_args,
             **self.default_client_args
         }
         self.parse_and_execute(
-            ['database', 'upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
+            ['upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
             expected_args
         )
 
     def parse_and_execute_upload_data_from_query_table_not_exist(self):
         expected_args = {
-            'command': 'database',
-            'operation': 'upload-data-from-sql',
+            'command': 'upload-data-from-sql',
             'table-name': self.default_table_name,
             'query': 'SELECT * FROM invoice',
             **self.default_main_parser_args,
             **self.default_client_args
         }
         self.parse_and_execute(
-            ['database', 'upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
+            ['upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
             expected_args,
             execute_exception=RequestError
         )
 
     def parse_and_execute_quick_add_table(self):
         expected_args = {
-            'command': 'database',
-            'operation': 'quick-add-table-from-sql',
+            'command': 'quick-add-table-from-sql',
             'table-name': self.default_table_name,
             'query': 'SELECT * FROM invoice',
             **self.default_main_parser_args,
             **self.default_client_args
         }
         self.parse_and_execute(
-            ['database', 'quick-add-table-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
+            ['quick-add-table-from-sql', 'quick-add-table-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
             expected_args,
         )
 

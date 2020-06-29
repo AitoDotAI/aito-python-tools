@@ -57,6 +57,7 @@ class QuickAddTableSubCommand(SubCommand):
         super().__init__('quick-add-table', 'infer schema, create table, and upload a file to Aito')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_argument(
             '-n', '--table-name', type=str,
             help='name of the table to be created (default: the input file name without the extension)')
@@ -105,6 +106,7 @@ class CreateTableSubCommand(SubCommand):
         super().__init__('create-table', 'create a table using the input table schema')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help="name of the table to be created")
         parser.add_argument(
             'input', default='-', type=InputArgType(), nargs='?',
@@ -123,6 +125,7 @@ class DeleteTableSubCommand(SubCommand):
         super().__init__('delete-table', 'delete a table schema and all content inside the table')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help="the name of the table to be deleted")
 
     def parse_and_execute(self, parsed_args: Dict):
@@ -138,6 +141,7 @@ class CopyTableSubCommand(SubCommand):
         super().__init__('copy-table', 'copy a table')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help="the name of the table to be copied")
         parser.add_argument('copy-table-name', type=str, help="the name of the new copy table")
         parser.add_argument(
@@ -156,6 +160,7 @@ class RenameTableSubCommand(SubCommand):
         super().__init__('rename-table', 'rename a table')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_argument('old-name', type=str, help="the name of the table to be renamed")
         parser.add_argument('new-name', type=str, help="the new name of the table")
         parser.add_argument(
@@ -174,7 +179,7 @@ class ShowTablesSubCommand(SubCommand):
         super().__init__('show-tables', 'show the existing tables in the Aito instance')
 
     def build_parser(self, parser):
-        pass
+        parser.add_aito_default_credentials_arguments()
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
@@ -188,7 +193,7 @@ class DeleteDatabaseSubCommand(SubCommand):
         super().__init__('delete-database', 'delete the whole database')
 
     def build_parser(self, parser):
-        pass
+        parser.add_aito_default_credentials_arguments()
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
@@ -201,6 +206,7 @@ class UploadEntriesSubCommand(SubCommand):
         super().__init__('upload-entries', 'upload a list of table entries to an existing table')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.epilog = 'With no input, or when input is -, read table content from standard input'
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
         parser.add_argument(
@@ -221,6 +227,7 @@ class UploadBatchSubCommand(UploadEntriesSubCommand):
         self.name = 'upload-batch'
 
     def parse_and_execute(self, parsed_args: Dict):
+        parser.add_aito_default_credentials_arguments()
         raise DeprecationWarning('This feature is deprecated. Use upload-entries instead.')
 
 
@@ -229,6 +236,7 @@ class UploadFileSubCommand(SubCommand):
         super().__init__('upload-file', 'upload a file to an existing table')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
         parser.add_argument('input-file', type=PathArgType(must_exist=True), help="path to the input file")
         file_format_choices = ['infer'] + DataFrameHandler.allowed_format
@@ -270,6 +278,7 @@ class UploadDataFromSQLSubCommand(SubCommand):
         super().__init__('upload-data-from-sql', 'populate the result of a SQL query to an existing table')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_sql_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
         parser.add_argument('query', type=str, help='query to get the data from your SQL database')
@@ -298,6 +307,7 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
         )
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_sql_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help='name of the table to be created and added data to')
         parser.add_argument('query', type=str, help='query to get the data from your SQL database')

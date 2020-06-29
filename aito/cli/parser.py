@@ -21,12 +21,11 @@ class ArgParser(ArgumentParser):
 
     """
     def __init__(self, **kwargs):
-                            super().__init__(formatter_class=RawTextHelpFormatter, **kwargs)
+        super().__init__(formatter_class=RawTextHelpFormatter, **kwargs)
 
-    def error(self, message):
-        sys.stderr.write(f"error: {message}\n")
-        self.print_help()
-        sys.exit(2)
+    def error_and_print_help(self, message):
+        self.print_help(sys.stderr)
+        self.exit(2, f"{self.prog}: error: {message}\n")
 
     def add_aito_default_credentials_arguments(self):
         """aito credentials (instance_url and api_key) default arguments
