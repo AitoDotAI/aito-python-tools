@@ -64,8 +64,7 @@ setup(
     python_requires='>=3.6',
     entry_points={
         'console_scripts': [
-            'aito = aito.cli.main_parser:main',
-            'aitodb = aito.cli.database_parser:main'
+            'aito = aito.cli.main_parser:main'
         ]
     }
 )
