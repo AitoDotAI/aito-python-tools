@@ -937,8 +937,6 @@ class AitoTableSchema(AitoSchema):
         :type columns: Dict[str, AitoColumnTypeSchema]
         """
         super().__init__('table')
-        if not columns:
-            raise ValueError("table schema must have at least one column")
         self._columns = columns
 
     @property
@@ -1059,8 +1057,6 @@ class AitoDatabaseSchema(AitoSchema):
     """
     def __init__(self, tables: Dict[str, AitoTableSchema]):
         super().__init__('database')
-        if not tables:
-            raise ValueError("database schema must have at least one table")
         self._tables = tables
 
     @property
