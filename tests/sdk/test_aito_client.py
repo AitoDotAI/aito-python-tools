@@ -132,6 +132,7 @@ class TestAitoClient(CompareTestCase):
 
     def download_table_step(self, start, end):
         self.client.download_table(self.default_table_name, self.output_folder)
+        self.addCleanup((self.output_folder / f'{self.default_table_name}.ndjson').unlink)
         import ndjson
         with (self.output_folder / f'{self.default_table_name}.ndjson').open() as f:
             entries = ndjson.load(f)
@@ -139,6 +140,7 @@ class TestAitoClient(CompareTestCase):
 
     def download_table_gzipped_step(self, start, end):
         self.client.download_table(self.default_table_name, self.output_folder, file_name='invoices', gzip_output=True)
+        self.addCleanup((self.output_folder / 'invoices.ndjson.gz').unlink)
         entries = read_ndjson_gz_file(self.output_folder / 'invoices.ndjson.gz')
         self.assertEqual(entries,  [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)])
 

@@ -234,7 +234,6 @@ class UploadBatchSubCommand(UploadEntriesSubCommand):
         self.name = 'upload-batch'
 
     def parse_and_execute(self, parsed_args: Dict):
-        parser.add_aito_default_credentials_arguments()
         raise DeprecationWarning('This feature is deprecated. Use upload-entries instead.')
 
 

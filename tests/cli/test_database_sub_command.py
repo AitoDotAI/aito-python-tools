@@ -318,6 +318,10 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.assertFalse(self.client.check_table_exists('invoice_altered'))
 
     def test_configure_default_profile(self):
+        # TODO: Test built package: communicate with getpass and stub existing credentials file
+        if os.environ.get('TEST_BUILT_PACKAGE'):
+            return
+
         self.addCleanup(self.delete_out_file)
 
         configure_args = {
@@ -327,15 +331,8 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         api_key = os.environ['AITO_API_KEY']
 
         with patch('aito.cli.parser.DEFAULT_CREDENTIAL_FILE', self.out_file_path):
-            if os.environ.get('TEST_BUILT_PACKAGE'):
-                proc = subprocess.Popen(
-                    [self.program_name, 'configure'], stdin=subprocess.PIPE, stdout=subprocess.PIPE
-                )
-                proc.stdin.write(instance_url.encode())
-                proc.stdin.write(api_key.encode())
-            else:
-                with patch('getpass.getpass', side_effect=[instance_url, api_key]):
-                    self.parse_and_execute(['configure'], configure_args)
+            with patch('getpass.getpass', side_effect=[instance_url, api_key]):
+                self.parse_and_execute(['configure'], configure_args)
 
             config = get_credentials_file_config()
             self.assertEqual(config.get('default', 'instance_url'), instance_url)
@@ -357,6 +354,9 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.assertIn(self.default_table_name, listed_tables)
 
     def test_configure_new_profile(self):
+        if os.environ.get('TEST_BUILT_PACKAGE'):
+            return
+
         self.addCleanup(self.delete_out_file)
 
         configure_expected_args = {
@@ -366,18 +366,10 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         api_key = os.environ['AITO_API_KEY']
 
         with patch('aito.cli.parser.DEFAULT_CREDENTIAL_FILE', self.out_file_path):
-            if os.environ.get('TEST_BUILT_PACKAGE'):
-                proc = subprocess.Popen(
-                    [self.program_name, 'configure', '--profile', 'new_profile'],
-                    stdin=subprocess.PIPE, stdout=subprocess.PIPE
+            with patch('getpass.getpass', side_effect=[instance_url, api_key]):
+                self.parse_and_execute(
+                    ['configure', '--profile', 'new_profile'], configure_expected_args
                 )
-                proc.stdin.write(instance_url.encode())
-                proc.stdin.write(api_key.encode())
-            else:
-                with patch('getpass.getpass', side_effect=[instance_url, api_key]):
-                    self.parse_and_execute(
-                        ['configure', '--profile', 'new_profile'], configure_expected_args
-                    )
 
             config = get_credentials_file_config()
             self.assertEqual(config.get('new_profile', 'instance_url'), instance_url)
