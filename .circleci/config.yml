@@ -132,6 +132,21 @@ commonYAMLStructure:
         . venv/bin/activate
         pip install -r requirements/deploy.txt
         pip install -r requirements/test.txt
+  - &restore_doc_venv_cache
+    restore_cache:
+      key: v2-dependencies-{{ checksum "requirements/docs.txt" }}
+  - &save_doc_venv_cache
+    save_cache:
+      paths:
+        - ./venv
+      key: v2-dependencies-{{ checksum "requirements/docs.txt" }}
+  - &create_doc_venv
+    run:
+      name: create doc virtualenv and install dependencies
+      command: |
+        python -m venv venv
+        . venv/bin/activate
+        pip install -r requirements/docs.txt
   - &install_python_and_build_and_test_dependencies_win
     run:
       name: create virtualenv and install dependencie
@@ -628,9 +643,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_venv_cache_deploy_and_test
-      - *create_venv_and_install_deploy_and_test_dependencies
-      - *save_venv_cache_deploy_and_test
+      - *restore_doc_venv_cache
+      - *create_doc_venv
+      - *save_doc_venv_cache
       - run:
           name: build docs only if there is any changes to the docs dir
           command: |
