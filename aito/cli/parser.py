@@ -1,16 +1,17 @@
+import configparser
 import json
-import logging
+import logging.handlers
 import sys
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
 from os import getenv
 from pathlib import Path
 from typing import Union, TextIO
-import configparser
 
 from aito.client import AitoClient
 
 DEFAULT_CONFIG_DIR = Path.home() / '.config' / 'aito'
+DEFAULT_LOG_DIR = DEFAULT_CONFIG_DIR / 'logs'
 DEFAULT_CREDENTIAL_FILE = DEFAULT_CONFIG_DIR / 'credentials'
 
 LOG = logging.getLogger('Parser')
