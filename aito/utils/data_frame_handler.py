@@ -106,7 +106,7 @@ class DataFrameHandler:
 
         LOG.debug(f"casting dataframe columns: {cast_type_map}")
         converted_df = df.astype(dtype=cast_type_map)
-        LOG.info(f"converted the dataframe according to the schema")
+        LOG.debug(f"converted the dataframe according to the schema")
         return converted_df
 
     def read_file_to_df(self, read_input: FilePathOrBuffer, in_format: str, read_options: Dict = None) -> pd.DataFrame:

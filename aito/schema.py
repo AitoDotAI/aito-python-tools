@@ -1068,7 +1068,7 @@ class AitoTableSchema(AitoSchema):
             )
             columns_schema[col] = col_type_schema
         table_schema = cls(columns=columns_schema)
-        LOG.info('inferred table schema')
+        LOG.debug('inferred table schema')
         return table_schema
 
 
