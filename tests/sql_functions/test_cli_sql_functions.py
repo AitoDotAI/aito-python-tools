@@ -74,7 +74,7 @@ class TestSQLFunctions(ParserAndCLITestCase):
             **self.default_client_args
         }
         self.parse_and_execute(
-            ['quick-add-table-from-sql', 'quick-add-table-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
+            ['quick-add-table-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
             expected_args,
         )
 
