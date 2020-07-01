@@ -25,7 +25,9 @@ class ConfigureSubCommand(SubCommand):
         def mask(string):
             if string is None:
                 return None
-            return (len(string) - 4) * '*' + string[:-4]
+            if len(string) <= 4:
+                return '****'
+            return (len(string) - 4) * '*' + string[-4:]
 
         def get_existing_credentials():
             config = get_credentials_file_config()
@@ -33,16 +35,21 @@ class ConfigureSubCommand(SubCommand):
             if profile not in config.sections():
                 return None, None
             else:
-                return mask(config.get(profile, 'instance_url', fallback=None)), \
-                       mask(config.get(profile, 'api_key', fallback=None))
+                return config.get(profile, 'instance_url', fallback=None), config.get(profile, 'api_key', fallback=None)
+
+        def prompt(name, existing_value):
+            masked_existing_value = mask(existing_value)
+            new_value = getpass.getpass(prompt=f'{name} [{masked_existing_value}]: ')
+            if not new_value:
+                if not existing_value:
+                    raise ParseError(f'{name} must not be empty')
+                else:
+                    new_value = existing_value
+            return new_value
 
         existing_instance_url, existing_api_key = get_existing_credentials()
-        new_instance_url = getpass.getpass(prompt=f'instance url [{existing_instance_url}]: ')
-        if not new_instance_url:
-            new_instance_url = existing_instance_url
-        new_api_key = getpass.getpass(prompt=f'api key [{existing_api_key}]: ')
-        if not new_api_key:
-            new_api_key = existing_api_key
+        new_instance_url = prompt('instance url', existing_instance_url)
+        new_api_key = prompt('api key', existing_api_key)
 
         try:
             AitoClient(instance_url=new_instance_url, api_key=new_api_key, check_credentials=True)
