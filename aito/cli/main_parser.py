@@ -1,4 +1,5 @@
 import argparse
+import logging.config
 import shutil
 import sys
 import textwrap
@@ -8,8 +9,7 @@ from typing import List
 import argcomplete
 
 from aito import __version__
-from aito.utils._generic_utils import logging_config
-from .parser import ArgParser, ParseError
+from .parser import ArgParser, ParseError, DEFAULT_CONFIG_DIR
 from .sub_commands import *
 
 
@@ -64,26 +64,49 @@ To see the help text, you can run:
 """
         argcomplete.autocomplete(self)
 
-    def parse_and_execute(self, parsed_args: Optional[Dict] = None):
-        if parsed_args is None:
-            parsed_args = vars(self.parse_args())
-        if parsed_args['version']:
-            print(__version__)
-            return 0
-        logging_level = 10 if parsed_args['verbose'] else 40 if parsed_args['quiet'] else 20
-        logging_config(level=logging_level)
+    def config_logging(self, default_level='INFO'):
+        if not DEFAULT_CONFIG_DIR.exists():
+            DEFAULT_CONFIG_DIR.mkdir(parents=True)
 
-        command_name = parsed_args['command']
-        if not command_name:
-            self.error_and_print_help('the following arguments are required: <command>')
-        if command_name == 'list':
-            self.list_commands()
-        else:
-            try:
-                self._commands_map[command_name].parse_and_execute(parsed_args)
-            except ParseError as e:
-                self.error(e.message)
-        return 0
+        config_dict = {
+            "version": 1,
+            'disable_existing_loggers': False,
+            "formatters": {
+                'default': {
+                    'class': 'logging.Formatter',
+                    'format': '%(name)-20s %(message)s',
+                },
+                'detailed': {
+                    'class': 'logging.Formatter',
+                    'format': '%(asctime)s %(name)-20s %(levelname)-10s %(message)s',
+                    'datefmt': '%Y-%m-%dT%H:%M:%S%z',
+                    'converter': 'time.gmtime'
+                }
+            },
+            "handlers": {
+                'default': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'default',
+                    'level': default_level,
+                    'stream': 'ext://sys.stdout'
+                },
+                'file': {
+                    'class': 'logging.handlers.RotatingFileHandler',
+                    'formatter': 'detailed',
+                    'level': 'DEBUG',
+                    'filename': DEFAULT_CONFIG_DIR / 'aito.log',
+                    'maxBytes': 10 * 1024 * 1024,
+                    'backupCount': 5,
+                }
+            },
+            'loggers': {
+                '': {
+                    'handlers': ['default', 'file'],
+                    'level': 'DEBUG'
+                }
+            }
+        }
+        logging.config.dictConfig(config_dict)
 
     def list_commands(self, max_command_name_width=24):
         terminal_width = shutil.get_terminal_size().columns
@@ -106,6 +129,27 @@ To see the help text, you can run:
 
         formatted_message = '\n'.join(formatted_text_items) + '\n'
         self.exit(status=0, message=formatted_message)
+
+    def parse_and_execute(self, parsed_args: Optional[Dict] = None):
+        if parsed_args is None:
+            parsed_args = vars(self.parse_args())
+        if parsed_args['version']:
+            print(__version__)
+            return 0
+        default_level = 'DEBUG' if parsed_args['verbose'] else 'WARNING' if parsed_args['quiet'] else 'INFO'
+        self.config_logging(default_level=default_level)
+
+        command_name = parsed_args['command']
+        if not command_name:
+            self.error_and_print_help('the following arguments are required: <command>')
+        if command_name == 'list':
+            self.list_commands()
+        else:
+            try:
+                self._commands_map[command_name].parse_and_execute(parsed_args)
+            except ParseError as e:
+                self.error(e.message)
+        return 0
 
 
 def main():
