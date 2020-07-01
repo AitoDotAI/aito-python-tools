@@ -9,23 +9,124 @@ To get started:
   .. code-block:: console
 
     $ aito -h
-    usage: aito [-h] <action> ...
+    usage: aito [-h] [-V] [-v] [-q]
 
     optional arguments:
-      -h, --help          show this help message and exit
+      -h, --help     show this help message and exit
+      -V, --version  display the version of this tool
+      -v, --verbose  display verbose messages
+      -q, --quiet    display only error messages
 
-    action:
-      action to perform
+    To see all available commands, you can run:
+      aito list
 
-      <action>
-        infer-table-schema
-                          infer an Aito table schema from a file
-        convert           convert a file into ndjson|json format
-        database          perform operations with your Aito database instance
+    To see the help text, you can run:
+      aito -h
+      aito <command> -h
+      aito <command> <subcommand> -h
 
-You can also use the shorthanded ``aitodb`` command instead of ``aito database`` to perform operations with your Aito database instance
 
 :ref:`Quickstart guide to upload data <cliQuickStartUploadData>`
+
+
+.. _cliSetUpAitoCredentials:
+
+Set Up Aito Credentials
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Performing operations with your Aito database instance always requires credentials.
+
+There are 3 ways to set up the credentials:
+
+1. The most convenient way is to use the ``configure`` command::
+
+    $ aito configure
+
+  When you enter this command, the CLI prompts you for two pieces of information:
+
+    - Your Aito instance URL
+    - Your Aito API key
+
+  The CLI stores this information in a profile named `default` in the credentials file. By default, the information in
+this profile is used when you run a command that requires credentials.
+
+  The credentials file is stored in `$HOME/.config/aito/credentials` (`%UserProfile%` in Windows). You can manually edit this credentials file.
+
+  You can also specify the named profile with the ``--profile`` flag and use the named profile for commands that require credentials.
+
+2. Set up the following environment variables::
+
+    $ export AITO_INSTANCE_URL=your-instance-url
+    $ export AITO_API_KEY=your-api-key
+
+  You can now perform commands::
+
+    $ aito <command> ...
+
+3. Using flags:
+
+  You can set up the credentials using ``-i`` flag for the instance url and ``-k`` flag for the api key::
+
+    $ aito -i MY_AITO_INSTANCE_URL -k MY_API_KEY <command> ...
+
+.. _cliQuickAddTable:
+
+Quick Add a Table
+~~~~~~~~~~~~~~~~~
+
+Infer a table schema based on the given file, create a table using the file name and upload the file content to the created table::
+
+  $ aito quick-add-table path/to/tableEntries.json
+
+.. _cliCreateTable:
+
+Create a Table
+~~~~~~~~~~~~~~
+
+Create a table using the given Aito table schema::
+
+  $ aito create-table tableName path/to/tableSchema.json
+
+.. _cliBatchUpload:
+
+
+Delete a Table
+~~~~~~~~~~~~~~
+
+Delete a table schema and all the data inside it:
+
+  .. code-block:: console
+
+    $ aito delete-table tableName
+
+  .. warning:: This operation is irreversible
+
+Delete the Whole Database
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Delete the database's schema and all data in the instance:
+
+  .. code-block:: console
+
+    $ aito delete-database
+
+  .. warning:: This operation is irreversible
+
+Upload Entries to a Table
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Upload entries to an *existing* table (a table of which `schema has been created <https://aito.ai/docs/api/#put-api-v1-schema>`_) in your Aito instance::
+
+    $ aito upload-entries tableName < tableEntries.json
+
+.. _cliFileUpload:
+
+Upload a File to a Table
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Upload a file to an *existing* table in your Aito instance::
+
+    $ aito upload-file tableName tableEntries.ndjson.gz
 
 .. _cliInferTableSchema:
 
@@ -244,113 +345,6 @@ Example::
 
   $ aito convert ndjson -j < path/to/myNDJSONFile.ndjson > path/to/convertedFile.json
 
-
-.. _cliDatabase:
-
-database command
-----------------
-
-The ``database`` command allows you to perform most database operations.
-You can use both ``aito database`` and ``aitodb`` to perform database operations.
-
-.. _cliSetUpAitoCredentials:
-
-Set Up Aito Credentials
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Performing operations with your Aito database instance always requires credentials.
-
-There are 4 ways to set up the credentials:
-
-1. The most convenient way is to use the ``login`` command::
-
-    $ aitodb login
-
-2. Set up the following environment variables::
-
-    $ export AITO_INSTANCE_URL=your-instance-url
-    $ export AITO_API_KEY=your-api-key
-
-  You can now perform database operations::
-
-    $ aitodb <operation> ...
-
-3. Using a dotenv (``.env``) file
-
-  Your .env file should contain environment variables as described above.
-
-  You can set up the credentials using a dotenv file with the ``-e`` flag::
-
-    $ aitodb -e path/to/myDotEnvFile.env <operation> ...
-
-4. Using flags:
-
-  You can set up the credentials using ``-i`` flag for the instance url and ``-k`` flag for the api key::
-
-    $ aitodb -i MY_AITO_INSTANCE_URL -k MY_API_KEY <operation> ...
-
-.. note::
-
-  All of the following operations require the read-write key
-
-.. _cliQuickAddTable:
-
-Quick Add a Table
-~~~~~~~~~~~~~~~~~
-
-Infer a table schema based on the given file, create a table using the file name and upload the file content to the created table::
-
-  $ aitodb quick-add-table path/to/tableEntries.json
-
-.. _cliCreateTable:
-
-Create a Table
-~~~~~~~~~~~~~~
-
-Create a table using the given Aito table schema::
-
-  $ aitodb create-table tableName path/to/tableSchema.json
-
-.. _cliBatchUpload:
-
-
-Delete a Table
-~~~~~~~~~~~~~~
-
-Delete a table schema and all the data inside it:
-
-  .. code-block:: console
-
-    $ aitodb delete-table tableName
-
-  .. warning:: This operation is irreversible
-
-Delete the Whole Database
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Delete the database's schema and all data in the instance:
-
-  .. code-block:: console
-
-    $ aitodb delete-database
-
-  .. warning:: This operation is irreversible
-
-Batch Upload
-~~~~~~~~~~~~
-
-Upload entries to an *existing* table (a table of which `schema has been created <https://aito.ai/docs/api/#put-api-v1-schema>`_) in your Aito instance::
-
-    $ aitodb upload-entries tableName < tableEntries.json
-
-.. _cliFileUpload:
-
-File Upload
-~~~~~~~~~~~
-
-Upload a file to an *existing* table in your Aito instance::
-
-    $ aitodb upload-file tableName tableEntries.ndjson.gz
 
 
 Tab Completion
