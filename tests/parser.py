@@ -1,5 +1,6 @@
 import argparse
 import logging
+import logging.handlers
 import os
 import sys
 import time
@@ -122,12 +123,14 @@ class TestParser(argparse.ArgumentParser):
         log_dir.mkdir(exist_ok=True)
 
         os.environ['METRICS_LOG_PATH'] = str(log_dir / 'test_metrics.log')
-
+        file_handler = logging.handlers.RotatingFileHandler(
+            filename=str(log_dir / 'test.log'), maxBytes=10 * 1024 * 1024, backupCount=5
+        )
         log_config_kwargs = {
             'format': '%(asctime)s %(name)-20s %(levelname)-10s %(message)s',
             'datefmt': "%Y-%m-%dT%H:%M:%S%z",
-            'handlers': [logging.FileHandler(str(log_dir / 'test.log')), logging.StreamHandler()]
-            if args.logStdout else [logging.FileHandler(str(log_dir / 'test.log'))]
+            'handlers': [file_handler, logging.StreamHandler()]
+            if args.logStdout else [file_handler]
         }
         if args.verbose:
             log_config_kwargs['level'] = logging.DEBUG
