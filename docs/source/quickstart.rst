@@ -24,10 +24,9 @@ Upload Data with the CLI
 :ref:`Setup Aito credentials <cliSetUpAitoCredentials>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  The easiest way to set-up the credentials is by using environment variables::
+  The easiest way to set-up the credentials is by `configure` command::
 
-    $ export AITO_INSTANCE_URL=your-instance-url
-    $ export AITO_API_KEY=your-api-key
+    $ aito configure
 
 .. note::
 
@@ -102,11 +101,11 @@ Upload the Data
 
     - :ref:`cliBatchUpload`::
 
-        $ aito database upload-entries tableName < tableEntries.json
+        $ aito upload-entries tableName < tableEntries.json
 
     - :ref:`cliFileUpload`::
 
-        $ aito database upload-file tableName tableEntries.ndjson.gz
+        $ aito upload-file tableName tableEntries.ndjson.gz
 
 .. _sdkQuickstartUpload:
 

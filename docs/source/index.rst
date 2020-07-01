@@ -28,19 +28,21 @@ Aito Command Line Interface
 .. code:: console
 
   $ aito -h
-  usage: aito [-h] <action> ...
+    usage: aito [-h] [-V] [-v] [-q]
 
-  optional arguments:
-    -h, --help          show this help message and exit
+    optional arguments:
+      -h, --help     show this help message and exit
+      -V, --version  display the version of this tool
+      -v, --verbose  display verbose messages
+      -q, --quiet    display only error messages
 
-  action:
-    action to perform
+    To see all available commands, you can run:
+      aito list
 
-    <action>
-      infer-table-schema
-                        infer an Aito table schema from a file
-      convert           convert a file into ndjson|json format
-      database          perform operations with your Aito database instance
+    To see the help text, you can run:
+      aito -h
+      aito <command> -h
+      aito <command> <subcommand> -h
 
 .. note::
 

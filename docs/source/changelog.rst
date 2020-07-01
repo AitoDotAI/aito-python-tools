@@ -58,13 +58,25 @@ Deprecation
 
 CLI
 ^^^
-- Added the shorthanded ``aitodb`` for the :ref:`cliDatabase` command. You can now perform database operation with ``aitodb <operation>`` instead of ``aito database <operation>``
-- Added the following database operations:
+- Removed the ``database`` command. All the database operations is now expose as command:
 
-  - ``login``: login to your Aito instance
+  - ***aito database quick-add-table*** -> ***aito quick-add-table***
+  - ***aito database create-table*** -> ***aito create-table***
+  - ***aito database delete-table*** -> ***aito delete-table***
+  - ***aito database delete-database*** -> ***aito delete-database***
+  - ***aito database upload-entries*** -> ***aito upload-entries***
+  - ***aito database upload-file*** -> ***aito upload-file***
+  - ***aito database upload-data-from-sql*** -> ***aito upload-data-from-sql***
+  - ***aito database quick-add-table-from-sql*** -> ***aito quick-add-table-from-sql***
+
+- Added the following commands:
+
+  - ``configure``: configure your Aito instance
   - ``show-tables``: show the existing tables in the Aito instance
   - ``copy-table``: copy a table
   - ``rename-table``: rename a table
+
+- Removed dotenv file support (***-e*** flag).
 
 0.2.2
 -----
