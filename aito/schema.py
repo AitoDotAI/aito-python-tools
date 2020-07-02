@@ -104,12 +104,31 @@ class AitoSchema(ABC):
         """
         pass
 
+    def to_json_string(self, **kwargs):
+        """the AitoSchema object as a JSON string
+
+        :param kwargs: the keyword arguments for json.dumps method
+        :rtype: str
+        """
+        return json.dumps(self.to_json_serializable(), **kwargs)
+
     @classmethod
     @abstractmethod
     def from_deserialized_object(cls, obj):
         """create an AitoSchema object from a JSON deserialized object
         """
         pass
+
+    @classmethod
+    def from_json_string(cls, json_string: str, **kwargs):
+        """create an AitoSchema object from a JSON string
+
+        :param json_string: the JSON string
+        :type json_string: str
+        :param kwargs: the keyword arguments for json.loads method
+        """
+        deserialized_obj = json.loads(json_string, **kwargs)
+        return cls.from_deserialized_object(deserialized_obj)
 
     @property
     @abstractmethod
