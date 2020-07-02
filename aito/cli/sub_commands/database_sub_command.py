@@ -1,14 +1,15 @@
-import tempfile
-from os import unlink, environ
-from typing import Dict, List
-
-from aito.utils.data_frame_handler import DataFrameHandler
-from aito.schema import AitoTableSchema
-from aito.client import AitoClient, BaseError
-from .sub_command import SubCommand
-from ..parser import PathArgType, InputArgType, ParseError, ArgParser, prompt_confirmation, \
-    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, get_credentials_file_config, write_credentials_file_profile
 import getpass
+import tempfile
+from os import unlink
+from typing import Dict
+
+from aito.client import AitoClient, BaseError
+from aito.schema import AitoTableSchema
+from aito.utils.data_frame_handler import DataFrameHandler
+from .sub_command import SubCommand
+from ..parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
+    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, \
+    get_credentials_file_config, write_credentials_file_profile
 
 
 class ConfigureSubCommand(SubCommand):
@@ -127,6 +128,21 @@ class CreateTableSubCommand(SubCommand):
         return 0
 
 
+class GetTableSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('get-table', 'return the schema of the specified table')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument('table-name', type=str, help="name of the table")
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        table_name = parsed_args['table-name']
+        print(client.get_table_schema(table_name).to_json_string(indent=2))
+        return 0
+
+
 class DeleteTableSubCommand(SubCommand):
     def __init__(self):
         super().__init__('delete-table', 'delete a table schema and all content inside the table')
@@ -193,6 +209,19 @@ class ShowTablesSubCommand(SubCommand):
         tables = client.get_existing_tables()
         print(*sorted(tables), sep='\n')
         pass
+
+
+class GetDatabaseSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('get-database', 'return the schema of the database')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        print(client.get_database_schema().to_json_string(indent=2))
+        return 0
 
 
 class DeleteDatabaseSubCommand(SubCommand):
