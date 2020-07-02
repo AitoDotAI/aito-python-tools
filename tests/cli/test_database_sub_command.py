@@ -11,6 +11,7 @@ from uuid import uuid4
 from aito.cli.parser import get_credentials_file_config
 from aito.client import AitoClient
 from aito.client import RequestError, BaseError
+from aito.schema import AitoTableSchema, AitoDatabaseSchema
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 
@@ -25,7 +26,8 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         }
         cls.client = AitoClient(os.environ['AITO_INSTANCE_URL'], os.environ['AITO_API_KEY'])
         with (cls.input_folder / "invoice_aito_schema.json").open() as f:
-            cls.default_table_schema = json.load(f)
+            json_schema = json.load(f)
+        cls.default_table_schema = AitoTableSchema.from_deserialized_object(json_schema)
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
 
     def create_table(self):
@@ -47,7 +49,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         else:
             self.assertCountEqual(table_entries, file_content)
 
-    def test_upload_batch_no_table_schema(self):
+    def test_upload_entries_no_table_schema(self):
         expected_args = {
             'command': 'upload-entries',
             'table-name': self.default_table_name,
@@ -61,7 +63,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             execute_exception=BaseError
         )
 
-    def test_upload_batch_invalid_entries(self):
+    def test_upload_entries_invalid_entries(self):
         self.create_table()
         expected_args = {
             'command': 'upload-entries',
@@ -76,7 +78,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             execute_exception=SystemExit
         )
 
-    def test_upload_batch(self):
+    def test_upload_entries(self):
         self.create_table()
         expected_args = {
             'command': 'upload-entries',
@@ -93,7 +95,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
         )
 
-    def test_upload_batch_stdin(self):
+    def test_upload_entries_stdin(self):
         self.create_table()
         expected_args = {
             'command': 'upload-entries',
@@ -201,6 +203,21 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
                 ['create-table', self.default_table_name], expected_args, stub_stdin=in_f
             )
         self.assertTrue(self.client.check_table_exists(self.default_table_name))
+
+    def test_get_table(self):
+        self.create_table()
+        expected_args = {
+            'command': 'get-table',
+            'table-name': self.default_table_name,
+            **self.default_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(['get-table', self.default_table_name], expected_args, stub_stdout=out_f)
+
+        with self.out_file_path.open() as f:
+            returned_content = json.load(f)
+        returned_table_schema = AitoTableSchema.from_deserialized_object(returned_content)
+        self.assertEqual(returned_table_schema, self.default_table_schema)
 
     def test_delete_table(self):
         self.create_table()
@@ -316,6 +333,21 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.parse_and_execute(['delete-database'], expected_args)
         self.assertFalse(self.client.check_table_exists(self.default_table_name))
         self.assertFalse(self.client.check_table_exists('invoice_altered'))
+
+    def test_get_database(self):
+        self.create_table()
+        expected_args = {
+            'command': 'get-database',
+            **self.default_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(['get-database'], expected_args, stub_stdout=out_f)
+
+        with self.out_file_path.open() as f:
+            returned_content = json.load(f)
+        returned_table_schema = AitoDatabaseSchema.from_deserialized_object(returned_content)
+        self.assertIn(self.default_table_name, returned_table_schema.tables)
+        self.assertEqual(returned_table_schema[self.default_table_name], self.default_table_schema)
 
     def test_configure_default_profile(self):
         # TODO: Test built package: communicate with getpass and stub existing credentials file

@@ -10,7 +10,12 @@ import argcomplete
 
 from aito import __version__
 from .parser import ArgParser, ParseError, DEFAULT_CONFIG_DIR
-from .sub_commands import *
+from .sub_commands.convert_sub_command import ConvertSubCommand
+from .sub_commands.database_sub_command import ConfigureSubCommand, QuickAddTableSubCommand, CreateTableSubCommand, \
+    DeleteTableSubCommand, CopyTableSubCommand, RenameTableSubCommand, ShowTablesSubCommand, DeleteDatabaseSubCommand, \
+    UploadEntriesSubCommand, UploadBatchSubCommand, UploadFileSubCommand, UploadDataFromSQLSubCommand, \
+    QuickAddTableFromSQLSubCommand, GetDatabaseSubCommand, GetTableSubCommand, SubCommand
+from .sub_commands.infer_table_schema_sub_command import InferTableSchemaSubCommand
 
 
 class MainParser(ArgParser):
@@ -20,10 +25,12 @@ class MainParser(ArgParser):
         ConfigureSubCommand(),
         QuickAddTableSubCommand(),
         CreateTableSubCommand(),
+        GetTableSubCommand(),
         DeleteTableSubCommand(),
         CopyTableSubCommand(),
         RenameTableSubCommand(),
         ShowTablesSubCommand(),
+        GetDatabaseSubCommand(),
         DeleteDatabaseSubCommand(),
         UploadEntriesSubCommand(),
         UploadBatchSubCommand(),
