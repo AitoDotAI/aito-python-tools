@@ -363,7 +363,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         api_key = os.environ['AITO_API_KEY']
 
         with patch('aito.cli.parser.DEFAULT_CREDENTIAL_FILE', self.out_file_path):
-            with patch('getpass.getpass', side_effect=[instance_url, api_key]):
+            with patch('builtins.input', side_effect=[instance_url, api_key]):
                 self.parse_and_execute(['configure'], configure_args)
 
             config = get_credentials_file_config()
@@ -398,7 +398,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         api_key = os.environ['AITO_API_KEY']
 
         with patch('aito.cli.parser.DEFAULT_CREDENTIAL_FILE', self.out_file_path):
-            with patch('getpass.getpass', side_effect=[instance_url, api_key]):
+            with patch('builtins.input', side_effect=[instance_url, api_key]):
                 self.parse_and_execute(
                     ['configure', '--profile', 'new_profile'], configure_expected_args
                 )

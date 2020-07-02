@@ -1,4 +1,3 @@
-import getpass
 import tempfile
 from os import unlink
 from typing import Dict
@@ -40,7 +39,7 @@ class ConfigureSubCommand(SubCommand):
 
         def prompt(name, existing_value):
             masked_existing_value = mask(existing_value)
-            new_value = getpass.getpass(prompt=f'{name} [{masked_existing_value}]: ')
+            new_value = input(f'{name} [{masked_existing_value}]: ')
             if not new_value:
                 if not existing_value:
                     raise ParseError(f'{name} must not be empty')
