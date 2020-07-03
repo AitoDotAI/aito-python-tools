@@ -9,7 +9,7 @@ SDK
 
 Refactoring
 """""""""""
-- | The :py:mod:`aito.client` module is moved from the ***sdk*** subpackage to the main ***aito*** package.
+- | The :py:mod:`aito.client` module is moved from the **sdk** subpackage to the main **aito** package.
   | You can now import the :py:class:`~aito.client.AitoClient` by:
 
   .. code-block:: python
@@ -17,7 +17,7 @@ Refactoring
     from aito.client import AitoClient
     # previously: from aito.sdk.aito_client import AitoClient
 
-- | The :py:mod:`~aito.utils.data_frame_handler` and :py:mod:`~aito.utils.sql_connection` module is moved from the ***sdk*** subpackage to the ***utils*** subpackage.
+- | The :py:mod:`~aito.utils.data_frame_handler` and :py:mod:`~aito.utils.sql_connection` module is moved from the **sdk** subpackage to the **utils** subpackage.
   | You can now import the :py:class:`~aito.utils.data_frame_handler.DataFrameHandler` and :py:class:`~aito.utils.sql_connection.SQLConnection` by:
 
   .. code-block:: python
@@ -49,25 +49,25 @@ New features
 
 Deprecation
 """""""""""
-- The ***SchemaHandler*** is deprecated and will be removed in an upcoming release. To migrate:
+- The **SchemaHandler** is deprecated and will be removed in an upcoming release. To migrate:
 
-  - ***SchemaHandler.infer_aito_types_from_pandas_series*** -> :py:func:`aito.schema.AitoDataTypeSchema.infer_from_samples`
-  - ***SchemaHandler.infer_table_schema_from_pandas_data_frame*** -> :py:func:`aito.schema.AitoTableSchema.infer_from_pandas_dataframe`
-  - ***SchemaHandler.validate_table_schema*** -> :py:func:`aito.schema.AitoTableSchema.from_deserialized_object`
+  - **SchemaHandler.infer_aito_types_from_pandas_series** -> :py:func:`aito.schema.AitoDataTypeSchema.infer_from_samples`
+  - **SchemaHandler.infer_table_schema_from_pandas_data_frame** -> :py:func:`aito.schema.AitoTableSchema.infer_from_pandas_dataframe`
+  - **SchemaHandler.validate_table_schema** -> :py:func:`aito.schema.AitoTableSchema.from_deserialized_object`
 
 
 CLI
 ^^^
-- Removed the ``database`` command. All the database operations is now expose as command:
+- Removed the ``database`` command. All the database operations are now exposed as follows:
 
-  - ***aito database quick-add-table*** -> ***aito quick-add-table***
-  - ***aito database create-table*** -> ***aito create-table***
-  - ***aito database delete-table*** -> ***aito delete-table***
-  - ***aito database delete-database*** -> ***aito delete-database***
-  - ***aito database upload-entries*** -> ***aito upload-entries***
-  - ***aito database upload-file*** -> ***aito upload-file***
-  - ***aito database upload-data-from-sql*** -> ***aito upload-data-from-sql***
-  - ***aito database quick-add-table-from-sql*** -> ***aito quick-add-table-from-sql***
+  - **aito database quick-add-table** -> **aito quick-add-table**
+  - **aito database create-table** -> **aito create-table**
+  - **aito database delete-table** -> **aito delete-table**
+  - **aito database delete-database** -> **aito delete-database**
+  - **aito database upload-entries** -> **aito upload-entries**
+  - **aito database upload-file** -> **aito upload-file**
+  - **aito database upload-data-from-sql** -> **aito upload-data-from-sql**
+  - **aito database quick-add-table-from-sql** -> **aito quick-add-table-from-sql**
 
 - Added the following commands:
 
@@ -78,7 +78,7 @@ CLI
   - ``rename-table``: rename a table
   - ``get-datbase``: return the schema of the database
 
-- Removed dotenv file support (***-e*** flag).
+- Removed dotenv file support (**-e** flag).
 
 0.2.2
 -----
@@ -91,7 +91,7 @@ CLI
 
 - - :py:class:`~aito.client.AitoClient` :py:func:`~aito.client.AitoClient.upload_entries` now accepts `generators`_ as well as lists.
 
-- - :py:class:`~aito.client.AitoClient` ***upload_entries_by_batches*** is deprecated and will be removed in an upcoming release, use :py:func:`~aito.client.AitoClient.upload_entries` instead.
+- - :py:class:`~aito.client.AitoClient` **upload_entries_by_batches** is deprecated and will be removed in an upcoming release, use :py:func:`~aito.client.AitoClient.upload_entries` instead.
 
 
 0.2.0

@@ -166,10 +166,7 @@ class CopyTableSubCommand(SubCommand):
         parser.add_aito_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help="the name of the table to be copied")
         parser.add_argument('copy-table-name', type=str, help="the name of the new copy table")
-        parser.add_argument(
-            '--replace', action='store_true',
-            help="replace an existing table of which name is the name of the copy table"
-        )
+        parser.add_argument('--replace', action='store_true', help="allow the replacement of an existing table")
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
@@ -185,10 +182,7 @@ class RenameTableSubCommand(SubCommand):
         parser.add_aito_default_credentials_arguments()
         parser.add_argument('old-name', type=str, help="the name of the table to be renamed")
         parser.add_argument('new-name', type=str, help="the new name of the table")
-        parser.add_argument(
-            '--replace', action='store_true',
-            help="replace an existing table of which name is the new name"
-        )
+        parser.add_argument('--replace', action='store_true', help="allow the replacement of an existing table")
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)

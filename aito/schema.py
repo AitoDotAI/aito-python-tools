@@ -339,7 +339,7 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
         :type use_default_stop_words: bool, defaults to False
         :param custom_stop_words: words that will be filtered
         :type custom_stop_words: List[str], defaults to []
-        :param custom_key_words: words that will not be featurizerd
+        :param custom_key_words: words that will not be featurized
         :type custom_key_words: List[str], defaults to []
         """
         super().__init__('language')
@@ -1104,7 +1104,7 @@ class AitoDatabaseSchema(AitoSchema):
     def tables(self) -> List[str]:
         """
 
-        :return: list of the database's table name
+        :return: list of the database's table names
         :rtype:
         """
         return list(self._tables.keys())
