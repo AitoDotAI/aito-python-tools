@@ -76,7 +76,7 @@ CLI
   - ``show-tables``: show the existing tables in the Aito instance
   - ``copy-table``: copy a table
   - ``rename-table``: rename a table
-  - ``get-datbase``: return the schema of the database
+  - ``get-database``: return the schema of the database
 
 - Removed dotenv file support (**-e** flag).
 
