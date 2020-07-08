@@ -95,17 +95,15 @@ You can either convert the data to:
 Upload the Data
 ~~~~~~~~~~~~~~~
 
-  You can upload data with the CLI by using the :ref:`cliDatabase`.
+You can upload the data by either:
 
-  You can then upload the data by either:
+  - :ref:`cliBatchUpload`::
 
-    - :ref:`cliBatchUpload`::
+      $ aito upload-entries tableName < tableEntries.json
 
-        $ aito upload-entries tableName < tableEntries.json
+  - :ref:`cliFileUpload`::
 
-    - :ref:`cliFileUpload`::
-
-        $ aito upload-file tableName tableEntries.ndjson.gz
+      $ aito upload-file tableName tableEntries.ndjson.gz
 
 .. _sdkQuickstartUpload:
 

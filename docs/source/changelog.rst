@@ -29,6 +29,7 @@ Refactoring
 
 New features
 """"""""""""
+
 - Added the :py:mod:`aito.schema` module which contains the component object of the Aito Schema including:
 
   - :py:class:`~aito.schema.AitoAnalyzerSchema`
@@ -49,6 +50,7 @@ New features
 
 Deprecation
 """""""""""
+
 - The **SchemaHandler** is deprecated and will be removed in an upcoming release. To migrate:
 
   - **SchemaHandler.infer_aito_types_from_pandas_series** -> :py:func:`aito.schema.AitoDataTypeSchema.infer_from_samples`

@@ -1,8 +1,3 @@
-.. _community:
-
-Community
-=========
-
 Useful Links
 ------------
 

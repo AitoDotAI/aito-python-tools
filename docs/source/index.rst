@@ -72,7 +72,7 @@ Aito SDK Overview
 .. currentmodule:: aito
 .. autosummary::
   :toctree: api_stubs
-  :caption: SDK Documentation
+  :caption: API Documentation
 
   schema
   client
@@ -89,8 +89,7 @@ Aito SDK Overview
 
 .. note::
 
-  The Aito Python SDK is an experimental project that we are already using ourselves.
-  It might be a bit rough around the edges and is not yet production-grade.
+  The Aito Python SDK is beta phase and we are already using it ourselves.
   This project is under constant development and is subject to change.
   Feel free to use the Aito SDK, and share any feedback with us via our `Slack channel`_ or
   our `Issue tracker`_
