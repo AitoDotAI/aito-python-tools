@@ -50,26 +50,42 @@ Aito Command Line Interface
 
 For an additional guide of the CLI tool, see the :doc:`CLI documentations <cli>`.
 
-Using the Python SDK
-~~~~~~~~~~~~~~~~~~~~
-
-Some common features:
-
-1. :ref:`sdkInferTableSchema`
-2. :ref:`sdkCreateTable`
-3. :ref:`sdkUploadData`
-4. :ref:`sdkExecuteQuery`
-
 .. toctree::
   :hidden:
+  :caption: Getting started
+  :name: sec-getting-started
 
   install
   quickstart
+
+.. toctree::
+  :hidden:
+  :caption: Tutorials
+
   cli
   sdk
-  api
   sql
+
+Aito SDK Overview
+~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: aito
+.. autosummary::
+  :toctree: api_stubs
+  :caption: SDK Documentation
+
+  schema
+  client
+  utils.data_frame_handler
+  utils.sql_connection
+
+.. toctree::
+  :hidden:
+  :caption: Additional Materials
+
   changelog
+  community
+
 
 .. note::
 
@@ -78,6 +94,7 @@ Some common features:
   This project is under constant development and is subject to change.
   Feel free to use the Aito SDK, and share any feedback with us via our `Slack channel`_ or
   our `Issue tracker`_
+
 
 .. _Aito: https://aito.ai/
 .. _Slack channel: https://aito.ai/join-slack
