@@ -89,7 +89,7 @@ Aito SDK Overview
 
 .. note::
 
-  The Aito Python SDK is beta phase and we are already using it ourselves.
+  The Aito Python SDK is in the beta phase and we are already using it ourselves.
   This project is under constant development and is subject to change.
   Feel free to use the Aito SDK, and share any feedback with us via our `Slack channel`_ or
   our `Issue tracker`_
