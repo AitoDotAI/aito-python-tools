@@ -131,7 +131,7 @@ Upload a file to an *existing* table in your Aito instance::
 .. _cliInferTableSchema:
 
 infer-table-schema command
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``infer-table-schema`` command helps you to infer a table schema from the input data
 
@@ -143,7 +143,7 @@ Supported input formats:
 - NDJSON_
 
 Infer table schema usage
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 To see help::
 
@@ -156,14 +156,14 @@ To see help for a specific input format::
 
 
 Infer table schema redirection
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 By default, the command takes standard input and standard output. To redirect::
 
   $ aito infer-table-schema csv < path/to/myFile.csv > path/to/schemaFile.json
 
 Infer Table Schema From Csv
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 To see help::
 
@@ -182,7 +182,7 @@ Infer a table schema from a semicolon delimited comma decimal point csv file::
   $ aito infer-table-schema csv -d ';' -p ',' < path/to/myCSVFile.csv
 
 Infer Table Schema From Excel
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 To see help::
 
@@ -202,7 +202,7 @@ Infer a table schema from a single sheet of an excel file::
 
 
 Infer Table Schema From JSON_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 To see help::
 
@@ -214,7 +214,7 @@ Example::
 
 
 Infer Table Schema From NDJSON_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 To see help::
 
@@ -228,7 +228,7 @@ Example::
 .. _cliConvert:
 
 convert command
----------------
+~~~~~~~~~~~~~~~
 
 The ``convert`` command helps you to convert the input data into JSON_ or NDJSON_ for upload or convert the data
 according to a table schema.
@@ -246,7 +246,7 @@ Supported input formats:
 - NDJSON_
 
 Convert usage
-~~~~~~~~~~~~~
+-------------
 
 To see help::
 
@@ -258,35 +258,35 @@ To see help for a specific input format::
   $ aito convert <input-format> -h
 
 Convert redirection
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 By default, the command takes standard input and standard output. To redirect::
 
   $ aito convert csv < path/to/myFile.csv > path/to/myConvertedFile.ndjson
 
 Convert to JSON
-~~~~~~~~~~~~~~~
+---------------
 
 By default, the command converts the input to the NDJSON_ format. If you want to convert to the JSON_ format, use the ``-j`` or ``--json`` flag::
 
   $ aito convert <input-format> --json ...
 
 Convert and Infer Schema
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 You can convert the data and infer a table schema at the same time by using the ``-c`` or ``--create-table-schema`` flag::
 
   $ aito convert <input-format> -c path/to/inferredTableSchema.json ...
 
 Convert Using A Table Schema
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 You can convert the data to match an existing table schema by using the ``-s`` or ``--use-table-schema`` flag::
 
   $ aito convert <input-format> -s path/to/tableSchema.json ...
 
 Convert CSV
-~~~~~~~~~~~
+-----------
 
 To see help::
 
@@ -305,7 +305,7 @@ Convert a semicolon delimited comma decimal point csv file::
   $ aito convert csv -d ';' -p ',' < path/to/myCsvFile.csv
 
 Convert Excel
-~~~~~~~~~~~~~
+-------------
 
 To see help::
 
@@ -324,7 +324,7 @@ Convert a single sheet of an excel file::
   $ aito convert excel -o sheetName path/to/myExcelFile.xls
 
 Convert JSON
-~~~~~~~~~~~~
+------------
 
 To see help::
 
@@ -335,7 +335,7 @@ Example::
   $ aito convert json < path/to/myJSONFile.json > path/to/convertedFile.ndjson
 
 Convert NDJSON
-~~~~~~~~~~~~~~
+--------------
 
 To see help::
 
@@ -348,7 +348,7 @@ Example::
 
 
 Tab Completion
---------------
+~~~~~~~~~~~~~~
 
 The CLI supports tab completion using argcomplete_
 
@@ -368,7 +368,8 @@ The CLI supports tab completion using argcomplete_
 
 
 Integration with SQL Database
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Aito supports integration with your SQL database. To enable this feature, please follow the instructions
 :doc:`here <sql>`
 
