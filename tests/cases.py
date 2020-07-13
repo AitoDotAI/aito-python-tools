@@ -7,10 +7,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Union
 import os
+from uuid import uuid4
+import shutil
 
 import ndjson
 
 from .parser import ROOT_PATH
+
+
+LOG = logging.getLogger('TestCase')
 
 
 class BaseTestCase(unittest.TestCase):
@@ -22,10 +27,50 @@ class BaseTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         self._started_at = datetime.now(timezone.utc)
+        self.method_name = self.id().split('.')[-1]
+        self.logger = logging.getLogger(self.method_name)
+        LOG.debug(f'{self.method_name} started')
 
     def tearDown(self) -> None:
         self._finished_at = datetime.now(timezone.utc)
         self._elapsed = self._finished_at - self._started_at
+        LOG.debug(f'{self.method_name} finished')
+
+    def stub_stdin(self, new_input):
+        saved_stdin = sys.stdin
+
+        def cleanup():
+            sys.stdin = saved_stdin
+
+        self.addCleanup(cleanup)
+        sys.stdin = new_input
+        self.logger.debug(f'new stdin {sys.stdin}')
+
+    def stub_stdout(self, new_output):
+        saved_stdout = sys.stdout
+
+        def cleanup():
+            sys.stdout = saved_stdout
+
+        self.addCleanup(cleanup)
+        sys.stdout = new_output
+        self.logger.debug(f'new stdout {sys.stdout}')
+
+    def stub_environment_variable(self, var_name: str, new_var_value):
+        old_var_value = os.getenv(var_name)
+
+        def cleanup():
+            if old_var_value is not None:
+                os.environ[var_name] = old_var_value
+
+        self.addCleanup(cleanup)
+        if new_var_value is not None:
+            os.environ[var_name] = new_var_value
+            self.logger.debug(f'stub env var `{var_name}`: {old_var_value} -> {new_var_value}')
+        else:
+            if var_name in os.environ:
+                del os.environ[var_name]
+            self.logger.debug(f'delete env var `{var_name}`')
 
 
 class CompareTestCase(BaseTestCase):
@@ -51,10 +96,12 @@ class CompareTestCase(BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        self.method_name = self.id().split('.')[-1]
         self.out_file_path = self.output_folder / (self.method_name + '_out.txt')
         self.exp_file_path = self.output_folder / (self.method_name + '_exp.txt')
-        self.logger = logging.getLogger(self.method_name)
+
+    def delete_out_file(self):
+        if self.out_file_path.exists():
+            self.out_file_path.unlink()
 
     def compare_file(self, out_file_path: Path, exp_file_path: Path, msg=None):
         self.logger.debug(f'Comparing {out_file_path} with {exp_file_path}')
@@ -80,35 +127,3 @@ class CompareTestCase(BaseTestCase):
         with out_file_path.open() as out_f, exp_file_path.open() as exp_f:
             assert_method(load_method(out_f), load_method(exp_f))
 
-    def stub_stdin(self, new_input):
-        saved_stdin = sys.stdin
-
-        def cleanup():
-            sys.stdin = saved_stdin
-
-        self.addCleanup(cleanup)
-        sys.stdin = new_input
-        self.logger.debug(f'new stdin {sys.stdin}')
-
-    def stub_stdout(self, new_output):
-        saved_stdout = sys.stdout
-
-        def cleanup():
-            sys.stdout = saved_stdout
-
-        self.addCleanup(cleanup)
-        sys.stdout = new_output
-        self.logger.debug(f'new stdout {sys.stdout}')
-
-    def stub_or_delete_environment_variable(self, var_name: str, new_var_value: str = None):
-        old_var_value = os.getenv(var_name)
-        def cleanup():
-            if old_var_value is not None:
-                os.environ[var_name] = old_var_value
-        self.addCleanup(cleanup)
-        if new_var_value is not None:
-            os.environ[var_name] = new_var_value
-            self.logger.debug(f'stub env var `{var_name}`: {old_var_value} -> {new_var_value}')
-        else:
-            del os.environ[var_name]
-            self.logger.debug(f'delete env var `{var_name}`')

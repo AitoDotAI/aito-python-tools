@@ -1,6 +1,87 @@
 Changelog
 =========
 
+0.3.0
+-----
+
+SDK
+^^^
+
+Refactoring
+"""""""""""
+- | The :py:mod:`aito.client` module is moved from the **sdk** subpackage to the main **aito** package.
+  | You can now import the :py:class:`~aito.client.AitoClient` by:
+
+  .. code-block:: python
+
+    from aito.client import AitoClient
+    # previously: from aito.sdk.aito_client import AitoClient
+
+- | The :py:mod:`~aito.utils.data_frame_handler` and :py:mod:`~aito.utils.sql_connection` module is moved from the **sdk** subpackage to the **utils** subpackage.
+  | You can now import the :py:class:`~aito.utils.data_frame_handler.DataFrameHandler` and :py:class:`~aito.utils.sql_connection.SQLConnection` by:
+
+  .. code-block:: python
+
+    from aito.utils.data_frame_handler import DataFrameHandler
+    # previously: from aito.sdk.data_frame_handler import DataFrameHandler
+    from aito.utils.sql_connection import SQLConnection
+    # previously: from aito.sdk.sql_connection import SQLConnection
+
+New features
+""""""""""""
+
+- Added the :py:mod:`aito.schema` module which contains the component object of the Aito Schema including:
+
+  - :py:class:`~aito.schema.AitoAnalyzerSchema`
+  - :py:class:`~aito.schema.AitoDataTypeSchema`
+  - :py:class:`~aito.schema.AitoColumnTypeSchema`
+  - :py:class:`~aito.schema.AitoTableSchema`
+  - :py:class:`~aito.schema.AitoDatabaseSchema`
+
+  Please go to the :py:mod:`module page <aito.schema>` for a full list of the supported components
+
+- Minor changes:
+
+  - Improved `Analyzer`_ inference that can now detect `Delimiter Analyzer`_ and is exposed at :py:func:`aito.schema.AitoAnalyzerSchema.infer_from_samples`
+  - :py:func:`aito.client.AitoClient.get_table_schema` and :py:func:`aito.client.AitoClient.get_database_schema` now return the schema object instead of the JSON response
+  - :py:func:`aito.client.AitoClient.create_table`, :py:func:`aito.utils.data_frame_handler.DataFrameHandler.convert_df_using_aito_table_schema` and :py:func:`aito.utils.data_frame_handler.DataFrameHandler.convert_file` now also support input of AitoTableSchema object
+  - :py:func:`aito.client.AitoClient.query_entries` now returns a list of table entries instead of the JSON response
+  - :py:func:`aito.client.AitoClient.query_entries` and :py:func:`aito.client.AitoClient.query_all_entries` now supports the ``select`` keyword to select the fields of an entry
+
+Deprecation
+"""""""""""
+
+- The **SchemaHandler** is deprecated and will be removed in an upcoming release. To migrate:
+
+  - **SchemaHandler.infer_aito_types_from_pandas_series** -> :py:func:`aito.schema.AitoDataTypeSchema.infer_from_samples`
+  - **SchemaHandler.infer_table_schema_from_pandas_data_frame** -> :py:func:`aito.schema.AitoTableSchema.infer_from_pandas_dataframe`
+  - **SchemaHandler.validate_table_schema** -> :py:func:`aito.schema.AitoTableSchema.from_deserialized_object`
+
+
+CLI
+^^^
+- Removed the ``database`` command. All the database operations are now exposed as follows:
+
+  - **aito database quick-add-table** -> **aito quick-add-table**
+  - **aito database create-table** -> **aito create-table**
+  - **aito database delete-table** -> **aito delete-table**
+  - **aito database delete-database** -> **aito delete-database**
+  - **aito database upload-entries** -> **aito upload-entries**
+  - **aito database upload-file** -> **aito upload-file**
+  - **aito database upload-data-from-sql** -> **aito upload-data-from-sql**
+  - **aito database quick-add-table-from-sql** -> **aito quick-add-table-from-sql**
+
+- Added the following commands:
+
+  - ``configure``: configure your Aito instance
+  - ``get-table``: return the schema of the specified table
+  - ``show-tables``: show the existing tables in the Aito instance
+  - ``copy-table``: copy a table
+  - ``rename-table``: rename a table
+  - ``get-database``: return the schema of the database
+
+- Removed dotenv file support (**-e** flag).
+
 0.2.2
 -----
 
@@ -10,9 +91,9 @@ Changelog
 0.2.1
 -----
 
-- AitoClient upload_entries now accepts `generators`_ as well as lists.
+- - :py:class:`~aito.client.AitoClient` :py:func:`~aito.client.AitoClient.upload_entries` now accepts `generators`_ as well as lists.
 
-- AitoClient upload_entries_by_batches is deprecated and will be removed in an upcoming release, so switch to use AitoClient upload_entries function instead.
+- - :py:class:`~aito.client.AitoClient` **upload_entries_by_batches** is deprecated and will be removed in an upcoming release, use :py:func:`~aito.client.AitoClient.upload_entries` instead.
 
 
 0.2.0
@@ -21,7 +102,7 @@ Changelog
 CLI
 ^^^
 
-- Add a version flag (``--version``) and verbosity level flags (``--verbose`` and ``--quiet``) to the CLI.
+- Added a version flag (``--version``) and verbosity level flags (``--verbose`` and ``--quiet``) to the CLI.
 - The CLI now returns more concise error messages. Use ``--verbose`` mode if you want to see the comprehensive error message with stack info.
 - The ODBC driver name for SQL functions is now specified by an environment variable (``SQL_DRIVER``) or a flag (``--driver``) instead of a required argument as before. For example::
 
@@ -35,7 +116,7 @@ CLI
 SDK
 ^^^
 
-- Rename the ``utils`` package to ``sdk``. Please change the import statement accordingly. For example::
+- Renamed the ``utils`` package to ``sdk``. Please change the import statement accordingly. For example::
 
     from aito.sdk.aito_client import AitoClient
 
@@ -114,3 +195,6 @@ Supported database:
 
 
 .. _generators: https://aitodotai.github.io/aito-python-tools/quickstart.html#sdkquickstartuploaddata
+.. _Column Type: https://aito.ai/docs/api/#schema-column-type
+.. _Analyzer: https://aito.ai/docs/api/#schema-analyzer
+.. _Delimiter Analyzer: https://aito.ai/docs/api/#schema-delimiter-analyzer

@@ -1,10 +1,12 @@
 import json
+
+from aito.schema import AitoTableSchema
+from aito.utils.data_frame_handler import DataFrameHandler
 from aito.sdk.schema_handler import SchemaHandler
-from aito.sdk.data_frame_handler import DataFrameHandler
 from tests.cases import CompareTestCase
 
 
-class TestSchemaHandler(CompareTestCase):
+class TestHandlingTableSchema(CompareTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -15,11 +17,16 @@ class TestSchemaHandler(CompareTestCase):
         super().setUp()
         self.out_file_path = self.output_folder / f"{self.method_name}_out.ndjson"
 
-    def test_generate_table_schema_from_df(self):
+    def test_infer_table_schema_from_df(self):
         df_handler = DataFrameHandler()
         df = df_handler.read_file_to_df(self.input_folder / 'invoice.csv', 'csv')
-        table_schema = self.schema_handler.infer_table_schema_from_pandas_data_frame(df)
-        self.assertDictEqual(table_schema, json.load((self.input_folder / 'invoice_aito_schema.json').open()))
+        table_schema_data = self.schema_handler.infer_table_schema_from_pandas_data_frame(df)
+        with (self.input_folder / 'invoice_aito_schema.json').open() as f:
+            expected_schema_data = json.load(f)
+        self.assertEqual(
+            AitoTableSchema.from_deserialized_object(table_schema_data),
+            AitoTableSchema.from_deserialized_object(expected_schema_data)
+        )
 
     def test_validate_table_schema(self):
         with (self.input_folder / 'invoice_aito_schema.json').open() as f:

@@ -2,7 +2,7 @@ import json
 import os
 from uuid import uuid4
 
-from aito.sdk.aito_client import AitoClient, RequestError
+from aito.client import AitoClient, RequestError
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 
@@ -12,11 +12,11 @@ class TestSQLFunctions(ParserAndCLITestCase):
         super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.default_main_parser_args = {
-            'verbose': False, 'version': False, 'quiet': False, 'use_env_file': None,
+            'verbose': False, 'version': False, 'quiet': False,
             'driver': '.env', 'server': '.env', 'port': '.env', 'database': '.env', 'username': '.env',
             'password': '.env'
         }
-        cls.default_database_args = {'api_key': '.env', 'instance_url': '.env'}
+        cls.default_client_args = {'profile': 'default', 'api_key': '.env', 'instance_url': '.env'}
         cls.client = AitoClient(os.environ['AITO_INSTANCE_URL'], os.environ['AITO_API_KEY'])
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
 
@@ -40,44 +40,41 @@ class TestSQLFunctions(ParserAndCLITestCase):
 
     def parse_and_execute_upload_data_from_query(self):
         expected_args = {
-            'command': 'database',
-            'operation': 'upload-data-from-sql',
+            'command': 'upload-data-from-sql',
             'table-name': self.default_table_name,
             'query': 'SELECT * FROM invoice',
             **self.default_main_parser_args,
-            **self.default_database_args
+            **self.default_client_args
         }
         self.parse_and_execute(
-            ['database', 'upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
+            ['upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
             expected_args
         )
 
     def parse_and_execute_upload_data_from_query_table_not_exist(self):
         expected_args = {
-            'command': 'database',
-            'operation': 'upload-data-from-sql',
+            'command': 'upload-data-from-sql',
             'table-name': self.default_table_name,
             'query': 'SELECT * FROM invoice',
             **self.default_main_parser_args,
-            **self.default_database_args
+            **self.default_client_args
         }
         self.parse_and_execute(
-            ['database', 'upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
+            ['upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
             expected_args,
             execute_exception=RequestError
         )
 
     def parse_and_execute_quick_add_table(self):
         expected_args = {
-            'command': 'database',
-            'operation': 'quick-add-table-from-sql',
+            'command': 'quick-add-table-from-sql',
             'table-name': self.default_table_name,
             'query': 'SELECT * FROM invoice',
             **self.default_main_parser_args,
-            **self.default_database_args
+            **self.default_client_args
         }
         self.parse_and_execute(
-            ['database', 'quick-add-table-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
+            ['quick-add-table-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
             expected_args,
         )
 
@@ -97,7 +94,7 @@ class TestPostgresFunctions(TestSQLFunctions):
         self.parse_and_execute_upload_data_from_query()
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
-            self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
+            self.assertCountEqual(result_table_entries, json.load(exp_f))
 
     def test_upload_data_from_query_table_not_exist(self):
         self.parse_and_execute_upload_data_from_query_table_not_exist()
@@ -106,7 +103,7 @@ class TestPostgresFunctions(TestSQLFunctions):
         self.parse_and_execute_quick_add_table()
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
-            self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
+            self.assertCountEqual(result_table_entries, json.load(exp_f))
 
 
 class TestMySQLFunctions(TestSQLFunctions):
@@ -124,7 +121,7 @@ class TestMySQLFunctions(TestSQLFunctions):
         self.parse_and_execute_upload_data_from_query()
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
-            self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
+            self.assertCountEqual(result_table_entries, json.load(exp_f))
 
     def test_upload_data_from_query_table_not_exist(self):
         self.parse_and_execute_upload_data_from_query_table_not_exist()
@@ -133,4 +130,4 @@ class TestMySQLFunctions(TestSQLFunctions):
         self.parse_and_execute_quick_add_table()
         result_table_entries = self.client.query_entries(self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
-            self.assertCountEqual(result_table_entries['hits'], json.load(exp_f))
+            self.assertCountEqual(result_table_entries, json.load(exp_f))

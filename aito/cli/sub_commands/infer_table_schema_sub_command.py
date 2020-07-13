@@ -3,11 +3,10 @@ import sys
 from typing import Dict
 from typing import List
 
-from aito.sdk.data_frame_handler import DataFrameHandler
-from aito.sdk.schema_handler import SchemaHandler
+from aito.schema import AitoTableSchema
+from aito.utils.data_frame_handler import DataFrameHandler
 from .sub_command import SubCommand
-from ..parser import InputArgType, ParseError
-from ..parser_utils import create_sql_connecting_from_parsed_args
+from ..parser import InputArgType, ParseError, create_sql_connecting_from_parsed_args
 
 
 class InferFromFormatSubCommand(SubCommand):
@@ -45,8 +44,8 @@ class InferFromFormatSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         parsed_read_args = self.parsed_args_to_data_frame_handler_read_args(parsed_args)
         df = DataFrameHandler().read_file_to_df(**parsed_read_args)
-        inferred_schema = SchemaHandler().infer_table_schema_from_pandas_data_frame(df)
-        json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
+        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(df)
+        json.dump(inferred_schema.to_json_serializable(), sys.stdout, indent=4, sort_keys=True)
         return 0
 
 
@@ -73,14 +72,14 @@ class InferFromSQLSubCommand(SubCommand):
         super().__init__('from-sql', 'infer a table schema from the result of a SQL query')
 
     def build_parser(self, parser):
-        parser.add_sql_default_credentials_arguments(add_use_env_arg=True)
+        parser.add_sql_default_credentials_arguments()
         parser.add_argument('query', type=str, help='query to get the data from your database')
 
     def parse_and_execute(self, parsed_args: Dict):
         connection = create_sql_connecting_from_parsed_args(parsed_args)
         result_df = connection.execute_query_and_save_result(parsed_args['query'])
-        inferred_schema = SchemaHandler().infer_table_schema_from_pandas_data_frame(result_df)
-        json.dump(inferred_schema, sys.stdout, indent=4, sort_keys=True)
+        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(result_df)
+        json.dump(inferred_schema.to_json_serializable(), sys.stdout, indent=4, sort_keys=True)
         return 0
 
 

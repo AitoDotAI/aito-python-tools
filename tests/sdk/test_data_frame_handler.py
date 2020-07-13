@@ -2,7 +2,7 @@ import json
 
 import ndjson
 
-from aito.sdk.data_frame_handler import DataFrameHandler
+from aito.utils.data_frame_handler import DataFrameHandler
 from tests.cases import CompareTestCase
 
 

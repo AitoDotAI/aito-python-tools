@@ -141,29 +141,29 @@ Supported Functions
 
 - Upload the result of a SQL to an existing table::
 
-    $ aito database -e path/to/dotEnvFile.env upload-data-from-sql tableName "SELECT * FROM tableName"
+    $ aito tableName "SELECT * FROM tableName"
 
   To see help::
 
-    $ aito database upload-data-from-sql -h
+    $ aito upload-data-from-sql -h
 
 - Infer schema, create table, and upload the result of a SQL to the database::
 
-    $ aito database quick-add-table-from-sql -D "PostgreSQL Unicode" -s localhost -u root -d testDB -tableName "SELECT * FROM tableName"
+    $ aito quick-add-table-from-sql -D "PostgreSQL Unicode" -s localhost -u root -d testDB -tableName "SELECT * FROM tableName"
 
   To see help::
 
-    $ aito database quick-add-table-from-sql -h
+    $ aito quick-add-table-from-sql -h
 
 
 SDK Integration
 ---------------
 
-You can connect to your SQL Database using the :ref:`apiSQLConnection`. The example below shows how you can upload a SQL query results to an Aito table:
+You can connect to your SQL Database using the :py:class:`~aito.utils.sql_connection.SQLConnection`. The example below shows how you can upload a SQL query results to an Aito table:
 
 .. code:: python
 
-  from aito.sdk.sql_connection import SQLConnection
+  from aito.utils.sql_connection import SQLConnection
   connection = SQLConnection(
     sql_driver='PostgreSQL Unicode',
     sql_server='localhost',

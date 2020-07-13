@@ -6,9 +6,10 @@ import subprocess
 
 class ParserAndCLITestCase(CompareTestCase):
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def setUpClass(cls, **kwargs):
+        super().setUpClass(**kwargs)
         cls.parser = MainParser()
+        cls.program_name = 'aito'
 
     def parse_and_execute(
             self, parsing_args, expected_args, stub_stdin=None, stub_stdout=None, execute_exception=None
@@ -16,9 +17,9 @@ class ParserAndCLITestCase(CompareTestCase):
         if os.getenv('TEST_BUILT_PACKAGE'):
             if execute_exception:
                 with self.assertRaises(subprocess.CalledProcessError):
-                    subprocess.run(['aito'] + parsing_args, stdin=stub_stdin, stdout=stub_stdout, check=True)
+                    subprocess.run([self.program_name] + parsing_args, stdin=stub_stdin, stdout=stub_stdout, check=True)
             else:
-                subprocess.run(['aito'] + parsing_args, stdin=stub_stdin, stdout=stub_stdout, check=True)
+                subprocess.run([self.program_name] + parsing_args, stdin=stub_stdin, stdout=stub_stdout, check=True)
         else:
             self.assertDictEqual(vars(self.parser.parse_args(parsing_args)), expected_args)
             if stub_stdin:

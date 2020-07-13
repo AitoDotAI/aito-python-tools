@@ -14,6 +14,7 @@ from packaging.version import Version
 PROJECT_ROOT_PATH = Path(__file__).parent.parent
 VERSION_FILE_PATH = PROJECT_ROOT_PATH / 'aito' / '__init__.py'
 CHANGE_LOG_FILE_PATH = PROJECT_ROOT_PATH / 'docs' / 'source' / 'changelog.rst'
+FINAL_RELEASE_PARTS = ['major', 'minor', 'micro']
 DEFAULT_SPECIAL_RELEASE_LETTER = {
     'pre': 'rc',
     'dev': 'dev',
@@ -39,13 +40,13 @@ def find_current_version(version_file_path: Path) -> Version:
     return Version(version_str)
 
 
-def update_version_file(version_file_path: Path, new_version: Version):
-    with version_file_path.open() as f:
+def update_version_file(new_version: Version):
+    with VERSION_FILE_PATH.open() as f:
         init_content = f.read()
-    with version_file_path.open('w') as f:
+    with VERSION_FILE_PATH.open('w') as f:
         f.write(re.sub(r"^__version__ = ['\"]([^'\"]*)['\"]", f'__version__ = "{new_version}"', init_content, re.M))
 
-    assert find_current_version(version_file_path) == new_version, 'version is not updated'
+    assert find_current_version(VERSION_FILE_PATH) == new_version, 'version is not updated'
 
 
 def get_all_existing_versions(repo) -> List[Version]:
@@ -55,12 +56,17 @@ def get_all_existing_versions(repo) -> List[Version]:
 
 
 def bump_version(current_version: Version, bump_part: str) -> Version:
-    final_releases_parts = ['major', 'minor', 'micro']
-    parts = [
-        str(getattr(current_version, part) + 1) if part == bump_part else str(getattr(current_version, part))
-        for part in final_releases_parts
-    ]
-    if bump_part in DEFAULT_SPECIAL_RELEASE_LETTER:
+    bump_final_release = bump_part in FINAL_RELEASE_PARTS
+    if bump_final_release:
+        bump_idx = FINAL_RELEASE_PARTS.index(bump_part)
+        parts = [
+            str(getattr(current_version, part) + 1) if idx == bump_idx
+            else str(getattr(current_version, part)) if idx < bump_idx
+            else '0'
+            for idx, part in enumerate(FINAL_RELEASE_PARTS)
+        ]
+    else:
+        parts = [str(getattr(current_version, part)) for part in FINAL_RELEASE_PARTS]
         # dev versioning has date intead of integer
         if bump_part == "dev":
             now = datetime.now()
@@ -122,11 +128,12 @@ def check_version_change_log_exist(change_log_file_path: Path, new_version: Vers
         raise ValueError(f'Change log file {change_log_file_path} does not exist')
     with change_log_file_path.open() as in_f:
         change_log_content = in_f.read()
-    if not re.search(f'^{new_version}', change_log_content, re.M):
+    if not re.search(f'^{new_version.base_version}', change_log_content, re.M):
         raise ValueError(f'version {new_version} changelog not found')
 
 
 def git_bump_version_and_tag(new_version):
+    subprocess.run(['git', 'add', str(VERSION_FILE_PATH)], check=True)
     subprocess.run(['git', 'commit', '--allow-empty', '-m', f'Bump to {new_version}'], check=True)
     subprocess.run(['git', 'tag', new_version], check=True)
     subprocess.run(['git', 'push'], check=True)
@@ -179,17 +186,19 @@ class DeployParser(argparse.ArgumentParser):
 
         m_e_group.add_argument(
             '-b', '--bump-version', type=str, choices=['dev', 'pre', 'post', 'micro', 'minor', 'major'],
-            help='bump the current version with the specified part, dev will be updated with the current date and other version parts are bumped automatically by one.'
+            help='bump the current version with the specified part, dev will be updated with the current date and '
+                 'other version parts are bumped automatically by one.'
         )
-        self.add_argument(
-            '-n', '--no-publish', action='store_true', help='Do not publish to repo'
-        )
+        self.add_argument('-n', '--no-publish', action='store_true', help='Do not publish to repo')
+        self.add_argument('--no-check-git-tree', action='store_true', help='Ignore if the repo is dirty')
 
     def __call__(self):
         check_at_top()
-        check_git_tree()
-
         parsed_args = vars(self.parse_args())
+
+        if not parsed_args['no_check_git_tree']:
+            check_git_tree()
+
         repo = parsed_args['repo']
 
         all_existing_versions = get_all_existing_versions(repo)
@@ -200,10 +209,12 @@ class DeployParser(argparse.ArgumentParser):
         elif parsed_args['bump_version']:
             bump_part = parsed_args['bump_version']
             new_version = bump_version(current_version, bump_part)
+        else:
+            raise ValueError('must either specify version or bump version mechanism')
 
         all_existing_versions = get_all_existing_versions(repo)
         validate_new_version(new_version, all_existing_versions)
-        update_version_file(VERSION_FILE_PATH, new_version)
+        update_version_file(new_version)
         build_package_and_check()
 
         if not parsed_args['no_publish']:
@@ -211,8 +222,8 @@ class DeployParser(argparse.ArgumentParser):
                 check_version_change_log_exist(CHANGE_LOG_FILE_PATH, new_version)
                 subprocess.run(['./scripts/build_docs.sh'], check=True)
                 publish(repo)
-                subprocess.run(['./scripts/publish_docs.sh', new_version], check=True)
-                git_bump_version_and_tag(new_version)
+                subprocess.run(['./scripts/publish_docs.sh', str(new_version)], check=True)
+                git_bump_version_and_tag(str(new_version))
             elif repo=='test.pypi':
                 publish(repo)
 

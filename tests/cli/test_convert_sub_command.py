@@ -1,6 +1,6 @@
 import sys
 
-from aito.cli.sub_commands.convert import ConvertFromFormatSubCommand
+from aito.cli.sub_commands.convert_sub_command import ConvertFromFormatSubCommand
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 

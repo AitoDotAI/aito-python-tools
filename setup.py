@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 PROJECT_ROOT_PATH = Path(__file__).parent
 VERSION_FILE_PATH = PROJECT_ROOT_PATH / 'aito' / '__init__.py'
-REQUIREMENTS_FILE_PATH = PROJECT_ROOT_PATH / 'requirements.txt'
+REQUIREMENTS_FILE_PATH = PROJECT_ROOT_PATH / 'requirements' / 'build.txt'
 
 
 def find_current_version(version_file_path: Path) -> str:
@@ -62,5 +62,9 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     python_requires='>=3.6',
-    entry_points={'console_scripts': ['aito = aito.cli.main_parser:main']}
+    entry_points={
+        'console_scripts': [
+            'aito = aito.cli.main_parser:main'
+        ]
+    }
 )

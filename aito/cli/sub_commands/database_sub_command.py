@@ -1,13 +1,62 @@
 import tempfile
 from os import unlink
-from typing import Dict, List
+from typing import Dict
 
-from aito.sdk.data_frame_handler import DataFrameHandler
-from aito.sdk.schema_handler import SchemaHandler
+from aito.client import AitoClient, BaseError
+from aito.schema import AitoTableSchema
+from aito.utils.data_frame_handler import DataFrameHandler
 from .sub_command import SubCommand
-from ..parser import PathArgType, InputArgType, ParseError
-from ..parser_utils import create_client_from_parsed_args, load_json_from_parsed_input_arg, \
-    prompt_confirmation, create_sql_connecting_from_parsed_args
+from ..parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
+    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, \
+    get_credentials_file_config, write_credentials_file_profile
+
+
+class ConfigureSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('configure', 'configure your Aito instance')
+
+    def build_parser(self, parser):
+        parser.add_argument(
+            '--profile', type=str, default="default",
+            help='the named profile for the config (default: default)'
+        )
+
+    def parse_and_execute(self, parsed_args: Dict):
+        def mask(string):
+            if string is None:
+                return None
+            if len(string) <= 4:
+                return '****'
+            return (len(string) - 4) * '*' + string[-4:]
+
+        def get_existing_credentials():
+            config = get_credentials_file_config()
+            profile = parsed_args['profile']
+            if profile not in config.sections():
+                return None, None
+            else:
+                return config.get(profile, 'instance_url', fallback=None), config.get(profile, 'api_key', fallback=None)
+
+        def prompt(name, existing_value):
+            masked_existing_value = mask(existing_value)
+            new_value = input(f'{name} [{masked_existing_value}]: ')
+            if not new_value:
+                if not existing_value:
+                    raise ParseError(f'{name} must not be empty')
+                else:
+                    new_value = existing_value
+            return new_value
+
+        existing_instance_url, existing_api_key = get_existing_credentials()
+        new_instance_url = prompt('instance url', existing_instance_url)
+        new_api_key = prompt('api key', existing_api_key)
+
+        try:
+            AitoClient(instance_url=new_instance_url, api_key=new_api_key, check_credentials=True)
+        except BaseError:
+            raise ParseError('invalid credentials, please try again')
+
+        write_credentials_file_profile(parsed_args['profile'], new_instance_url, new_api_key)
 
 
 class QuickAddTableSubCommand(SubCommand):
@@ -15,6 +64,7 @@ class QuickAddTableSubCommand(SubCommand):
         super().__init__('quick-add-table', 'infer schema, create table, and upload a file to Aito')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_argument(
             '-n', '--table-name', type=str,
             help='name of the table to be created (default: the input file name without the extension)')
@@ -47,10 +97,9 @@ class QuickAddTableSubCommand(SubCommand):
         converted_df = df_handler.convert_file(**convert_options)
         converted_tmp_file.close()
 
-        schema_handler = SchemaHandler()
-        inferred_schema = schema_handler.infer_table_schema_from_pandas_data_frame(converted_df)
+        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(converted_df)
         client = create_client_from_parsed_args(parsed_args)
-        client.create_table(table_name, inferred_schema)
+        client.create_table(table_name, inferred_schema.to_json_serializable())
 
         with open(converted_tmp_file.name, 'rb') as in_f:
             client.upload_binary_file(table_name, in_f)
@@ -64,6 +113,7 @@ class CreateTableSubCommand(SubCommand):
         super().__init__('create-table', 'create a table using the input table schema')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help="name of the table to be created")
         parser.add_argument(
             'input', default='-', type=InputArgType(), nargs='?',
@@ -77,12 +127,28 @@ class CreateTableSubCommand(SubCommand):
         return 0
 
 
+class GetTableSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('get-table', 'return the schema of the specified table')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument('table-name', type=str, help="name of the table")
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        table_name = parsed_args['table-name']
+        print(client.get_table_schema(table_name).to_json_string(indent=2))
+        return 0
+
+
 class DeleteTableSubCommand(SubCommand):
     def __init__(self):
         super().__init__('delete-table', 'delete a table schema and all content inside the table')
 
     def build_parser(self, parser):
-        parser.add_argument('table-name', type=str, help="name of the table to be deleted")
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument('table-name', type=str, help="the name of the table to be deleted")
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
@@ -92,12 +158,71 @@ class DeleteTableSubCommand(SubCommand):
         return 0
 
 
+class CopyTableSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('copy-table', 'copy a table')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument('table-name', type=str, help="the name of the table to be copied")
+        parser.add_argument('copy-table-name', type=str, help="the name of the new copy table")
+        parser.add_argument('--replace', action='store_true', help="allow the replacement of an existing table")
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        client.copy_table(parsed_args['table-name'], parsed_args['copy-table-name'], parsed_args['replace'])
+        return 0
+
+
+class RenameTableSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('rename-table', 'rename a table')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument('old-name', type=str, help="the name of the table to be renamed")
+        parser.add_argument('new-name', type=str, help="the new name of the table")
+        parser.add_argument('--replace', action='store_true', help="allow the replacement of an existing table")
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        client.rename_table(parsed_args['old-name'], parsed_args['new-name'], parsed_args['replace'])
+        return 0
+
+
+class ShowTablesSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('show-tables', 'show the existing tables in the Aito instance')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        tables = client.get_existing_tables()
+        print(*sorted(tables), sep='\n')
+        pass
+
+
+class GetDatabaseSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('get-database', 'return the schema of the database')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        print(client.get_database_schema().to_json_string(indent=2))
+        return 0
+
+
 class DeleteDatabaseSubCommand(SubCommand):
     def __init__(self):
         super().__init__('delete-database', 'delete the whole database')
 
     def build_parser(self, parser):
-        pass
+        parser.add_aito_default_credentials_arguments()
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
@@ -110,6 +235,7 @@ class UploadEntriesSubCommand(SubCommand):
         super().__init__('upload-entries', 'upload a list of table entries to an existing table')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.epilog = 'With no input, or when input is -, read table content from standard input'
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
         parser.add_argument(
@@ -138,6 +264,7 @@ class UploadFileSubCommand(SubCommand):
         super().__init__('upload-file', 'upload a file to an existing table')
 
     def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
         parser.add_argument('input-file', type=PathArgType(must_exist=True), help="path to the input file")
         file_format_choices = ['infer'] + DataFrameHandler.allowed_format
@@ -179,7 +306,8 @@ class UploadDataFromSQLSubCommand(SubCommand):
         super().__init__('upload-data-from-sql', 'populate the result of a SQL query to an existing table')
 
     def build_parser(self, parser):
-        parser.add_sql_default_credentials_arguments(add_use_env_arg=False)
+        parser.add_aito_default_credentials_arguments()
+        parser.add_sql_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help='name of the table to be added data to')
         parser.add_argument('query', type=str, help='query to get the data from your SQL database')
 
@@ -207,7 +335,8 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
         )
 
     def build_parser(self, parser):
-        parser.add_sql_default_credentials_arguments(add_use_env_arg=False)
+        parser.add_aito_default_credentials_arguments()
+        parser.add_sql_default_credentials_arguments()
         parser.add_argument('table-name', type=str, help='name of the table to be created and added data to')
         parser.add_argument('query', type=str, help='query to get the data from your SQL database')
 
@@ -217,56 +346,15 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
         connection = create_sql_connecting_from_parsed_args(parsed_args)
 
         result_df = connection.execute_query_and_save_result(parsed_args['query'])
-        inferred_schema = SchemaHandler().infer_table_schema_from_pandas_data_frame(result_df)
+        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(result_df)
 
         converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
         DataFrameHandler().df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
         converted_tmp_file.close()
 
-        client.create_table(table_name, inferred_schema)
+        client.create_table(table_name, inferred_schema.to_json_serializable())
         with open(converted_tmp_file.name, 'rb') as in_f:
             client.upload_binary_file(table_name, in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
-        return 0
-
-
-class DatabaseSubCommand(SubCommand):
-    _default_sub_sub_commands = [
-        QuickAddTableSubCommand(),
-        CreateTableSubCommand(),
-        DeleteTableSubCommand(),
-        DeleteDatabaseSubCommand(),
-        UploadEntriesSubCommand(),
-        UploadBatchSubCommand(),
-        UploadFileSubCommand(),
-        UploadDataFromSQLSubCommand(),
-        QuickAddTableFromSQLSubCommand()
-    ]
-
-    def __init__(self, sub_sub_commands: List[SubCommand] = None):
-        super().__init__('database', 'perform operations with your Aito database instance')
-        if not sub_sub_commands:
-            sub_sub_commands = self._default_sub_sub_commands
-        self._sub_sub_commands_map = {cmd.name: cmd for cmd in sub_sub_commands}
-
-    def build_parser(self, parser):
-        parser.add_aito_default_credentials_arguments()
-        parser.epilog = '''To see help for a specific operation:
-  aito database <operation> -h
-'''
-        sub_sub_commands_subparsers = parser.add_subparsers(
-            title='operation',
-            dest='operation',
-            metavar='<operation>'
-        )
-        sub_sub_commands_subparsers.required = True
-
-        for sub_cmd in self._sub_sub_commands_map.values():
-            sub_sub_cmd_parser = sub_sub_commands_subparsers.add_parser(sub_cmd.name, help=sub_cmd.help_message)
-            sub_cmd.build_parser(sub_sub_cmd_parser)
-
-    def parse_and_execute(self, parsed_args: Dict):
-        sub_sub_command_name = parsed_args['operation']
-        self._sub_sub_commands_map[sub_sub_command_name].parse_and_execute(parsed_args)
         return 0

@@ -2,9 +2,10 @@ import json
 import os
 from uuid import uuid4
 
-from aito.sdk.aito_client import AitoClient, BaseError, RequestError
-from aito.common.file_utils import read_ndjson_gz_file
+from aito.client import AitoClient, BaseError, RequestError
+from aito.utils._file_utils import read_ndjson_gz_file
 from tests.cases import CompareTestCase
+from parameterized import parameterized
 
 
 class TestAitoClient(CompareTestCase):
@@ -48,7 +49,7 @@ class TestAitoClient(CompareTestCase):
 
     def get_table_schema_step(self):
         tbl_schema = self.client.get_table_schema(self.default_table_name)
-        self.assertDictEqual(tbl_schema, self.default_schema)
+        self.assertDictEqual(tbl_schema.to_json_serializable(), self.default_schema)
 
     def upload_by_batch_step(self, start, end):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)]
@@ -73,14 +74,14 @@ class TestAitoClient(CompareTestCase):
             optimize_on_finished=False)
 
     def query_table_entries_step(self):
-        entries = self.client.query_entries(self.default_table_name, 2, 2)['hits']
+        entries = self.client.query_entries(self.default_table_name, 2, 2)
         self.assertEqual(entries, [
             {'id': 2, 'name': 'some_name', 'amount': 2},
             {'id': 3, 'name': 'some_name', 'amount': 3}
         ])
 
     def query_table_all_entries_step(self, expected_result):
-        entries = self.client.query_entries(self.default_table_name)['hits']
+        entries = self.client.query_entries(self.default_table_name)
         self.assertEqual(len(entries), expected_result)
 
     def async_query_step(self):
@@ -131,6 +132,7 @@ class TestAitoClient(CompareTestCase):
 
     def download_table_step(self, start, end):
         self.client.download_table(self.default_table_name, self.output_folder)
+        self.addCleanup((self.output_folder / f'{self.default_table_name}.ndjson').unlink)
         import ndjson
         with (self.output_folder / f'{self.default_table_name}.ndjson').open() as f:
             entries = ndjson.load(f)
@@ -138,6 +140,7 @@ class TestAitoClient(CompareTestCase):
 
     def download_table_gzipped_step(self, start, end):
         self.client.download_table(self.default_table_name, self.output_folder, file_name='invoices', gzip_output=True)
+        self.addCleanup((self.output_folder / 'invoices.ndjson.gz').unlink)
         entries = read_ndjson_gz_file(self.output_folder / 'invoices.ndjson.gz')
         self.assertEqual(entries,  [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)])
 
@@ -159,6 +162,19 @@ class TestAitoClient(CompareTestCase):
         self.download_table_gzipped_step(start=0, end=12)
         self.delete_table_step()
 
+    def test_alter_table(self):
+        self.create_table_step()
+        copy_table_name = f'{self.default_table_name}_copy'
+        self.client.copy_table(self.default_table_name, copy_table_name)
+        db_tables = self.client.get_existing_tables()
+        self.assertIn(self.default_table_name, db_tables)
+        self.assertIn(copy_table_name, db_tables)
+        rename_table_name = f'{self.default_table_name}_rename'
+        self.client.rename_table(copy_table_name, rename_table_name)
+        db_tables = self.client.get_existing_tables()
+        self.assertIn(self.default_table_name, db_tables)
+        self.assertIn(rename_table_name, db_tables)
+        self.assertNotIn(copy_table_name, db_tables)
 
     def test_tobe_deprecated_upload(self):
         self.create_table_step()
@@ -173,3 +189,28 @@ class TestAitoClient(CompareTestCase):
         self.delete_table_step()
 
 
+class TestAitoClientGroceryCase(CompareTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        env_var = os.environ
+        cls.client = AitoClient(env_var['AITO_GROCERY_DEMO_INSTANCE_URL'], env_var['AITO_GROCERY_DEMO_API_KEY'])
+        cls.database_schema = cls.client.get_database_schema()
+
+    @parameterized.expand([
+        ('same_table', 'tags', 'products', True, ['category', 'id', 'name', 'price'], None),
+        ('linked_table', 'product.tags', 'impressions', False, ['session', 'purchase'], None),
+        ('invalid_predicting_field', 'description', 'products', False, None, ValueError),
+        ('invalid_linked_column', 'products.tags', 'impressions', False, None, ValueError),
+        ('invalid_linked_column_name', 'product.description', 'impressions', False, None, ValueError),
+    ])
+    def test_naive_predict(
+            self, test_name, predicting_field, from_table, fetch_schema, expected_hypothesis_fields, error
+    ):
+        use_database_schema = None if fetch_schema else self.database_schema
+        if error:
+            with self.assertRaises(error):
+                self.client.naive_predict(predicting_field, from_table, use_database_schema=use_database_schema)
+        else:
+            predict_query, result, actual_result = self.client.naive_predict(predicting_field, from_table)
+            self.assertCountEqual(list(predict_query['where'].keys()), expected_hypothesis_fields)
