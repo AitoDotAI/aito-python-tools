@@ -1,7 +1,7 @@
 Aito Python SDK
 ===============
 
-:Info: Check `Github <https://github.com/AitoDotAI/aito-python-tools>`_ for the latest source code and `documentation <https://aitodotai.github.io/aito-python-tools>`__ for more information.
+:Info: Check `Github <https://github.com/AitoDotAI/aito-python-tools>`_ for the latest source code and `documentation <https://aito-python-sdk.readthedocs.io/en/latest/>`__ for more information.
 :Maintainer: Aito <admin@aito.ai>
 
 About
@@ -10,7 +10,7 @@ About
 The Aito Python SDK is an open-source library that helps you to integrate your Python application
 to `Aito <https://aito.ai/>`_ quicker and more efficiently.
 
-The SDK also includes the `Aito Command Line Interface (CLI) <https://aitodotai.github.io/aito-python-tools/cli.html>`_ that enables you to interact with Aito
+The SDK also includes the `Aito Command Line Interface (CLI) <https://aito-python-sdk.readthedocs.io/en/latest/cli.html>`_ that enables you to interact with Aito
 using commands in your command-line shell, e.g: infer a table schema from a file or upload a file to Aito.
 
 
@@ -28,7 +28,7 @@ Aito Python SDK can be installed with `pip <http://pypi.python.org/pypi/pip>`_
 
     $ pip install aitoai
 
-Check our `installation guide <https://aitodotai.github.io/aito-python-tools/install.html>`_ for more information
+Check our `installation guide <https://aito-python-sdk.readthedocs.io/en/latest/install.html>`_ for more information
 
 Documentation
 -------------
