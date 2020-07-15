@@ -194,7 +194,7 @@ Supported database:
 - Improved documentation
 
 
-.. _generators: https://aitodotai.github.io/aito-python-tools/quickstart.html#sdkquickstartuploaddata
+.. _generators: https://aito-python-sdk.readthedocs.io/en/latest/sdk.html#sdkuploaddata
 .. _Column Type: https://aito.ai/docs/api/#schema-column-type
 .. _Analyzer: https://aito.ai/docs/api/#schema-analyzer
 .. _Delimiter Analyzer: https://aito.ai/docs/api/#schema-delimiter-analyzer
