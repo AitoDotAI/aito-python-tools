@@ -229,15 +229,14 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
             try:
                 return str(Sniffer().sniff(sample, ' ').delimiter)
             except csvError:
-                LOG.debug(f'failed to sniff delimiter of {sample}: e')
-        return None
+                return None
 
     @classmethod
     def _infer_delimiter(cls, samples: Iterable[str]) -> Optional[str]:
         """returns the most common inferred delimiter from the samples"""
         inferred_delimiter_counter = Counter([cls._try_sniff_delimiter(smpl) for smpl in samples])
+        LOG.debug(f'inferred delimiter and count: {inferred_delimiter_counter}')
         most_common_delimiter_and_count = inferred_delimiter_counter.most_common(1)[0]
-        LOG.debug(f'most common inferred delimiter and count: {most_common_delimiter_and_count}')
         return most_common_delimiter_and_count[0]
 
     @classmethod
