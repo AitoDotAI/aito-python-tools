@@ -915,7 +915,7 @@ class AitoTableSchema(AitoSchema):
     --------
 
     Infer AitoTableSchema from a Pandas DataFrame
-
+    >>> import pandas as pd
     >>> df = pd.DataFrame(data={'id': [1, 2], 'name': ['Neil', 'Buzz']})
     >>> table_schema = AitoTableSchema.infer_from_pandas_data_frame(df)
     >>> table_schema

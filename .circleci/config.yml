@@ -49,6 +49,7 @@ workflows:
       - run_sdk_and_cli_tests_built_package
       - run_postgres_tests_built_package
       - run_mysql_tests_built_package
+      - run_inline_docs_test
       - build_docs
       - build_and_deploy_to_test_pypi:
           requires:
@@ -643,6 +644,23 @@ jobs:
       - *install_mysql_cli_linux
       - *prepare_data_mysql
       - *run_mysql_cli_test
+      - *store_log_files
+
+  run_inline_docs_test:
+    docker:
+      - image: circleci/python:3.6.9
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_linux
+      - *save_venv_cache_build_and_test
+      - run:
+          name: run inline docs tests
+          command: |
+            [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
+            . venv/bin/activate
+            python -m tests -v suite inline_docs
       - *store_log_files
 
   build_docs:
