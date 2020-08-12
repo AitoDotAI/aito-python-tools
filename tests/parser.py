@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import unittest
+import doctest
 from pathlib import Path
 
 from tests.results import TestResultLogMetrics, TestResultCompareFileMeld
@@ -50,7 +51,11 @@ class TestParser(argparse.ArgumentParser):
         def test_case_gen(t_suite):
             for test in t_suite:
                 if self.is_not_suite(test):
-                    yield test.id()
+                    if isinstance(test, doctest.DocTestCase):
+                        # doctest can only load by module, not class
+                        yield f'doctest.{".".join(test.id().split(".")[:-1])}'
+                    else:
+                        yield test.id()
                 else:
                     for t in test_case_gen(test):
                         yield t
@@ -63,8 +68,11 @@ class TestParser(argparse.ArgumentParser):
         def test_case_gen(t_suite):
             for test in t_suite:
                 if self.is_not_suite(test):
-                    case = '.'.join(test.id().split('.')[:-1])
-                    yield case
+                    case_name = '.'.join(test.id().split('.')[:-1])
+                    if isinstance(test, doctest.DocTestCase):
+                        yield f'doctest.{case_name}'
+                    else:
+                        yield case_name
                 else:
                     for t in test_case_gen(test):
                         yield t
@@ -155,9 +163,15 @@ class TestParser(argparse.ArgumentParser):
             else:
                 self.error(f"Suite {args.suiteName} not found in {test_dir}. Use `list` option to list suite")
         elif args.command == 'case':
-            relative_to_root = '.'.join(test_dir.relative_to(ROOT_PATH).parts)
-            suite = unittest.defaultTestLoader.loadTestsFromName(f"{relative_to_root}.{args.caseName}")
-            all_succeed = runner.run(suite).wasSuccessful()
+            case_name = args.caseName
+            if case_name.startswith('doctest.'):
+                doctest_module = '.'.join(case_name.split('.')[1:])
+                suite = doctest.DocTestSuite(doctest_module)
+                all_succeed = runner.run(suite).wasSuccessful()
+            else:
+                relative_to_root = '.'.join(test_dir.relative_to(ROOT_PATH).parts)
+                suite = unittest.defaultTestLoader.loadTestsFromName(f"{relative_to_root}.{args.caseName}")
+                all_succeed = runner.run(suite).wasSuccessful()
         elif args.command == 'list':
             if args.level == 'suite':
                 names = list(test_suites.keys())
