@@ -287,7 +287,10 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         db_tables = self.client.get_existing_tables()
         self.assertIn(self.default_table_name, db_tables)
         self.assertIn(copy_table_name, db_tables)
-        self.client.delete_table(copy_table_name)
+
+        def clean_up():
+            self.client.delete_table(copy_table_name)
+        self.addCleanup(clean_up)
 
     def test_rename_table(self):
         self.create_table()
@@ -305,7 +308,10 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         db_tables = self.client.get_existing_tables()
         self.assertIn(rename_table_name, db_tables)
         self.assertNotIn(self.default_table_name, db_tables)
-        self.client.delete_table(rename_table_name)
+
+        def clean_up():
+            self.client.delete_table(rename_table_name)
+        self.addCleanup(clean_up)
 
     def test_show_tables(self):
         self.addCleanup(self.delete_out_file)
