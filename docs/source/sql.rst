@@ -19,8 +19,8 @@ To enable the SQL integration, you need to do the following extra installation:
     $ pip install pyodbc
 
 - `Install Database ODBC driver`_
-   - :ref:`PostgreSQL<Install PostgreSQL ODBC Driver>`
-   - :ref:`MySQL<Install MySQL ODBC Driver>`
+   - :ref:`installPostgresDriver`
+   - :ref:`installMySQLDriver`
 
 More instructions regarding the pyodbc_ library and connecting to different databases can
 be found `here <https://github.com/mkleehammer/pyodbc/wiki>`__.
@@ -48,6 +48,8 @@ Install ODBC Driver Manager
 Install Database ODBC driver
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _installPostgresDriver:
+
 Install PostgreSQL ODBC Driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -64,6 +66,8 @@ psqlODBC_ is the official PostgreSQL ODBC driver. To install:
 - On Generic Linux::
 
     $ sudo yum install postgresql-odbc.x86_64
+
+.. _installMySQLDriver:
 
 Install MySQL ODBC Driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^

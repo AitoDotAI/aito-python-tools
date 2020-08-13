@@ -3,6 +3,9 @@ Aito SDK
 
 :ref:`Quickstart guide to upload data <sdkQuickstartUpload>`
 
+
+.. _sdkLoadDataFile:
+
 Load a Data File to Pandas DataFrame
 ------------------------------------
 
@@ -26,7 +29,7 @@ An Aito table schema describes how the table should be constructed and processed
 You can read more about the Aito schema `here <https://aito.ai/docs/articles/defining-a-database-schema/>`__
 
 The :py:class:`~aito.schema.AitoTableSchema` can be inferred from a `Pandas DataFrame`_.
-The example below assumes that you already have a DataFrame named reddit_df from :ref:`Load a Data File to Pandas DataFrame` from
+The example below assumes that you already have a DataFrame named reddit_df from :ref:`sdkLoadDataFile`
 
 .. code:: python
 

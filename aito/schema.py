@@ -911,10 +911,8 @@ class AitoTableSchema(AitoSchema):
 
     Can be thought of as a dict-like container for AitoColumnTypeSchema objects
 
-    Examples
-    --------
-
     Infer AitoTableSchema from a Pandas DataFrame
+
     >>> import pandas as pd
     >>> df = pd.DataFrame(data={'id': [1, 2], 'name': ['Neil', 'Buzz']})
     >>> table_schema = AitoTableSchema.infer_from_pandas_data_frame(df)
@@ -932,20 +930,21 @@ class AitoTableSchema(AitoSchema):
         },
         "type": "table"
     }
+
     >>> table_schema['name']
     {
         "nullable": false,
         "type": "String"
     }
+
+    change the property of a column
+
     >>> table_schema['name'].nullable = True
     >>> table_schema['name']
     {
         "nullable": true,
         "type": "String"
     }
-
-    change the property of a column
-
     """
 
     def __init__(self, columns: Dict[str, AitoColumnTypeSchema]):

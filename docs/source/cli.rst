@@ -47,8 +47,7 @@ There are 3 ways to set up the credentials:
     - Your Aito instance URL
     - Your Aito API key
 
-  The CLI stores this information in a profile named `default` in the credentials file. By default, the information in
-this profile is used when you run a command that requires credentials.
+  The CLI stores this information in a profile named `default` in the credentials file. By default, the information in this profile is used when you run a command that requires credentials.
 
   The credentials file is stored in `$HOME/.config/aito/credentials` (`%UserProfile%` in Windows). You can manually edit this credentials file.
 
