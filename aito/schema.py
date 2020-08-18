@@ -943,7 +943,7 @@ class AitoColumnTypeSchema(AitoSchema):
 class AitoTableSchema(AitoSchema):
     """Aito Table schema contains the columns and their schema
 
-    Can be thought of as a dict-like container for AitoColumnTypeSchema objects
+    Can be thought of as a dict-like container for :class:`.AitoColumnTypeSchema` objects
 
     Infer AitoTableSchema from a Pandas DataFrame
 
@@ -1110,7 +1110,7 @@ class AitoTableSchema(AitoSchema):
 class AitoDatabaseSchema(AitoSchema):
     """Aito Database Schema
 
-    Can be thought of as a dict-like container for AitoTableSchema objects
+    Can be thought of as a dict-like container for :class:`.AitoTableSchema` objects
     """
     def __init__(self, tables: Dict[str, AitoTableSchema]):
         super().__init__('database')

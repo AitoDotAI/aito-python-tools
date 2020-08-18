@@ -4,5 +4,6 @@ import aito.schema
 
 
 def load_tests(loader, tests, ignore):
-    tests.addTests(doctest.DocTestSuite(aito.schema))
+    suite = doctest.DocTestSuite(aito.schema)
+    tests.addTests(suite)
     return tests

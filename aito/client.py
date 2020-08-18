@@ -30,7 +30,7 @@ class BaseError(Exception):
         self.message = message
 
     def __str__(self):
-        return f'AitoClientError: {self.message}'
+        return self.message
 
 
 class RequestError(BaseError):
@@ -125,7 +125,7 @@ class AitoClient:
             queries: List[Union[List, Dict]],
             batch_size: int = 10
     ) -> List[Dict]:
-        """async multiple requests
+        """make multiple requests asynchronously
 
         This method is useful when sending a batch of requests, for example, when sending a batch of predict requests.
 
@@ -139,6 +139,29 @@ class AitoClient:
         :type batch_size: int
         :return: list of request response or exception if a request did not succeed
         :rtype: List[Dict]
+
+        Find products that multiple users would most likely buy
+
+        >>> users = ['veronica', 'larry', 'alice']
+        >>> responses = client.async_requests(
+        ...     methods=['POST'] * len(users),
+        ...     endpoints=['/api/v1/_match'] * len(users),
+        ...     queries=[
+        ...         {
+        ...             'from': 'impressions',
+        ...             'where': { 'session.user': usr },
+        ...             'match': 'product'
+        ...         }
+        ...         for usr in users
+        ...     ]
+        ... )
+        >>> # Print top product for each customer
+        >>> for idx, usr in enumerate(users):
+        ...     print(f"{usr}: {responses[idx]['hits'][0]}") # doctest: +NORMALIZE_WHITESPACE +REPORT_UDIFF
+        veronica: {'$p': 0.14496525949529243, 'category': '100', 'id': '6410405060457', 'name': 'Pirkka bio cherry tomatoes 250g international 1st class', 'price': 1.29, 'tags': 'fresh vegetable pirkka tomato'}
+        larry: {'$p': 0.2348757987154449, 'category': '104', 'id': '6410405216120', 'name': 'Pirkka lactose-free semi-skimmed milk drink 1l', 'price': 1.25, 'tags': 'lactose-free drink pirkka'}
+        alice: {'$p': 0.11144746333281082, 'category': '104', 'id': '6408430000258', 'name': 'Valio eila™ Lactose-free semi-skimmed milk drink 1l', 'price': 1.95, 'tags': 'lactose-free drink'}
+
         """
         async def run():
             async with ClientSession() as session:
@@ -163,6 +186,7 @@ class AitoClient:
 
     def request(self, method: str, endpoint: str, query: Union[Dict, List] = None) -> Dict:
         """make a request to an Aito API endpoint
+        The client returns a JSON response if the request succeed and a :class:`.RequestError` if the request failed
 
         :param method: request method
         :type method: str
@@ -173,7 +197,41 @@ class AitoClient:
         :raises RequestError: an error occurred during the execution of the request
         :return: request JSON content
         :rtype: Dict
-        """
+
+        Simple request to get the schema of a table:
+
+        >>> res = client.request(method="GET", endpoint="/api/v1/schema/impressions")
+        >>> pprint(res) # doctest: +NORMALIZE_WHITESPACE
+         {'columns': {'product': {'link': 'products.id',
+                                 'nullable': False,
+                                 'type': 'String'},
+                     'purchase': {'nullable': False, 'type': 'Boolean'},
+                     'session': {'link': 'sessions.id',
+                                 'nullable': False,
+                                 'type': 'String'}},
+         'type': 'table'}
+
+         Sends a `PREDICT <https://aito.ai/docs/api/#post-api-v1-predict>`__ query:
+
+         >>> client.request(
+         ...    method="POST",
+         ...    endpoint="/api/v1/_predict",
+         ...    query={
+         ...        "from": "impressions",
+         ...        "where": { "session": "veronica" },
+         ...        "predict": "product.name",
+         ...        "limit": 1
+         ...    }
+         ... ) # doctest: +NORMALIZE_WHITESPACE
+         {'offset': 0, 'total': 142, 'hits': [{'$p': 0.07285448674038553, 'field': 'product.name', 'feature': 'pirkka'}]}
+
+         Returns an error when make a request to an incorrect path:
+
+         >>> client.request(method="GET", endpoint="/api/v1/incorrect-path") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+         Traceback (most recent call last):
+            ...
+         aito.client.RequestError: failed to `GET` to `/api/v1/incorrect-path` with query None...: The path you requested [/incorrect-path] does not exist
+         """
         self._check_endpoint(endpoint)
         url = self.url + endpoint
         try:
@@ -194,6 +252,10 @@ class AitoClient:
 
     def create_database(self, database_schema: Dict) -> Dict:
         """`create a database <https://aito.ai/docs/api/#put-api-v1-schema>`__ using the specified database schema
+
+        .. note::
+
+            requires the client to be setup with the READ-WRITE API key
 
         :param database_schema: Aito database schema
         :type database_schema: Dict
@@ -216,6 +278,11 @@ class AitoClient:
     def delete_database(self) -> Dict:
         """`delete the whole database <https://aito.ai/docs/api/#delete-api-v1-schema>`__
 
+        .. note::
+
+            requires the client to be setup with the READ-WRITE API key
+
+
         :return: deleted tables
         :rtype: Dict
         """
@@ -227,6 +294,10 @@ class AitoClient:
         """`create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__ with the specified table name and schema
 
         update the table if the table already exists and does not contain any data
+
+        .. note::
+
+            requires the client to be setup with the READ-WRITE API key
 
         :param table_name: the name of the table
         :type table_name: str
@@ -256,6 +327,10 @@ class AitoClient:
 
     def delete_table(self, table_name: str) -> Dict:
         """`delete the specified table <https://aito.ai/docs/api/#delete-api-v1-schema>`__
+
+        .. note::
+
+            requires the client to be setup with the READ-WRITE API key
 
         :param table_name: the name of the table
         :type table_name: str
@@ -287,6 +362,10 @@ class AitoClient:
     def rename_table(self, old_name: str, new_name: str, replace: bool = False):
         """`rename a table <https://aito.ai/docs/api/#post-api-v1-schema-rename>`__
 
+        .. note::
+
+            requires the client to be setup with the READ-WRITE API key
+
         :param old_name: the name of the table to be renamed
         :type old_name: str
         :param new_name: the new name of the table
@@ -298,6 +377,10 @@ class AitoClient:
 
     def copy_table(self, table_name: str, copy_table_name: str, replace: bool = False):
         """`copy a table <https://aito.ai/docs/api/#post-api-v1-schema-copy>`__
+
+        .. note::
+
+            requires the client to be setup with the READ-WRITE API key
 
         :param table_name: the name of the table to be copied
         :type table_name: str
@@ -311,7 +394,7 @@ class AitoClient:
         )
 
     def optimize_table(self, table_name):
-        """`optimize the specified table <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
+        """`optimize the specified table after uploading the data <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
 
         :param table_name: the name of the table
         :type table_name: str
@@ -352,6 +435,10 @@ class AitoClient:
     ):
         """populate table entries by batches of batch_size
 
+        .. note::
+
+            requires the client to be setup with the READ-WRITE API key
+
         :param table_name: the name of the table
         :type table_name: str
         :param entries: iterable of the table entries
@@ -360,6 +447,25 @@ class AitoClient:
         :type batch_size: int, optional
         :param optimize_on_finished: `optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__ the table on finished, defaults to True
         :type optimize_on_finished: bool
+
+        Upload a Pandas DataFrame
+
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'height': [94, 170], 'weight': [31, 115], 'depth':  [ 3,  29]})
+        >>> entries = df.to_dict(orient='records')
+        >>> client.upload_entries(table_name='specifications', entries=entries) # doctest: +SKIP
+
+        Upload a genator of entries
+        >>> def entries_generator(start, end):
+        ...     for idx in range(start, end):
+        ...         entry = {'id': idx}
+        ...         yield entry
+        >>> client.upload_entries(
+        ...     table_name="table_name",
+        ...     entries=entries_generator(start=0, end=10000),
+        ...     batch_size=500,
+        ...     optimize_on_finished=False
+        ... ) # doctest: +SKIP
         """
         LOG.info(f'uploading entries to table `{table_name}` with batch size of {batch_size}...')
 
@@ -405,6 +511,10 @@ class AitoClient:
             self, table_name: str, binary_file: BinaryIO, optimize_on_finished: bool = True, polling_time: int = 10
     ):
         """`upload a binary file object to a table <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
+
+        .. note::
+
+            requires the client to be setup with the READ-WRITE API key
 
         :param table_name: the name of the table
         :type table_name: str
@@ -456,6 +566,10 @@ class AitoClient:
     def upload_file(
             self, table_name: str, file_path: PathLike, optimize_on_finished: bool = True, polling_time: int = 10):
         """`upload a file <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__ to the specfied table
+
+        .. note::
+
+            requires the client to be setup with the READ-WRITE API key
 
         :param table_name: the name of the table
         :type table_name: str
@@ -512,6 +626,22 @@ class AitoClient:
         """make a request to an Aito API endpoint using job
 
         This method should be used for requests that take longer than 30 seconds, e.g: evaluate
+
+        The following query evaluate the perfomance of a predict query that uses the product's name to predic the product's category
+
+        >>> response = client.job_request(
+        ...     job_endpoint='/api/v1/jobs/_evaluate',
+        ...     query={
+        ...         "test": { "$index": { "$mod": [4, 0] } },
+        ...         "evaluate": {
+        ...             "from": "products",
+        ...             "where": { "name": { "$get": "name" } },
+        ...             "predict": "category"
+        ...         }
+        ...     }
+        ... )
+        >>> print(response["accuracy"]) # doctest: +ELLIPSIS
+        0.72...
 
         :param job_endpoint: job end point
         :type job_endpoint: str
