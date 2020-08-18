@@ -223,7 +223,7 @@ class DeployParser(argparse.ArgumentParser):
                 subprocess.run(['./scripts/build_docs.sh'], check=True)
                 publish(repo)
                 git_bump_version_and_tag(str(new_version))
-            elif repo=='test.pypi':
+            elif repo == 'test.pypi':
                 publish(repo)
 
 
