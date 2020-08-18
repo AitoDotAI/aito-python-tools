@@ -122,8 +122,8 @@ You can download an example csv file ``reddit_sample.csv`` `here <https://raw.gi
 
 .. _sdkQuickstartInferTableSchema:
 
-:ref:`Infer a Table Schema <sdkInferTableSchema>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Infer a table schema
+~~~~~~~~~~~~~~~~~~~~
 
 You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFrame`_:
 
@@ -239,8 +239,8 @@ You can access and update the column schema by using the column name as the key:
 
 .. _sdkQuickstartCreateTable:
 
-:ref:`Create a Table <sdkCreateTable>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Create a table
+~~~~~~~~~~~~~~
 
 The :py:class:`~aito.client.AitoClient` can create a table using a table name and a table schema
 
@@ -297,8 +297,8 @@ A DataFrame can be converted to:
 
 .. _sdkQuickstartUploadData:
 
-:ref:`Upload the Data <sdkUploadData>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Upload the Data
+~~~~~~~~~~~~~~~
 
 The :py:class:`~aito.client.AitoClient` can upload the data with either `Batch Upload`_ or `File Upload`_:
 

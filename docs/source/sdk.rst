@@ -1,243 +1,88 @@
 Aito SDK
 ==============
 
-:ref:`Quickstart guide to upload data <sdkQuickstartUpload>`
+The Aito SDK consists of:
+  - :py:mod:`~aito.schema`: Data structure for the Aito Database Schema
+  - :py:mod:`~aito.client`: A versatile client that helps you to interact with the Aito Database Instance
+  - :py:class:`~aito.utils.data_frame_handler.DataFrameHandler`: Utility to read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema
+
+We highly recommend you to take a look at the :ref:`quickstart guide to upload data <sdkQuickstartUpload>` if you haven't
 
 
-.. _sdkLoadDataFile:
+.. _sdkAitoSchema:
 
-Load a Data File to Pandas DataFrame
-------------------------------------
+AitoSchema
+----------
 
-The Aito Python SDK uses `Pandas DataFrame`_ for multiple operations.
+Before uploading data into Aito, you need to create a table with a :py:class:`~aito.schema.AitoTableSchema`.
 
-The example below shows how you can load a csv file into a DataFrame, please read the `official pandas guide <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__ for further instructions.
-You can download an example csv file ``reddit_sample.csv`` `here <https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv>`__ and run the code below:
+You can infer a table schema from a `Pandas DataFrame`_  with :py:func:`~aito.schema.AitoTableSchema.infer_from_pandas_data_frame`.
 
-.. code:: python
+You can also create a table schema column-by-column and infer the :py:class:`~aito.schema.AitoColumnTypeSchema` with :py:func:`~aito.schema.AitoColumnTypeSchema.infer_from_samples`.
 
-  import pandas as pd
+.. _sdkAitoClient:
 
-  reddit_df = pd.read_csv('reddit_sample.csv')
+AitoClient
+----------
 
-.. _sdkInferTableSchema:
+The :py:class:`~aito.client.AitoClient` offers multiple functions:
 
-Infer a Table Schema
---------------------
+  - Manipulate the database:
 
-An Aito table schema describes how the table should be constructed and processed internally.
-You can read more about the Aito schema `here <https://aito.ai/docs/articles/defining-a-database-schema/>`__
+    .. note::
 
-The :py:class:`~aito.schema.AitoTableSchema` can be inferred from a `Pandas DataFrame`_.
-The example below assumes that you already have a DataFrame named reddit_df from :ref:`sdkLoadDataFile`
+      These operations require the client to be setup with the READ-WRITE API key
 
-.. code:: python
+    - Create a table: :py:func:`~aito.client.AitoClient.create_table`
+    - Delete a table: :py:func:`~aito.client.AitoClient.delete_table`
+    - Create the database: :py:func:`~aito.client.AitoClient.create_database`
+    - Delete the database: :py:func:`~aito.client.AitoClient.delete_database`
+    - Copy a table: :py:func:`~aito.client.AitoClient.copy_table`
+    - Rename a table: :py:func:`~aito.client.AitoClient.rename_table`
 
-  from aito.schema import AitoTableSchema, AitoStringType, AitoTokenNgramAnalyzerSchema, AitoAliasAnalyzerSchema
-  reddit_schema = AitoTableSchema.infer_from_pandas_data_frame(reddit_df)
+  - Upload the data:
 
-  # Feel free to change the schema as you see fit. For example:
-  # Change the data type  of the `label` column  to `String` instead of `Int`
-  reddit_schema['label'].data_type = AitoStringType()
-  # Change the analyzer of the `comments` column
-  reddit_schema['comments'].analyzer = AitoTokenNgramAnalyzerSchema(
-    source=AitoAliasAnalyzerSchema('en'),
-    min_gram=1,
-    max_gram=3
-  )
+    .. note::
 
-.. _sdkCreateTable:
+      These operations require the client to be setup with the READ-WRITE API key
 
-Create a Table
---------------
-
-You can `create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__ after you have the table schema with the :py:class:`~aito.client.AitoClient`.
-
-Your AitoClient must be set up with the READ-WRITE API key
-
-The example below assumes that you already have a table_schema named reddit_schema from :ref:`sdkInferTableSchema`.
-
-.. code:: python
-
-  from aito.client import AitoClient
-  aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
-  aito_client.create_table(table_name='reddit', table_schema=reddit_schema)
-
-  # Check your table schema in Aito
-  aito_client.get_table_schema(table_name=table_name)
-
-- `To create a database schema <https://aito.ai/docs/api/#put-api-v1-schema>`_:
-
-  .. code:: python
-
-    # Aito DB schema example
-    from aito.schema import AitoDatabaseSchema
-    database_schema = AitoDatabaseSchema(tables={'reddit': reddit_schema})
-    aito_client.create_database(database_schema=database_schema)
-
-    # Check your DB schema in Aito
-    aito_client.get_database_schema()
-
-.. _sdkUploadData:
-
-Upload Data
------------
-
-You can upload data to a table with the :py:class:`~aito.client.AitoClient`.
-
-Your AitoClient must be set up with the READ-WRITE API key
-
-.. code:: python
-
-  from aito.client import AitoClient
-  aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
-
-- `Upload a list of table entries <https://aito.ai/docs/api/#post-api-v1-data-table-batch>`__ with :py:func:`~aito.client.AitoClient.upload_entries`
-
-  .. code:: python
-
-    entries = [
-      {
-        'label': 0,
-        'comment': 'it was.',
-        'author': 'renden123',
-        'subreddit': 'CFB',
-        'score': 4,
-        'ups': -1,
-        'downs': -1,
-        'date': '2016-11',
-        'created_utc': '2016-11-22 21:32:03',
-        'parent_comment': "Wasn't it 2010?"
-      }
-    ]
-    aito_client.upload_entries(table_name='reddit', entries=entries)
-
-- Upload a `Pandas DataFrame`_
-
-  .. code:: python
-
-    # convert DataFrame to list of entries
-    entries = df.to_dict(orient="records")
-    aito_client.upload_entries(table_name='reddit', entries=entries)
-
-- `Upload a gzipped ndjson file <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__ with :py:func:`~aito.client.AitoClient.upload_file`
-
-  .. code:: python
-
-    aito_client.upload_file(table_name='table_name', file_path=file_path)
-
-- Upload using generator
-
-  .. code-block:: python
-
-    def entries_generator(start, end):
-        for idx in range(start, end):
-            entry = {'id': idx}
-            yield entry
-
-    aito_client.upload_entries(
-        table_name="table_name",
-        entries=entries_generator(start=0, end=4),
-        batch_size=2,
-        optimize_on_finished=False
-    )
-
-Delete data
------------
-
-You can delete data with the :py:class:`~aito.client.AitoClient`.
-
-Your AitoClient must be set up with the READ-WRITE API key
-
-- Delete a table: :py:func:`aito.client.AitoClient.delete_table`
-- Delete the entire database :py:func:`aito.client.AitoClient.delete_database`
-
-.. _Pandas DataFrame: https://pandas.pydata.org/pandas-docs/stable/reference/frame.html
+    - Upload a binary file object to a table: :py:func:`~aito.client.AitoClient.upload_binary_file`
+    - Upload a file to a table: :py:func:`~aito.client.AitoClient.upload_file`
+    - Upload batches of entries to a table: :py:func:`~aito.client.AitoClient.upload_entries`
+    - Optimize a table after uploading the data: :py:func:`~aito.client.AitoClient.optimize_table`
 
 
-.. _sdkExecuteQuery:
+  - Get information about the database:
 
-Execute Queries
+    - Get the instance version: :py:func:`~aito.client.AitoClient.get_version`
+    - Check if a table exists in the instance: :py:func:`~aito.client.AitoClient.check_table_exists`
+    - Get a list of existing tables in the instance: :py:func:`~aito.client.AitoClient.get_existing_tables`
+    - Get a table schema: :py:func:`~aito.client.AitoClient.get_table_schema`
+    - Find the number of entries in a table: :py:func:`~aito.client.AitoClient.get_table_size`
+    - Get the database schema: :py:func:`~aito.client.AitoClient.get_database_schema`
+
+  - Querying:
+
+    - Query entries of a table: :py:func:`~aito.client.AitoClient.query_entries`
+    - Query all entries of a table: :py:func:`~aito.client.AitoClient.query_all_entries`
+    - Download a table: :py:func:`~aito.client.AitoClient.download_table`
+    - Make a request to an Aito API endpoint: :py:func:`~aito.client.AitoClient.request`
+    - Make multiple requests asynchronously: :py:func:`~aito.client.AitoClient.async_requests`
+    - Make a job request (for query that takes longer than 30 seconds): :py:func:`~aito.client.AitoClient.job_request`
+    - Make a job request step by step: :py:func:`~aito.client.AitoClient.create_job`, :py:func:`~aito.client.AitoClient.get_job_status`, :py:func:`~aito.client.AitoClient.get_job_result`
+
+.. _sdkTroubleshooting:
+
+Troubleshooting
 ---------------
 
-You can execute queries with the :py:class:`~aito.client.AitoClient`.
+The easiest way to troubleshoot the Aito SDK is by enabling the debug logging. You can enable the debug logging by:
 
-Your AitoClient can be set up with the READ-ONLY API key
+.. testcode::
 
-:meth:`Request to an endpoint <aito.client.AitoClient.request>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    import logging
 
-The example below show how you could send a predict query to Aito:
-
-.. code:: python
-
-  aito_client.request(
-    method='POST',
-    endpoint='/api/v1/_predict',
-    query={
-      'from': 'invoice',
-      'where': {
-        'description': 'a very long invoice description'
-      },
-      'predict': 'sales_rep'
-    }
-  )
-
-:meth:`Query a Table Entries <aito.client.AitoClient.query_entries>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: python
-
-  # query the first 10 entries of a table
-  aito_client.query_entries(table_name='table_name')
+    logging.basicConfig(level=logging.DEBUG)
 
 
-:meth:`Executing multiple queries asynchronously <aito.client.AitoClient.async_requests>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: python
-
-  # predict with different descriptions
-
-  descriptions = ['first description', 'second description', 'third description']
-
-  responses = aito_client.async_requests(
-    methods=['POST'] * len(descriptions),
-    endpoints=['/api/v1/_predict'] * len(descriptions),
-    queries=[
-      {
-        'from': 'invoice',
-        'where': {
-          'description': desc
-        },
-        'predict': 'sales_rep'
-      }
-      for desc in descriptions
-    ]
-  )
-
-:meth:`Sending a job request for query that takes longer than 30 seconds <aito.client.AitoClient.job_request>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Some queries might take longer than 30 seconds to run (e.g: `Evaluate <https://aito.ai/docs/api/#post-api-v1-evaluate>`_).
-You can use the job request for these queries. For example:
-
-.. code:: python
-
-  response = aito_client.job_request(
-    job_endpoint='/api/v1/jobs/_evaluate',
-    query={
-      "test": {
-        "$index": {
-          "$mod": [4, 0]
-        }
-      },
-      "evaluate": {
-        "from": "invoice",
-        "where": {
-          "description": { "$get": "description" }
-        },
-        "predict": "sales_rep"
-      }
-    }
-  )
+.. _Pandas DataFrame: https://pandas.pydata.org/pandas-docs/stable/reference/frame.html
