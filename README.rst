@@ -59,6 +59,10 @@ You can use our test cli to run tests:
 
     $ python -m tests -h
 
+.. note::
+
+  Some tests require some environment variables to be setup. Use the test CLI list command to discover and display the test suites and cases
+
 There are multiple test suites:
 
 1. CLI suite:
@@ -117,3 +121,31 @@ There are multiple test suites:
         $ pip install dist/aitoai-<version>.whl
 
   - To test the built package, create an environment variable ```TEST_BUILT_PACKAGE``` and run the above tests
+
+5. Test the documentation:
+
+  - To test the inline documentation:
+
+    .. code-block:: console
+
+      $ python -m tests -v suite inline_docs
+
+  - To test the code blocks in rst files:
+
+    .. code-block:: console
+
+      $ cd docs
+      $ make doctest
+
+Contributing
+------------
+
+- Making changes
+- Add unittest to the appropriate test suite (e.g: test case for Aito Schema: `tests/sdk/test_aito_schema.py`) or create a new test suite inside the `tests` folder
+- Add document:
+
+  - Inline document if applicable
+  - Update .rst file in docs/source folder (e.g: Add a new Client function to docs/source/sdk.rst)
+
+- Add inline doc test if applicable (e.g: inline doc test for Aito Client: `tests/inline_docs/test_client_inline_docs.py`)
+- Check CircleCI and issue a PR
