@@ -344,7 +344,13 @@ Example::
 
   $ aito convert ndjson -j < path/to/myNDJSONFile.ndjson > path/to/convertedFile.json
 
+Troubleshooting
+~~~~~~~~~~~~~~~
 
+You can troubleshoot the Aito CLI by either:
+
+  - Enabling the verbose mode by adding the `-v` or `--verbose` flag before running any command
+  - Take a look at the log file at `$HOME/.config/aito/aito.log` (`%UserProfile%` in Windows)
 
 Tab Completion
 ~~~~~~~~~~~~~~
