@@ -142,10 +142,11 @@ Contributing
 
 - Making changes
 - Add unittest to the appropriate test suite (e.g: test case for Aito Schema: `tests/sdk/test_aito_schema.py`) or create a new test suite inside the `tests` folder
-- Add document:
+- Add documentation:
 
-  - Inline document if applicable
+  - Inline documentation if applicable
   - Update .rst file in docs/source folder (e.g: Add a new Client function to docs/source/sdk.rst)
 
 - Add inline doc test if applicable (e.g: inline doc test for Aito Client: `tests/inline_docs/test_client_inline_docs.py`)
 - Check CircleCI and issue a PR
+- Deploy to production (scripts/deploy) with the appropriate version after the PR is reviewed

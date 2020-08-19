@@ -6,8 +6,9 @@ The Aito SDK consists of:
   - :py:mod:`~aito.client`: A versatile client that helps you to interact with the Aito Database Instance
   - :py:class:`~aito.utils.data_frame_handler.DataFrameHandler`: Utility to read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema
 
-We highly recommend you to take a look at the :ref:`quickstart guide to upload data <sdkQuickstartUpload>` if you haven't
+.. note::
 
+  We highly recommend you to take a look at the :ref:`quickstart guide to uploading data <sdkQuickstartUpload>` if you haven't already.  
 
 .. _sdkAitoSchema:
 
