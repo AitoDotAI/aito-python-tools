@@ -132,20 +132,22 @@ commonYAMLStructure:
         . venv/bin/activate
         pip install -r requirements/deploy.txt
         pip install -r requirements/test.txt
-  - &restore_doc_venv_cache
+  - &restore_build_doc_venv_cache
     restore_cache:
-      key: v2-dependencies-{{ checksum "requirements/docs.txt" }}
-  - &save_doc_venv_cache
+      key: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ checksum "requirements/docs.txt" }}
+  - &save_build_doc_venv_cache
     save_cache:
       paths:
         - ./venv
-      key: v2-dependencies-{{ checksum "requirements/docs.txt" }}
-  - &create_doc_venv
+      key: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ checksum "requirements/docs.txt" }}
+  - &create_build_doc_venv
     run:
       name: create doc virtualenv and install dependencies
       command: |
         python -m venv venv
         . venv/bin/activate
+        pip install -r requirements/build.txt
+        pip install -r requirements/test.txt
         pip install -r requirements/docs.txt
   - &install_python_and_build_and_test_dependencies_win
     run:
@@ -278,6 +280,7 @@ commonYAMLStructure:
     run:
       name: run all tests execluding sql functions tests
       command: |
+        [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
         . venv/bin/activate
         python -m tests -v suite sdk
         python -m tests -v suite cli
@@ -285,6 +288,9 @@ commonYAMLStructure:
     run:
       name: run all tests execluding sql functions tests
       command: |
+        if ($Env:CIRCLE_BRANCH -ne "master") {
+          (git diff --quiet HEAD origin/master -- . ":!docs") -and (echo "NO CHANGE - SKIP") -and (exit 0)
+        }
         venv\Scripts\activate.ps1
         python -m tests -v suite sdk
         python -m tests -v suite cli
@@ -292,24 +298,28 @@ commonYAMLStructure:
     run:
       name: run postgres connection test
       command: |
+        [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
         . venv/bin/activate
         python -m tests -v case sql_functions.test_connection.TestPostgresConnection
   - &run_postgres_cli_test
     run:
       name: run postgres cli test
       command: |
+        [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
         . venv/bin/activate
         python -m tests -v case sql_functions.test_cli_sql_functions.TestPostgresFunctions
   - &run_mysql_connection_test
     run:
       name: run mysql connection test
       command: |
+        [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
         . venv/bin/activate
         python -m tests -v case sql_functions.test_connection.TestMySQLConnection
   - &run_mysql_cli_test
     run:
       name: run mysql cli test
       command: |
+        [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
         . venv/bin/activate
         python -m tests -v case sql_functions.test_cli_sql_functions.TestMySQLFunctions
   - &store_log_files
@@ -643,11 +653,24 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - *restore_doc_venv_cache
-      - *create_doc_venv
-      - *save_doc_venv_cache
+      - *restore_build_doc_venv_cache
+      - *create_build_doc_venv
+      - *save_build_doc_venv_cache
       - run:
-          name: build docs only if there is any changes to the docs dir
+          name: run inline docs tests
+          command: |
+            . venv/bin/activate
+            python -m tests -v suite inline_docs
+      - run:
+          name: run doc test in docs file
+          command: |
+            . venv/bin/activate
+            cd docs
+            curl -o reddit_sample.csv https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv
+            export SPHINX_DISABLE_MOCK_REQUIREMENTS=TRUE
+            make doctest
+      - run:
+          name: build docs
           command: |
             [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- docs && echo "NO CHANGE" && exit 0
             . venv/bin/activate

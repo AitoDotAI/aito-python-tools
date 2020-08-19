@@ -229,15 +229,14 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
             try:
                 return str(Sniffer().sniff(sample, ' ').delimiter)
             except csvError:
-                LOG.debug(f'failed to sniff delimiter of {sample}: e')
-        return None
+                return None
 
     @classmethod
     def _infer_delimiter(cls, samples: Iterable[str]) -> Optional[str]:
         """returns the most common inferred delimiter from the samples"""
         inferred_delimiter_counter = Counter([cls._try_sniff_delimiter(smpl) for smpl in samples])
+        LOG.debug(f'inferred delimiter and count: {inferred_delimiter_counter}')
         most_common_delimiter_and_count = inferred_delimiter_counter.most_common(1)[0]
-        LOG.debug(f'most common inferred delimiter and count: {most_common_delimiter_and_count}')
         return most_common_delimiter_and_count[0]
 
     @classmethod
@@ -906,17 +905,49 @@ class AitoColumnTypeSchema(AitoSchema):
         link = AitoColumnLink.from_deserialized_object(link_data) if link_data is not None else None
         return cls(data_type=data_type, nullable=obj.get('nullable'), link=link, analyzer=analyzer)
 
+    @classmethod
+    def _infer_from_pandas_series(cls, series: pd.Series, max_sample_size: int = 100000) -> 'AitoColumnTypeSchema':
+        samples = series if len(series) < max_sample_size else series.sample(max_sample_size)
+
+        col_nullable = True if series.isna().sum() > 0 else False
+        col_analyzer = None
+        col_aito_type = AitoDataTypeSchema._infer_from_pandas_series(samples, max_sample_size)
+
+        if col_aito_type.is_text:
+            col_analyzer = AitoAnalyzerSchema.infer_from_samples(samples.dropna().__iter__())
+            if not col_analyzer:
+                col_aito_type = AitoStringType()
+        return cls(
+            data_type=col_aito_type, nullable=col_nullable, analyzer=col_analyzer
+        )
+
+    @classmethod
+    def infer_from_samples(cls, samples: Iterable, max_sample_size: int = 100000) -> 'AitoColumnTypeSchema':
+        """infer AitoColumnType from the given samples
+
+        :param samples: iterable of sample
+        :type samples: Iterable
+        :param max_sample_size: at most first max_sample_size will be used for inference, defaults to 100000
+        :type max_sample_size: int
+        :return: inferred Aito column type
+        :rtype: str
+        """
+        try:
+            casted_samples = pd.Series(itertools.islice(samples, max_sample_size))
+        except Exception as e:
+            LOG.debug(f'failed to cast samples ({list(itertools.islice(samples, 10))}, ...)  to pandas Series: {e}')
+            raise Exception(f'failed to infer column type')
+        return cls._infer_from_pandas_series(casted_samples)
+
 
 class AitoTableSchema(AitoSchema):
     """Aito Table schema contains the columns and their schema
 
-    Can be thought of as a dict-like container for AitoColumnTypeSchema objects
-
-    Examples
-    --------
+    Can be thought of as a dict-like container for :class:`.AitoColumnTypeSchema` objects
 
     Infer AitoTableSchema from a Pandas DataFrame
 
+    >>> import pandas as pd
     >>> df = pd.DataFrame(data={'id': [1, 2], 'name': ['Neil', 'Buzz']})
     >>> table_schema = AitoTableSchema.infer_from_pandas_data_frame(df)
     >>> table_schema
@@ -933,20 +964,21 @@ class AitoTableSchema(AitoSchema):
         },
         "type": "table"
     }
+
     >>> table_schema['name']
     {
         "nullable": false,
         "type": "String"
     }
+
+    change the property of a column
+
     >>> table_schema['name'].nullable = True
     >>> table_schema['name']
     {
         "nullable": true,
         "type": "String"
     }
-
-    change the property of a column
-
     """
 
     def __init__(self, columns: Dict[str, AitoColumnTypeSchema]):
@@ -1068,23 +1100,7 @@ class AitoTableSchema(AitoSchema):
         LOG.debug('inferring table schema...')
         columns_schema = {}
         for col in df.columns.values:
-            col_df_samples = df[col] if len(df[col]) < max_sample_size else df[col].sample(max_sample_size)
-            col_nullable = True if col_df_samples.isna().sum() > 0 else False
-            col_analyzer = None
-            try:
-                col_aito_type = AitoDataTypeSchema.infer_from_samples(col_df_samples, max_sample_size)
-            except Exception as e:
-                LOG.debug(f'failed to infer aito col type from col {col} samples: {col_df_samples[:10].values}: {e}')
-                raise Exception(f'failed to infer aito column type of column `{col}`')
-            # avoid numpy type
-            if col_aito_type.is_text:
-                col_df_samples.dropna(inplace=True)
-                col_analyzer = AitoAnalyzerSchema.infer_from_samples(col_df_samples.__iter__())
-                if not col_analyzer:
-                    col_aito_type = AitoStringType()
-            col_type_schema = AitoColumnTypeSchema(
-                data_type=col_aito_type, nullable=col_nullable, analyzer=col_analyzer
-            )
+            col_type_schema = AitoColumnTypeSchema._infer_from_pandas_series(df[col], max_sample_size)
             columns_schema[col] = col_type_schema
         table_schema = cls(columns=columns_schema)
         LOG.debug('inferred table schema')
@@ -1094,7 +1110,7 @@ class AitoTableSchema(AitoSchema):
 class AitoDatabaseSchema(AitoSchema):
     """Aito Database Schema
 
-    Can be thought of as a dict-like container for AitoTableSchema objects
+    Can be thought of as a dict-like container for :class:`.AitoTableSchema` objects
     """
     def __init__(self, tables: Dict[str, AitoTableSchema]):
         super().__init__('database')

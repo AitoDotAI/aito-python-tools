@@ -176,6 +176,12 @@ class TestAitoClient(CompareTestCase):
         self.assertIn(rename_table_name, db_tables)
         self.assertNotIn(copy_table_name, db_tables)
 
+        def clean_up():
+            self.client.delete_table(copy_table_name)
+            self.client.delete_table(rename_table_name)
+
+        self.addCleanup(clean_up)
+
     def test_tobe_deprecated_upload(self):
         self.create_table_step()
         self.query_table_all_entries_step(expected_result=0)

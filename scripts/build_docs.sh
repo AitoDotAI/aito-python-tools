@@ -9,7 +9,7 @@ function check_at_top {
 
 function sphinx_build_html {
   cd docs || return
-  make clean html
+  make clean html SPHINXOPTS="-W"
   cd ..
 }
 

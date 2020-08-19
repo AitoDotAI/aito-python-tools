@@ -31,8 +31,16 @@ version = release.split(".dev")[0]
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel', 'sphinx.ext.githubpages', 'sphinx.ext.autosummary']
-autodoc_mock_imports = [
+
+SPHINX_DISABLE_MOCK_REQUIREMENTS = os.environ.get('SPHINX_DISABLE_MOCK_REQUIREMENTS', False)
+
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.githubpages',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.doctest',
+]
+autodoc_mock_imports = [] if SPHINX_DISABLE_MOCK_REQUIREMENTS else [
     'pandas', 'dotenv', 'requests', 'aiohttp', 'ndjson', 'langdetect', 'argcomplete', 'xlrd', 'numpy', 'pyodbc'
 ]
 autodoc_default_flags = [
@@ -42,6 +50,9 @@ autodoc_default_flags = [
 ]
 autoclass_content = "both"
 autosummary_generate = True
+
+# disable testing inline docstring (already covered in tests/inline_docs)
+doctest_test_doctest_blocks = ''
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
