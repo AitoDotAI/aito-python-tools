@@ -5,7 +5,7 @@ Changelog
 -----
 
 - Improved and fixed error codes in documentation
-- Added the :py:func`aito.schema.AitoColumnTypeSchema.infer_from_samples` function that infers the Column Type from samples.
+- Added the :py:func:`aito.schema.AitoColumnTypeSchema.infer_from_samples` function that infers the Column Type from samples.
 
 0.3.0
 -----
