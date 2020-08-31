@@ -80,7 +80,7 @@ class TestParser(argparse.ArgumentParser):
                         ret_val[t_name] = suite
                     ret_val[t_name].addTest(test)
                 else:
-                    ret_val[t_name] = test
+                    ret_val[t_name] = unittest.TestSuite([test])
             else:
                 ret_val = self.unpack_test_suite(ret_val, test, level)
         return ret_val
@@ -96,24 +96,16 @@ class TestParser(argparse.ArgumentParser):
     def list_command(self, level: str, test_dir):
         if level == 'suite':
             test_suites = self.discover_suites(test_dir)
-            names = list(test_suites.keys())
+            names = list(sorted(test_suites.keys()))
         elif level == 'case':
-            names = list(self.discover_cases(test_dir).keys())
+            names = list(sorted(self.discover_cases(test_dir).keys()))
         else:
-            names = list(self.discover_test_methods(test_dir).keys())
+            names = list(sorted(self.discover_test_methods(test_dir).keys()))
         if not names:
             sys.stdout.write(f"No {level} found in {test_dir}")
         else:
             sys.stdout.write('\n'.join(names))
             sys.stdout.write('\n')
-
-    def run_by_level(self, test_runner, test_dir, level, name):
-
-        if level == "suite":
-            all_choices = self.discover_suites(test_dir, silent=True)
-        if level == "case":
-            all_choices = self.discover_cases(test_dir, silent=True)
-
 
     @staticmethod
     def config_log(log_dir_path, log_to_std_out, verbose):
@@ -168,9 +160,10 @@ class TestParser(argparse.ArgumentParser):
         sub_parser.required = True
         suite_parser = sub_parser.add_parser('suite', help='Run a test suite')
         suite_parser.add_argument('suiteName', type=str, help=f"Name of the suite to be run")
-        case_parser = sub_parser.add_parser('case', help='Run a test case or method')
-        case_parser.add_argument('caseName', type=str,
-                                 help="Path to TestCase or method from the testDir separated by dot")
+        case_parser = sub_parser.add_parser('case', help='Run a test case')
+        case_parser.add_argument('caseName', type=str, help="name of the test case")
+        method_parser = sub_parser.add_parser('method', help='Run a test method')
+        method_parser.add_argument('methodName', type=str, help="name of the test method")
         sub_parser.add_parser('all', help='Test all cases discovered from the testDir ')
         list_parser = sub_parser.add_parser(
             'list', help='List discovered test suites or cases or methods from the testDir'
@@ -205,6 +198,11 @@ class TestParser(argparse.ArgumentParser):
             all_cases = self.discover_cases(test_dir, silent=True)
             case_name = args.caseName
             all_succeed = runner.run(all_cases[case_name]).wasSuccessful()
+
+        elif args.command == 'method':
+            all_methods = self.discover_test_methods(test_dir, silent=True)
+            method_name = args.methodName
+            all_succeed = runner.run(all_methods[method_name]).wasSuccessful()
 
         elif args.command == 'list':
             self.list_command(args.level, test_dir)
