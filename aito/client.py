@@ -92,31 +92,38 @@ class AitoClient:
         if not is_database_path and not is_job_path and endpoint not in self._query_endpoints:
             LOG.warning(f'unrecognized endpoint {endpoint}')
 
-    async def _async_request(
+    async def async_request(
             self, session: ClientSession, method: str, endpoint: str, query: Union[List, Dict]
     ) -> Tuple[int, Union[Dict, List]]:
-        """async a request
+        """execute a request asynchronously using aiohttp ClientSession
 
-        :param session: aiohttp client session
+        :param session: aiohttp ClientSession for making request
+        :type session: ClientSession
         :param method: request method
+        :type method: str
         :param endpoint: request endpoint
+        :type endpoint: str
         :param query: request query
+        :type query: Union[List, Dict]
         :return: tuple of request status code and request json content
+        :rtype: Tuple[int, Union[Dict, List]]
         """
         self._check_endpoint(endpoint)
         LOG.debug(f'async {method} to {endpoint} with query {query}')
         async with session.request(method=method, url=self.url + endpoint, json=query, headers=self.headers) as resp:
             return resp.status, await resp.json()
 
-    async def _bounded_async_request(self, semaphore: asyncio.Semaphore, *args) -> Tuple[int, Union[Dict, List]]:
-        """bounded requests by semaphore
+    async def bounded_async_request(self, semaphore: asyncio.Semaphore, *args) -> Tuple[int, Union[Dict, List]]:
+        """bounded concurrent requests with asyncio semaphore
 
         :param semaphore: asyncio Semaphore
-        :param args: request args
-        :return:
+        :type semaphore: asyncio.Semaphore
+        :param args: :func:`.async_request` arguments
+        :return: tuple of request status code and request json content
+        :rtype: Tuple[int, Union[Dict, List]]
         """
         async with semaphore:
-            return await self._async_request(*args)
+            return await self.async_request(*args)
 
     def async_requests(
             self,
@@ -125,7 +132,26 @@ class AitoClient:
             queries: List[Union[List, Dict]],
             batch_size: int = 10
     ) -> List[Dict]:
-        """make multiple requests asynchronously
+        """
+        .. deprecated:: 0.4.0
+
+        Use :func:`batch_requests` instead
+        """
+        warnings.warn(
+            'The AitoClient.async_requests function is deprecated and will be removed '
+            'in a future version. Use AitoClient.batch_requests instead',
+            category=FutureWarning
+        )
+        return self.batch_requests(methods, endpoints, queries, batch_size)
+
+    def batch_requests(
+            self,
+            methods: List[str],
+            endpoints: List[str],
+            queries: List[Union[List, Dict]],
+            max_concurrent_requests: int = 10
+    ) -> List[Dict]:
+        """execute a batch of requests asynchronously
 
         This method is useful when sending a batch of requests, for example, when sending a batch of predict requests.
 
@@ -135,15 +161,15 @@ class AitoClient:
         :type endpoints: List[str]
         :param queries: list of request queries
         :type queries: List[Dict]
-        :param batch_size: the number of queries to be sent per batch
-        :type batch_size: int
+        :param max_concurrent_requests: the number of queries to be sent per batch
+        :type max_concurrent_requests: int
         :return: list of request response or exception if a request did not succeed
         :rtype: List[Dict]
 
         Find products that multiple users would most likely buy
 
         >>> users = ['veronica', 'larry', 'alice']
-        >>> responses = client.async_requests(
+        >>> responses = client.batch_requests(
         ...     methods=['POST'] * len(users),
         ...     endpoints=['/api/v1/_match'] * len(users),
         ...     queries=[
@@ -166,12 +192,12 @@ class AitoClient:
         async def run():
             async with ClientSession() as session:
                 tasks = [
-                    self._bounded_async_request(semaphore, session, method, endpoints[idx], queries[idx])
+                    self.bounded_async_request(semaphore, session, method, endpoints[idx], queries[idx])
                     for idx, method in enumerate(methods)
                 ]
                 return await asyncio.gather(*tasks, return_exceptions=True)
 
-        semaphore = asyncio.Semaphore(batch_size)
+        semaphore = asyncio.Semaphore(max_concurrent_requests)
         loop = asyncio.get_event_loop()
         responses = loop.run_until_complete(run())
         for resp_idx, resp in enumerate(responses):
@@ -602,7 +628,6 @@ class AitoClient:
     def get_job_status(self, job_id: str) -> Dict:
         """`Get the status of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__ with the specified job id
 
-        `API doc <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__
         :param job_id: the id of the job
         :type job_id: str
         :return: job status

@@ -84,9 +84,9 @@ class TestAitoClient(CompareTestCase):
         entries = self.client.query_entries(self.default_table_name)
         self.assertEqual(len(entries), expected_result)
 
-    def async_query_step(self):
+    def batch_queries_step(self):
         queries = [{'from': self.default_table_name, 'offset': 1, 'limit': 1}] * 2
-        responses = self.client.async_requests(['POST'] * 2, ['/api/v1/_query'] * 2, queries)
+        responses = self.client.batch_requests(['POST'] * 2, ['/api/v1/_query'] * 2, queries)
         self.assertEqual(
             responses,
             [{'offset': 1, 'total': 8, 'hits': [{'id': 1, 'name': 'some_name', 'amount': 1}]}] * 2
@@ -94,7 +94,7 @@ class TestAitoClient(CompareTestCase):
 
     def bounded_async_query_step(self):
         queries = [{'from': self.default_table_name, 'offset': 1, 'limit': 1}] * 2
-        responses = self.client.async_requests(['POST'] * 2, ['/api/v1/_query'] * 2, queries, 1)
+        responses = self.client.batch_requests(['POST'] * 2, ['/api/v1/_query'] * 2, queries, 1)
         self.assertEqual(
             responses,
             [{'offset': 1, 'total': 8, 'hits': [{'id': 1, 'name': 'some_name', 'amount': 1}]}] * 2
@@ -102,7 +102,7 @@ class TestAitoClient(CompareTestCase):
 
     def async_error_query_step(self):
         queries = [{'from': self.default_table_name, 'offset': 0, 'limit': 1}, {'from': 'bohemian'}]
-        responses = self.client.async_requests(['POST'] * 2, ['/api/v1/_query'] * 2, queries)
+        responses = self.client.batch_requests(['POST'] * 2, ['/api/v1/_query'] * 2, queries)
         self.assertEqual(
             responses[0],
             {'offset': 0, 'total': 8, 'hits': [{'id': 0, 'name': 'some_name', 'amount': 0}]}
@@ -152,7 +152,7 @@ class TestAitoClient(CompareTestCase):
         self.upload_by_batch_step_generator(start=4, end=8)
         self.query_table_all_entries_step(expected_result=8)
         self.query_table_entries_step()
-        self.async_query_step()
+        self.batch_queries_step()
         self.bounded_async_query_step()
         self.async_error_query_step()
         self.job_query_step()
