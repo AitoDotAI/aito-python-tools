@@ -5,26 +5,72 @@
 import asyncio
 import logging
 import time
+import warnings
 from os import PathLike
 from pathlib import Path
-from typing import Dict, List, BinaryIO, Union, Tuple, Iterable
+from typing import Dict, List, BinaryIO, Union, Tuple, Iterable, Optional
 
 import ndjson
-import requests
-import warnings
+import requests as requestslib
 from aiohttp import ClientSession, ClientResponseError
 
-from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 from aito.schema import AitoTableSchema, AitoDatabaseSchema
+from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 
 LOG = logging.getLogger('AitoClient')
+
+
+class BaseRequest:
+    _query_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
+    _query_endpoints = [f'/api/v1/{p}' for p in _query_paths] + ['/version']
+    _database_endpoints = ['/api/v1/schema', '/api/v1/data']
+    _job_endpoint = '/api/v1/jobs'
+    _request_methods = ['PUT', 'POST', 'GET', 'DELETE']
+
+    def _check_endpoint(self, endpoint: str):
+        """raise error if erroneous endpoint and warn if the unrecognized endpoint, else return the endpoint
+        """
+        if not endpoint.startswith('/'):
+            raise ValueError('endpoint must start with the `/` character')
+        is_database_path = any([endpoint.startswith(db_endpoint) for db_endpoint in self._database_endpoints])
+        is_job_path = endpoint.startswith(self._job_endpoint)
+        if not is_database_path and not is_job_path and endpoint not in self._query_endpoints:
+            LOG.warning(f'unrecognized endpoint {endpoint}')
+        return endpoint
+
+    def _check_method(self, method: str):
+        """raise error if incorrect method else return the method
+        """
+        method = method.upper()
+        if method not in self._request_methods:
+            raise ValueError(
+                f"incorrect request method `{method}`. Method must be one of {'|'.join(self._request_methods)}"
+            )
+        return method
+
+    def __init__(self, method: str, endpoint: str, query: Optional[Union[Dict, List]] = None):
+        """ A request object to be sent to an Aito instance
+
+        :param method: request method
+        :type method: str
+        :param endpoint: request endpoint
+        :type endpoint: str
+        :param query: an Aito query if applicable, optional
+        :type query: Optional[Union[Dict, List]]
+        """
+        self.method = self._check_method(method)
+        self.endpoint = self._check_endpoint(endpoint)
+        self.query = query
+
+    def __str__(self):
+        return f'{self.method}({self.endpoint}): {str(self.query)[:100]}'
 
 
 class BaseError(Exception):
     """An error occurred when using the client
 
     """
-    def __init__(self, message):
+    def __init__(self, message: str):
         LOG.error(message)
         LOG.debug(message, stack_info=True)
         self.message = message
@@ -37,30 +83,22 @@ class RequestError(BaseError):
     """An error occurred when sending a request to the Aito instance
 
     """
-    def __init__(self, method: str, endpoint: str, query: Union[List, Dict], error: Exception):
-        if isinstance(error, requests.HTTPError):
+    def __init__(self, request: BaseRequest, error: Exception):
+        if isinstance(error, requestslib.HTTPError):
             resp = error.response.json()
             error_msg = resp['message'] if 'message' in resp else resp
         elif isinstance(error, ClientResponseError):
             error_msg = error.message
         else:
             error_msg = str(error)
-        super().__init__(f'failed to `{method}` to `{endpoint}` with query {str(query)[:100]}...: {error_msg}')
+        super().__init__(f'failed to {request}: {error_msg}')
 
 
 class AitoClient:
     """A versatile client that connects to the Aito Database Instance
 
     """
-    _request_methods = {
-        'PUT': requests.put, 'POST': requests.post, 'GET': requests.get, 'DELETE': requests.delete
-    }
-    _query_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
-    _query_endpoints = [f'/api/v1/{p}' for p in _query_paths] + ['/version']
-    _database_endpoints = ['/api/v1/schema', '/api/v1/data']
-    _job_endpoint = '/api/v1/jobs'
-
-    def __init__(self, instance_url: str, api_key: str, check_credentials: bool = True):
+    def __init__(self, instance_url: str, api_key: str, check_credentials: Optional[bool] = True):
         """
 
         :param instance_url: Aito instance url
@@ -68,7 +106,7 @@ class AitoClient:
         :param api_key: Aito instance API key
         :type api_key: str
         :param check_credentials: check the given credentials by requesting the Aito instance version, defaults to True
-        :type check_credentials: bool
+        :type check_credentials: Optional[bool]
         :raises BaseError: an error occurred during the creation of AitoClient
         """
         self.url = instance_url.strip("/")
@@ -79,38 +117,81 @@ class AitoClient:
             except Exception:
                 raise BaseError('failed to instantiate Aito Client, please check your credentials')
 
-    def _check_endpoint(self, endpoint: str):
-        """raise error if erroneous endpoint and warn if the unrecognized endpoint
+    def request(self, request: BaseRequest) -> Dict:
+        """make a request to an Aito API endpoint
+        The client returns a JSON response if the request succeed and a :class:`.RequestError` if the request failed
 
-        :param endpoint: endpoint
-        :return:
-        """
-        if not endpoint.startswith('/'):
-            raise BaseError('endpoint must start with `/` character')
-        is_database_path = any([endpoint.startswith(db_endpoint) for db_endpoint in self._database_endpoints])
-        is_job_path = endpoint.startswith(self._job_endpoint)
-        if not is_database_path and not is_job_path and endpoint not in self._query_endpoints:
-            LOG.warning(f'unrecognized endpoint {endpoint}')
+        :param request: request object
+        :type request: BaseRequest
+        :raises RequestError: an error occurred during the execution of the request
+        :return: request JSON content
+        :rtype: Dict
+
+        Simple request to get the schema of a table:
+
+        >>> res = client.request(BaseRequest(method="GET", endpoint="/api/v1/schema/impressions"))
+        >>> pprint(res) # doctest: +NORMALIZE_WHITESPACE
+         {'columns': {'product': {'link': 'products.id',
+                                 'nullable': False,
+                                 'type': 'String'},
+                     'purchase': {'nullable': False, 'type': 'Boolean'},
+                     'session': {'link': 'sessions.id',
+                                 'nullable': False,
+                                 'type': 'String'}},
+         'type': 'table'}
+
+         Sends a `PREDICT <https://aito.ai/docs/api/#post-api-v1-predict>`__ query:
+
+         >>> client.request(
+         ...    BaseRequest(
+         ...        method="POST",
+         ...        endpoint="/api/v1/_predict",
+         ...        query={
+         ...            "from": "impressions",
+         ...            "where": { "session": "veronica" },
+         ...            "predict": "product.name",
+         ...            "limit": 1
+         ...        }
+         ...    )
+         ... ) # doctest: +NORMALIZE_WHITESPACE
+         {'offset': 0, 'total': 142, 'hits': [{'$p': 0.07285448674038553, 'field': 'product.name', 'feature': 'pirkka'}]}
+
+         Returns an error when make a request to an incorrect path:
+
+         >>> client.request(BaseRequest(method="GET", endpoint="/api/v1/incorrect-path")) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+         Traceback (most recent call last):
+            ...
+         aito.client.RequestError: failed to `GET` to `/api/v1/incorrect-path` with query None...: The path you requested [/incorrect-path] does not exist
+         """
+        try:
+            resp = requestslib.request(
+                method=request.method,
+                url=self.url + request.endpoint,
+                headers=self.headers,
+                json=request.query
+            )
+            resp.raise_for_status()
+            json_resp = resp.json()
+        except Exception as e:
+            raise RequestError(request, e)
+        return json_resp
 
     async def async_request(
-            self, session: ClientSession, method: str, endpoint: str, query: Union[List, Dict]
+            self, session: ClientSession, request: BaseRequest
     ) -> Tuple[int, Union[Dict, List]]:
         """execute a request asynchronously using aiohttp ClientSession
 
         :param session: aiohttp ClientSession for making request
         :type session: ClientSession
-        :param method: request method
-        :type method: str
-        :param endpoint: request endpoint
-        :type endpoint: str
-        :param query: request query
-        :type query: Union[List, Dict]
-        :return: tuple of request status code and request json content
-        :rtype: Tuple[int, Union[Dict, List]]
+        :param request: the request object
+        :type request: BaseRequest
         """
-        self._check_endpoint(endpoint)
-        LOG.debug(f'async {method} to {endpoint} with query {query}')
-        async with session.request(method=method, url=self.url + endpoint, json=query, headers=self.headers) as resp:
+        LOG.debug(f'async {request}')
+        async with session.request(
+                method=request.method,
+                url=self.url + request.endpoint,
+                json=request.query,
+                headers=self.headers) as resp:
             return resp.status, await resp.json()
 
     async def bounded_async_request(self, semaphore: asyncio.Semaphore, *args) -> Tuple[int, Union[Dict, List]]:
@@ -142,25 +223,20 @@ class AitoClient:
             'in a future version. Use AitoClient.batch_requests instead',
             category=FutureWarning
         )
-        return self.batch_requests(methods, endpoints, queries, batch_size)
+        requests = [BaseRequest(method, endpoints[idx], queries[idx]) for idx, method in enumerate(methods)]
+        return self.batch_requests(requests=requests, max_concurrent_requests=batch_size)
 
     def batch_requests(
             self,
-            methods: List[str],
-            endpoints: List[str],
-            queries: List[Union[List, Dict]],
+            requests: List[BaseRequest],
             max_concurrent_requests: int = 10
     ) -> List[Dict]:
         """execute a batch of requests asynchronously
 
         This method is useful when sending a batch of requests, for example, when sending a batch of predict requests.
 
-        :param methods: list of request methods
-        :type methods: List[str]
-        :param endpoints: list of request endpoints
-        :type endpoints: List[str]
-        :param queries: list of request queries
-        :type queries: List[Dict]
+        :param requests: list of request object
+        :type requests: List[BaseRequest]
         :param max_concurrent_requests: the number of queries to be sent per batch
         :type max_concurrent_requests: int
         :return: list of request response or exception if a request did not succeed
@@ -169,18 +245,18 @@ class AitoClient:
         Find products that multiple users would most likely buy
 
         >>> users = ['veronica', 'larry', 'alice']
-        >>> responses = client.batch_requests(
-        ...     methods=['POST'] * len(users),
-        ...     endpoints=['/api/v1/_match'] * len(users),
-        ...     queries=[
-        ...         {
+        >>> responses = client.batch_requests([
+        ...     BaseRequest(
+        ...         method='POST',
+        ...         endpoint='/api/v1/_match',
+        ...         query = {
         ...             'from': 'impressions',
         ...             'where': { 'session.user': usr },
         ...             'match': 'product'
         ...         }
-        ...         for usr in users
-        ...     ]
-        ... )
+        ...     )
+        ...     for usr in users
+        ... ])
         >>> # Print top product for each customer
         >>> for idx, usr in enumerate(users):
         ...     print(f"{usr}: {responses[idx]['hits'][0]}") # doctest: +NORMALIZE_WHITESPACE +REPORT_UDIFF
@@ -191,82 +267,22 @@ class AitoClient:
         """
         async def run():
             async with ClientSession() as session:
-                tasks = [
-                    self.bounded_async_request(semaphore, session, method, endpoints[idx], queries[idx])
-                    for idx, method in enumerate(methods)
-                ]
+                tasks = [self.bounded_async_request(semaphore, session, req) for req in requests]
                 return await asyncio.gather(*tasks, return_exceptions=True)
 
         semaphore = asyncio.Semaphore(max_concurrent_requests)
         loop = asyncio.get_event_loop()
         responses = loop.run_until_complete(run())
-        for resp_idx, resp in enumerate(responses):
+        for idx, resp in enumerate(responses):
+            req = requests[idx]
             if isinstance(resp, Exception):
-                responses[resp_idx] = RequestError(methods[resp_idx], endpoints[resp_idx], queries[resp_idx], resp)
+                responses[idx] = RequestError(req, resp)
             # manually handling raise for status since aiohttp doesnt return response content with raise for status
             elif resp[0] >= 400:
-                responses[resp_idx] = RequestError(methods[resp_idx], endpoints[resp_idx], queries[resp_idx], resp[1])
+                responses[idx] = RequestError(req, resp[1])
             else:
-                responses[resp_idx] = resp[1]
+                responses[idx] = resp[1]
         return responses
-
-    def request(self, method: str, endpoint: str, query: Union[Dict, List] = None) -> Dict:
-        """make a request to an Aito API endpoint
-        The client returns a JSON response if the request succeed and a :class:`.RequestError` if the request failed
-
-        :param method: request method
-        :type method: str
-        :param endpoint: an Aito API endpoint
-        :type endpoint: str
-        :param query: an Aito query, defaults to None
-        :type query: Union[Dict, List], optional
-        :raises RequestError: an error occurred during the execution of the request
-        :return: request JSON content
-        :rtype: Dict
-
-        Simple request to get the schema of a table:
-
-        >>> res = client.request(method="GET", endpoint="/api/v1/schema/impressions")
-        >>> pprint(res) # doctest: +NORMALIZE_WHITESPACE
-         {'columns': {'product': {'link': 'products.id',
-                                 'nullable': False,
-                                 'type': 'String'},
-                     'purchase': {'nullable': False, 'type': 'Boolean'},
-                     'session': {'link': 'sessions.id',
-                                 'nullable': False,
-                                 'type': 'String'}},
-         'type': 'table'}
-
-         Sends a `PREDICT <https://aito.ai/docs/api/#post-api-v1-predict>`__ query:
-
-         >>> client.request(
-         ...    method="POST",
-         ...    endpoint="/api/v1/_predict",
-         ...    query={
-         ...        "from": "impressions",
-         ...        "where": { "session": "veronica" },
-         ...        "predict": "product.name",
-         ...        "limit": 1
-         ...    }
-         ... ) # doctest: +NORMALIZE_WHITESPACE
-         {'offset': 0, 'total': 142, 'hits': [{'$p': 0.07285448674038553, 'field': 'product.name', 'feature': 'pirkka'}]}
-
-         Returns an error when make a request to an incorrect path:
-
-         >>> client.request(method="GET", endpoint="/api/v1/incorrect-path") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-         Traceback (most recent call last):
-            ...
-         aito.client.RequestError: failed to `GET` to `/api/v1/incorrect-path` with query None...: The path you requested [/incorrect-path] does not exist
-         """
-        self._check_endpoint(endpoint)
-        url = self.url + endpoint
-        try:
-            resp = self._request_methods[method](url, headers=self.headers, json=query)
-            resp.raise_for_status()
-            json_resp = resp.json()
-        except Exception as e:
-            raise RequestError(method, endpoint, query, e)
-        return json_resp
 
     def get_version(self) -> Dict:
         """get the aito instance version
@@ -274,7 +290,7 @@ class AitoClient:
         :return: version information in json format
         :rtype: Dict
         """
-        return self.request('GET', '/version')
+        return self.request(BaseRequest('GET', '/version'))
 
     def create_database(self, database_schema: Dict) -> Dict:
         """`create a database <https://aito.ai/docs/api/#put-api-v1-schema>`__ using the specified database schema
@@ -288,7 +304,7 @@ class AitoClient:
         :return: the database schema
         :rtype: Dict
         """
-        r = self.request('PUT', '/api/v1/schema', database_schema)
+        r = self.request(BaseRequest('PUT', '/api/v1/schema', database_schema))
         LOG.info('database schema created')
         return r
 
@@ -298,7 +314,7 @@ class AitoClient:
         :return: Aito database schema
         :rtype: Dict
         """
-        json_response = self.request('GET', '/api/v1/schema')
+        json_response = self.request(BaseRequest('GET', '/api/v1/schema'))
         return AitoDatabaseSchema.from_deserialized_object(json_response)
 
     def delete_database(self) -> Dict:
@@ -312,7 +328,7 @@ class AitoClient:
         :return: deleted tables
         :rtype: Dict
         """
-        r = self.request('DELETE', '/api/v1/schema')
+        r = self.request(BaseRequest('DELETE', '/api/v1/schema'))
         LOG.info('database deleted')
         return r
 
@@ -336,7 +352,7 @@ class AitoClient:
             if not isinstance(table_schema, dict):
                 raise ValueError("the input table schema must be either an AitoTableSchema object or a dict")
             table_schema = AitoTableSchema.from_deserialized_object(table_schema)
-        r = self.request('PUT', f'/api/v1/schema/{table_name}', table_schema.to_json_serializable())
+        r = self.request(BaseRequest('PUT', f'/api/v1/schema/{table_name}', table_schema.to_json_serializable()))
         LOG.info(f'table `{table_name}` created')
         return r
 
@@ -348,7 +364,7 @@ class AitoClient:
         :return: the table schema
         :rtype: AitoTableSchema
         """
-        json_response = self.request('GET', f'/api/v1/schema/{table_name}')
+        json_response = self.request(BaseRequest('GET', f'/api/v1/schema/{table_name}'))
         return AitoTableSchema.from_deserialized_object(json_response)
 
     def delete_table(self, table_name: str) -> Dict:
@@ -363,7 +379,7 @@ class AitoClient:
         :return: deleted table
         :rtype: Dict
         """
-        r = self.request('DELETE', f'/api/v1/schema/{table_name}')
+        r = self.request(BaseRequest('DELETE', f'/api/v1/schema/{table_name}'))
         LOG.info(f'table `{table_name}` deleted')
         return r
 
@@ -399,7 +415,9 @@ class AitoClient:
         :param replace: replace an existing table of which name is the new name, defaults to False
         :type replace: bool, optional
         """
-        self.request('POST', '/api/v1/schema/_rename', {'from': old_name, 'rename': new_name, 'replace': replace})
+        self.request(BaseRequest(
+            'POST', '/api/v1/schema/_rename', {'from': old_name, 'rename': new_name, 'replace': replace}
+        ))
 
     def copy_table(self, table_name: str, copy_table_name: str, replace: bool = False):
         """`copy a table <https://aito.ai/docs/api/#post-api-v1-schema-copy>`__
@@ -415,9 +433,11 @@ class AitoClient:
         :param replace: replace an existing table of which name is the name of the copy table, defaults to False
         :type replace: bool, optional
         """
-        self.request(
-            'POST', '/api/v1/schema/_copy', {'from': table_name, 'copy': copy_table_name, 'replace': replace}
-        )
+        self.request(BaseRequest(
+            'POST',
+            '/api/v1/schema/_copy',
+            {'from': table_name, 'copy': copy_table_name, 'replace': replace}
+        ))
 
     def optimize_table(self, table_name):
         """`optimize the specified table after uploading the data <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
@@ -428,7 +448,7 @@ class AitoClient:
         :rtype:
         """
         try:
-            self.request('POST', f'/api/v1/data/{table_name}/optimize', {})
+            self.request(BaseRequest('POST', f'/api/v1/data/{table_name}/optimize', {}))
         except Exception as e:
             LOG.error(f'failed to optimize: {e}')
         LOG.info(f'table {table_name} optimized')
@@ -507,7 +527,7 @@ class AitoClient:
             if last_idx % batch_size == 0:
                 try:
                     LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-                    self.request('POST', f"/api/v1/data/{table_name}/batch", entries_batch)
+                    self.request(BaseRequest('POST', f"/api/v1/data/{table_name}/batch", entries_batch))
                     populated += len(entries_batch)
                     LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
                 except Exception as e:
@@ -519,7 +539,7 @@ class AitoClient:
         if last_idx % batch_size != 0:
             try:
                 LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-                self.request('POST', f"/api/v1/data/{table_name}/batch", entries_batch)
+                self.request(BaseRequest('POST', f"/api/v1/data/{table_name}/batch", entries_batch))
                 populated += len(entries_batch)
                 LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
             except Exception as e:
@@ -554,7 +574,7 @@ class AitoClient:
         """
         LOG.debug(f'uploading file object to table `{table_name}`...')
         LOG.debug('initiating file upload...')
-        r = self.request('POST', f"/api/v1/data/{table_name}/file")
+        r = self.request(BaseRequest('POST', f"/api/v1/data/{table_name}/file"))
         LOG.info('file upload initiated')
         LOG.debug('getting session id and upload url...')
         upload_session_id = r['id']
@@ -564,18 +584,18 @@ class AitoClient:
         LOG.info('got session id and upload url')
         LOG.debug('uploading file file to s3...')
         try:
-            r = requests.request(upload_req_method, s3_url, data=binary_file)
+            r = requestslib.request(upload_req_method, s3_url, data=binary_file)
             r.raise_for_status()
         except Exception as e:
             raise BaseError(f'failed to upload file to S3: {e}')
         LOG.debug('uploaded file to S3')
         LOG.debug('triggering file processing...')
-        self.request('POST', session_end_point)
+        self.request(BaseRequest('POST', session_end_point))
         LOG.info('triggered file processing')
         LOG.debug('polling processing status...')
         while True:
             try:
-                processing_progress = self.request('GET', session_end_point)
+                processing_progress = self.request(BaseRequest('GET', session_end_point))
                 status = processing_progress['status']
                 LOG.debug(f"completed count: {status['completedCount']}, throughput: {status['throughput']}")
                 if processing_progress['errors']['message'] != 'Last 0 failing rows':
@@ -623,7 +643,7 @@ class AitoClient:
         :return: job information
         :rtype: Dict
         """
-        return self.request('POST', job_endpoint, query)
+        return self.request(BaseRequest('POST', job_endpoint, query))
 
     def get_job_status(self, job_id: str) -> Dict:
         """`Get the status of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__ with the specified job id
@@ -633,7 +653,7 @@ class AitoClient:
         :return: job status
         :rtype: Dict
         """
-        return self.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}')
+        return self.request(BaseRequest(method='GET', endpoint=f'/api/v1/jobs/{job_id}'))
 
     def get_job_result(self, job_id: str) -> Dict:
         """`Get the result of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid-result>`__ with the specified job id
@@ -643,7 +663,7 @@ class AitoClient:
         :return: the job result
         :rtype: Dict
         """
-        return self.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}/result')
+        return self.request(BaseRequest(method='GET', endpoint=f'/api/v1/jobs/{job_id}/result'))
 
     def job_request(
             self, job_endpoint: str, query: Union[Dict, List] = None, polling_time: int = 10
@@ -696,7 +716,7 @@ class AitoClient:
         :return: the number of entries in the table
         :rtype: int
         """
-        return self.request('POST', '/api/v1/_query', {'from': table_name})['total']
+        return self.request(BaseRequest('POST', '/api/v1/_query', {'from': table_name}))['total']
 
     def query_entries(self, table_name: str, offset: int = 0, limit: int = 10, select: List[str] = None) -> List[Dict]:
         """`query <https://aito.ai/docs/api/#post-api-v1-query>`__ entries of the specified table
@@ -716,7 +736,7 @@ class AitoClient:
         """
 
         query = {'from': table_name, 'offset': offset, 'limit': limit, 'select': select}
-        return self.request('POST', '/api/v1/_query', query)['hits']
+        return self.request(BaseRequest('POST', '/api/v1/_query', query))['hits']
 
     def query_all_entries(
             self,
@@ -780,9 +800,9 @@ class AitoClient:
         while begin_idx < table_size:
             last_idx = begin_idx + batch_size if begin_idx + batch_size <= table_size else table_size
             LOG.debug(f'downloading table chunk {begin_idx}:{last_idx}...')
-            hits = self.request(
+            hits = self.request(BaseRequest(
                 'POST', '/api/v1/_query', {'from': table_name, 'offset': begin_idx, 'limit': batch_size}
-            )['hits']
+            ))['hits']
             with out_file_path.open('a+') as f:
                 ndjson.dump(hits, f)
                 if last_idx != table_size:
@@ -847,5 +867,5 @@ class AitoClient:
             'select': ['$p', 'feature', '$why']
         }
         actual_result = table_first_entry.get(predicting_col)
-        predict_result = self.request('POST', '/api/v1/_predict', predict_query)
+        predict_result = self.request(BaseRequest('POST', '/api/v1/_predict', predict_query))
         return predict_query, predict_result, actual_result
