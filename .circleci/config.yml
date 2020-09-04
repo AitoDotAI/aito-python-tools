@@ -654,6 +654,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_build_doc_venv_cache
       - *create_build_doc_venv
       - *save_build_doc_venv_cache
