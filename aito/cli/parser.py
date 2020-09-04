@@ -281,7 +281,7 @@ def create_sql_connecting_from_parsed_args(parsed_args):
     """
     if not pyodbc_is_installed():
         raise ParseError('pyodbc is not installed. Please refer to our documentation: '
-                         'https://aitodotai.github.io/aito-python-tools/sql.html#additional-installation')
+                         'https://aito-python-sdk.readthedocs.io/en/latest/sql.html#additional-installation')
     connection_args = {}
     for arg in ('driver', 'server', 'port', 'database', 'username', 'password'):
         connection_arg_name = f"sql_{arg}"

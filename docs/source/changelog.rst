@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.3.1
+-----
+
+- Improved and fixed error codes in documentation
+- Added the :py:func:`aito.schema.AitoColumnTypeSchema.infer_from_samples` function that infers the Column Type from samples.
+
 0.3.0
 -----
 
@@ -194,7 +200,7 @@ Supported database:
 - Improved documentation
 
 
-.. _generators: https://aitodotai.github.io/aito-python-tools/quickstart.html#sdkquickstartuploaddata
+.. _generators: https://aito-python-sdk.readthedocs.io/en/latest/sdk.html#sdkuploaddata
 .. _Column Type: https://aito.ai/docs/api/#schema-column-type
 .. _Analyzer: https://aito.ai/docs/api/#schema-analyzer
 .. _Delimiter Analyzer: https://aito.ai/docs/api/#schema-delimiter-analyzer

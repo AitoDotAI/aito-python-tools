@@ -123,12 +123,12 @@ def publish(repo: str):
         subprocess.run(['twine', 'upload', 'dist/*'], check=True)
 
 
-def check_version_change_log_exist(change_log_file_path: Path, new_version: Version):
+def check_version_change_log_exist(change_log_file_path: Path, new_version: str):
     if not change_log_file_path.exists():
         raise ValueError(f'Change log file {change_log_file_path} does not exist')
     with change_log_file_path.open() as in_f:
         change_log_content = in_f.read()
-    if not re.search(f'^{new_version.base_version}', change_log_content, re.M):
+    if not re.search(f'^{new_version}', change_log_content, re.M):
         raise ValueError(f'version {new_version} changelog not found')
 
 
@@ -219,12 +219,11 @@ class DeployParser(argparse.ArgumentParser):
 
         if not parsed_args['no_publish']:
             if repo == 'pypi' and prompt_confirmation(content=f"Publishing version {new_version} into {repo}, are you sure?"):
-                check_version_change_log_exist(CHANGE_LOG_FILE_PATH, new_version)
+                check_version_change_log_exist(CHANGE_LOG_FILE_PATH, new_version.base_version)
                 subprocess.run(['./scripts/build_docs.sh'], check=True)
                 publish(repo)
-                subprocess.run(['./scripts/publish_docs.sh', str(new_version)], check=True)
                 git_bump_version_and_tag(str(new_version))
-            elif repo=='test.pypi':
+            elif repo == 'test.pypi':
                 publish(repo)
 
 

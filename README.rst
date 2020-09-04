@@ -1,7 +1,7 @@
 Aito Python SDK
 ===============
 
-:Info: Check `Github <https://github.com/AitoDotAI/aito-python-tools>`_ for the latest source code and `documentation <https://aitodotai.github.io/aito-python-tools>`__ for more information.
+:Info: Check `Github <https://github.com/AitoDotAI/aito-python-tools>`_ for the latest source code and `documentation <https://aito-python-sdk.readthedocs.io/en/latest/>`__ for more information.
 :Maintainer: Aito <admin@aito.ai>
 
 About
@@ -10,7 +10,7 @@ About
 The Aito Python SDK is an open-source library that helps you to integrate your Python application
 to `Aito <https://aito.ai/>`_ quicker and more efficiently.
 
-The SDK also includes the `Aito Command Line Interface (CLI) <https://aitodotai.github.io/aito-python-tools/cli.html>`_ that enables you to interact with Aito
+The SDK also includes the `Aito Command Line Interface (CLI) <https://aito-python-sdk.readthedocs.io/en/latest/cli.html>`_ that enables you to interact with Aito
 using commands in your command-line shell, e.g: infer a table schema from a file or upload a file to Aito.
 
 
@@ -28,7 +28,7 @@ Aito Python SDK can be installed with `pip <http://pypi.python.org/pypi/pip>`_
 
     $ pip install aitoai
 
-Check our `installation guide <https://aitodotai.github.io/aito-python-tools/install.html>`_ for more information
+Check our `installation guide <https://aito-python-sdk.readthedocs.io/en/latest/install.html>`_ for more information
 
 Documentation
 -------------
@@ -58,6 +58,10 @@ You can use our test cli to run tests:
   .. code-block:: console
 
     $ python -m tests -h
+
+.. note::
+
+  Some tests require some environment variables to be setup. Use the test CLI list command to discover and display the test suites and cases
 
 There are multiple test suites:
 
@@ -117,3 +121,32 @@ There are multiple test suites:
         $ pip install dist/aitoai-<version>.whl
 
   - To test the built package, create an environment variable ```TEST_BUILT_PACKAGE``` and run the above tests
+
+5. Test the documentation:
+
+  - To test the inline documentation:
+
+    .. code-block:: console
+
+      $ python -m tests -v suite inline_docs
+
+  - To test the code blocks in rst files:
+
+    .. code-block:: console
+
+      $ cd docs
+      $ make doctest
+
+Contributing
+------------
+
+- Making changes
+- Add unittest to the appropriate test suite (e.g: test case for Aito Schema: `tests/sdk/test_aito_schema.py`) or create a new test suite inside the `tests` folder
+- Add documentation:
+
+  - Inline documentation if applicable
+  - Update .rst file in docs/source folder (e.g: Add a new Client function to docs/source/sdk.rst)
+
+- Add inline doc test if applicable (e.g: inline doc test for Aito Client: `tests/inline_docs/test_client_inline_docs.py`)
+- Check CircleCI and issue a PR
+- Deploy to production (scripts/deploy) with the appropriate version after the PR is reviewed

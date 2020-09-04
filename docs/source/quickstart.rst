@@ -115,23 +115,103 @@ The Aito Python SDK uses `Pandas DataFrame`_ for multiple operations.
 The example below shows how you can load a csv file into a DataFrame, please read the `official pandas guide <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`__ for further instructions.
 You can download an example csv file ``reddit_sample.csv`` `here <https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv>`__ and run the code below:
 
-  .. code-block:: python
+.. code-block:: python
 
-    import pandas as pd
-
-    reddit_df = pd.read_csv('reddit_sample.csv')
+  import pandas
+  reddit_df = pandas.read_csv("reddit_sample.csv")
 
 .. _sdkQuickstartInferTableSchema:
 
-:ref:`Infer a Table Schema <sdkInferTableSchema>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Infer a table schema
+~~~~~~~~~~~~~~~~~~~~
 
 You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFrame`_:
 
-  .. code-block:: python
+.. testsetup::
 
-    from aito.schema import AitoTableSchema
-    reddit_schema = AitoTableSchema.infer_from_pandas_dataframe(reddit_schema)
+  import pandas as pd
+  reddit_df = pd.read_csv("reddit_sample.csv")
+
+.. testcode::
+
+  from aito.schema import AitoTableSchema
+  from pprint import pprint
+  reddit_schema = AitoTableSchema.infer_from_pandas_data_frame(reddit_df)
+  pprint(reddit_schema)
+
+.. testoutput::
+  :options: +NORMALIZE_WHITESPACE
+
+  {
+    "columns": {
+      "author": {
+        "nullable": false,
+        "type": "String"
+      },
+      "comment": {
+        "analyzer": {
+          "customKeyWords": [],
+          "customStopWords": [],
+          "language": "english",
+          "type": "language",
+          "useDefaultStopWords": false
+        },
+        "nullable": false,
+        "type": "Text"
+      },
+      "created_utc": {
+        "analyzer": {
+          "delimiter": ":",
+          "trimWhiteSpace": true,
+          "type": "delimiter"
+        },
+        "nullable": false,
+        "type": "Text"
+      },
+      "date": {
+        "analyzer": {
+          "delimiter": "-",
+          "trimWhiteSpace": true,
+          "type": "delimiter"
+        },
+        "nullable": false,
+        "type": "Text"
+      },
+      "downs": {
+        "nullable": false,
+        "type": "Int"
+      },
+      "label": {
+        "nullable": false,
+        "type": "Int"
+      },
+      "parent_comment": {
+        "analyzer": {
+          "customKeyWords": [],
+          "customStopWords": [],
+          "language": "english",
+          "type": "language",
+          "useDefaultStopWords": false
+        },
+        "nullable": false,
+        "type": "Text"
+      },
+      "score": {
+        "nullable": false,
+        "type": "Int"
+      },
+      "subreddit": {
+        "nullable": false,
+        "type": "String"
+      },
+      "ups": {
+        "nullable": false,
+        "type": "Int"
+      }
+    },
+    "type": "table"
+  }
+
 
 .. _sdkQuickstartChangeSchema:
 
@@ -143,28 +223,42 @@ or add a Analyzer_ to a ``Text`` column.
 
 You can access and update the column schema by using the column name as the key:
 
-  .. code-block:: python
+.. testcode::
 
-    reddit_schema['label'].data_type = AitoStringType()
-    # Change the analyzer of the `comments` column
-    reddit_schema['comments'].analyzer = AitoTokenNgramAnalyzerSchema(
-      source=AitoAliasAnalyzerSchema('en'),
-      min_gram=1,
-      max_gram=3
-    )
+  from aito.schema import AitoStringType, AitoTokenNgramAnalyzerSchema, AitoAliasAnalyzerSchema
+
+  # Change the label type to String instead of Int
+  reddit_schema['label'].data_type = AitoStringType()
+
+  # Change the analyzer of the `comments` column
+  reddit_schema['comment'].analyzer = AitoTokenNgramAnalyzerSchema(
+    source=AitoAliasAnalyzerSchema('en'),
+    min_gram=1,
+    max_gram=3
+  )
 
 .. _sdkQuickstartCreateTable:
 
-:ref:`Create a Table <sdkCreateTable>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Create a table
+~~~~~~~~~~~~~~
 
-The :py:class:`~aito.client.AitoClient` can create a table using a table name and a table schema:
+The :py:class:`~aito.client.AitoClient` can create a table using a table name and a table schema
 
-  .. code-block:: python
+.. note::
+  The example is not direclty copy-pastable. Please use your own Aito environment credentials
 
-    from aito.client import AitoClient
-    aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
-    aito_client.create_table(table_name='reddit', table_schema=reddit_schema)
+.. testsetup::
+
+  from os import environ
+
+  YOUR_AITO_INSTANCE_URL = environ['AITO_INSTANCE_URL']
+  YOUR_AITO_INSTANCE_API_KEY = environ['AITO_API_KEY']
+
+.. testcode::
+
+  from aito.client import AitoClient
+  aito_client = AitoClient(instance_url=YOUR_AITO_INSTANCE_URL, api_key=YOUR_AITO_INSTANCE_API_KEY)
+  aito_client.create_table(table_name='reddit', table_schema=reddit_schema)
 
 .. _sdkQuickstartConvertData:
 
@@ -173,53 +267,68 @@ Convert the Data
 
 The :py:class:`~aito.utils.data_frame_handler.DataFrameHandler` can convert a DataFrame to match an existing schema:
 
-  .. code-block:: python
+.. testcode::
 
-    from aito.utils.data_frame_handler import DataFrameHandler
-    data_frame_handler = DataFrameHandler()
-    converted_data_frame = data_frame_handler.convert_df_from_aito_table_schema(
-      df=data_frame,
-      table_schema=table_schema_content
-    )
+  from aito.utils.data_frame_handler import DataFrameHandler
+  data_frame_handler = DataFrameHandler()
+  converted_reddit_df = data_frame_handler.convert_df_using_aito_table_schema(
+    df=reddit_df,
+    table_schema=reddit_schema
+  )
 
 A DataFrame can be converted to:
 
   - A list of entries in JSON format for `Batch Upload`_:
 
-    .. code-block:: python
+    .. testcode::
 
-      entries = data_frame.to_dict(orient="records")
+      reddit_entries = converted_reddit_df.to_dict(orient="records")
 
-  - A gzipped NDJSON file for `File Upload`_ using the DataFrameHandler:
+  - A gzipped NDJSON file for `File Upload`_ using the :py:class:`~aito.utils.data_frame_handler.DataFrameHandler`:
 
-    .. code-block:: python
+    .. testcode::
 
-      from aito.utils.data_frame_handler import DataFrameHandler
-      data_frame_handler = DataFrameHandler()
       data_frame_handler.df_to_format(
-        df=data_frame,
+        df=converted_reddit_df,
         out_format='ndjson',
-        write_output='path/to/myConvertedFile.ndjson.gz',
+        write_output='reddit_sample.ndjson.gz',
         convert_options={'compression': 'gzip'}
       )
 
 .. _sdkQuickstartUploadData:
 
-:ref:`Upload the Data <sdkUploadData>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Upload the Data
+~~~~~~~~~~~~~~~
 
 The :py:class:`~aito.client.AitoClient` can upload the data with either `Batch Upload`_ or `File Upload`_:
 
-  .. code-block:: python
+  - Batch Upload:
 
-    from aito.client import AitoClient
-    aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
+    .. code-block:: python
 
-    # Batch upload
-    aito_client.upload_entries(table_name='reddit', entries=entries)
+      aito_client.upload_entries(table_name='reddit', entries=reddit_entries)
 
-    # File Upload
-    aito_client.upload_file(table_name='table_name', file_path=file_path)
+  - File Upload:
+
+    .. testcode::
+
+      from pathlib import Path
+
+      aito_client.upload_file(table_name='reddit', file_path=Path('reddit_sample.ndjson.gz'))
+
+      # Check that the data has been uploaded
+      print(aito_client.get_table_size('reddit'))
+
+    .. testoutput::
+
+      10000
+
+    .. testcleanup::
+
+      import os
+      aito_client.delete_table('reddit')
+      os.unlink('reddit_sample.ndjson.gz')
+
 
 The `Batch Upload`_ can also be done using a generator:
 
