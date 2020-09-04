@@ -655,8 +655,8 @@ jobs:
     steps:
       - checkout
       - jira/notify:
-          job_type: build
-          environment_type: development
+        job_type: build
+        environment_type: development
       - *restore_build_doc_venv_cache
       - *create_build_doc_venv
       - *save_build_doc_venv_cache
