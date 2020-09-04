@@ -654,7 +654,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - jira/notify
+      - jira/notify:
           job_type: build
           environment_type: development
       - *restore_build_doc_venv_cache
