@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   win: circleci/windows@2.2.0
+  jira: circleci/jira@1.2.2
 
 workflows:
   version: 2
@@ -684,6 +685,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify:
+        job_type: deployment
+        environment_type: testing
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
