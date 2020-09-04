@@ -686,8 +686,8 @@ jobs:
     steps:
       - checkout
       - jira/notify:
-        job_type: deployment
-        environment_type: testing
+          job_type: deployment
+          environment_type: testing
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
