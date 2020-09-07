@@ -3,6 +3,7 @@ import os
 from uuid import uuid4
 
 from aito.client import AitoClient, BaseError, RequestError
+from aito.client_request import BaseRequest
 from aito.utils._file_utils import read_ndjson_gz_file
 from tests.cases import CompareTestCase
 from parameterized import parameterized
@@ -32,12 +33,12 @@ class TestAitoClient(CompareTestCase):
             AitoClient(os.environ['AITO_INSTANCE_URL'], "under_pressure")
 
     def test_error_endpoint(self):
-        with self.assertRaises(BaseError):
-            self.client.request('GET', 'api/v1/schema')
+        with self.assertRaises(ValueError):
+            self.client.request(BaseRequest('GET', 'api/v1/schema'))
 
     def test_error_query(self):
         with self.assertRaises(RequestError):
-            self.client.request('POST', '/api/v1/_query', {"from": "catch_me_if_you_can"})
+            self.client.request(BaseRequest('POST', '/api/v1/_query', {"from": "catch_me_if_you_can"}))
 
     def delete_table_step(self):
         self.client.delete_table(self.default_table_name)
@@ -86,7 +87,10 @@ class TestAitoClient(CompareTestCase):
 
     def batch_queries_step(self):
         queries = [{'from': self.default_table_name, 'offset': 1, 'limit': 1}] * 2
-        responses = self.client.batch_requests(['POST'] * 2, ['/api/v1/_query'] * 2, queries)
+        responses = self.client.batch_requests([
+            BaseRequest('POST', '/api/v1/_query', query)
+            for query in queries
+        ])
         self.assertEqual(
             responses,
             [{'offset': 1, 'total': 8, 'hits': [{'id': 1, 'name': 'some_name', 'amount': 1}]}] * 2
@@ -94,7 +98,10 @@ class TestAitoClient(CompareTestCase):
 
     def bounded_async_query_step(self):
         queries = [{'from': self.default_table_name, 'offset': 1, 'limit': 1}] * 2
-        responses = self.client.batch_requests(['POST'] * 2, ['/api/v1/_query'] * 2, queries, 1)
+        responses = self.client.batch_requests(
+            [BaseRequest('POST', '/api/v1/_query', query) for query in queries],
+            1
+        )
         self.assertEqual(
             responses,
             [{'offset': 1, 'total': 8, 'hits': [{'id': 1, 'name': 'some_name', 'amount': 1}]}] * 2
@@ -102,7 +109,10 @@ class TestAitoClient(CompareTestCase):
 
     def async_error_query_step(self):
         queries = [{'from': self.default_table_name, 'offset': 0, 'limit': 1}, {'from': 'bohemian'}]
-        responses = self.client.batch_requests(['POST'] * 2, ['/api/v1/_query'] * 2, queries)
+        responses = self.client.batch_requests([
+            BaseRequest('POST', '/api/v1/_query', query)
+            for query in queries
+        ])
         self.assertEqual(
             responses[0],
             {'offset': 0, 'total': 8, 'hits': [{'id': 0, 'name': 'some_name', 'amount': 0}]}
