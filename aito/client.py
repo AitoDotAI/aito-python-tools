@@ -116,7 +116,7 @@ class AitoClient:
          >>> client.request(BaseRequest(method="GET", endpoint="/api/v1/incorrect-path")) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
          Traceback (most recent call last):
             ...
-         aito.client.RequestError: failed to `GET` to `/api/v1/incorrect-path` with query None...: The path you requested [/incorrect-path] does not exist
+         aito.client.RequestError: failed to GET(/api/v1/incorrect-path): None: The path you requested [/incorrect-path] does not exist
          """
         try:
             resp = requestslib.request(
