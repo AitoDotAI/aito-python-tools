@@ -95,6 +95,8 @@ class AitoSchema(ABC):
     @property
     def type(self):
         """the type of the schema component
+
+        :rtype: str
         """
         return self._typ
 
@@ -133,7 +135,7 @@ class AitoSchema(ABC):
     @property
     @abstractmethod
     def comparison_properties(self) -> Iterable[str]:
-        """iterable of the properties that will be used for comparison with another schema object of the same type
+        """properties of the schema object that will be used for comparison opeartion
 
         :rtype: Iterable[str]
         """
@@ -180,6 +182,10 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
 
     @property
     def analyzer_type(self) -> str:
+        """the type of the analyzer
+
+        :rtype: str
+        """
         return self._analyzer_type
 
     @classmethod
@@ -299,9 +305,8 @@ class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
 
     @property
     def alias(self) -> str:
-        """
+        """the alias of the analyzer
 
-        :return: the alias of the analyzer
         :rtype: str
         """
         return self._alias
@@ -349,7 +354,10 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
 
     @property
     def language(self) -> str:
-        """the language of the analyzer"""
+        """the language of the analyzer
+
+        :rtype: str
+        """
         return self._language
 
     @language.setter
@@ -365,7 +373,10 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
 
     @property
     def use_default_stop_words(self) -> bool:
-        """filter the language default stop words"""
+        """filter the language default stop words
+
+        :rtype: bool
+        """
         return self._use_default_stop_words
 
     @use_default_stop_words.setter
@@ -377,8 +388,11 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
         self._use_default_stop_words = value
 
     @property
-    def custom_stop_words(self) -> List:
-        """list of words that will be filtered"""
+    def custom_stop_words(self) -> List[str]:
+        """list of words that will be filtered
+
+        :rtype: List[str]
+        """
         return self._custom_stop_words
 
     @custom_stop_words.setter
@@ -390,8 +404,11 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
         self._use_default_stop_words = value
 
     @property
-    def custom_key_words(self) -> List:
-        """list of words that will not be featurizerd"""
+    def custom_key_words(self) -> List[str]:
+        """list of words that will not be featurizerd
+
+        :rtype: List[str]
+        """
         return self._custom_key_words
 
     @custom_key_words.setter
@@ -446,6 +463,10 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
 
     @property
     def delimiter(self):
+        """the delimiter of the anlyzer
+
+        :rtype: str
+        """
         return self._delimiter
 
     @delimiter.setter
@@ -456,7 +477,10 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
 
     @property
     def trim_white_space(self) -> bool:
-        """trim leading and trailing whitespaces of the features"""
+        """trim leading and trailing whitespaces of the features
+
+        :rtype: bool
+        """
         return self._trim_white_space
 
     @trim_white_space.setter
@@ -551,7 +575,10 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
 
     @property
     def token_separator(self) -> str:
-        """the string to join the features"""
+        """the string that will be used to join the features
+
+        :rtype: str
+        """
         return self._token_separator
 
     @token_separator.setter
@@ -622,7 +649,8 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         super().__init__('dtype')
         if aito_dtype not in self._supported_data_types:
             raise ValueError(
-                f"unrecognized data type `{aito_dtype}`. Data type must be one of {'|'.join(self._supported_data_types)}"
+                f"unrecognized data type `{aito_dtype}`. "
+                f"Data type must be one of {'|'.join(self._supported_data_types)}"
             )
         self._aito_dtype = aito_dtype
 
@@ -636,31 +664,41 @@ class AitoDataTypeSchema(AitoSchema, ABC):
 
     @property
     def is_string(self) -> bool:
-        """true if the data type is String
+        """returns True if the data type is String
+
+        :rtype: bool
         """
         return self._aito_dtype == 'String'
 
     @property
     def is_text(self) -> bool:
-        """true if the data type is Text
+        """returns True if the data type is Text
+
+        :rtype: bool
         """
         return self._aito_dtype == 'Text'
 
     @property
     def is_bool(self) -> bool:
-        """true if the data type is Boolean
+        """returns True if the data type is Boolean
+
+        :rtype: bool
         """
         return self._aito_dtype == 'Boolean'
 
     @property
     def is_int(self) -> bool:
-        """true if the data type is Int
+        """returns True if the data type is Int
+
+        :rtype: bool
         """
         return self._aito_dtype == 'Int'
 
     @property
     def is_decimal(self) -> bool:
-        """true if the data type is Decimal
+        """returns True if the data type is Decimal
+
+        :rtype: bool
         """
         return self._aito_dtype == 'Decimal'
 
@@ -782,12 +820,18 @@ class AitoColumnLink(AitoSchema):
 
     @property
     def linked_table_name(self) -> str:
-        """the name of the linked table"""
+        """the name of the linked table
+
+        :rtype: str
+        """
         return self._linked_table_name
 
     @property
     def linked_field_name(self) -> str:
-        """the name of the linked field"""
+        """the name of the linked field
+
+        :rtype: str
+        """
         return self._linked_field_name
 
     def to_json_serializable(self):
@@ -839,6 +883,10 @@ class AitoColumnTypeSchema(AitoSchema):
 
     @property
     def data_type(self):
+        """The data type of the column
+
+        :rtype: AitoDataTypeSchema
+        """
         return self._data_type
 
     @data_type.setter
@@ -851,6 +899,10 @@ class AitoColumnTypeSchema(AitoSchema):
 
     @property
     def analyzer(self):
+        """the analyzer of the column
+
+        :rtype: AitoAnalyzerSchema
+        """
         return self._analyzer
 
     @analyzer.setter
@@ -858,13 +910,16 @@ class AitoColumnTypeSchema(AitoSchema):
         if value:
             if not isinstance(value, AitoAnalyzerSchema):
                 raise TypeError('analyzer must be of type AitoAnalyzerSchema')
-            if  not self.data_type.is_text:
+            if not self.data_type.is_text:
                 raise ValueError(f"{self.data_type} does not support analyzer")
         self._analyzer = value
 
     @property
     def nullable(self) -> bool:
-        """True if the column allow `null` value"""
+        """returns True if the column allow `null` value
+
+        :rtype: bool
+        """
         return self._nullable
 
     @nullable.setter
@@ -1004,27 +1059,24 @@ class AitoTableSchema(AitoSchema):
 
     @property
     def columns(self) -> List[str]:
-        """
+        """list of the table's columns name
 
-        :return: list of the table's columns name
         :rtype: List[str]
         """
         return list(self._columns.keys())
 
     @property
     def columns_schemas(self) -> Dict[str, AitoColumnTypeSchema]:
-        """
+        """a dictionary contains the names of the table columns and its corresponding schemas
 
-        :return: the table columns and its schemas
-        :rtype: List[str]
+        :rtype: Dict[str, AitoColumnTypeSchema]
         """
         return self._columns
 
     @property
     def links(self) -> Optional[Dict[str, AitoColumnLink]]:
-        """
+        """a dictionary contains the names of the table columns and its corresponding link
 
-        :return: dictionary of the table column and its link
         :rtype: Dict[str, AitoColumnLink]
         """
         return {col_name: col_schema.link for col_name, col_schema in self._columns.items() if col_schema.has_link}
@@ -1118,18 +1170,16 @@ class AitoDatabaseSchema(AitoSchema):
 
     @property
     def tables(self) -> List[str]:
-        """
+        """a list contains the names of the database's tables
 
-        :return: list of the database's table names
         :rtype:
         """
         return list(self._tables.keys())
 
     @property
     def tables_schemas(self) -> Dict[str, AitoTableSchema]:
-        """
+        """a dictionary contains the name of the database's tables and its corresponding schemas
 
-        :return: the database tables and its schemas
         :rtype: Dict[str, AitoTableSchema]
         """
         return self._tables

@@ -90,6 +90,11 @@ class AitoClient:
 
     @property
     def headers(self):
+        """
+
+        :return: the headers that will be used to send a request to the Aito instance
+        :rtype: Dict
+        """
         return {'Content-Type': 'application/json', 'x-api-key': self.api_key}
 
     def request(self, request: BaseRequest) -> Dict:
