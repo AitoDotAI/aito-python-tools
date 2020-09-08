@@ -76,6 +76,8 @@ Aito SDK Overview
 
   schema
   client
+  api
+  client_request
   utils.data_frame_handler
   utils.sql_connection
 

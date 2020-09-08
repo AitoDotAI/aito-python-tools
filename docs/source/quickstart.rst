@@ -242,7 +242,7 @@ You can access and update the column schema by using the column name as the key:
 Create a table
 ~~~~~~~~~~~~~~
 
-The :py:class:`~aito.client.AitoClient` can create a table using a table name and a table schema
+You can :py:func:`~aito.api.create_table` using an :py:class:`~aito.client.AitoClient` and specifying the table name and the table schema
 
 .. note::
   The example is not direclty copy-pastable. Please use your own Aito environment credentials
@@ -257,8 +257,9 @@ The :py:class:`~aito.client.AitoClient` can create a table using a table name an
 .. testcode::
 
   from aito.client import AitoClient
+  from aito.api import create_table
   aito_client = AitoClient(instance_url=YOUR_AITO_INSTANCE_URL, api_key=YOUR_AITO_INSTANCE_API_KEY)
-  aito_client.create_table(table_name='reddit', table_schema=reddit_schema)
+  create_table(client=aito_client, table_name='reddit', table_schema=reddit_schema)
 
 .. _sdkQuickstartConvertData:
 
@@ -300,24 +301,26 @@ A DataFrame can be converted to:
 Upload the Data
 ~~~~~~~~~~~~~~~
 
-The :py:class:`~aito.client.AitoClient` can upload the data with either `Batch Upload`_ or `File Upload`_:
+You can :py:func:`~aito.api.upload_entries` using an :py:class:`~aito.client.AitoClient`
 
   - Batch Upload:
 
     .. code-block:: python
 
-      aito_client.upload_entries(table_name='reddit', entries=reddit_entries)
+      from aito.api import upload_entries
+      upload_entries(aito_client, table_name='reddit', entries=reddit_entries)
 
   - File Upload:
 
     .. testcode::
 
       from pathlib import Path
+      from aito.api import upload_file, get_table_size
 
-      aito_client.upload_file(table_name='reddit', file_path=Path('reddit_sample.ndjson.gz'))
+      upload_file(aito_client, table_name='reddit', file_path=Path('reddit_sample.ndjson.gz'))
 
       # Check that the data has been uploaded
-      print(aito_client.get_table_size('reddit'))
+      print(get_table_size(aito_client, 'reddit'))
 
     .. testoutput::
 
@@ -326,7 +329,8 @@ The :py:class:`~aito.client.AitoClient` can upload the data with either `Batch U
     .. testcleanup::
 
       import os
-      aito_client.delete_table('reddit')
+      from aito.api import delete_table
+      delete_table(aito_client, 'reddit')
       os.unlink('reddit_sample.ndjson.gz')
 
 
@@ -339,7 +343,8 @@ The `Batch Upload`_ can also be done using a generator:
         entry = {'id': idx}
         yield entry
 
-    aito_client.upload_entries(
+    upload_entries(
+      aito_client,
       table_name="table_name",
       entries=entries_generator(start=0, end=4),
       batch_size=2,

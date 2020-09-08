@@ -168,6 +168,9 @@ You can connect to your SQL Database using the :py:class:`~aito.utils.sql_connec
 .. code:: python
 
   from aito.utils.sql_connection import SQLConnection
+  from aito.client import AitoClient
+  from aito.api import upload_entries
+
   connection = SQLConnection(
     sql_driver='PostgreSQL Unicode',
     sql_server='localhost',
@@ -184,7 +187,7 @@ You can connect to your SQL Database using the :py:class:`~aito.utils.sql_connec
   # create aito client
   aito_client = AitoClient(instance_url="your_aito_instance_url", api_key="your_rw_api_key")
   # upload entries to table
-  aito_client.upload_entries(table_name='table', entries=query_results_entries)
+  upload_entries(aito_client, table_name='table', entries=query_results_entries)
 
 
 Troubleshooting

@@ -1,4 +1,4 @@
-"""Different APIs that utilize the :class:`~aito.client.AitoClient`
+"""Different APIs that takes an :class:`Aito Client object <aito.client.AitoClient>` as the first argument
 
 """
 
@@ -249,7 +249,7 @@ def upload_entries(
     :param batch_size: the batch size, defaults to 1000
     :type batch_size: int, optional
     :param optimize_on_finished: `optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
-    the table on finished, defaults to True
+        the table on finished, defaults to True
     :type optimize_on_finished: bool
 
     Upload a Pandas DataFrame
@@ -259,9 +259,10 @@ def upload_entries(
     >>> entries = df.to_dict(orient='records')
     >>> client.upload_entries(table_name='specifications', entries=entries) # doctest: +SKIP
 
-    Upload a genator of entries
+    Upload a generator of entries
+
     >>> def entries_generator(start, end):
-    ...     for idx in range(start, end):
+    ...     for idx in range(start,clea end):
     ...         entry = {'id': idx}
     ...         yield entry
     >>> client.upload_entries(

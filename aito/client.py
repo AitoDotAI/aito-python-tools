@@ -1,4 +1,4 @@
-"""A versatile client that connects to an Aito Database Instance
+"""A versatile client that makes requests to an Aito Database Instance
 
 """
 
