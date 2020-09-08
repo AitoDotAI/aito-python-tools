@@ -22,10 +22,15 @@ LOG = logging.getLogger('AitoClient')
 
 
 class BaseError(Exception):
-    """An error occurred when using the client
+    """An error occurred when using the client. Log the error message and the stack trace
 
     """
     def __init__(self, message: str):
+        """
+
+        :param message: the error message
+        :type message: str
+        """
         LOG.error(message)
         LOG.debug(message, stack_info=True)
         self.message = message
@@ -39,6 +44,13 @@ class RequestError(BaseError):
 
     """
     def __init__(self, request: BaseRequest, error: Exception):
+        """
+
+        :param request: the request object
+        :type request: BaseRequest
+        :param error: the error
+        :type error: Exception
+        """
         if isinstance(error, requestslib.HTTPError):
             resp = error.response.json()
             error_msg = resp['message'] if 'message' in resp else resp
@@ -63,14 +75,22 @@ class AitoClient:
         :param check_credentials: check the given credentials by requesting the Aito instance version, defaults to True
         :type check_credentials: Optional[bool]
         :raises BaseError: an error occurred during the creation of AitoClient
+
+        >>> aito_client = AitoClient(your_instance_url, your_api_key) # doctest: +SKIP
+        >>> # Change the API key to READ-WRITE or READ-ONLY
+        >>> aito_client.api_key = new_api_key # doctest: +SKIP
         """
-        self.url = instance_url.strip("/")
-        self.headers = {'Content-Type': 'application/json', 'x-api-key': api_key}
+        self.instance_url = instance_url.strip("/")
+        self.api_key = api_key
         if check_credentials:
             try:
                 self.get_version()
             except Exception:
                 raise BaseError('failed to instantiate Aito Client, please check your credentials')
+
+    @property
+    def headers(self):
+        return {'Content-Type': 'application/json', 'x-api-key': self.api_key}
 
     def request(self, request: BaseRequest) -> Dict:
         """make a request to an Aito API endpoint
@@ -121,7 +141,7 @@ class AitoClient:
         try:
             resp = requestslib.request(
                 method=request.method,
-                url=self.url + request.endpoint,
+                url=self.instance_url + request.endpoint,
                 headers=self.headers,
                 json=request.query
             )
@@ -144,7 +164,7 @@ class AitoClient:
         LOG.debug(f'async {request}')
         async with session.request(
                 method=request.method,
-                url=self.url + request.endpoint,
+                url=self.instance_url + request.endpoint,
                 json=request.query,
                 headers=self.headers) as resp:
             return resp.status, await resp.json()
@@ -288,7 +308,8 @@ class AitoClient:
         return r
 
     def create_table(self, table_name: str, table_schema: Union[AitoTableSchema, Dict]) -> Dict:
-        """`create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__ with the specified table name and schema
+        """`create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__
+        with the specified table name and schema
 
         update the table if the table already exists and does not contain any data
 
@@ -395,7 +416,8 @@ class AitoClient:
         ))
 
     def optimize_table(self, table_name):
-        """`optimize the specified table after uploading the data <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
+        """`optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
+        the specified table after uploading the data
 
         :param table_name: the name of the table
         :type table_name: str
@@ -589,7 +611,8 @@ class AitoClient:
             self.upload_binary_file(table_name, f, optimize_on_finished, polling_time)
 
     def create_job(self, job_endpoint: str, query: Union[List, Dict]) -> Dict:
-        """Create a `job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__ for a query that takes longer than 30 seconds to run
+        """Create a `job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
+        for a query that takes longer than 30 seconds to run
 
         :param job_endpoint: job endpoint
         :type job_endpoint: str
@@ -776,7 +799,8 @@ class AitoClient:
     ) -> Tuple[Dict, Dict, Dict]:
         """generate an example predict query to predict a field
 
-        The example query will use all fields of the table as the hypothesis and the first entry of the table as the input data
+        The example query will use all fields of the table as the hypothesis and the first entry of the table as the
+        input data
 
         :param predicting_field: the predicting field name. If the field belong to a linked table,
             it should be in the format of <column_with_link>.<field_name>
