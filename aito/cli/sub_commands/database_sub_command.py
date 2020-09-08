@@ -2,6 +2,8 @@ import tempfile
 from os import unlink
 from typing import Dict
 
+from aito.api import get_database_schema, delete_database, create_table, get_table_schema, delete_table, \
+    get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file
 from aito.client import AitoClient, BaseError
 from aito.schema import AitoTableSchema
 from aito.utils.data_frame_handler import DataFrameHandler
@@ -99,10 +101,10 @@ class QuickAddTableSubCommand(SubCommand):
 
         inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(converted_df)
         client = create_client_from_parsed_args(parsed_args)
-        client.create_table(table_name, inferred_schema.to_json_serializable())
+        create_table(client, table_name, inferred_schema)
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            client.upload_binary_file(table_name, in_f)
+            upload_binary_file(client, table_name, in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0
@@ -123,7 +125,7 @@ class CreateTableSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         table_schema = load_json_from_parsed_input_arg(parsed_args['input'], 'table schema')
-        client.create_table(table_name, table_schema)
+        create_table(client, table_name, table_schema)
         return 0
 
 
@@ -138,7 +140,7 @@ class GetTableSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
-        print(client.get_table_schema(table_name).to_json_string(indent=2))
+        print(get_table_schema(client, table_name).to_json_string(indent=2))
         return 0
 
 
@@ -154,7 +156,7 @@ class DeleteTableSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         if prompt_confirmation(f'Confirm delete table `{table_name}`? The action is irreversible', False):
-            client.delete_table(table_name)
+            delete_table(client, table_name)
         return 0
 
 
@@ -170,7 +172,7 @@ class CopyTableSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        client.copy_table(parsed_args['table-name'], parsed_args['copy-table-name'], parsed_args['replace'])
+        copy_table(client, parsed_args['table-name'], parsed_args['copy-table-name'], parsed_args['replace'])
         return 0
 
 
@@ -186,7 +188,7 @@ class RenameTableSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        client.rename_table(parsed_args['old-name'], parsed_args['new-name'], parsed_args['replace'])
+        rename_table(client, parsed_args['old-name'], parsed_args['new-name'], parsed_args['replace'])
         return 0
 
 
@@ -199,7 +201,7 @@ class ShowTablesSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        tables = client.get_existing_tables()
+        tables = get_existing_tables(client)
         print(*sorted(tables), sep='\n')
         pass
 
@@ -213,7 +215,7 @@ class GetDatabaseSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        print(client.get_database_schema().to_json_string(indent=2))
+        print(get_database_schema(client).to_json_string(indent=2))
         return 0
 
 
@@ -227,7 +229,7 @@ class DeleteDatabaseSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         if prompt_confirmation('Confirm delete the whole database? The action is irreversible', False):
-            client.delete_database()
+            delete_database(client)
 
 
 class UploadEntriesSubCommand(SubCommand):
@@ -246,7 +248,7 @@ class UploadEntriesSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         table_entries = load_json_from_parsed_input_arg(parsed_args['input'])
-        client.upload_entries(table_name=table_name, entries=table_entries)
+        upload_entries(client, table_name=table_name, entries=table_entries)
         return 0
 
 
@@ -289,14 +291,14 @@ class UploadFileSubCommand(SubCommand):
             'in_format': in_format,
             'out_format': 'ndjson',
             'convert_options': {'compression': 'gzip'},
-            'use_table_schema': client.get_table_schema(table_name)
+            'use_table_schema': get_table_schema(client, table_name)
         }
         df_handler = DataFrameHandler()
         df_handler.convert_file(**convert_options)
         converted_tmp_file.close()
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            client.upload_binary_file(table_name, in_f)
+            upload_binary_file(client, table_name, in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
 
@@ -322,7 +324,7 @@ class UploadDataFromSQLSubCommand(SubCommand):
         converted_tmp_file.close()
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            client.upload_binary_file(table_name, in_f)
+            upload_binary_file(client, table_name, in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0
@@ -352,9 +354,9 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
         DataFrameHandler().df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
         converted_tmp_file.close()
 
-        client.create_table(table_name, inferred_schema.to_json_serializable())
+        create_table(client, table_name, inferred_schema)
         with open(converted_tmp_file.name, 'rb') as in_f:
-            client.upload_binary_file(table_name, in_f)
+            upload_binary_file(client, table_name, in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0

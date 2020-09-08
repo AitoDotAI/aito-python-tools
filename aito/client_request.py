@@ -1,3 +1,7 @@
+"""Request objects that is sent by :class:`~aito.client.AitoClient` to an Aito instance
+
+"""
+
 import logging
 from typing import Optional, Union, Dict, List
 

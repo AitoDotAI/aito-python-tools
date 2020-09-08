@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
+from aito.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries
 from aito.cli.parser import get_credentials_file_config
 from aito.client import AitoClient
 from aito.client import RequestError, BaseError
@@ -31,17 +32,17 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
 
     def create_table(self):
-        self.client.create_table(self.default_table_name, self.default_table_schema)
+        create_table(self.client, self.default_table_name, self.default_table_schema)
 
     def tearDown(self):
         super().tearDown()
         try:
-            self.client.delete_table(self.default_table_name)
+            delete_table(self.client, self.default_table_name)
         except Exception as e:
             self.logger.error(f"failed to delete table in tearDown: {e}")
 
     def compare_table_entries_to_file_content(self, table_name: str, exp_file_path: Path, compare_order: bool = False):
-        table_entries = self.client.query_entries(table_name)
+        table_entries = query_entries(self.client, table_name)
         with exp_file_path.open() as exp_f:
             file_content = json.load(exp_f)
         if compare_order:
@@ -60,7 +61,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(
             ['upload-entries', self.default_table_name, str(self.input_folder / 'invoice.json')],
             expected_args,
-            execute_exception=BaseError
+            execute_exception=Exception
         )
 
     def test_upload_entries_invalid_entries(self):
@@ -189,7 +190,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             ['create-table', self.default_table_name, f'{self.input_folder}/invoice_aito_schema.json'],
             expected_args
         )
-        self.assertTrue(self.client.check_table_exists(self.default_table_name))
+        self.assertTrue(check_table_exists(self.client, self.default_table_name))
 
     def test_create_table_stdin(self):
         expected_args = {
@@ -202,7 +203,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.parse_and_execute(
                 ['create-table', self.default_table_name], expected_args, stub_stdin=in_f
             )
-        self.assertTrue(self.client.check_table_exists(self.default_table_name))
+        self.assertTrue(check_table_exists(self.client, self.default_table_name))
 
     def test_get_table(self):
         self.create_table()
@@ -234,7 +235,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         else:
             with patch('builtins.input', return_value='yes'):
                 self.parse_and_execute(['delete-table', self.default_table_name], expected_args)
-        self.assertFalse(self.client.check_table_exists(self.default_table_name))
+        self.assertFalse(check_table_exists(self.client, self.default_table_name))
 
     def test_quick_add_table(self):
         expected_args = {
@@ -284,12 +285,12 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(
             ['copy-table', self.default_table_name, copy_table_name], expected_args
         )
-        db_tables = self.client.get_existing_tables()
+        db_tables = get_existing_tables(self.client)
         self.assertIn(self.default_table_name, db_tables)
         self.assertIn(copy_table_name, db_tables)
 
         def clean_up():
-            self.client.delete_table(copy_table_name)
+            delete_table(self.client, copy_table_name)
         self.addCleanup(clean_up)
 
     def test_rename_table(self):
@@ -305,12 +306,12 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(
             ['rename-table', self.default_table_name, rename_table_name], expected_args
         )
-        db_tables = self.client.get_existing_tables()
+        db_tables = get_existing_tables(self.client)
         self.assertIn(rename_table_name, db_tables)
         self.assertNotIn(self.default_table_name, db_tables)
 
         def clean_up():
-            self.client.delete_table(rename_table_name)
+            delete_table(self.client, rename_table_name)
         self.addCleanup(clean_up)
 
     def test_show_tables(self):
@@ -332,13 +333,13 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.create_table()
         with (self.input_folder / 'invoice_aito_schema_altered.json').open() as f:
             another_tbl_schema = json.load(f)
-        self.client.create_table('invoice_altered', another_tbl_schema)
+        create_table(self.client, 'invoice_altered', another_tbl_schema)
 
         expected_args = {'command': 'delete-database', **self.default_parser_args}
         with patch('builtins.input', return_value='yes'):
             self.parse_and_execute(['delete-database'], expected_args)
-        self.assertFalse(self.client.check_table_exists(self.default_table_name))
-        self.assertFalse(self.client.check_table_exists('invoice_altered'))
+        self.assertFalse(check_table_exists(self.client, self.default_table_name))
+        self.assertFalse(check_table_exists(self.client, 'invoice_altered'))
 
     def test_get_database(self):
         self.create_table()

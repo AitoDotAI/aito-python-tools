@@ -2,6 +2,7 @@ import json
 import os
 from uuid import uuid4
 
+from aito.api import create_table, delete_table, query_entries
 from aito.client import AitoClient, RequestError
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
@@ -22,7 +23,7 @@ class TestSQLFunctions(ParserAndCLITestCase):
 
     def tearDown(self):
         super().tearDown()
-        self.client.delete_table(self.default_table_name)
+        delete_table(self.client, self.default_table_name)
 
     def parser_and_execute_infer_schema_from_query(self):
         expected_args = {
@@ -83,7 +84,7 @@ class TestPostgresFunctions(TestSQLFunctions):
     def create_table(self):
         with (self.input_folder / "invoice_aito_schema.json").open() as f:
             table_schema = json.load(f)
-        self.client.create_table(self.default_table_name, table_schema)
+        create_table(self.client, self.default_table_name, table_schema)
 
     def test_infer_schema_from_query(self):
         self.parser_and_execute_infer_schema_from_query()
@@ -92,7 +93,7 @@ class TestPostgresFunctions(TestSQLFunctions):
     def test_upload_data_from_query(self):
         self.create_table()
         self.parse_and_execute_upload_data_from_query()
-        result_table_entries = self.client.query_entries(self.default_table_name)
+        result_table_entries = query_entries(self.client, self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
             self.assertCountEqual(result_table_entries, json.load(exp_f))
 
@@ -101,7 +102,7 @@ class TestPostgresFunctions(TestSQLFunctions):
 
     def test_quick_add_table_from_query(self):
         self.parse_and_execute_quick_add_table()
-        result_table_entries = self.client.query_entries(self.default_table_name)
+        result_table_entries = query_entries(self.client, self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value.json').open() as exp_f:
             self.assertCountEqual(result_table_entries, json.load(exp_f))
 
@@ -110,7 +111,7 @@ class TestMySQLFunctions(TestSQLFunctions):
     def create_table(self):
         with (self.input_folder / "invoice_aito_schema_lower_case_columns.json").open() as f:
             table_schema = json.load(f)
-        self.client.create_table(self.default_table_name, table_schema)
+        create_table(self.client, self.default_table_name, table_schema)
 
     def test_infer_schema_from_query(self):
         self.parser_and_execute_infer_schema_from_query()
@@ -119,7 +120,7 @@ class TestMySQLFunctions(TestSQLFunctions):
     def test_upload_data_from_query(self):
         self.create_table()
         self.parse_and_execute_upload_data_from_query()
-        result_table_entries = self.client.query_entries(self.default_table_name)
+        result_table_entries = query_entries(self.client, self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
             self.assertCountEqual(result_table_entries, json.load(exp_f))
 
@@ -128,6 +129,6 @@ class TestMySQLFunctions(TestSQLFunctions):
 
     def test_quick_add_table_from_query(self):
         self.parse_and_execute_quick_add_table()
-        result_table_entries = self.client.query_entries(self.default_table_name)
+        result_table_entries = query_entries(self.client, self.default_table_name)
         with (self.input_folder / 'invoice_no_null_value_lower_case_columns.json').open() as exp_f:
             self.assertCountEqual(result_table_entries, json.load(exp_f))
