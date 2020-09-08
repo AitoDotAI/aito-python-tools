@@ -48,3 +48,43 @@ class BaseRequest:
 
     def __str__(self):
         return f'{self.method}({self.endpoint}): {str(self.query)[:100]}'
+
+
+class SearchRequest(BaseRequest):
+    def __init__(self, query: Dict):
+        super().__init__('POST', '/api/v1/_search', query)
+
+
+class PredictRequest(BaseRequest):
+    def __init__(self, query: Dict):
+        super().__init__('POST', '/api/v1/_predict', query)
+
+
+class RecommendRequest(BaseRequest):
+    def __init__(self, query: Dict):
+        super().__init__('POST', '/api/v1/_recommend', query)
+
+
+class EvaluateRequest(BaseRequest):
+    def __init__(self, query: Dict):
+        super().__init__('POST', '/api/v1/_evaluate', query)
+
+
+class SimilarityRequest(BaseRequest):
+    def __init__(self, query: Dict):
+        super().__init__('POST', '/api/v1/_similarity', query)
+
+
+class MatchRequest(BaseRequest):
+    def __init__(self, query: Dict):
+        super().__init__('POST', '/api/v1/_match', query)
+
+
+class RelateRequest(BaseRequest):
+    def __init__(self, query: Dict):
+        super().__init__('POST', '/api/v1/_relate', query)
+
+
+class GenericQueryRequest(BaseRequest):
+    def __init__(self, query: Dict):
+        super().__init__('POST', '/api/v1/_query', query)
