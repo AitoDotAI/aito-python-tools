@@ -183,15 +183,15 @@ class TestAitoDataType(BaseTestCase):
 
 class TestAitoColumnLink(BaseTestCase):
     def test_from_deserialized_object(self):
-        self.assertEqual(AitoColumnLink.from_deserialized_object('tbl.col'), AitoColumnLink('tbl', 'col'))
+        self.assertEqual(AitoColumnLinkSchema.from_deserialized_object('tbl.col'), AitoColumnLinkSchema('tbl', 'col'))
 
     def test_to_serialized_object(self):
-        self.assertEqual(AitoColumnLink('tbl', 'col').to_json_serializable(), 'tbl.col')
+        self.assertEqual(AitoColumnLinkSchema('tbl', 'col').to_json_serializable(), 'tbl.col')
 
     def test_comparison(self):
-        self.assertEqual(AitoColumnLink('tbl', 'col'), AitoColumnLink('tbl', 'col'))
-        self.assertNotEqual(AitoColumnLink('tbl', 'col'), AitoColumnLink.from_deserialized_object('tbl.col1'))
-        self.assertNotEqual(AitoColumnLink.from_deserialized_object('tbl1.col'), AitoColumnLink('tbl', 'col'))
+        self.assertEqual(AitoColumnLinkSchema('tbl', 'col'), AitoColumnLinkSchema('tbl', 'col'))
+        self.assertNotEqual(AitoColumnLinkSchema('tbl', 'col'), AitoColumnLinkSchema.from_deserialized_object('tbl.col1'))
+        self.assertNotEqual(AitoColumnLinkSchema.from_deserialized_object('tbl1.col'), AitoColumnLinkSchema('tbl', 'col'))
 
 
 class TestAitoColumnTypeSchema(BaseTestCase):
@@ -210,7 +210,7 @@ class TestAitoColumnTypeSchema(BaseTestCase):
         (
                 'link',
                 {'type': 'Int', 'link': 'infinity.beyond'},
-                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('infinity', 'beyond'))
+                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('infinity', 'beyond'))
         )
     ])
     def test_from_deserialized_object(self, test_name, deserialized_obj, expected):
@@ -236,7 +236,7 @@ class TestAitoColumnTypeSchema(BaseTestCase):
         ),
         (
                 'link',
-                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('infinity', 'beyond')),
+                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('infinity', 'beyond')),
                 {'type': 'Int', 'nullable': False, 'link': 'infinity.beyond'}
         )
     ])
@@ -246,17 +246,17 @@ class TestAitoColumnTypeSchema(BaseTestCase):
     def test_comparison(self):
         self.assertEqual(
             AitoColumnTypeSchema(
-                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLink('table', 'column')),
+                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLinkSchema('table', 'column')),
             AitoColumnTypeSchema(
                 AitoTextType(),
                 nullable=False,
                 analyzer=AitoLanguageAnalyzerSchema('french'),
-                link=AitoColumnLink('table', 'column')
+                link=AitoColumnLinkSchema('table', 'column')
             )
         )
         self.assertNotEqual(
             AitoColumnTypeSchema(
-                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLink('table', 'column')
+                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLinkSchema('table', 'column')
             ),
             AitoColumnTypeSchema(
                 AitoTextType(), analyzer=AitoAliasAnalyzerSchema('french')
@@ -264,9 +264,9 @@ class TestAitoColumnTypeSchema(BaseTestCase):
         )
 
     def test_link(self):
-        col_schema_1 = AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('infinity', 'beyond'))
+        col_schema_1 = AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('infinity', 'beyond'))
         self.assertTrue(col_schema_1.has_link)
-        self.assertEqual(col_schema_1.link, AitoColumnLink('infinity', 'beyond'))
+        self.assertEqual(col_schema_1.link, AitoColumnLinkSchema('infinity', 'beyond'))
 
 
 class TestAitoTableSchema(BaseTestCase):
@@ -290,7 +290,7 @@ class TestAitoTableSchema(BaseTestCase):
                     AitoTextType(),
                     nullable=True,
                     analyzer=AitoLanguageAnalyzerSchema('finnish'),
-                    link=AitoColumnLink('another', 'one')
+                    link=AitoColumnLinkSchema('another', 'one')
                 )
             })
         )
@@ -312,7 +312,7 @@ class TestAitoTableSchema(BaseTestCase):
                     AitoTextType(),
                     nullable=True,
                     analyzer=AitoAliasAnalyzerSchema('fi'),
-                    link=AitoColumnLink('another', 'one')
+                    link=AitoColumnLinkSchema('another', 'one')
                 )
             }).to_json_serializable(),
             {
@@ -344,12 +344,12 @@ class TestAitoTableSchema(BaseTestCase):
 
     def test_link(self):
         table_schema = AitoTableSchema({
-            'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('first', 'link')),
-            'col2': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('second', 'link'))
+            'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('first', 'link')),
+            'col2': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('second', 'link'))
         })
         self.assertEqual(
             table_schema.links,
-            {'col1': AitoColumnLink('first', 'link'), 'col2': AitoColumnLink('second', 'link')}
+            {'col1': AitoColumnLinkSchema('first', 'link'), 'col2': AitoColumnLinkSchema('second', 'link')}
         )
 
 
@@ -392,7 +392,7 @@ class TestAitoDatabaseSchema(BaseTestCase):
                                 AitoTextType(),
                                 nullable=True,
                                 analyzer=AitoAliasAnalyzerSchema('fi'),
-                                link=AitoColumnLink('another', 'one')
+                                link=AitoColumnLinkSchema('another', 'one')
                             )
                         }
                     ),
@@ -432,7 +432,7 @@ class TestAitoDatabaseSchema(BaseTestCase):
     def test_link(self):
         db_schema = AitoDatabaseSchema(tables={
             'tbl1': AitoTableSchema(columns={
-                'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('tbl2', 'col1'))
+                'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('tbl2', 'col1'))
             }),
             'tbl2': AitoTableSchema(columns={
                 'col1': AitoColumnTypeSchema(AitoIntType()),
