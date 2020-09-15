@@ -160,23 +160,21 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
         """
         pass
 
-    @property
-    @abstractmethod
-    def json_schema(self):
-        return {
-            'oneOf': [
-                AitoAliasAnalyzerSchema.json_schema,
-                AitoLanguageAnalyzerSchema.json_schema,
-                AitoDelimiterAnalyzerSchema.json_schema,
-                AitoCharNGramAnalyzerSchema.json_schema,
-                AitoTokenNgramAnalyzerSchema.json_schema
-            ]
-        }
-
     @classmethod
     @abstractmethod
     def from_deserialized_object(cls, obj):
-        jsonschema.validate(obj, cls.json_schema)
+        jsonschema.validate(
+            obj,
+            {
+                'oneOf': [
+                    AitoAliasAnalyzerSchema.json_schema,
+                    AitoLanguageAnalyzerSchema.json_schema,
+                    AitoDelimiterAnalyzerSchema.json_schema,
+                    AitoCharNGramAnalyzerSchema.json_schema,
+                    AitoTokenNgramAnalyzerSchema.json_schema
+                ]
+            }
+        )
 
         analyzer_type = obj.get('type')
         if analyzer_type not in cls._supported_analyzer_type:
@@ -271,6 +269,8 @@ class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
     """Aito `AliasAnalyzer <https://aito.ai/docs/api/#schema-alias-analyzer>`__ schema
     """
 
+    json_schema = {'type': 'string', 'enum': AitoAnalyzerSchema._supported_language_analyzer_aliases}
+
     def __init__(self, alias: str):
         """
 
@@ -289,10 +289,6 @@ class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
     @property
     def analyzer_type(self) -> str:
         return 'alias'
-
-    @property
-    def json_schema(self):
-        return {'type': 'string', 'enum': self._supported_analyzer_aliases}
 
     @property
     def alias(self) -> str:
@@ -319,6 +315,19 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
     """Aito `LanguageAnalyzer <https://aito.ai/docs/api/#schema-language-analyzer>`__ schema
 
     """
+    json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'const': 'language'},
+            'language': {'type': 'string', 'enum': AitoAnalyzerSchema._supported_language_analyzer_aliases},
+            'useDefaultStopWords': {'type': 'boolean', 'default': False},
+            'customStopWords': {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            'customKeyWords': {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+        },
+        'required': ['type', 'language'],
+        'additionalProperties': False
+    }
+
     def __init__(
             self,
             language: str,
@@ -345,21 +354,6 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
     @property
     def analyzer_type(self) -> str:
         return 'language'
-
-    @property
-    def json_schema(self):
-        return {
-            'type': 'object',
-            'properties': {
-                'type': {'const': 'language'},
-                'language': {'type': 'string', 'enum': self._supported_language_analyzer_aliases},
-                'useDefaultStopWords': {'type': 'boolean', 'default': False},
-                'customStopWords': {'type': 'array', 'items': {'type': 'string'}, 'default': []},
-                'customKeyWords': {'type': 'array', 'items': {'type': 'string'}, 'default': []},
-            },
-            'required': ['type', 'language'],
-            'additionalProperties': False
-        }
 
     @property
     def language(self) -> str:
@@ -456,6 +450,17 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
 
     """
 
+    json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'const': 'delimiter'},
+            'delimiter': {'type': 'string'},
+            'trimWhiteSpace': {'type': 'boolean', 'default': True}
+        },
+        'required': ['type', 'delimiter'],
+        'additionalProperties': False
+    }
+
     def __init__(self, delimiter: str, trim_white_space: bool = None):
         """
 
@@ -470,19 +475,6 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
     @property
     def analyzer_type(self) -> str:
         return 'delimiter'
-
-    @property
-    def json_schema(self):
-        return {
-            'type': 'object',
-            'properties': {
-                'type': {'const': 'delimiter'},
-                'delimiter': {'type': 'string'},
-                'trimWhiteSpace': {'type': 'boolean', 'default': True}
-            },
-            'required': ['type', 'delimiter'],
-            'additionalProperties': False
-        }
 
     @property
     def delimiter(self):
@@ -539,6 +531,17 @@ class AitoCharNGramAnalyzerSchema(AitoAnalyzerSchema):
 
     """
 
+    json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'const': 'char-ngram'},
+            'minGram': {'type': 'integer', 'minimum': 1},
+            'maxGram': {'type': 'integer', 'minimum': 1}
+        },
+        'required': ['type', 'minGram', 'maxGram'],
+        'additionalProperties': False
+    }
+
     def __init__(self, min_gram: int, max_gram: int):
         """
 
@@ -553,19 +556,6 @@ class AitoCharNGramAnalyzerSchema(AitoAnalyzerSchema):
     @property
     def analyzer_type(self) -> str:
         return 'char-ngram'
-
-    @property
-    def json_schema(self):
-        return {
-            'type': 'object',
-            'properties': {
-                'type': {'const': 'char-ngram'},
-                'minGram': {'type': 'integer', 'minimum': 1},
-                'maxGram': {'type': 'integer', 'minimum': 1}
-            },
-            'required': ['type', 'minGram', 'maxGram'],
-            'additionalProperties': False
-        }
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -610,6 +600,19 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
 
     """
 
+    json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'const': 'token-ngram'},
+            'source': {'type': 'object'},
+            'minGram': {'type': 'integer', 'minimum': 1},
+            'maxGram': {'type': 'integer', 'minimum': 1},
+            'tokenSeparator': {'type': 'string', 'default': ' '}
+        },
+        'required': ['type', 'source', 'minGram', 'maxGram'],
+        'additionalProperties': False
+    }
+
     def __init__(self, source: AitoAnalyzerSchema, min_gram: int, max_gram: int, token_separator: str = None):
         """
 
@@ -630,21 +633,6 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
     @property
     def analyzer_type(self) -> str:
         return 'token-ngram'
-
-    @property
-    def json_schema(self):
-        return {
-            'type': 'object',
-            'properties': {
-                'type': {'const': 'token-ngram'},
-                'source': {'type': 'object'},
-                'minGram': {'type': 'integer', 'minimum': 1},
-                'maxGram': {'type': 'integer', 'minimum': 1},
-                'tokenSeparator': {'type': 'string', 'default': ' '}
-            },
-            'required': ['type', 'source', 'minGram', 'maxGram'],
-            'additionalProperties': False
-        }
 
     @property
     def source(self):
@@ -744,6 +732,8 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         'mixed': 'Text'
     }
 
+    json_schema = {'type': 'string', 'enum': _supported_data_types}
+
     def __init__(self, aito_dtype: str):
         """
 
@@ -760,10 +750,6 @@ class AitoDataTypeSchema(AitoSchema, ABC):
     @property
     def type(self):
         return 'dtype'
-
-    @property
-    def json_schema(self):
-        return {'type': 'string', 'enum': self._supported_data_types}
 
     @property
     def aito_dtype(self) -> str:
@@ -921,6 +907,10 @@ class AitoTextType(AitoDataTypeSchema):
 
 
 class AitoColumnLinkSchema(AitoSchema):
+    """Link to a column of another table"""
+
+    json_schema = {'type': 'string'}
+
     def __init__(self, linked_table_name: str, linked_field_name: str):
         self._linked_table_name = linked_table_name
         self._linked_field_name = linked_field_name
@@ -928,10 +918,6 @@ class AitoColumnLinkSchema(AitoSchema):
     @property
     def type(self):
         return 'columnLink'
-
-    @property
-    def json_schema(self):
-        return {'type': 'string'}
 
     @property
     def linked_table_name(self) -> str:
@@ -971,6 +957,19 @@ class AitoColumnTypeSchema(AitoSchema):
     """Aito `ColumnType <https://aito.ai/docs/api/#schema-column-type>`__ schema
 
     """
+
+    json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': AitoDataTypeSchema.json_schema,
+            'nullable': {'type': 'boolean', 'default': False},
+            'link': AitoColumnLinkSchema.json_schema,
+            'analyzer': AitoAnalyzerSchema.json_schema
+        },
+        'required': ['type'],
+        'additionalProperties': False
+    }
+
     def __init__(
             self,
             data_type: AitoDataTypeSchema,
@@ -998,20 +997,6 @@ class AitoColumnTypeSchema(AitoSchema):
     @property
     def type(self):
         return 'column'
-
-    @property
-    def json_schema(self):
-        return {
-            'type': 'object',
-            'properties': {
-                'type': AitoDataTypeSchema.json_schema,
-                'nullable': {'type': 'boolean', 'default': False},
-                'link': AitoColumnLinkSchema.json_schema,
-                'analyzer': AitoAnalyzerSchema.json_schema
-            },
-            'required': ['type'],
-            'additionalProperties': False
-        }
 
     @property
     def data_type(self):
@@ -1184,6 +1169,19 @@ class AitoTableSchema(AitoSchema):
     }
     """
 
+    json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'const': 'table'},
+            'columns': {
+                'type': 'array',
+                'items': AitoColumnTypeSchema.json_schema
+            }
+        },
+        'required': ['type', 'columns'],
+        'additionalProperties': False
+    }
+
     def __init__(self, columns: Dict[str, AitoColumnTypeSchema]):
         """
 
@@ -1195,21 +1193,6 @@ class AitoTableSchema(AitoSchema):
     @property
     def type(self):
         return 'table'
-
-    @property
-    def json_schema(self):
-        return {
-            'type': 'object',
-            'properties': {
-                'type': {'const': 'table'},
-                'columns': {
-                    'type': 'array',
-                    'items': AitoColumnTypeSchema.json_schema
-                }
-            },
-            'required': ['type', 'columns'],
-            'additionalProperties': False
-        }
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -1327,26 +1310,25 @@ class AitoDatabaseSchema(AitoSchema):
 
     Can be thought of as a dict-like container for :class:`.AitoTableSchema` objects
     """
+
+    json_schema = {
+        'type': 'object',
+        'properties': {
+            'schema': {
+                'type': 'object',
+                'additionalProperties': AitoTableSchema.json_schema
+            }
+        },
+        'required': ['schema'],
+        'additionalProperties': False
+    }
+
     def __init__(self, tables: Dict[str, AitoTableSchema]):
         self._tables = tables
 
     @property
     def type(self):
         return 'database'
-
-    @property
-    def json_schema(self):
-        return {
-            'type': 'object',
-            'properties': {
-                'schema': {
-                    'type': 'object',
-                    'additionalProperties': AitoTableSchema.json_schema
-                }
-            },
-            'required': ['schema'],
-            'additionalProperties': False
-        }
 
     @property
     def tables(self) -> List[str]:
