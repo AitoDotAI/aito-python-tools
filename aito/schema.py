@@ -10,8 +10,9 @@ from abc import abstractmethod, ABC
 from collections import Counter
 from csv import Sniffer, Error as csvError
 from typing import List, Iterable, Dict, Optional
-import jsonschema
+from jsonschema import validate, Draft7Validator
 
+from aito.exceptions import ValidationError
 import pandas as pd
 from langdetect import detect_langs
 
@@ -74,7 +75,7 @@ class AitoSchema(ABC):
     @property
     @abstractmethod
     def comparison_properties(self) -> Iterable[str]:
-        """properties of the schema object that will be used for comparison opeartion
+        """properties of the schema object that will be used for comparison operation
 
         :rtype: Iterable[str]
         """
@@ -96,7 +97,17 @@ class AitoSchema(ABC):
         return json.dumps(self.to_json_serializable())
 
     def __repr__(self):
-        return json.dumps(self.to_json_serializable(), indent=4, sort_keys=True)
+        return json.dumps(self.to_json_serializable(), indent=2, sort_keys=True)
+
+    @classmethod
+    def _json_schema_validate(cls, obj, schema):
+        try:
+            validate(instance=obj, schema=schema, cls=Draft7Validator)
+        except Exception as e:
+            raise ValidationError(cls.__name__, e, LOG) from None
+
+    def _raise_validation_error(self, e):
+        raise ValidationError(self.__class__.__name__, e, LOG)
 
 
 class AitoAnalyzerSchema(AitoSchema, ABC):
@@ -148,6 +159,64 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
     ]
     _supported_analyzer_aliases = ['standard', 'whitespace'] + _supported_language_analyzer_aliases
 
+    alias_analyzer_json_schema = {'type': 'string', 'enum': _supported_analyzer_aliases}
+    language_analyzer_json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'enum': ['language']},
+            'language': {'type': 'string', 'enum': _supported_language_analyzer_aliases},
+            'useDefaultStopWords': {'type': 'boolean', 'default': False},
+            'customStopWords': {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            'customKeyWords': {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+        },
+        'required': ['type', 'language'],
+        'additionalProperties': False
+    }
+
+    delimiter_analyzer_json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'enum': ['delimiter']},
+            'delimiter': {'type': 'string'},
+            'trimWhitespace': {'type': 'boolean', 'default': True}
+        },
+        'required': ['type', 'delimiter'],
+        'additionalProperties': False
+    }
+
+    token_ngram_analyzer_json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'enum': ['token-ngram']},
+            'source': {'oneOf': [{'type': 'string'}, {'type': 'object'}]},
+            'minGram': {'type': 'integer', 'minimum': 1},
+            'maxGram': {'type': 'integer', 'minimum': 1},
+            'tokenSeparator': {'type': 'string', 'default': ' '}
+        },
+        'required': ['type', 'source', 'minGram', 'maxGram'],
+        'additionalProperties': False
+    }
+
+    char_ngram_analyzer_json_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'enum': ['char-ngram']},
+            'minGram': {'type': 'integer', 'minimum': 1},
+            'maxGram': {'type': 'integer', 'minimum': 1}
+        },
+        'required': ['type', 'minGram', 'maxGram'],
+        'additionalProperties': False
+    }
+
+    json_schema = {'anyOf': [
+        alias_analyzer_json_schema,
+        language_analyzer_json_schema,
+        delimiter_analyzer_json_schema,
+        token_ngram_analyzer_json_schema,
+        char_ngram_analyzer_json_schema
+    ]}
+
+    @property
     def type(self):
         return 'analyzer'
 
@@ -163,30 +232,22 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
     @classmethod
     @abstractmethod
     def from_deserialized_object(cls, obj):
-        jsonschema.validate(
-            obj,
-            {
-                'oneOf': [
-                    AitoAliasAnalyzerSchema.json_schema,
-                    AitoLanguageAnalyzerSchema.json_schema,
-                    AitoDelimiterAnalyzerSchema.json_schema,
-                    AitoCharNGramAnalyzerSchema.json_schema,
-                    AitoTokenNgramAnalyzerSchema.json_schema
-                ]
-            }
-        )
+        cls._json_schema_validate(obj, cls.json_schema)
 
-        analyzer_type = obj.get('type')
-        if analyzer_type not in cls._supported_analyzer_type:
-            raise ValueError(f'unsupported analyzer of type {analyzer_type}')
-        if analyzer_type == 'language':
-            return AitoLanguageAnalyzerSchema.from_deserialized_object(obj)
-        if analyzer_type == 'delimiter':
-            return AitoDelimiterAnalyzerSchema.from_deserialized_object(obj)
-        if analyzer_type == 'char-ngram':
-            return AitoCharNGramAnalyzerSchema.from_deserialized_object(obj)
-        if analyzer_type == 'token-ngram':
-            return AitoTokenNgramAnalyzerSchema.from_deserialized_object(obj)
+        if isinstance(obj, str):
+            return AitoAliasAnalyzerSchema.from_deserialized_object(obj)
+        else:
+            analyzer_type = obj.get('type')
+            if analyzer_type not in cls._supported_analyzer_type:
+                raise ValidationError(cls.__name__, f'unsupported analyzer of type {analyzer_type}', LOG)
+            if analyzer_type == 'language':
+                return AitoLanguageAnalyzerSchema.from_deserialized_object(obj)
+            if analyzer_type == 'delimiter':
+                return AitoDelimiterAnalyzerSchema.from_deserialized_object(obj)
+            if analyzer_type == 'char-ngram':
+                return AitoCharNGramAnalyzerSchema.from_deserialized_object(obj)
+            if analyzer_type == 'token-ngram':
+                return AitoTokenNgramAnalyzerSchema.from_deserialized_object(obj)
 
     def __eq__(self, other):
         self._compare_type(other)
@@ -269,7 +330,7 @@ class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
     """Aito `AliasAnalyzer <https://aito.ai/docs/api/#schema-alias-analyzer>`__ schema
     """
 
-    json_schema = {'type': 'string', 'enum': AitoAnalyzerSchema._supported_language_analyzer_aliases}
+    json_schema = AitoAnalyzerSchema.alias_analyzer_json_schema
 
     def __init__(self, alias: str):
         """
@@ -278,10 +339,10 @@ class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
         :type alias: str
         """
         if not isinstance(alias, str):
-            raise TypeError("alias must be of type str")
+            self._raise_validation_error("alias must be of type str")
         alias = alias.lower().strip()
         if alias not in self._supported_analyzer_aliases:
-            raise ValueError(f"unsupported alias {alias}")
+            self._raise_validation_error(f"unsupported alias {alias}")
         if alias in self._supported_language_analyzer_iso_code_to_name:
             alias = self._supported_language_analyzer_iso_code_to_name[alias]
         self._alias = alias
@@ -304,7 +365,7 @@ class AitoAliasAnalyzerSchema(AitoAnalyzerSchema):
 
     @classmethod
     def from_deserialized_object(cls, obj: str):
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
         return cls(alias=obj)
 
     def to_json_serializable(self) -> str:
@@ -315,18 +376,7 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
     """Aito `LanguageAnalyzer <https://aito.ai/docs/api/#schema-language-analyzer>`__ schema
 
     """
-    json_schema = {
-        'type': 'object',
-        'properties': {
-            'type': {'const': 'language'},
-            'language': {'type': 'string', 'enum': AitoAnalyzerSchema._supported_language_analyzer_aliases},
-            'useDefaultStopWords': {'type': 'boolean', 'default': False},
-            'customStopWords': {'type': 'array', 'items': {'type': 'string'}, 'default': []},
-            'customKeyWords': {'type': 'array', 'items': {'type': 'string'}, 'default': []},
-        },
-        'required': ['type', 'language'],
-        'additionalProperties': False
-    }
+    json_schema = AitoAnalyzerSchema.language_analyzer_json_schema
 
     def __init__(
             self,
@@ -365,7 +415,7 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
 
     @language.setter
     def language(self, value):
-        jsonschema.validate(value, self.json_schema['properties']['language'])
+        self._json_schema_validate(value, self.json_schema['properties']['language'])
         if value in self._supported_language_analyzer_iso_code_to_name:
             value = self._supported_language_analyzer_iso_code_to_name[value]
         self._language = value
@@ -384,7 +434,7 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
         if value is None:
             value = schema['default']
         else:
-            jsonschema.validate(value, schema)
+            self._json_schema_validate(value, schema)
         self._use_default_stop_words = value
 
     @property
@@ -401,12 +451,12 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
         if value is None:
             value = schema['default']
         else:
-            jsonschema.validate(value, schema)
+            self._json_schema_validate(value, schema)
         self._custom_stop_words = value
 
     @property
     def custom_key_words(self) -> List[str]:
-        """list of words that will not be featurizerd
+        """list of words that will not be featurized
 
         :rtype: List[str]
         """
@@ -418,7 +468,7 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
         if value is None:
             value = schema['default']
         else:
-            jsonschema.validate(value, schema)
+            self._json_schema_validate(value, schema)
         self._custom_key_words = value
 
     @property
@@ -427,7 +477,7 @@ class AitoLanguageAnalyzerSchema(AitoAnalyzerSchema):
 
     @classmethod
     def from_deserialized_object(cls, obj: Dict):
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
         return cls(
             language=obj.get('language'),
             use_default_stop_words=obj.get('useDefaultStopWords'),
@@ -450,16 +500,7 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
 
     """
 
-    json_schema = {
-        'type': 'object',
-        'properties': {
-            'type': {'const': 'delimiter'},
-            'delimiter': {'type': 'string'},
-            'trimWhiteSpace': {'type': 'boolean', 'default': True}
-        },
-        'required': ['type', 'delimiter'],
-        'additionalProperties': False
-    }
+    json_schema = AitoAnalyzerSchema.delimiter_analyzer_json_schema
 
     def __init__(self, delimiter: str, trim_white_space: bool = None):
         """
@@ -478,7 +519,7 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
 
     @property
     def delimiter(self):
-        """the delimiter of the anlyzer
+        """the delimiter of the analyzer
 
         :rtype: str
         """
@@ -486,7 +527,7 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
 
     @delimiter.setter
     def delimiter(self, value):
-        jsonschema.validate(value, self.json_schema['properties']['delimiter'])
+        self._json_schema_validate(value, self.json_schema['properties']['delimiter'])
         self._delimiter = value
 
     @property
@@ -499,11 +540,11 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
 
     @trim_white_space.setter
     def trim_white_space(self, value):
-        schema = self.json_schema['properties']['trimWhiteSpace']
+        schema = self.json_schema['properties']['trimWhitespace']
         if value is None:
             value = schema['default']
         else:
-            jsonschema.validate(value, schema)
+            self._json_schema_validate(value, schema)
         self._trim_white_space = value
 
     @property
@@ -514,15 +555,15 @@ class AitoDelimiterAnalyzerSchema(AitoAnalyzerSchema):
         return {
             'type': 'delimiter',
             'delimiter': self.delimiter,
-            'trimWhiteSpace': self.trim_white_space
+            'trimWhitespace': self.trim_white_space
         }
 
     @classmethod
     def from_deserialized_object(cls, obj):
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
         return cls(
             delimiter=obj.get('delimiter'),
-            trim_white_space=obj.get('trimWhiteSpace')
+            trim_white_space=obj.get('trimWhitespace')
         )
 
 
@@ -531,16 +572,7 @@ class AitoCharNGramAnalyzerSchema(AitoAnalyzerSchema):
 
     """
 
-    json_schema = {
-        'type': 'object',
-        'properties': {
-            'type': {'const': 'char-ngram'},
-            'minGram': {'type': 'integer', 'minimum': 1},
-            'maxGram': {'type': 'integer', 'minimum': 1}
-        },
-        'required': ['type', 'minGram', 'maxGram'],
-        'additionalProperties': False
-    }
+    json_schema = AitoAnalyzerSchema.char_ngram_analyzer_json_schema
 
     def __init__(self, min_gram: int, max_gram: int):
         """
@@ -574,7 +606,7 @@ class AitoCharNGramAnalyzerSchema(AitoAnalyzerSchema):
 
     @min_gram.setter
     def min_gram(self, value):
-        jsonschema.validate(value, self.json_schema['properties']['minGram'])
+        self._json_schema_validate(value, self.json_schema['properties']['minGram'])
         self._min_gram = value
 
     @property
@@ -583,12 +615,12 @@ class AitoCharNGramAnalyzerSchema(AitoAnalyzerSchema):
 
     @max_gram.setter
     def max_gram(self, value):
-        jsonschema.validate(value, self.json_schema['properties']['maxGram'])
+        self._json_schema_validate(value, self.json_schema['properties']['maxGram'])
         self._max_gram = value
 
     @classmethod
     def from_deserialized_object(cls, obj):
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
         return cls(
             min_gram=obj.get('minGram'),
             max_gram=obj.get('maxGram')
@@ -600,18 +632,7 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
 
     """
 
-    json_schema = {
-        'type': 'object',
-        'properties': {
-            'type': {'const': 'token-ngram'},
-            'source': {'type': 'object'},
-            'minGram': {'type': 'integer', 'minimum': 1},
-            'maxGram': {'type': 'integer', 'minimum': 1},
-            'tokenSeparator': {'type': 'string', 'default': ' '}
-        },
-        'required': ['type', 'source', 'minGram', 'maxGram'],
-        'additionalProperties': False
-    }
+    json_schema = AitoAnalyzerSchema.token_ngram_analyzer_json_schema
 
     def __init__(self, source: AitoAnalyzerSchema, min_gram: int, max_gram: int, token_separator: str = None):
         """
@@ -645,7 +666,7 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
     @source.setter
     def source(self, value):
         if not isinstance(value, AitoAnalyzerSchema):
-            raise ValueError('source analyzer must be of type AitoAnalyzerSchema')
+            self._raise_validation_error('source analyzer must be of type AitoAnalyzerSchema')
         self._source = value
 
     @property
@@ -654,7 +675,7 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
 
     @min_gram.setter
     def min_gram(self, value):
-        jsonschema.validate(value, self.json_schema['properties']['minGram'])
+        self._json_schema_validate(value, self.json_schema['properties']['minGram'])
         self._min_gram = value
 
     @property
@@ -663,7 +684,7 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
 
     @max_gram.setter
     def max_gram(self, value):
-        jsonschema.validate(value, self.json_schema['properties']['maxGram'])
+        self._json_schema_validate(value, self.json_schema['properties']['maxGram'])
         self._max_gram = value
 
     @property
@@ -680,7 +701,7 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
         if value is None:
             value = schema['default']
         else:
-            jsonschema.validate(value, schema)
+            self._json_schema_validate(value, schema)
         self._token_separator = value
 
     @property
@@ -698,7 +719,7 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
 
     @classmethod
     def from_deserialized_object(cls, obj):
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
         return cls(
             source=AitoAnalyzerSchema.from_deserialized_object(obj.get('source')),
             min_gram=obj.get('minGram'),
@@ -710,7 +731,7 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
 class AitoDataTypeSchema(AitoSchema, ABC):
     """The base class for Aito DataType"""
 
-    _supported_data_types = ("Boolean", "Decimal", "Int", "String", "Text")
+    _supported_data_types = ["Boolean", "Decimal", "Int", "String", "Text"]
     _pandas_dtypes_name_to_aito_type = {
         'string': 'Text',
         'bytes': 'String',
@@ -741,7 +762,7 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         :type aito_dtype: str
         """
         if aito_dtype not in self._supported_data_types:
-            raise ValueError(
+            self._raise_validation_error(
                 f"unrecognized data type `{aito_dtype}`. "
                 f"Data type must be one of {'|'.join(self._supported_data_types)}"
             )
@@ -810,7 +831,7 @@ class AitoDataTypeSchema(AitoSchema, ABC):
 
     @classmethod
     def from_deserialized_object(cls, obj: str) -> 'AitoDataTypeSchema':
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
         if obj == 'Boolean':
             return AitoBooleanType()
         if obj == 'Int':
@@ -940,11 +961,13 @@ class AitoColumnLinkSchema(AitoSchema):
 
     @classmethod
     def from_deserialized_object(cls, obj: str) -> "AitoColumnLinkSchema":
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
         splitted = obj.split('.')
         if not splitted or len(splitted) != 2:
-            raise ValueError(
-                f'invalid link. The link must contain table and column in the format `<table_name>.<column_name>`'
+            raise ValidationError(
+                cls.__name__,
+                'invalid link. The link must contain table and column in the format `<table_name>.<column_name>`',
+                LOG
             )
         return cls(splitted[0], splitted[1])
 
@@ -1009,9 +1032,9 @@ class AitoColumnTypeSchema(AitoSchema):
     @data_type.setter
     def data_type(self, value):
         if not isinstance(value, AitoDataTypeSchema):
-            raise TypeError('data_type must be of type AitoDataTypeSchema')
+            self._raise_validation_error('data_type must be of type AitoDataTypeSchema')
         if self.analyzer and not value.is_text:
-            raise ValueError(f"{value} does not support analyzer")
+            self._raise_validation_error(f"{value} does not support analyzer")
         self._data_type = value
 
     @property
@@ -1028,7 +1051,7 @@ class AitoColumnTypeSchema(AitoSchema):
         if value is None:
             value = schema['default']
         else:
-            jsonschema.validate(value, schema)
+            self._json_schema_validate(value, schema)
         self._nullable = value
 
     @property
@@ -1043,7 +1066,7 @@ class AitoColumnTypeSchema(AitoSchema):
     def link(self, value):
         if value is not None:
             if not isinstance(value, AitoColumnLinkSchema):
-                raise TypeError('link must be of type AitoColumnLinkSchema')
+                self._raise_validation_error('link must be of type AitoColumnLinkSchema')
         self._link = value
 
     @property
@@ -1058,9 +1081,9 @@ class AitoColumnTypeSchema(AitoSchema):
     def analyzer(self, value):
         if value is not None:
             if not self.data_type.is_text:
-                raise ValueError(f"{self.data_type} does not support analyzer")
+                self._raise_validation_error(f"{self.data_type} does not support analyzer")
             if not isinstance(value, AitoAnalyzerSchema):
-                raise TypeError('analyzer must be of type AitoAnalyzerSchema')
+                self._raise_validation_error('analyzer must be of type AitoAnalyzerSchema')
         self._analyzer = value
 
     @property
@@ -1085,7 +1108,7 @@ class AitoColumnTypeSchema(AitoSchema):
 
     @classmethod
     def from_deserialized_object(cls, obj: Dict):
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
         data_type = AitoDataTypeSchema.from_deserialized_object(obj.get('type'))
         analyzer_data = obj.get('analyzer')
         analyzer = AitoAnalyzerSchema.from_deserialized_object(analyzer_data) if analyzer_data is not None else None
@@ -1140,23 +1163,23 @@ class AitoTableSchema(AitoSchema):
     >>> table_schema = AitoTableSchema.infer_from_pandas_data_frame(df)
     >>> table_schema
     {
-        "columns": {
-            "id": {
-                "nullable": false,
-                "type": "Int"
-            },
-            "name": {
-                "nullable": false,
-                "type": "String"
-            }
+      "columns": {
+        "id": {
+          "nullable": false,
+          "type": "Int"
         },
-        "type": "table"
+        "name": {
+          "nullable": false,
+          "type": "String"
+        }
+      },
+      "type": "table"
     }
 
     >>> table_schema['name']
     {
-        "nullable": false,
-        "type": "String"
+      "nullable": false,
+      "type": "String"
     }
 
     change the property of a column
@@ -1164,18 +1187,18 @@ class AitoTableSchema(AitoSchema):
     >>> table_schema['name'].nullable = True
     >>> table_schema['name']
     {
-        "nullable": true,
-        "type": "String"
+      "nullable": true,
+      "type": "String"
     }
     """
 
     json_schema = {
         'type': 'object',
         'properties': {
-            'type': {'const': 'table'},
+            'type': {'enum': ['table']},
             'columns': {
-                'type': 'array',
-                'items': AitoColumnTypeSchema.json_schema
+                'type': 'object',
+                'additionalProperties': AitoColumnTypeSchema.json_schema
             }
         },
         'required': ['type', 'columns'],
@@ -1185,7 +1208,7 @@ class AitoTableSchema(AitoSchema):
     def __init__(self, columns: Dict[str, AitoColumnTypeSchema]):
         """
 
-        :param columns: a dictionary of the table's columns' name and scheam
+        :param columns: a dictionary of the table's columns' name and schema
         :type columns: Dict[str, AitoColumnTypeSchema]
         """
         self._columns = columns
@@ -1234,20 +1257,20 @@ class AitoTableSchema(AitoSchema):
         """get the column schema of the specified column name
         """
         if not isinstance(column_name, str):
-            raise TypeError('the name of the column must be of type string')
+            self._raise_validation_error('the name of the column must be of type string')
         if column_name not in self._columns:
-            raise KeyError(f'column `{column_name}` does not exist')
+            self._raise_validation_error(f'column `{column_name}` does not exist')
         return self._columns[column_name]
 
     def __setitem__(self, column_name: str, value):
         """update the column schema of the specified column name
         """
         if not isinstance(column_name, str):
-            raise TypeError('the name of the column must be of type string')
+            self._raise_validation_error('the name of the column must be of type string')
         if column_name not in self._columns:
-            raise KeyError(f'column `{column_name}` does not exist')
+            self._raise_validation_error(f'column `{column_name}` does not exist')
         if not isinstance(value, AitoColumnTypeSchema):
-            raise TypeError('column shchema must be of type AitoColumnTypeSchema')
+            self._raise_validation_error('column schema must be of type AitoColumnTypeSchema')
         self._columns[column_name] = value
 
     def has_column(self, column_name: str) -> bool:
@@ -1269,12 +1292,12 @@ class AitoTableSchema(AitoSchema):
         :type column_schema: AitoColumnTypeSchema
         """
         if self.has_column(column_name):
-            raise ValueError(f'column `{column_name}` already exists')
+            self._raise_validation_error(f'column `{column_name}` already exists')
         self._columns[column_name] = column_schema
 
     @classmethod
     def from_deserialized_object(cls, obj):
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
 
         columns_data = obj.get('columns')
         columns = {
@@ -1361,20 +1384,20 @@ class AitoDatabaseSchema(AitoSchema):
         """get the schema of the specified table
         """
         if not isinstance(table_name, str):
-            raise TypeError('the name of the column must be of type string')
+            self._raise_validation_error('the name of the column must be of type string')
         if table_name not in self._tables:
-            raise KeyError(f'table `{table_name}` does not exist')
+            self._raise_validation_error(f'table `{table_name}` does not exist')
         return self._tables[table_name]
 
     def __setitem__(self, table_name: str, value):
         """update the schema of the specified table
         """
         if not isinstance(table_name, str):
-            raise TypeError('the name of the column must be of type string')
+            self._raise_validation_error('the name of the column must be of type string')
         if table_name not in self._tables:
-            raise KeyError(f'table `{table_name}` does not exist')
+            self._raise_validation_error('table `{table_name}` does not exist')
         if not isinstance(value, AitoTableSchema):
-            raise TypeError('the table schema must be of type AitoTableSchema')
+            self._raise_validation_error('the table schema must be of type AitoTableSchema')
         self._tables[table_name] = value
 
     def has_table(self, table_name: str) -> bool:
@@ -1396,12 +1419,12 @@ class AitoDatabaseSchema(AitoSchema):
         :type table_schema: AitoTableSchema
         """
         if self.has_table(table_name):
-            raise ValueError(f'table `{table_name}` already exists')
+            self._raise_validation_error(f'table `{table_name}` already exists')
         self._tables[table_name] = table_schema
 
     @classmethod
     def from_deserialized_object(cls, obj):
-        jsonschema.validate(obj, cls.json_schema)
+        cls._json_schema_validate(obj, cls.json_schema)
         schema_data = obj.get('schema')
         tables = {
             tbl_name: AitoTableSchema.from_deserialized_object(tbl_data) for tbl_name, tbl_data in schema_data.items()
@@ -1423,7 +1446,7 @@ class AitoDatabaseSchema(AitoSchema):
                 col_link = col_schema.link
                 col_linked_table_name = col_link.linked_table_name
                 if col_linked_table_name not in self.tables:
-                    raise ValueError(f'column {col_name} link to non-exist table{col_linked_table_name}')
+                    self._raise_validation_error(f'column {col_name} link to non-exist table{col_linked_table_name}')
                 linked_columns += [
                     f'{col_linked_table_name}.{linked_tbl_col}'
                     for linked_tbl_col in self.__getitem__(col_linked_table_name).columns

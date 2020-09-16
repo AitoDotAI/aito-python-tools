@@ -41,11 +41,11 @@ class TestAitoAnalyzerSchema(BaseTestCase):
         self.assertEqual(AitoAnalyzerSchema.from_deserialized_object(deserialized_obj), expected)
 
     @parameterized.expand([
-        ('invalid_alias', 'spacewhite', ValueError),
-        ('missing_type', {'minGram': 1, 'maxGram': 2}, ValueError),
-        ('invalid_language', {'type': 'language', 'language': 'elvish'}, ValueError),
-        ('no_delimiter', {'type': 'delimiter', 'trimWhiteSpace': True}, ValueError),
-        ('invalid_source', {'type': 'token-ngram', 'source': 'aGram', 'minGram': 1, 'maxGram': 2}, ValueError),
+        ('invalid_alias', 'spacewhite', ValidationError),
+        ('missing_type', {'minGram': 1, 'maxGram': 2}, ValidationError),
+        ('invalid_language', {'type': 'language', 'language': 'elvish'}, ValidationError),
+        ('no_delimiter', {'type': 'delimiter', 'trimWhitespace': True}, ValidationError),
+        ('invalid_source', {'type': 'token-ngram', 'source': 'aGram', 'minGram': 1, 'maxGram': 2}, ValidationError),
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
         with self.assertRaises(error):
@@ -68,7 +68,7 @@ class TestAitoAnalyzerSchema(BaseTestCase):
         (
                 'delimiter',
                 AitoDelimiterAnalyzerSchema(delimiter=','),
-                {'type': 'delimiter', 'delimiter': ',', 'trimWhiteSpace': True}
+                {'type': 'delimiter', 'delimiter': ',', 'trimWhitespace': True}
         ),
         ('char-ngram', AitoCharNGramAnalyzerSchema(1, 2), {'type': 'char-ngram', 'minGram': 1, 'maxGram': 2}),
         (
@@ -142,7 +142,7 @@ class TestAitoDataType(BaseTestCase):
         ('not string', {'type': 'String'})
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             AitoAnalyzerSchema.from_deserialized_object(deserialized_obj)
 
     def test_comparison(self):
@@ -217,11 +217,11 @@ class TestAitoColumnTypeSchema(BaseTestCase):
         self.assertEqual(AitoColumnTypeSchema.from_deserialized_object(deserialized_obj), expected)
 
     @parameterized.expand([
-        ('missing_type', {'analyzer': 'fi'}, ValueError),
-        ('invalid_type', {'type': 'array'}, ValueError),
-        ('invalid_analyzer', {'type': 'Text', 'analyzer': 'elvish'}, ValueError),
-        ('unsupported_analyzer', {'type': 'String', 'analyzer': 'english'}, ValueError),
-        ('invalid_link', {'type': 'Int', 'link': 'infinity'}, ValueError),
+        ('missing_type', {'analyzer': 'fi'}, ValidationError),
+        ('invalid_type', {'type': 'array'}, ValidationError),
+        ('invalid_analyzer', {'type': 'Text', 'analyzer': 'elvish'}, ValidationError),
+        ('unsupported_analyzer', {'type': 'String', 'analyzer': 'english'}, ValidationError),
+        ('invalid_link', {'type': 'Int', 'link': 'infinity'}, ValidationError),
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
         with self.assertRaises(error):
@@ -296,9 +296,9 @@ class TestAitoTableSchema(BaseTestCase):
         )
 
     @parameterized.expand([
-        ('missing_type', {'columns': {'col1': {'type': 'Int'}}}, ValueError),
-        ('wrong_type', {'type': 'something_else', 'columns': {}}, ValueError),
-        ('invalid_column', {'type': 'table', 'columns': {'col2': {'type': 'array'}}}, ValueError)
+        ('missing_type', {'columns': {'col1': {'type': 'Int'}}}, ValidationError),
+        ('wrong_type', {'type': 'something_else', 'columns': {}}, ValidationError),
+        ('invalid_column', {'type': 'table', 'columns': {'col2': {'type': 'array'}}}, ValidationError)
 
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
@@ -375,8 +375,8 @@ class TestAitoDatabaseSchema(BaseTestCase):
         )
 
     @parameterized.expand([
-        ('missing_schema', {'tbl1': {'type': 'table', 'columns': {'col1': {'type': 'Boolean'}}}}, ValueError),
-        ('invalid_table', {'schema': {'tbl1': {'type': 'table', 'columns': {'col1': {}}}}}, ValueError)
+        ('missing_schema', {'tbl1': {'type': 'table', 'columns': {'col1': {'type': 'Boolean'}}}}, ValidationError),
+        ('invalid_table', {'schema': {'tbl1': {'type': 'table', 'columns': {'col1': {}}}}}, ValidationError)
     ])
     def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
         with self.assertRaises(error):
