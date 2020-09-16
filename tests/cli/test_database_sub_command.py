@@ -11,7 +11,7 @@ from uuid import uuid4
 from aito.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries
 from aito.cli.parser import get_credentials_file_config
 from aito.client import AitoClient
-from aito.client import RequestError, BaseError
+from aito.client import RequestError
 from aito.schema import AitoTableSchema, AitoDatabaseSchema
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
@@ -31,15 +31,18 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         cls.default_table_schema = AitoTableSchema.from_deserialized_object(json_schema)
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
 
+    def setUp(self):
+        super().setUp()
+
+        def _default_clean_up():
+            try:
+                delete_table(self.client, self.default_table_name)
+            except Exception as e:
+                self.logger.error(f"failed to delete table in cleanup: {e}")
+        self.addCleanup(_default_clean_up)
+
     def create_table(self):
         create_table(self.client, self.default_table_name, self.default_table_schema)
-
-    def tearDown(self):
-        super().tearDown()
-        try:
-            delete_table(self.client, self.default_table_name)
-        except Exception as e:
-            self.logger.error(f"failed to delete table in tearDown: {e}")
 
     def compare_table_entries_to_file_content(self, table_name: str, exp_file_path: Path, compare_order: bool = False):
         table_entries = query_entries(self.client, table_name)
@@ -273,8 +276,14 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         )
 
     def test_copy_table(self):
-        self.create_table()
         copy_table_name = f'{self.default_table_name}_copy'
+
+        def clean_up():
+            delete_table(self.client, copy_table_name)
+        self.addCleanup(clean_up)
+
+        self.create_table()
+
         expected_args = {
             'command': 'copy-table',
             'table-name': self.default_table_name,
@@ -289,13 +298,15 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.assertIn(self.default_table_name, db_tables)
         self.assertIn(copy_table_name, db_tables)
 
+    def test_rename_table(self):
+        rename_table_name = f'{self.default_table_name}_rename'
+
         def clean_up():
-            delete_table(self.client, copy_table_name)
+            delete_table(self.client, rename_table_name)
         self.addCleanup(clean_up)
 
-    def test_rename_table(self):
         self.create_table()
-        rename_table_name = f'{self.default_table_name}_rename'
+
         expected_args = {
             'command': 'rename-table',
             'old-name': self.default_table_name,
@@ -309,10 +320,6 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         db_tables = get_existing_tables(self.client)
         self.assertIn(rename_table_name, db_tables)
         self.assertNotIn(self.default_table_name, db_tables)
-
-        def clean_up():
-            delete_table(self.client, rename_table_name)
-        self.addCleanup(clean_up)
 
     def test_show_tables(self):
         self.addCleanup(self.delete_out_file)
