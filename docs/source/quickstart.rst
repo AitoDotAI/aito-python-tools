@@ -162,7 +162,7 @@ You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFram
       "created_utc": {
         "analyzer": {
           "delimiter": ":",
-          "trimWhiteSpace": true,
+          "trimWhitespace": true,
           "type": "delimiter"
         },
         "nullable": false,
@@ -171,7 +171,7 @@ You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFram
       "date": {
         "analyzer": {
           "delimiter": "-",
-          "trimWhiteSpace": true,
+          "trimWhitespace": true,
           "type": "delimiter"
         },
         "nullable": false,

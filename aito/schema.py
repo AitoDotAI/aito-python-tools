@@ -10,11 +10,12 @@ from abc import abstractmethod, ABC
 from collections import Counter
 from csv import Sniffer, Error as csvError
 from typing import List, Iterable, Dict, Optional
-from jsonschema import validate, Draft7Validator
+
+import pandas as pd
+from jsonschema import Draft7Validator
+from langdetect import detect_langs
 
 from aito.exceptions import ValidationError
-import pandas as pd
-from langdetect import detect_langs
 
 LOG = logging.getLogger('AitoSchema')
 
@@ -101,10 +102,9 @@ class AitoSchema(ABC):
 
     @classmethod
     def _json_schema_validate(cls, obj, schema):
-        try:
-            validate(instance=obj, schema=schema, cls=Draft7Validator)
-        except Exception as e:
-            raise ValidationError(cls.__name__, e, LOG) from None
+        validator = Draft7Validator(schema)
+        for err in validator.iter_errors(obj):
+            raise ValidationError(cls.__name__, err, LOG) from None
 
     def _raise_validation_error(self, e):
         raise ValidationError(self.__class__.__name__, e, LOG)
@@ -208,7 +208,7 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
         'additionalProperties': False
     }
 
-    json_schema = {'anyOf': [
+    json_schema = {'oneOf': [
         alias_analyzer_json_schema,
         language_analyzer_json_schema,
         delimiter_analyzer_json_schema,
