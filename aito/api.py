@@ -651,7 +651,7 @@ def naive_predict(
         (predicting_col, linked_col) = predicting_field_splitted
         if predicting_col not in table_schema.columns:
             raise ValueError(f"table `{from_table}` does not have column `{predicting_col}`")
-        linked_table = table_schema.links[predicting_col].linked_table_name
+        linked_table = table_schema.links[predicting_col].table_name
         if linked_col not in database_schema[linked_table].columns:
             raise ValueError(f"linked table `{linked_table}` does not have column `{linked_col}`")
     else:
