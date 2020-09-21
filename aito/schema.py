@@ -1221,14 +1221,6 @@ class AitoTableSchema(AitoSchema):
     def comparison_properties(self) -> Iterable[str]:
         return ['columns_schemas']
 
-    def to_json_serializable(self):
-        return {
-            "type": "table",
-            "columns": {
-                col_name: col_type.to_json_serializable() for col_name, col_type in self._columns.items()
-            }
-        }
-
     @property
     def columns(self) -> List[str]:
         """list of the table's columns name
@@ -1294,6 +1286,14 @@ class AitoTableSchema(AitoSchema):
         if self.has_column(column_name):
             self._raise_validation_error(f'column `{column_name}` already exists')
         self._columns[column_name] = column_schema
+
+    def to_json_serializable(self):
+        return {
+            "type": "table",
+            "columns": {
+                col_name: col_type.to_json_serializable() for col_name, col_type in self._columns.items()
+            }
+        }
 
     @classmethod
     def from_deserialized_object(cls, obj):
