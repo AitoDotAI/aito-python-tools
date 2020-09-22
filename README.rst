@@ -148,5 +148,10 @@ Contributing
   - Update .rst file in docs/source folder (e.g: Add a new Client function to docs/source/sdk.rst)
 
 - Add inline doc test if applicable (e.g: inline doc test for Aito Client: `tests/inline_docs/test_client_inline_docs.py`)
+
+.. note::
+
+  Remember to update the `autodoc_mock_imports` in conf.py file if there are additional requirements
+
 - Check CircleCI and issue a PR
 - Deploy to production (scripts/deploy) with the appropriate version after the PR is reviewed

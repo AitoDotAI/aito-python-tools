@@ -1143,7 +1143,7 @@ class AitoTableSchema(AitoSchema):
 
     add a column to the table schema
 
-    >>> table_schema['description'] = AitoColumnTypeSchema('Text', nullable=True)
+    >>> table_schema['description'] = AitoColumnTypeSchema(AitoTextType(), nullable=True)
     >>> table_schema
     {
       "columns": {
@@ -1156,7 +1156,7 @@ class AitoTableSchema(AitoSchema):
           "type": "Int"
         },
         "name": {
-          "nullable": false,
+          "nullable": true,
           "type": "String"
         }
       },
