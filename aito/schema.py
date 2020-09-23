@@ -1168,6 +1168,15 @@ class AitoTableSchema(AitoSchema):
     >>> del table_schema['description']
     >>> table_schema.columns
     ['id', 'name']
+
+    check if a column exist in the table schema
+
+    >>> 'id' in table_schema
+    True
+
+    iterate over the table schema
+    >>> for col in table_schema:
+    ...     table_schema[col].nullable = False
     """
 
     def __init__(self, columns: Dict[str, AitoColumnTypeSchema]):
@@ -1234,6 +1243,12 @@ class AitoTableSchema(AitoSchema):
         if key not in self._columns:
             raise KeyError(f'column `{key}` does not exist')
         del self._columns[key]
+
+    def __contains__(self, item):
+        return item in self._columns
+
+    def __iter__(self):
+        return iter(self._columns)
 
     def has_column(self, column_name: str) -> bool:
         """check if the table has the specified column
@@ -1317,7 +1332,7 @@ class AitoDatabaseSchema(AitoSchema):
 
                     linked_table_schema = self._tables[linked_tbl_name]
                     linked_col_name = link.column_name
-                    if not linked_table_schema.has_column(linked_col_name):
+                    if linked_col_name not in linked_table_schema:
                         raise ValueError(f'column {tbl_name}.{col_name} link to non-exist column '
                                          f'{linked_tbl_name}.{linked_col_name}')
 
@@ -1376,6 +1391,12 @@ class AitoDatabaseSchema(AitoSchema):
         if key not in self._tables:
             raise KeyError(f'table `{key}` does not exist')
         del self._tables[key]
+
+    def __contains__(self, item):
+        return item in self._tables
+
+    def __iter__(self):
+        return iter(self._tables)
 
     def has_table(self, table_name: str) -> bool:
         """check if the database has the specified table
