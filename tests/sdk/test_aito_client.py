@@ -1,11 +1,14 @@
-import json
+import asyncio
 import os
-from uuid import uuid4
 
+from aiohttp import ClientSession
 from parameterized import parameterized
 
-from aito.client_request import BaseRequest
 from aito.client import AitoClient, Error, RequestError
+from aito.client_request import BaseRequest, SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
+    SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest
+from aito.client_response import SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
+    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
 from tests.cases import CompareTestCase
 
 
@@ -35,6 +38,67 @@ class TestAitoClientGroceryCase(CompareTestCase):
         super().setUpClass()
         env_var = os.environ
         cls.client = AitoClient(env_var['AITO_GROCERY_DEMO_INSTANCE_URL'], env_var['AITO_GROCERY_DEMO_API_KEY'])
+        cls.loop = asyncio.new_event_loop()
+
+    @parameterized.expand([
+        ('search', SearchRequest, {"from": "users"}, SearchResponse),
+        (
+                'predict',
+                PredictRequest,
+                {"from": "products", "where": {"name": "Pirkka banana"}, "predict": "tags"},
+                PredictResponse
+        ),
+        (
+                'recommend',
+                RecommendRequest,
+                {"from": "impressions", "recommend": "product", "goal": {"session.user": "veronica"}},
+                RecommendResponse
+        ),
+        (
+                'evaluate',
+                EvaluateRequest,
+                {
+                    "test": {"$index": {"$mod": [10, 0]}},
+                    "evaluate": {
+                        "from": "products",
+                        "where": {"name": {"$get": "name"}},
+                        "match": "tags"
+                    }
+                },
+                EvaluateResponse
+        ),
+        (
+                'similarity',
+                SimilarityRequest,
+                {"from": "products", "similarity": {"name": "rye bread"}},
+                SimilarityResponse
+        ),
+        (
+                'match',
+                MatchRequest,
+                {"from": "impressions", "where": {"session.user": "veronica"}, "match": "product"},
+                MatchResponse
+        ),
+        ('relate', RelateRequest, {"from": "products", "where": {"$exists": "name"}, "relate": "tags"}, RelateResponse),
+        (
+                'generic',
+                GenericQueryRequest,
+                {"from": "products", "where": {"name": "Pirkka banana"}, "get": "tags", "orderBy": "$p"},
+                HitsResponse
+        ),
+    ])
+    def test_request(self, _, request_cls, query, response_cls):
+        async def test_async_request():
+            async with ClientSession() as session:
+                a_resp = await self.client.async_request(session, request_cls(query))
+                self.assertTrue(isinstance(a_resp, response_cls))
+
+        self.logger.debug('test normal request')
+        req = request_cls(query)
+        resp = self.client.request(req)
+        self.assertTrue(isinstance(resp, response_cls))
+
+        self.loop.run_until_complete(test_async_request())
 
     @parameterized.expand([
         ('default_max_concurrent', 10),

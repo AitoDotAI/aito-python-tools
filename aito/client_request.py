@@ -53,6 +53,10 @@ class BaseRequest:
     def __str__(self):
         return f'{self.method}({self.endpoint}): {str(self.query)[:100]}'
 
+    def _is_same_type(self, req: 'BaseRequest'):
+        """check if another request object is of the same type by comaring method and endpoint"""
+        return self.method == req.method and self.endpoint == req.endpoint
+
 
 class SearchRequest(BaseRequest):
     def __init__(self, query: Dict):

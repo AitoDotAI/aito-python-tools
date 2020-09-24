@@ -10,6 +10,10 @@ from typing import Dict, List, Union, Tuple, Optional
 import requests as requestslib
 from aiohttp import ClientSession, ClientResponseError
 
+from .client_request import BaseRequest, SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
+    SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest
+from .client_response import BaseResponse, SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
+    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
 from aito.exceptions import BaseError
 LOG = logging.getLogger('AitoClient')
 
@@ -26,14 +30,16 @@ class RequestError(Error):
     """An error occurred when sending a request to the Aito instance
 
     """
-    def __init__(self, request: BaseRequest, error: Exception):
+    def __init__(self, request_obj: BaseRequest, error: Exception):
         """
 
-        :param request: the request object
-        :type request: BaseRequest
+        :param request_obj: the request object
+        :type request_obj: BaseRequest
         :param error: the error
         :type error: Exception
         """
+        self.request_obj = request_obj
+        self.error = error
         if isinstance(error, requestslib.HTTPError):
             resp = error.response.json()
             error_msg = resp['message'] if 'message' in resp else resp
@@ -41,14 +47,31 @@ class RequestError(Error):
             error_msg = error.message
         else:
             error_msg = str(error)
-        super().__init__(f'failed to {request}: {error_msg}')
+        super().__init__(f'failed to {request_obj}: {error_msg}')
 
 
 class AitoClient:
     """A versatile client that connects to the Aito Database Instance
 
     """
-    def __init__(self, instance_url: str, api_key: str, check_credentials: Optional[bool] = True):
+    _request_response_map = {
+        SearchRequest: SearchResponse,
+        PredictRequest: PredictResponse,
+        RecommendRequest: RecommendResponse,
+        EvaluateRequest: EvaluateResponse,
+        SimilarityRequest: SimilarityResponse,
+        MatchRequest: MatchResponse,
+        RelateRequest: RelateResponse,
+        GenericQueryRequest: HitsResponse
+    }
+
+    def __init__(
+            self,
+            instance_url: str,
+            api_key: str,
+            check_credentials: bool = True,
+            raise_for_status: bool = True
+    ):
         """
 
         :param instance_url: Aito instance url
@@ -56,7 +79,9 @@ class AitoClient:
         :param api_key: Aito instance API key
         :type api_key: str
         :param check_credentials: check the given credentials by requesting the Aito instance version, defaults to True
-        :type check_credentials: Optional[bool]
+        :type check_credentials: bool
+        :param raise_for_status: automatically raise RequestError for each failed response, defaults to True
+        :type raise_for_status: bool
         :raises BaseError: an error occurred during the creation of AitoClient
 
         >>> aito_client = AitoClient(your_instance_url, your_api_key) # doctest: +SKIP
@@ -65,6 +90,7 @@ class AitoClient:
         """
         self.instance_url = instance_url.strip("/")
         self.api_key = api_key
+        self.raise_for_status = raise_for_status
         if check_credentials:
             try:
                 self.request(BaseRequest('GET', '/version'))
@@ -73,22 +99,34 @@ class AitoClient:
 
     @property
     def headers(self):
-        """
+        """ the headers that will be used to send a request to the Aito instance
 
-        :return: the headers that will be used to send a request to the Aito instance
         :rtype: Dict
         """
         return {'Content-Type': 'application/json', 'x-api-key': self.api_key}
 
-    def request(self, request: BaseRequest) -> Dict:
-        """make a request to an Aito API endpoint
-        The client returns a JSON response if the request succeed and a :class:`.RequestError` if the request failed
+    # noinspection PyProtectedMember
+    def _get_response(self, request: BaseRequest, json_response: Dict):
+        """return the appropriate response object"""
+        for req_type, resp_type in self._request_response_map.items():
+            if request._is_same_type(req_type({})):
+                return resp_type(json_response)
+        return BaseResponse(json_response)
 
-        :param request: request object
-        :type request: BaseRequest
-        :raises RequestError: an error occurred during the execution of the request
-        :return: request JSON content
-        :rtype: Dict
+    def request(
+            self, request_obj: BaseRequest, raise_for_status: Optional[bool] = None
+    ) -> Union[BaseResponse, RequestError]:
+        """make a request to an Aito API endpoint
+        The client returns a JSON response if the request succeed and a :class:`.RequestError` if the request fails
+
+        :param request_obj: request object
+        :type request_obj: BaseRequest
+        :param raise_for_status: raise :class:`.RequestError` if the request fails.
+        If set to None, value from Client will be used. Defaults to True
+        :type raise_for_status: bool
+        :raises RequestError: an error occurred during the execution of the request and raise_for_status
+        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
+        :rtype: Union[BaseResponse, RequestError]
 
         Simple request to get the schema of a table:
 
@@ -128,46 +166,65 @@ class AitoClient:
          """
         try:
             resp = requestslib.request(
-                method=request.method,
-                url=self.instance_url + request.endpoint,
+                method=request_obj.method,
+                url=self.instance_url + request_obj.endpoint,
                 headers=self.headers,
-                json=request.query
+                json=request_obj.query
             )
             resp.raise_for_status()
             json_resp = resp.json()
         except Exception as e:
-            raise RequestError(request, e)
-        return json_resp
+            req_err = RequestError(request_obj, e)
+            _raise = raise_for_status if raise_for_status is not None else self.raise_for_status
+            if _raise:
+                raise req_err
+            else:
+                return req_err
+        return self._get_response(request_obj, json_resp)
 
     async def async_request(
-            self, session: ClientSession, request: BaseRequest
-    ) -> Tuple[int, Union[Dict, List]]:
+            self, session: ClientSession, request_obj: BaseRequest, raise_for_status: Optional[bool] = None
+    ) -> Union[BaseResponse, RequestError]:
         """execute a request asynchronously using aiohttp ClientSession
 
         :param session: aiohttp ClientSession for making request
         :type session: ClientSession
-        :param request: the request object
-        :type request: BaseRequest
+        :param request_obj: the request object
+        :type request_obj: BaseRequest
+        :param raise_for_status: raise :class:`.RequestError` if the request fails.
+        If set to None, value from Client will be used. Defaults to True
+        :type raise_for_status: bool
+        :raises RequestError: an error occurred during the execution of the request and raise_for_status
         """
-        LOG.debug(f'async {request}')
-        async with session.request(
-                method=request.method,
-                url=self.instance_url + request.endpoint,
-                json=request.query,
-                headers=self.headers) as resp:
-            return resp.status, await resp.json()
+        LOG.debug(f'async {request_obj}')
+        try:
+            async with session.request(
+                    method=request_obj.method,
+                    url=self.instance_url + request_obj.endpoint,
+                    json=request_obj.query,
+                    headers=self.headers,
+                    raise_for_status=True
+            ) as resp:
+                return self._get_response(request_obj, await resp.json())
+        except Exception as e:
+            req_err = RequestError(request_obj, e)
+            _raise = raise_for_status if raise_for_status is not None else self.raise_for_status
+            if _raise:
+                raise req_err
+            else:
+                return req_err
 
-    async def bounded_async_request(self, semaphore: asyncio.Semaphore, *args) -> Tuple[int, Union[Dict, List]]:
+    async def bounded_async_request(self, semaphore: asyncio.Semaphore, **kwargs) -> Union[BaseResponse, RequestError]:
         """bounded concurrent requests with asyncio semaphore
 
         :param semaphore: asyncio Semaphore
         :type semaphore: asyncio.Semaphore
-        :param args: :func:`.async_request` arguments
+        :param kwargs: :func:`.async_request` keyword arguments
         :return: tuple of request status code and request json content
         :rtype: Tuple[int, Union[Dict, List]]
         """
         async with semaphore:
-            return await self.async_request(*args)
+            return await self.async_request(**kwargs)
 
     def async_requests(
             self,
@@ -175,7 +232,7 @@ class AitoClient:
             endpoints: List[str],
             queries: List[Union[List, Dict]],
             batch_size: int = 10
-    ) -> List[Dict]:
+    ) -> List[BaseResponse]:
         """
         .. deprecated:: 0.4.0
 
@@ -193,12 +250,12 @@ class AitoClient:
             self,
             requests: List[BaseRequest],
             max_concurrent_requests: int = 10
-    ) -> List[Dict]:
+    ) -> List[BaseResponse]:
         """execute a batch of requests asynchronously
 
         This method is useful when sending a batch of requests, for example, when sending a batch of predict requests.
 
-        :param requests: list of request object
+        :param requests: list of request objects
         :type requests: List[BaseRequest]
         :param max_concurrent_requests: the number of queries to be sent per batch
         :type max_concurrent_requests: int
@@ -230,19 +287,13 @@ class AitoClient:
         """
         async def run():
             async with ClientSession() as session:
-                tasks = [self.bounded_async_request(semaphore, session, req) for req in requests]
-                return await asyncio.gather(*tasks, return_exceptions=True)
+                tasks = [
+                    self.bounded_async_request(semaphore, session=session, request_obj=req, raise_for_status=False)
+                    for req in requests
+                ]
+                return await asyncio.gather(*tasks)
 
         semaphore = asyncio.Semaphore(max_concurrent_requests)
         loop = asyncio.get_event_loop()
         responses = loop.run_until_complete(run())
-        for idx, resp in enumerate(responses):
-            req = requests[idx]
-            if isinstance(resp, Exception):
-                responses[idx] = RequestError(req, resp)
-            # manually handling raise for status since aiohttp doesnt return response content with raise for status
-            elif resp[0] >= 400:
-                responses[idx] = RequestError(req, resp[1])
-            else:
-                responses[idx] = resp[1]
         return responses
