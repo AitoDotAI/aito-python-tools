@@ -78,6 +78,7 @@ Aito SDK Overview
   client
   api
   client_request
+  client_response
   utils.data_frame_handler
   utils.sql_connection
 
