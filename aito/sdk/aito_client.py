@@ -1,1 +1,1 @@
-from aito.client import AitoClient, BaseError, RequestError
+from aito.client import AitoClient, Error, RequestError

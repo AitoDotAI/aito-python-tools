@@ -150,7 +150,7 @@ class TestParser(argparse.ArgumentParser):
         )
         self.add_argument('-s', '--logStdout', action='store_true', help='log to stdout as well as to a log file')
         self.add_argument(
-            '-v', '--verbose', action='store_true',
+            '-v', '--verbose', action='store_false',
             help=f"Make the test verbose (default False)"
         )
         self.add_argument('--meld', action='store_true', help='Use meld to compare out and exp file (default False)')

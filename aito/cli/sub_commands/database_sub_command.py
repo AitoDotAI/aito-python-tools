@@ -4,7 +4,7 @@ from typing import Dict
 
 from aito.api import get_database_schema, delete_database, create_table, get_table_schema, delete_table, \
     get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file
-from aito.client import AitoClient, BaseError
+from aito.client import AitoClient, Error
 from aito.schema import AitoTableSchema
 from aito.utils.data_frame_handler import DataFrameHandler
 from .sub_command import SubCommand
@@ -55,7 +55,7 @@ class ConfigureSubCommand(SubCommand):
 
         try:
             AitoClient(instance_url=new_instance_url, api_key=new_api_key, check_credentials=True)
-        except BaseError:
+        except Error:
             raise ParseError('invalid credentials, please try again')
 
         write_credentials_file_profile(parsed_args['profile'], new_instance_url, new_api_key)

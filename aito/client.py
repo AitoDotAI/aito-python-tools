@@ -10,30 +10,19 @@ from typing import Dict, List, Union, Tuple, Optional
 import requests as requestslib
 from aiohttp import ClientSession, ClientResponseError
 
-from .client_request import BaseRequest
-
+from aito.exceptions import BaseError
 LOG = logging.getLogger('AitoClient')
 
 
-class BaseError(Exception):
-    """An error occurred when using the client. Log the error message and the stack trace
+class Error(BaseError):
+    """An error occurred when using the client
 
     """
     def __init__(self, message: str):
-        """
-
-        :param message: the error message
-        :type message: str
-        """
-        LOG.error(message)
-        LOG.debug(message, stack_info=True)
-        self.message = message
-
-    def __str__(self):
-        return self.message
+        super().__init__(message, LOG)
 
 
-class RequestError(BaseError):
+class RequestError(Error):
     """An error occurred when sending a request to the Aito instance
 
     """
@@ -80,7 +69,7 @@ class AitoClient:
             try:
                 self.request(BaseRequest('GET', '/version'))
             except Exception:
-                raise BaseError('failed to instantiate Aito Client, please check your credentials')
+                raise Error('failed to instantiate Aito Client, please check your credentials')
 
     @property
     def headers(self):
