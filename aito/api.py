@@ -12,14 +12,14 @@ import ndjson
 import requests as requestslib
 
 from aito.client import AitoClient
-from aito.client_request import BaseRequest
+from aito.client_request import BaseRequest, GenericQueryRequest, PredictRequest
 from aito.schema import AitoDatabaseSchema, AitoTableSchema
 from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 
 LOG = logging.getLogger('AitoAPI')
 
 
-def get_version(client: AitoClient) -> Dict:
+def get_version(client: AitoClient) -> str:
     """get the aito instance version
 
     :param client: the AitoClient object
@@ -27,10 +27,11 @@ def get_version(client: AitoClient) -> Dict:
     :return: version information in json format
     :rtype: Dict
     """
-    return client.request(BaseRequest('GET', '/version'))
+    resp = client.request(BaseRequest('GET', '/version'))
+    return resp['version']
 
 
-def create_database(client: AitoClient, database_schema: Dict) -> Dict:
+def create_database(client: AitoClient, database_schema: Dict):
     """`create a database <https://aito.ai/docs/api/#put-api-v1-schema>`__ using the specified database schema
 
     .. note::
@@ -44,9 +45,8 @@ def create_database(client: AitoClient, database_schema: Dict) -> Dict:
     :return: the database schema
     :rtype: Dict
     """
-    r = client.request(BaseRequest('PUT', '/api/v1/schema', database_schema))
+    client.request(BaseRequest('PUT', '/api/v1/schema', database_schema))
     LOG.info('database schema created')
-    return r
 
 
 def get_database_schema(client: AitoClient) -> AitoDatabaseSchema:
@@ -57,11 +57,11 @@ def get_database_schema(client: AitoClient) -> AitoDatabaseSchema:
     :return: Aito database schema
     :rtype: Dict
     """
-    json_response = client.request(BaseRequest('GET', '/api/v1/schema'))
-    return AitoDatabaseSchema.from_deserialized_object(json_response)
+    res = client.request(BaseRequest('GET', '/api/v1/schema'))
+    return AitoDatabaseSchema.from_deserialized_object(res.json)
 
 
-def delete_database(client: AitoClient) -> Dict:
+def delete_database(client: AitoClient):
     """`delete the whole database <https://aito.ai/docs/api/#delete-api-v1-schema>`__
 
     .. note::
@@ -73,12 +73,11 @@ def delete_database(client: AitoClient) -> Dict:
     :return: deleted tables
     :rtype: Dict
     """
-    r = client.request(BaseRequest('DELETE', '/api/v1/schema'))
+    client.request(BaseRequest('DELETE', '/api/v1/schema'))
     LOG.info('database deleted')
-    return r
 
 
-def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTableSchema, Dict]) -> Dict:
+def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTableSchema, Dict]):
     """`create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__
     with the specified table name and schema
 
@@ -101,9 +100,8 @@ def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTa
         if not isinstance(table_schema, dict):
             raise ValueError("the input table schema must be either an AitoTableSchema object or a dict")
         table_schema = AitoTableSchema.from_deserialized_object(table_schema)
-    r = client.request(BaseRequest('PUT', f'/api/v1/schema/{table_name}', table_schema.to_json_serializable()))
+    client.request(BaseRequest('PUT', f'/api/v1/schema/{table_name}', table_schema.to_json_serializable()))
     LOG.info(f'table `{table_name}` created')
-    return r
 
 
 def get_table_schema(client: AitoClient, table_name: str) -> AitoTableSchema:
@@ -116,11 +114,11 @@ def get_table_schema(client: AitoClient, table_name: str) -> AitoTableSchema:
     :return: the table schema
     :rtype: AitoTableSchema
     """
-    json_response = client.request(BaseRequest('GET', f'/api/v1/schema/{table_name}'))
-    return AitoTableSchema.from_deserialized_object(json_response)
+    resp = client.request(BaseRequest('GET', f'/api/v1/schema/{table_name}'))
+    return AitoTableSchema.from_deserialized_object(resp.json)
 
 
-def delete_table(client: AitoClient, table_name: str) -> Dict:
+def delete_table(client: AitoClient, table_name: str):
     """`delete the specified table <https://aito.ai/docs/api/#delete-api-v1-schema>`__
 
     .. note::
@@ -134,9 +132,8 @@ def delete_table(client: AitoClient, table_name: str) -> Dict:
     :return: deleted table
     :rtype: Dict
     """
-    r = client.request(BaseRequest('DELETE', f'/api/v1/schema/{table_name}'))
+    client.request(BaseRequest('DELETE', f'/api/v1/schema/{table_name}'))
     LOG.info(f'table `{table_name}` deleted')
-    return r
 
 
 def get_existing_tables(client: AitoClient) -> List[str]:
@@ -361,11 +358,11 @@ def upload_binary_file(
     LOG.debug('polling processing status...')
     while True:
         try:
-            processing_progress = client.request(BaseRequest('GET', session_end_point))
-            status = processing_progress['status']
+            processing_progress_resp = client.request(BaseRequest('GET', session_end_point))
+            status = processing_progress_resp['status']
             LOG.debug(f"completed count: {status['completedCount']}, throughput: {status['throughput']}")
-            if processing_progress['errors']['message'] != 'Last 0 failing rows':
-                LOG.error(processing_progress['errors'])
+            if processing_progress_resp['errors']['message'] != 'Last 0 failing rows':
+                LOG.error(processing_progress_resp['errors'])
             if status['finished']:
                 break
         except Exception as e:
@@ -421,7 +418,8 @@ def create_job(client: AitoClient, job_endpoint: str, query: Union[List, Dict]) 
     :return: job information
     :rtype: Dict
     """
-    return client.request(BaseRequest('POST', job_endpoint, query))
+    resp = client.request(BaseRequest('POST', job_endpoint, query))
+    return resp.json
 
 
 def get_job_status(client: AitoClient, job_id: str) -> Dict:
@@ -434,7 +432,8 @@ def get_job_status(client: AitoClient, job_id: str) -> Dict:
     :return: job status
     :rtype: Dict
     """
-    return client.request(BaseRequest(method='GET', endpoint=f'/api/v1/jobs/{job_id}'))
+    resp = client.request(BaseRequest(method='GET', endpoint=f'/api/v1/jobs/{job_id}'))
+    return resp.json
 
 
 def get_job_result(client: AitoClient, job_id: str) -> Dict:
@@ -447,7 +446,8 @@ def get_job_result(client: AitoClient, job_id: str) -> Dict:
     :return: the job result
     :rtype: Dict
     """
-    return client.request(BaseRequest(method='GET', endpoint=f'/api/v1/jobs/{job_id}/result'))
+    resp = client.request(BaseRequest(method='GET', endpoint=f'/api/v1/jobs/{job_id}/result'))
+    return resp.json
 
 
 def job_request(
@@ -507,7 +507,8 @@ def get_table_size(client: AitoClient, table_name: str) -> int:
     :return: the number of entries in the table
     :rtype: int
     """
-    return client.request(BaseRequest('POST', '/api/v1/_query', {'from': table_name}))['total']
+    resp = client.request(BaseRequest('POST', '/api/v1/_query', {'from': table_name}))
+    return resp['total']
 
 
 def query_entries(
@@ -532,7 +533,8 @@ def query_entries(
     """
 
     query = {'from': table_name, 'offset': offset, 'limit': limit, 'select': select}
-    return client.request(BaseRequest('POST', '/api/v1/_query', query))['hits']
+    resp = client.request(BaseRequest('POST', '/api/v1/_query', query))
+    return resp['hits']
 
 
 def query_all_entries(
@@ -602,9 +604,8 @@ def download_table(
     while begin_idx < table_size:
         last_idx = begin_idx + batch_size if begin_idx + batch_size <= table_size else table_size
         LOG.debug(f'downloading table chunk {begin_idx}:{last_idx}...')
-        hits = client.request(BaseRequest(
-            'POST', '/api/v1/_query', {'from': table_name, 'offset': begin_idx, 'limit': batch_size}
-        ))['hits']
+        resp = client.request(GenericQueryRequest({'from': table_name, 'offset': begin_idx, 'limit': batch_size}))
+        hits = resp['hits']
         with out_file_path.open('a+') as f:
             ndjson.dump(hits, f)
             if last_idx != table_size:
@@ -673,5 +674,6 @@ def naive_predict(
         'select': ['$p', 'feature', '$why']
     }
     actual_result = table_first_entry.get(predicting_col)
-    predict_result = client.request(BaseRequest('POST', '/api/v1/_predict', predict_query))
-    return predict_query, predict_result, actual_result
+    predict_resp = client.request(PredictRequest(predict_query))
+    predicted_result = predict_resp.top_prediction
+    return predict_query, predicted_result, actual_result
