@@ -137,7 +137,7 @@ You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFram
   from aito.schema import AitoTableSchema
   from pprint import pprint
   reddit_schema = AitoTableSchema.infer_from_pandas_data_frame(reddit_df)
-  pprint(reddit_schema)
+  print(reddit_schema.to_json_string(indent=2, sort_keys=True))
 
 .. testoutput::
   :options: +NORMALIZE_WHITESPACE

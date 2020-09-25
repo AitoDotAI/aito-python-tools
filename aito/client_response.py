@@ -51,7 +51,7 @@ class BaseHit(JsonFormat):
 
 
 class _BaseScoredHit(BaseHit, ABC):
-    """`Base class for ResponseHit <https://aito.ai/docs/api/#schema-response-hit>`__ that contains a
+    """Base class for `ResponseHit <https://aito.ai/docs/api/#schema-response-hit>`__ that contains a
     `score <https://aito.ai/docs/api/#schema-score-field>`__
     """
     @classmethod
@@ -271,7 +271,7 @@ class PredictResponse(_BaseHitsResponse):
 
 
 class RecommendResponse(_BaseHitsResponse):
-    """Response of the `Recommend query https://aito.ai/docs/api/#post-api-v1-recommend`__"""
+    """Response of the `Recommend query <https://aito.ai/docs/api/#post-api-v1-recommend>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
         return ProbabilityHit
@@ -297,7 +297,7 @@ class RecommendResponse(_BaseHitsResponse):
 
 
 class SimilarityResponse(_BaseHitsResponse):
-    """Response of the `Similarity query https://aito.ai/docs/api/#post-api-v1-similarity`__"""
+    """Response of the `Similarity query <https://aito.ai/docs/api/#post-api-v1-similarity>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
         return ScoredHit
@@ -323,7 +323,7 @@ class SimilarityResponse(_BaseHitsResponse):
 
 
 class MatchResponse(_BaseHitsResponse):
-    """Response of the `Match query https://aito.ai/docs/api/#post-api-v1-match`__"""
+    """Response of the `Match query <https://aito.ai/docs/api/#post-api-v1-match>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
         return ProbabilityHit
@@ -349,7 +349,7 @@ class MatchResponse(_BaseHitsResponse):
 
 
 class RelateResponse(_BaseHitsResponse):
-    """Response of the `Relate query https://aito.ai/docs/api/#post-api-v1-relate`__"""
+    """Response of the `Relate query <https://aito.ai/docs/api/#post-api-v1-relate>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
         return RelateHit
@@ -361,7 +361,7 @@ class RelateResponse(_BaseHitsResponse):
 
 
 class EvaluateResponse(BaseResponse):
-    """Response of the `Evaluate query https://aito.ai/docs/api/#post-api-v1-evaluate`__"""
+    """Response of the `Evaluate query <https://aito.ai/docs/api/#post-api-v1-evaluate>`__"""
     @property
     def accuracy(self) -> float:
         """test evaluation accuracy

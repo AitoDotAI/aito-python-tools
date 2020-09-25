@@ -1111,7 +1111,7 @@ class AitoTableSchema(AitoSchema):
     >>> import pandas as pd
     >>> df = pd.DataFrame(data={'id': [1, 2], 'name': ['Neil', 'Buzz']})
     >>> table_schema = AitoTableSchema.infer_from_pandas_data_frame(df)
-    >>> table_schema.to_json_string(indent=2, sort_keys=True)
+    >>> print(table_schema.to_json_string(indent=2, sort_keys=True))
     {
       "columns": {
         "id": {
@@ -1127,18 +1127,18 @@ class AitoTableSchema(AitoSchema):
     }
 
     >>> print(table_schema['name'])
-    {"nullable": false, "type": "String"}
+    {"type": "String", "nullable": false}
 
     change the property of a column
 
     >>> table_schema['name'].nullable = True
     >>> print(table_schema['name'])
-    {"nullable": true, "type": "String"}
+    {"type": "String", "nullable": true}
 
     add a column to the table schema
 
     >>> table_schema['description'] = AitoColumnTypeSchema(AitoTextType(), nullable=True)
-    >>> table_schema.to_json_string(indent=2, sort_keys=True)
+    >>> print(table_schema.to_json_string(indent=2, sort_keys=True))
     {
       "columns": {
         "description": {

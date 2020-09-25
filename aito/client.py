@@ -106,7 +106,7 @@ class AitoClient:
         return {'Content-Type': 'application/json', 'x-api-key': self.api_key}
 
     # noinspection PyProtectedMember
-    def _get_response(self, request: BaseRequest, json_response: Dict):
+    def _get_response(self, request: BaseRequest, json_response: Dict) -> BaseResponse:
         """return the appropriate response object"""
         for req_type, resp_type in self._request_response_map.items():
             if request._is_same_type(req_type({})):
@@ -122,7 +122,7 @@ class AitoClient:
         :param request_obj: request object
         :type request_obj: BaseRequest
         :param raise_for_status: raise :class:`.RequestError` if the request fails.
-        If set to None, value from Client will be used. Defaults to True
+            If set to None, value from Client will be used. Defaults to True
         :type raise_for_status: bool
         :raises RequestError: an error occurred during the execution of the request and raise_for_status
         :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
@@ -131,7 +131,7 @@ class AitoClient:
         Simple request to get the schema of a table:
 
         >>> res = client.request(BaseRequest(method="GET", endpoint="/api/v1/schema/impressions"))
-        >>> res.to_json_string(indent=2, sort_keys=True)
+        >>> print(res.to_json_string(indent=2, sort_keys=True))
         {
           "columns": {
             "product": {
@@ -158,12 +158,11 @@ class AitoClient:
          ...    query={
          ...        "from": "impressions",
          ...        "where": { "session": "veronica" },
-         ...        "predict": "product.name",
-         ...        "limit": 1
+         ...        "predict": "product.name"
          ...    }
          ... )) # doctest: +NORMALIZE_WHITESPACE
-         >>> print(res.predictions)
-         >>> [{"$p": 0.07285448674038553, "field": "product.name", "feature": "pirkka"}]
+         >>> print(res.top_prediction) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+         {"$p": ..., "field": ..., "feature": ...}
 
          Returns an error when make a request to an incorrect path:
 
@@ -200,7 +199,7 @@ class AitoClient:
         :param request_obj: the request object
         :type request_obj: BaseRequest
         :param raise_for_status: raise :class:`.RequestError` if the request fails.
-        If set to None, value from Client will be used. Defaults to True
+            If set to None, value from Client will be used. Defaults to True
         :type raise_for_status: bool
         :raises RequestError: an error occurred during the execution of the request and raise_for_status
         """
@@ -285,10 +284,10 @@ class AitoClient:
         ... ])
         >>> # Print top product for each customer
         >>> for idx, usr in enumerate(users):
-        ...     print(f"{usr}: {responses[idx].top_match}") # doctest: +NORMALIZE_WHITESPACE +REPORT_UDIFF
-        veronica: {'$p': 0.14496525949529243, 'category': '100', 'id': '6410405060457', 'name': 'Pirkka bio cherry tomatoes 250g international 1st class', 'price': 1.29, 'tags': 'fresh vegetable pirkka tomato'}
-        larry: {'$p': 0.2348757987154449, 'category': '104', 'id': '6410405216120', 'name': 'Pirkka lactose-free semi-skimmed milk drink 1l', 'price': 1.25, 'tags': 'lactose-free drink pirkka'}
-        alice: {'$p': 0.11144746333281082, 'category': '104', 'id': '6408430000258', 'name': 'Valio eila™ Lactose-free semi-skimmed milk drink 1l', 'price': 1.95, 'tags': 'lactose-free drink'}
+        ...     print(f"{usr}: {responses[idx].top_match}") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        veronica: {"$p": ..., "category": ..., "id": ..., "name": ..., "price": ..., "tags": ...}
+        larry: {"$p": ..., "category": ..., "id": ..., "name": ..., "price": ..., "tags": ...}
+        alice: {"$p": ..., "category": ..., "id": ..., "name": ..., "price": ..., "tags": ...}
 
         """
         async def run():
