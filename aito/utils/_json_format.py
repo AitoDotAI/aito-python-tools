@@ -24,7 +24,7 @@ class JsonValidationError(BaseError):
         self.component_name = component_name
         self.error = base_error
         instance = ''.join([f'[{repr(index)}]' for index in base_error.absolute_path])
-        error_msg = f"{base_error.message} on instance {instance}"
+        error_msg = base_error.message + f' on instance {instance}' if instance else base_error.message
         error_msg = f"[{self.component_name}] {error_msg}"
         super().__init__(error_msg, LOG)
 
@@ -106,7 +106,4 @@ class JsonFormat(ABC):
         return json.loads(json_string, object_hook=cls.from_deserialized_object, **kwargs)
 
     def __str__(self):
-        return json.dumps(self.to_json_serializable())
-
-    def __repr__(self):
-        return json.dumps(self.to_json_serializable(), indent=2, sort_keys=True)
+        return self.to_json_string()
