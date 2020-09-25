@@ -126,39 +126,39 @@ class BaseResponse(JsonFormat):
     """The base class for the AitoClient request response
 
     """
-    def __init__(self, response: Dict):
+    def __init__(self, json: Dict):
         """
-        :param response: the original JSON response
-        :type response: Dict
+        :param json: the original JSON response of the request
+        :type json: Dict
         """
-        self.json_schema_validate(response)
-        self._response = response
+        self.json_schema_validate(json)
+        self._json = json
 
     @property
-    def response(self):
-        """the original response
+    def json(self):
+        """the original JSON response of the request
 
         :rtype: Dict
         """
-        return self._response
+        return self._json
 
     def __getitem__(self, item):
-        if item not in self._response:
+        if item not in self._json:
             raise KeyError(f'Response does not contain field `{item}`')
-        return self._response[item]
+        return self._json[item]
 
     def __contains__(self, item):
-        return item in self._response
+        return item in self._json
 
     def __iter__(self):
-        return iter(self._response)
+        return iter(self._json)
 
     @classmethod
     def json_schema(cls):
         return {'type': 'object'}
 
     def to_json_serializable(self):
-        return self._response
+        return self._json
 
     @classmethod
     def from_deserialized_object(cls, obj: Any):
@@ -167,14 +167,14 @@ class BaseResponse(JsonFormat):
 
 class _BaseHitsResponse(BaseResponse, ABC):
     """The response contains entries or `hits <https://aito.ai/docs/api/#schema-hits>`__ returned for a given query"""
-    def __init__(self, response):
+    def __init__(self, json):
         """
 
-        :param response: the raw JSON response
-        :type response: Dict
+        :param json: the raw JSON response
+        :type json: Dict
         """
-        super().__init__(response)
-        self._hits = [self.hit_cls(hit) for hit in response['hits']]
+        super().__init__(json)
+        self._hits = [self.hit_cls(hit) for hit in json['hits']]
 
     @property
     @abstractmethod
@@ -203,7 +203,7 @@ class _BaseHitsResponse(BaseResponse, ABC):
 
         :rtype: int
         """
-        return self._response['offset']
+        return self._json['offset']
 
     @property
     def total(self) -> int:
@@ -211,7 +211,7 @@ class _BaseHitsResponse(BaseResponse, ABC):
 
         :rtype: int
         """
-        return self._response['offset']
+        return self._json['offset']
 
     @property
     def hits(self) -> List[BaseHit]:

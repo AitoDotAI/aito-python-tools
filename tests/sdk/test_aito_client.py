@@ -112,7 +112,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
         )
         self.assertTrue(all([isinstance(res, HitsResponse) for res in responses]))
         self.assertEqual(
-            [res.response for res in responses],
+            [res.json for res in responses],
             [{'offset': 0, 'total': 3, 'hits': [{'username': 'veronica'}]}] * 3
         )
 
@@ -124,7 +124,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
         ])
         self.assertTrue(isinstance(responses[0], HitsResponse))
         self.assertEqual(
-            responses[0].response,
+            responses[0].json,
             {'offset': 0, 'total': 3, 'hits': [{'username': 'veronica'}]}
         )
         self.assertTrue(isinstance(responses[1], RequestError))
