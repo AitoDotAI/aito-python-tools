@@ -81,23 +81,29 @@ class TestAitoClientGroceryCase(CompareTestCase):
         ),
         ('relate', RelateRequest, {"from": "products", "where": {"$exists": "name"}, "relate": "tags"}, RelateResponse),
         (
-                'generic',
+                'query',
                 GenericQueryRequest,
                 {"from": "products", "where": {"name": "Pirkka banana"}, "get": "tags", "orderBy": "$p"},
                 HitsResponse
         ),
     ])
-    def test_request(self, _, request_cls, query, response_cls):
+    def test_request(self, endpoint, request_cls, query, response_cls):
         async def test_async_request():
             async with ClientSession() as session:
                 a_resp = await self.client.async_request(session, request_cls(query))
                 self.assertTrue(isinstance(a_resp, response_cls))
 
-        self.logger.debug('test normal request')
+        self.logger.debug('test request method')
         req = request_cls(query)
         resp = self.client.request(req)
         self.assertTrue(isinstance(resp, response_cls))
 
+        self.logger.debug('test endpoint method')
+        method = self.client.__getattribute__(endpoint)
+        resp = method(query)
+        self.assertTrue(isinstance(resp, response_cls))
+
+        self.logger.debug('test async request')
         self.loop.run_until_complete(test_async_request())
 
     @parameterized.expand([

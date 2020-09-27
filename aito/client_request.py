@@ -9,6 +9,7 @@ LOG = logging.getLogger('AitoClientRequest')
 
 
 class BaseRequest:
+    """Base request to the Aito instance"""
     _query_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
     _query_endpoints = [f'/api/v1/{p}' for p in _query_paths] + ['/version']
     _database_endpoints = ['/api/v1/schema', '/api/v1/data']
@@ -37,7 +38,7 @@ class BaseRequest:
         return method
 
     def __init__(self, method: str, endpoint: str, query: Optional[Union[Dict, List]] = None):
-        """ A request object to be sent to an Aito instance
+        """
 
         :param method: request method
         :type method: str
@@ -59,40 +60,48 @@ class BaseRequest:
 
 
 class SearchRequest(BaseRequest):
+    """Request of the `Search query <https://aito.ai/docs/api/#post-api-v1-search>`__"""
     def __init__(self, query: Dict):
         super().__init__('POST', '/api/v1/_search', query)
 
 
 class PredictRequest(BaseRequest):
+    """Request of the `Predict query <https://aito.ai/docs/api/#post-api-v1-predict>`__"""
     def __init__(self, query: Dict):
         super().__init__('POST', '/api/v1/_predict', query)
 
 
 class RecommendRequest(BaseRequest):
+    """Request of the `Recommend query <https://aito.ai/docs/api/#post-api-v1-recommend>`__"""
     def __init__(self, query: Dict):
         super().__init__('POST', '/api/v1/_recommend', query)
 
 
 class EvaluateRequest(BaseRequest):
+    """Request of the `Evaluate query <https://aito.ai/docs/api/#post-api-v1-evaluate>`__"""
     def __init__(self, query: Dict):
         super().__init__('POST', '/api/v1/_evaluate', query)
 
 
 class SimilarityRequest(BaseRequest):
+    """Request of the `Similarity query <https://aito.ai/docs/api/#post-api-v1-similarity>`__"""
     def __init__(self, query: Dict):
         super().__init__('POST', '/api/v1/_similarity', query)
 
 
 class MatchRequest(BaseRequest):
+    """Request of the `Match query <https://aito.ai/docs/api/#post-api-v1-match>`__"""
     def __init__(self, query: Dict):
         super().__init__('POST', '/api/v1/_match', query)
 
 
 class RelateRequest(BaseRequest):
+    """Request of the `Relate query <https://aito.ai/docs/api/#post-api-v1-relate>`__"""
     def __init__(self, query: Dict):
         super().__init__('POST', '/api/v1/_relate', query)
 
 
 class GenericQueryRequest(BaseRequest):
+    """Response of the `Generic query <https://aito.ai/docs/api/#post-api-v1-query>`__"""
     def __init__(self, query: Dict):
         super().__init__('POST', '/api/v1/_query', query)
