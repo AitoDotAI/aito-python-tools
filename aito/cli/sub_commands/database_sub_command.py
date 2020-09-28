@@ -104,7 +104,7 @@ class QuickAddTableSubCommand(SubCommand):
         create_table(client, table_name, inferred_schema)
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            upload_binary_file(client, table_name, in_f)
+            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0
@@ -298,7 +298,7 @@ class UploadFileSubCommand(SubCommand):
         converted_tmp_file.close()
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            upload_binary_file(client, table_name, in_f)
+            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
 
@@ -324,7 +324,7 @@ class UploadDataFromSQLSubCommand(SubCommand):
         converted_tmp_file.close()
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            upload_binary_file(client, table_name, in_f)
+            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0
@@ -356,7 +356,7 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
 
         create_table(client, table_name, inferred_schema)
         with open(converted_tmp_file.name, 'rb') as in_f:
-            upload_binary_file(client, table_name, in_f)
+            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0

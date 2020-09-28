@@ -269,93 +269,112 @@ def upload_entries(
     ...     optimize_on_finished=False
     ... ) # doctest: +SKIP
     """
-    LOG.info(f'uploading entries to table `{table_name}` with batch size of {batch_size}...')
 
-    begin_idx = 0
-    populated = 0
-    last_idx = 0
+    LOG.info(f'uploading entries to table `{table_name}` with batch size of {batch_size}...')
+    begin_index, last_index, populated_count = 0, 0, 0
     entries_batch = []
 
-    for entry in entries:
-        entries_batch.append(entry)
-        last_idx += 1
-
-        if last_idx % batch_size == 0:
-            try:
-                LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-                client.request(BaseRequest('POST', f"/api/v1/data/{table_name}/batch", entries_batch))
-                populated += len(entries_batch)
-                LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
-            except Exception as e:
-                LOG.error(f'batch {begin_idx}:{last_idx} failed: {e}')
-
-            begin_idx = last_idx
-            entries_batch = []
-
-    if last_idx % batch_size != 0:
+    def _upload_a_batch(begin_idx, last_idx, populated_c, batch_content):
         try:
             LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-            client.request(BaseRequest('POST', f"/api/v1/data/{table_name}/batch", entries_batch))
-            populated += len(entries_batch)
+            client.request(BaseRequest('POST', f"/api/v1/data/{table_name}/batch", batch_content))
+            populated_c += len(batch_content)
             LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
         except Exception as e:
             LOG.error(f'batch {begin_idx}:{last_idx} failed: {e}')
+        return populated_c
 
-    if populated == 0:
+    for entry in entries:
+        entries_batch.append(entry)
+        last_index += 1
+
+        if last_index % batch_size == 0:
+            populated_count = _upload_a_batch(begin_index, last_index, populated_count, entries_batch)
+
+            begin_index = last_index
+            entries_batch = []
+
+    # upload the remaining entries
+    if last_index % batch_size != 0:
+        populated_count = _upload_a_batch(begin_index, last_index, populated_count, entries_batch)
+
+    if populated_count == 0:
         raise Exception("failed to upload any data into Aito")
 
-    LOG.info(f'uploaded {populated}/{last_idx} entries to table `{table_name}`')
+    LOG.info(f'uploaded {populated_count}/{last_index} entries to table `{table_name}`')
 
     if optimize_on_finished:
         optimize_table(client, table_name)
 
 
-def upload_binary_file(
-        client: AitoClient,
-        table_name: str,
-        binary_file: BinaryIO,
-        optimize_on_finished: bool = True,
-        polling_time: int = 10
-):
-    """`upload a binary file object to a table <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
-
-    .. note::
-
-        requires the client to be setup with the READ-WRITE API key
+def initiate_upload_file(client: AitoClient, table_name: str) -> Dict:
+    """`Initial uploading a file to a table <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
 
     :param client: the AitoClient object
     :type client: AitoClient
-    :param table_name: the name of the table
+    :param table_name: the name of the table to be uploaded
     :type table_name: str
-    :param binary_file: binary file object
-    :type binary_file: BinaryIO
-    :param optimize_on_finished: :func:`optimize_table` when finished uploading, defaults to True
-    :type optimize_on_finished: bool
-    :param polling_time: polling wait time
-    :type polling_time: int
-    :raises RequestError: an error occurred during the upload of the file to S3
+    :return: The details to execute the S3 upload and the upload session's id
+    :rtype: Dict
     """
-    LOG.debug(f'uploading file object to table `{table_name}`...')
     LOG.debug('initiating file upload...')
     r = client.request(BaseRequest('POST', f"/api/v1/data/{table_name}/file"))
-    LOG.info('file upload initiated')
+    return r.json
+
+
+def upload_binary_file_to_s3(initiate_upload_file_response: Dict, binary_file: BinaryIO):
+    """Upload a binary file to AWS S3 with using the information from :func:`.initiate_upload_file`
+
+    :param initiate_upload_file_response: the result from :func:`.initiate_upload_file`
+    :type initiate_upload_file_response: Dict
+    :param binary_file: binary file object
+    :type binary_file: BinaryIO
+    """
+    LOG.debug('uploading binary file to S3...')
     LOG.debug('getting session id and upload url...')
-    upload_session_id = r['id']
-    session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
-    s3_url = r['url']
-    upload_req_method = r['method']
-    LOG.info('got session id and upload url')
-    LOG.debug('uploading file file to s3...')
+    s3_url = initiate_upload_file_response['url']
+    upload_req_method = initiate_upload_file_response['method']
+    LOG.debug('uploading file file to S3...')
     try:
         r = requestslib.request(upload_req_method, s3_url, data=binary_file)
         r.raise_for_status()
     except Exception as e:
         raise Exception(f'failed to upload file to S3: {e}')
     LOG.debug('uploaded file to S3')
+
+
+def trigger_file_processing(client: AitoClient, table_name: str, upload_session_id: str):
+    """`Trigger file processing of uploading a file to a table
+    <https://aito.ai/docs/api/#post-api-v1-data-table-file-uuid>`__
+
+    :param client: the AitoClient object
+    :type client: AitoClient
+    :param table_name: the name of the table to be uploaded
+    :type table_name: str
+    :param upload_session_id: The upload session id from :func:`.initiate_upload_file`
+    :type upload_session_id: str
+    """
     LOG.debug('triggering file processing...')
+    session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
     client.request(BaseRequest('POST', session_end_point))
     LOG.info('triggered file processing')
+
+
+def poll_file_processing_status(client: AitoClient, table_name: str, upload_session_id: str, polling_time: int = 10):
+    """Polling the `file processing status <https://aito.ai/docs/api/#get-api-v1-data-table-file-uuid>`__ until
+    the processing finished
+
+    :param client: the AitoClient object
+    :type client: AitoClient
+    :param table_name: the name of the table to be uploaded
+    :type table_name: str
+    :param upload_session_id: The upload session id from :func:`.initiate_upload_file`
+    :type upload_session_id: str
+    :param polling_time: polling wait time
+    :type polling_time: int
+    """
     LOG.debug('polling processing status...')
+    session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
     while True:
         try:
             processing_progress_resp = client.request(BaseRequest('GET', session_end_point))
@@ -368,6 +387,41 @@ def upload_binary_file(
         except Exception as e:
             LOG.debug(f'failed to get file upload status: {e}')
         time.sleep(polling_time)
+
+
+def upload_binary_file(
+        client: AitoClient,
+        table_name: str,
+        binary_file: BinaryIO,
+        polling_time: int = 10,
+        optimize_on_finished: bool = True
+):
+    """`upload a binary file object to a table <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
+
+    .. note::
+
+        requires the client to be setup with the READ-WRITE API key
+
+    :param client: the AitoClient object
+    :type client: AitoClient
+    :param table_name: the name of the table to be uploaded
+    :type table_name: str
+    :param binary_file: binary file object
+    :type binary_file: BinaryIO
+    :param polling_time: polling wait time
+    :type polling_time: int
+    :param optimize_on_finished: :func:`optimize_table` when finished uploading, defaults to True
+    :type optimize_on_finished: bool
+    """
+    LOG.debug(f'uploading file object to table `{table_name}`...')
+    init_upload_resp = initiate_upload_file(client=client, table_name=table_name)
+    upload_binary_file_to_s3(initiate_upload_file_response=init_upload_resp, binary_file=binary_file)
+    upload_session_id = init_upload_resp['id']
+    trigger_file_processing(client=client, table_name=table_name, upload_session_id=upload_session_id)
+    poll_file_processing_status(
+        client=client, table_name=table_name, upload_session_id=upload_session_id, polling_time=polling_time
+    )
+
     LOG.info(f'uploaded file object to table `{table_name}`')
     if optimize_on_finished:
         optimize_table(client, table_name)
@@ -377,8 +431,8 @@ def upload_file(
         client: AitoClient,
         table_name: str,
         file_path: PathLike,
-        optimize_on_finished: bool = True,
-        polling_time: int = 10
+        polling_time: int = 10,
+        optimize_on_finished: bool = True
 ):
     """`upload a file <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__ to the specfied table
 
@@ -392,17 +446,22 @@ def upload_file(
     :type table_name: str
     :param file_path: path to the file to be uploaded
     :type file_path: PathLike
-    :param optimize_on_finished: :func:`optimize_table` when finished uploading, defaults to True
-    :type optimize_on_finished: bool
     :param polling_time: polling wait time
     :type polling_time: int
-    :raises BaseError: incorrect file extension, should be .ndjson.gz
-    :raises RequestError: an error occurred during the upload of the file to S3
+    :param optimize_on_finished: :func:`optimize_table` when finished uploading, defaults to True
+    :type optimize_on_finished: bool
+    :raises ValueError: incorrect file extension, should be .ndjson.gz
     """
     if not check_file_is_gzipped(file_path):
         raise ValueError(f'file {file_path} is not a gzip-compressed ndjson file')
     with open(file_path, 'rb') as f:
-        upload_binary_file(client, table_name, f, optimize_on_finished, polling_time)
+        upload_binary_file(
+            client=client,
+            table_name=table_name,
+            binary_file=f,
+            polling_time=polling_time,
+            optimize_on_finished=optimize_on_finished
+        )
 
 
 def create_job(client: AitoClient, job_endpoint: str, query: Union[List, Dict]) -> Dict:
@@ -604,10 +663,9 @@ def download_table(
     while begin_idx < table_size:
         last_idx = begin_idx + batch_size if begin_idx + batch_size <= table_size else table_size
         LOG.debug(f'downloading table chunk {begin_idx}:{last_idx}...')
-        resp = client.request(GenericQueryRequest({'from': table_name, 'offset': begin_idx, 'limit': batch_size}))
-        hits = resp['hits']
+        entries_batch = query_entries(client=client, table_name=table_name, offset=begin_idx, limit=batch_size)
         with out_file_path.open('a+') as f:
-            ndjson.dump(hits, f)
+            ndjson.dump(entries_batch, f)
             if last_idx != table_size:
                 f.write('\n')
         LOG.debug(f'downloaded table chunk {begin_idx}:{last_idx}')
