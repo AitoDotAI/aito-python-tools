@@ -10,14 +10,14 @@ from aito.client_request import BaseRequest, SearchRequest, PredictRequest, Reco
 from aito.client_response import SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
     SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
 from tests.cases import CompareTestCase
+from tests.sdk.contexts import default_client, grocery_demo_client
 
 
 class TestAitoClient(CompareTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
+        cls.client = default_client()
 
     def test_erroneous_instance_url(self):
         with self.assertRaises(Error):
@@ -36,8 +36,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_GROCERY_DEMO_INSTANCE_URL'], env_var['AITO_GROCERY_DEMO_API_KEY'])
+        cls.client = grocery_demo_client()
         cls.loop = asyncio.new_event_loop()
 
     @parameterized.expand([

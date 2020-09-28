@@ -4,7 +4,7 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Type
+from typing import List, Dict, Any, Type, TypeVar, Generic
 
 from aito.utils._json_format import JsonFormat
 
@@ -13,37 +13,38 @@ LOG = logging.getLogger('AitoResponse')
 
 class BaseHit(JsonFormat):
     """Aito `ResponseHit <https://aito.ai/docs/api/#schema-response-hit>`__"""
-    def __init__(self, hit: Dict):
+    def __init__(self, json: Dict):
         """
 
-        :param hit: the content of the hit
-        :type hit: Dict
+        :param json: the content of the hit
+        :type json: Dict
         """
-        self.json_schema_validate(hit)
-        self._hit = hit
+        self.json_schema_validate(json)
+        self._json = json
 
     def __getitem__(self, item):
-        if item not in self._hit:
+        if item not in self._json:
             raise KeyError(f'The hit does not contain field `{item}`. '
                            f'Please specify the field in the `select` clause of the query')
-        return self._hit[item]
+        return self._json[item]
 
     def __contains__(self, item):
-        return item in self._hit
+        return item in self._json
 
     def __iter__(self):
-        return iter(self._hit)
+        return self._json.keys()
 
     @classmethod
     def json_schema(cls):
         return {'type': 'object'}
 
     @property
-    def hit(self):
-        return self._hit
+    def json(self):
+        """the content of the hit"""
+        return self._json
 
     def to_json_serializable(self):
-        return self._hit
+        return self._json
 
     @classmethod
     def from_deserialized_object(cls, obj: Any):
@@ -75,11 +76,11 @@ class _BaseScoredHit(BaseHit, ABC):
 
         :rtype: float
         """
-        score_field = next((alias for alias in self.score_aliases() if alias in self._hit), None)
+        score_field = next((alias for alias in self.score_aliases() if alias in self._json), None)
         if score_field is None:
             raise KeyError(f'The hit does not contain the score field. Please specify one of '
                            f'{"|".join(self.score_aliases())} in the `select` clause of the query')
-        return self._hit[score_field]
+        return self._json[score_field]
 
 
 class ScoredHit(_BaseScoredHit):
@@ -165,12 +166,15 @@ class BaseResponse(JsonFormat):
         return cls(obj)
 
 
-class _BaseHitsResponse(BaseResponse, ABC):
+HitType = TypeVar('HitType', bound=BaseHit)
+
+
+class _BaseHitsResponse(BaseResponse, Generic[HitType], ABC):
     """The response contains entries or `hits <https://aito.ai/docs/api/#schema-hits>`__ returned for a given query"""
     def __init__(self, json):
         """
 
-        :param json: the raw JSON response
+        :param json: the original JSON response
         :type json: Dict
         """
         super().__init__(json)
@@ -211,40 +215,40 @@ class _BaseHitsResponse(BaseResponse, ABC):
 
         :rtype: int
         """
-        return self._json['offset']
+        return self._json['total']
 
     @property
-    def hits(self) -> List[BaseHit]:
+    def hits(self) -> List[HitType]:
         """the returned hits
 
-        :rtype: List[Dict]
+        :rtype: List[HitType]
         """
         return self._hits
 
     @property
-    def first_hit(self) -> BaseHit:
+    def first_hit(self) -> HitType:
         """return the first hit
 
-        :rtype: Dict
+        :rtype: HitType
         """
         return self._hits[0]
 
 
-class HitsResponse(_BaseHitsResponse):
+class HitsResponse(_BaseHitsResponse[BaseHit]):
     """The response contains entries or `hits <https://aito.ai/docs/api/#schema-hits>`__ returned for a given query"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
         return BaseHit
 
 
-class SearchResponse(_BaseHitsResponse):
+class SearchResponse(_BaseHitsResponse[BaseHit]):
     """Response of the `Search query <https://aito.ai/docs/api/#post-api-v1-search>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
         return BaseHit
 
 
-class PredictResponse(_BaseHitsResponse):
+class PredictResponse(_BaseHitsResponse[ProbabilityHit]):
     """Response of the `Predict query <https://aito.ai/docs/api/#post-api-v1-predict>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
@@ -270,7 +274,7 @@ class PredictResponse(_BaseHitsResponse):
         return self.first_hit
 
 
-class RecommendResponse(_BaseHitsResponse):
+class RecommendResponse(_BaseHitsResponse[ProbabilityHit]):
     """Response of the `Recommend query <https://aito.ai/docs/api/#post-api-v1-recommend>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
@@ -296,7 +300,7 @@ class RecommendResponse(_BaseHitsResponse):
         return self.first_hit
 
 
-class SimilarityResponse(_BaseHitsResponse):
+class SimilarityResponse(_BaseHitsResponse[ScoredHit]):
     """Response of the `Similarity query <https://aito.ai/docs/api/#post-api-v1-similarity>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
@@ -322,7 +326,7 @@ class SimilarityResponse(_BaseHitsResponse):
         return self.first_hit
 
 
-class MatchResponse(_BaseHitsResponse):
+class MatchResponse(_BaseHitsResponse[ProbabilityHit]):
     """Response of the `Match query <https://aito.ai/docs/api/#post-api-v1-match>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
@@ -348,7 +352,7 @@ class MatchResponse(_BaseHitsResponse):
         return self.first_hit
 
 
-class RelateResponse(_BaseHitsResponse):
+class RelateResponse(_BaseHitsResponse[RelateHit]):
     """Response of the `Relate query <https://aito.ai/docs/api/#post-api-v1-relate>`__"""
     @property
     def hit_cls(self) -> Type[BaseHit]:
