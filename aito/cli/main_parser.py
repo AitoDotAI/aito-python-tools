@@ -14,8 +14,9 @@ from .sub_commands.convert_sub_command import ConvertSubCommand
 from .sub_commands.database_sub_command import ConfigureSubCommand, QuickAddTableSubCommand, CreateTableSubCommand, \
     DeleteTableSubCommand, CopyTableSubCommand, RenameTableSubCommand, ShowTablesSubCommand, DeleteDatabaseSubCommand, \
     UploadEntriesSubCommand, UploadBatchSubCommand, UploadFileSubCommand, UploadDataFromSQLSubCommand, \
-    QuickAddTableFromSQLSubCommand, GetDatabaseSubCommand, GetTableSubCommand, SubCommand
+    QuickAddTableFromSQLSubCommand, GetDatabaseSubCommand, GetTableSubCommand, QuickPredictSubCommand
 from .sub_commands.infer_table_schema_sub_command import InferTableSchemaSubCommand
+from .sub_commands.sub_command import SubCommand
 
 
 class MainParser(ArgParser):
@@ -36,7 +37,8 @@ class MainParser(ArgParser):
         UploadBatchSubCommand(),
         UploadFileSubCommand(),
         UploadDataFromSQLSubCommand(),
-        QuickAddTableFromSQLSubCommand()
+        QuickAddTableFromSQLSubCommand(),
+        QuickPredictSubCommand(),
     ]
 
     def __init__(self, commands: List[SubCommand] = None):
@@ -67,11 +69,11 @@ class MainParser(ArgParser):
 To see the help text, you can run:
   {self.prog} -h
   {self.prog} <command> -h
-  {self.prog} <command> <subcommand> -h
 """
         argcomplete.autocomplete(self)
 
-    def config_logging(self, default_level='INFO'):
+    @staticmethod
+    def config_logging(default_level='INFO'):
         if not DEFAULT_CONFIG_DIR.exists():
             DEFAULT_CONFIG_DIR.mkdir(parents=True)
 
@@ -149,7 +151,7 @@ To see the help text, you can run:
         command_name = parsed_args['command']
         if not command_name:
             self.error_and_print_help('the following arguments are required: <command>')
-        if command_name == 'list':
+        elif command_name == 'list':
             self.list_commands()
         else:
             try:

@@ -1,9 +1,10 @@
 import tempfile
 from os import unlink
 from typing import Dict
+import json
 
 from aito.api import get_database_schema, delete_database, create_table, get_table_schema, delete_table, \
-    get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file
+    get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file, quick_predict_and_evaluate
 from aito.client import AitoClient, Error
 from aito.schema import AitoTableSchema
 from aito.utils.data_frame_handler import DataFrameHandler
@@ -359,4 +360,39 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
             upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
+        return 0
+
+
+class QuickPredictSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__(
+            'quick-predict', 'generate an example predict query to predict a field'
+        )
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument(
+            'from-table', type=str, help='the name of the table the will be use as context for prediction'
+        )
+        parser.add_argument('predicting-field', type=str, help='the name of the predicting field')
+        parser.add_argument('--evaluate', action='store_true', help="get the accuracy of the example prediction query")
+
+    def parse_and_execute(self, parsed_args: Dict):
+        from_table = parsed_args['from-table']
+        predicting_field = parsed_args['predicting-field']
+        client = create_client_from_parsed_args(parsed_args)
+
+        predict_query, evaluate_query = quick_predict_and_evaluate(
+            client=client, from_table=from_table, predicting_field=predicting_field
+        )
+        print("[Predict Query Example]")
+        print(json.dumps(predict_query, indent=2))
+
+        if parsed_args['evaluate']:
+            evaluate_result = client.evaluate(evaluate_query)
+            print("[Evaluation Result]")
+            print(f"- Train samples count: {evaluate_result.train_sample_count}")
+            print(f"- Test samples count: {evaluate_result.test_sample_count}")
+            print(f"- Accuracy: {evaluate_result.accuracy}")
+
         return 0
