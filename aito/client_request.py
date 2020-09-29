@@ -55,7 +55,10 @@ class AitoRequest(ABC):
         return method
 
     def __str__(self):
-        return f'{self.method}({self.endpoint}): {str(self.query)[:100]}'
+        query_str = str(self.query)
+        if len(query_str) > 100:
+            query_str = query_str[:100] + '...'
+        return f'{self.method}({self.endpoint}): {query_str}'
 
     @property
     @abstractmethod
