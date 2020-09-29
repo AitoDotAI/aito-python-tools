@@ -189,6 +189,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
         )
 
+    @unittest.skipUnless(os.environ.get('RUN_DELETE_DATABASE_TEST'), "Avoid create DB when running other tests")
     def test_create_database(self):
         database_schema = {'schema': {self.default_table_name: self.default_table_schema.to_json_serializable()}}
         database_schema_fp = self.output_folder / 'database_schema.json'
