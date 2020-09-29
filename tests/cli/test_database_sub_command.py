@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
-from aito.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries
+from aito.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries, upload_entries
 from aito.cli.parser import get_credentials_file_config
 from aito.client import AitoClient
 from aito.client import RequestError
@@ -30,6 +30,8 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             json_schema = json.load(f)
         cls.default_table_schema = AitoTableSchema.from_deserialized_object(json_schema)
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
+        with (cls.input_folder / "invoice_no_null_value.json").open() as f:
+            cls.default_entries = json.load(f)
 
     def setUp(self):
         super().setUp()
@@ -43,6 +45,9 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
 
     def create_table(self):
         create_table(self.client, self.default_table_name, self.default_table_schema)
+
+    def upload_entries_to_table(self):
+        upload_entries(self.client, self.default_table_name, self.default_entries)
 
     def compare_table_entries_to_file_content(self, table_name: str, exp_file_path: Path, compare_order: bool = False):
         table_entries = query_entries(self.client, table_name)
@@ -435,3 +440,52 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
                 content = in_f.read()
             listed_tables = content.splitlines()
             self.assertIn(self.default_table_name, listed_tables)
+
+    def test_quick_predict(self):
+        self.create_table()
+        self.upload_entries_to_table()
+
+        predicting_field = 'name'
+
+        expected_args = {
+            'command': 'quick-predict',
+            'from-table': self.default_table_name,
+            'predicting-field': predicting_field,
+            'evaluate': False,
+            **self.default_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(
+                ['quick-predict', self.default_table_name, predicting_field],
+                expected_args,
+                stub_stdout=out_f
+            )
+
+        with self.out_file_path.open() as f:
+            returned_content = f.read()
+        self.assertIn('[Predict Query Example]', returned_content)
+
+    def test_quick_predict_and_evaluate(self):
+        self.create_table()
+        self.upload_entries_to_table()
+
+        predicting_field = 'name'
+
+        expected_args = {
+            'command': 'quick-predict',
+            'from-table': self.default_table_name,
+            'predicting-field': predicting_field,
+            'evaluate': True,
+            **self.default_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(
+                ['quick-predict', self.default_table_name, predicting_field, '--evaluate'],
+                expected_args,
+                stub_stdout=out_f
+            )
+
+        with self.out_file_path.open() as f:
+            returned_content = f.read()
+        self.assertIn('[Predict Query Example]', returned_content)
+        self.assertIn('[Evaluation Result]', returned_content)
