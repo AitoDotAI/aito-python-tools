@@ -673,12 +673,11 @@ def download_table(
     LOG.info(f'downloaded table `{table_name}` to {out_file_path}')
 
 
-def naive_predict(
+def quick_predict_and_evaluate(
         client: AitoClient,
-        predicting_field: str,
         from_table: str,
-        use_database_schema: AitoDatabaseSchema = None
-) -> Tuple[Dict, Dict, Dict]:
+        predicting_field: str
+) -> Tuple[Dict, Dict]:
     """generate an example predict query to predict a field
 
     The example query will use all fields of the table as the hypothesis and the first entry of the table as the
@@ -686,35 +685,28 @@ def naive_predict(
 
     :param client: the AitoClient object
     :type client: AitoClient
-    :param predicting_field: the predicting field name. If the field belong to a linked table,
+    :param from_table: the name of the table the will be use as context for prediction.
+    :type from_table: str
+    :param predicting_field: the name of the predicting field. If the field belongs to a linked table,
         it should be in the format of <column_with_link>.<field_name>
     :type predicting_field: str
-    :param from_table: the name of the table the will be use as context for prediction.
-        The predicting field should be "reachable" from the table (i.e: the predicting field should be a column
-        in the table or a table that is linked to this table)
-    :type from_table: str
-    :param use_database_schema: use an existing database schema if do not want to re-fetch the database schema
-    :type use_database_schema: AitoDatabaseSchema
     :return: a tuple contains the predict query and the prediction result
-    :rtype: Tuple[Dict, Dict, Dict]
+    :rtype: Tuple[Dict, Dict]
     """
-    database_schema = use_database_schema if use_database_schema else get_database_schema(client)
+    database_schema = get_database_schema(client)
     table_schema = database_schema[from_table]
 
     predicting_field_splitted = predicting_field.split('.')
     is_predicting_a_linked_field = len(predicting_field_splitted) == 2
 
+    predicting_col = predicting_field if not is_predicting_a_linked_field else predicting_field_splitted[0]
+    if predicting_col not in table_schema.columns:
+        raise ValueError(f"table `{from_table}` does not have column `{predicting_col}`")
     if is_predicting_a_linked_field:
-        (predicting_col, linked_col) = predicting_field_splitted
-        if predicting_col not in table_schema.columns:
-            raise ValueError(f"table `{from_table}` does not have column `{predicting_col}`")
+        linked_col = predicting_field_splitted[1]
         linked_table = table_schema.links[predicting_col].table_name
         if linked_col not in database_schema[linked_table].columns:
             raise ValueError(f"linked table `{linked_table}` does not have column `{linked_col}`")
-    else:
-        if predicting_field not in table_schema.columns:
-            raise ValueError(f"table `{from_table}` does not have column `{predicting_field}`")
-        predicting_col = predicting_field
 
     table_first_entry_res = query_entries(client, from_table, limit=1)
     if not table_first_entry_res:
@@ -729,7 +721,14 @@ def naive_predict(
         'predict': predicting_field,
         'select': ['$p', 'feature', '$why']
     }
-    actual_result = table_first_entry.get(predicting_col)
-    predict_resp = client.request(PredictRequest(predict_query))
-    predicted_result = predict_resp.top_prediction
-    return predict_query, predicted_result, actual_result
+
+    pred_query_with_get_op = predict_query
+    for col in pred_query_with_get_op['where']:
+        pred_query_with_get_op['where'][col] = {'$get': col}
+
+    evaluate_query = {
+        'test': {'$index': {"$mod": [10, 0]}},
+        'evaluate': pred_query_with_get_op
+    }
+
+    return predict_query, evaluate_query

@@ -1,5 +1,4 @@
 import json
-import os
 from uuid import uuid4
 
 import ndjson
@@ -7,18 +6,17 @@ from parameterized import parameterized
 
 from aito.api import delete_table, check_table_exists, create_table, get_table_schema, upload_entries, query_entries, \
     query_all_entries, job_request, optimize_table, download_table, copy_table, get_existing_tables, rename_table, \
-    get_database_schema, naive_predict
-from aito.client import AitoClient
+    quick_predict_and_evaluate
 from aito.utils._file_utils import read_ndjson_gz_file
 from tests.cases import CompareTestCase
+from tests.sdk.contexts import default_client, grocery_demo_client
 
 
 class TestAPI(CompareTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_INSTANCE_URL'], env_var['AITO_API_KEY'])
+        cls.client = default_client()
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         with (cls.input_folder / 'invoice_aito_schema.json').open() as f:
@@ -150,24 +148,21 @@ class TestAPIGroceryCase(CompareTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        env_var = os.environ
-        cls.client = AitoClient(env_var['AITO_GROCERY_DEMO_INSTANCE_URL'], env_var['AITO_GROCERY_DEMO_API_KEY'])
-        cls.database_schema = get_database_schema(cls.client)
+        cls.client = grocery_demo_client()
 
     @parameterized.expand([
-        ('same_table', 'tags', 'products', True, ['category', 'id', 'name', 'price'], None),
-        ('linked_table', 'product.tags', 'impressions', False, ['session', 'purchase'], None),
-        ('invalid_predicting_field', 'description', 'products', False, None, ValueError),
-        ('invalid_linked_column', 'products.tags', 'impressions', False, None, ValueError),
-        ('invalid_linked_column_name', 'product.description', 'impressions', False, None, ValueError),
+        ('same_table', 'products', 'tags', ['category', 'id', 'name', 'price'], None),
+        ('linked_table', 'impressions', 'product.tags', ['session', 'purchase'], None),
+        ('invalid_predicting_field', 'products', 'description', None, ValueError),
+        ('invalid_linked_column', 'impressions', 'products.tags', None, ValueError),
+        ('invalid_linked_column_name', 'impressions', 'product.description', None, ValueError),
     ])
-    def test_naive_predict(
-            self, _, predicting_field, from_table, fetch_schema, expected_hypothesis_fields, error
+    def test_quick_predict_and_evaluate(
+            self, _, from_table, predicting_field, expected_hypothesis_fields, error
     ):
-        use_database_schema = None if fetch_schema else self.database_schema
         if error:
             with self.assertRaises(error):
-                naive_predict(self.client, predicting_field, from_table, use_database_schema=use_database_schema)
+                quick_predict_and_evaluate(self.client, from_table, predicting_field)
         else:
-            predict_query, result, actual_result = naive_predict(self.client, predicting_field, from_table)
+            predict_query, evaluate_query = quick_predict_and_evaluate(self.client, from_table, predicting_field)
             self.assertCountEqual(list(predict_query['where'].keys()), expected_hypothesis_fields)
