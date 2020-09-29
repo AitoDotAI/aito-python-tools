@@ -1407,7 +1407,7 @@ class AitoDatabaseSchema(AitoSchema):
         return {
             'type': 'object',
             'properties': {
-                'schema': {'type': 'object', 'minProperties': 1}
+                'schema': {'type': 'object'}
             },
             'required': ['schema'],
             'additionalProperties': False
