@@ -5,7 +5,8 @@ from os import unlink
 from typing import Dict
 
 from aito.api import get_database_schema, delete_database, create_table, get_table_schema, delete_table, \
-    get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file, quick_predict_and_evaluate
+    get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file, quick_predict_and_evaluate, \
+    create_database
 from aito.cli.parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
     load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, \
     get_credentials_file_config, write_credentials_file_profile
@@ -109,6 +110,23 @@ class QuickAddTableSubCommand(SubCommand):
             upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
+        return 0
+
+
+class CreateDatabaseSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('create-database', 'create the database using the input database schema')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument(
+            'input', default='-', type=InputArgType(), nargs='?',
+            help="path to the schema file (when no file is given or when input is -, read from the standard input)")
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        database_schema = load_json_from_parsed_input_arg(parsed_args['input'], 'database schema')
+        create_database(client=client, database_schema=database_schema)
         return 0
 
 

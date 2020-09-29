@@ -189,6 +189,22 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
         )
 
+    def test_create_database(self):
+        database_schema = {'schema': {self.default_table_name: self.default_table_schema.to_json_serializable()}}
+        database_schema_fp = self.output_folder / 'database_schema.json'
+        with database_schema_fp.open('w') as f:
+            json.dump(database_schema, f)
+
+        self.addCleanup(database_schema_fp.unlink)
+
+        expected_args = {
+            'command': 'create-database',
+            'input': database_schema_fp,
+            **self.default_parser_args
+        }
+        self.parse_and_execute(['create-database', str(database_schema_fp)], expected_args)
+        self.assertTrue(check_table_exists(self.client, self.default_table_name))
+
     def test_create_table(self):
         expected_args = {
             'command': 'create-table',
