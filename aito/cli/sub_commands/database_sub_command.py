@@ -1,17 +1,18 @@
+import json
 import tempfile
+from abc import ABC, abstractmethod
 from os import unlink
 from typing import Dict
-import json
 
 from aito.api import get_database_schema, delete_database, create_table, get_table_schema, delete_table, \
     get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file, quick_predict_and_evaluate
+from aito.cli.parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
+    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, \
+    get_credentials_file_config, write_credentials_file_profile
+from aito.cli.sub_commands.sub_command import SubCommand
 from aito.client import AitoClient, Error
 from aito.schema import AitoTableSchema
 from aito.utils.data_frame_handler import DataFrameHandler
-from .sub_command import SubCommand
-from ..parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
-    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, \
-    get_credentials_file_config, write_credentials_file_profile
 
 
 class ConfigureSubCommand(SubCommand):
@@ -396,3 +397,39 @@ class QuickPredictSubCommand(SubCommand):
             print(f"- Accuracy: {evaluate_result.accuracy}")
 
         return 0
+
+
+class QueryToEndpointSubCommand(SubCommand, ABC):
+    @property
+    @abstractmethod
+    def endpoint(self) -> str:
+        pass
+
+    def __init__(self):
+        super().__init__(self.endpoint, f'send a query to the {self.endpoint.upper()} API')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument('query', type=str, help='the query to be send')
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+
+        query_str = parsed_args['query']
+        query = json.loads(query_str)
+
+        client_method = getattr(client, self.endpoint)
+        resp = client_method(query)
+
+        print(resp.to_json_string(indent=2))
+        return 0
+
+
+SearchSubCommand = type('SearchSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'search'})
+PredictSubCommand = type('PredictSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'predict'})
+RecommendSubCommand = type('RecommendSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'recommend'})
+EvaluateSubCommand = type('EvaluateSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'evaluate'})
+SimilaritySubCommand = type('SimilaritySubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'similarity'})
+MatchSubCommand = type('MatchSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'match'})
+RelateSubCommand = type('RelateSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'relate'})
+QuerySubCommand = type('QuerySubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'query'})

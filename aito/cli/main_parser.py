@@ -14,7 +14,9 @@ from .sub_commands.convert_sub_command import ConvertSubCommand
 from .sub_commands.database_sub_command import ConfigureSubCommand, QuickAddTableSubCommand, CreateTableSubCommand, \
     DeleteTableSubCommand, CopyTableSubCommand, RenameTableSubCommand, ShowTablesSubCommand, DeleteDatabaseSubCommand, \
     UploadEntriesSubCommand, UploadBatchSubCommand, UploadFileSubCommand, UploadDataFromSQLSubCommand, \
-    QuickAddTableFromSQLSubCommand, GetDatabaseSubCommand, GetTableSubCommand, QuickPredictSubCommand
+    QuickAddTableFromSQLSubCommand, GetDatabaseSubCommand, GetTableSubCommand, QuickPredictSubCommand, SearchSubCommand, \
+    PredictSubCommand, RecommendSubCommand, EvaluateSubCommand, SimilaritySubCommand, MatchSubCommand, RelateSubCommand, \
+    QuerySubCommand
 from .sub_commands.infer_table_schema_sub_command import InferTableSchemaSubCommand
 from .sub_commands.sub_command import SubCommand
 
@@ -39,6 +41,14 @@ class MainParser(ArgParser):
         UploadDataFromSQLSubCommand(),
         QuickAddTableFromSQLSubCommand(),
         QuickPredictSubCommand(),
+        SearchSubCommand(),
+        PredictSubCommand(),
+        RecommendSubCommand(),
+        EvaluateSubCommand(),
+        SimilaritySubCommand(),
+        MatchSubCommand(),
+        RelateSubCommand(),
+        QuerySubCommand()
     ]
 
     def __init__(self, commands: List[SubCommand] = None):

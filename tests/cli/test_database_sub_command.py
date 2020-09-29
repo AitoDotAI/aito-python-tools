@@ -8,12 +8,14 @@ from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
+from parameterized import parameterized
+
 from aito.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries, upload_entries
 from aito.cli.parser import get_credentials_file_config
-from aito.client import AitoClient
 from aito.client import RequestError
 from aito.schema import AitoTableSchema, AitoDatabaseSchema
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
+from tests.sdk.contexts import default_client
 
 
 class TestDatabaseSubCommands(ParserAndCLITestCase):
@@ -25,7 +27,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             'verbose': False, 'version': False, 'quiet': False,
             'profile': 'default', 'api_key': '.env', 'instance_url': '.env'
         }
-        cls.client = AitoClient(os.environ['AITO_INSTANCE_URL'], os.environ['AITO_API_KEY'])
+        cls.client = default_client()
         with (cls.input_folder / "invoice_aito_schema.json").open() as f:
             json_schema = json.load(f)
         cls.default_table_schema = AitoTableSchema.from_deserialized_object(json_schema)
@@ -440,6 +442,32 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
                 content = in_f.read()
             listed_tables = content.splitlines()
             self.assertIn(self.default_table_name, listed_tables)
+
+    @parameterized.expand([
+        ('search', {"from": "users"}),
+        ('predict', {"from": "products", "where": {"name": "Pirkka banana"}, "predict": "tags"}),
+        ('recommend', {"from": "impressions", "recommend": "product", "goal": {"session.user": "veronica"}}),
+        ('evaluate', {"test": {"$index": {"$mod": [10, 0]}}, "evaluate": {"from": "products", "predict": "tags"}}),
+        ('similarity', {"from": "products", "similarity": {"name": "rye bread"}}),
+        ('match', {"from": "impressions", "where": {"session.user": "veronica"}, "match": "product"}),
+        ('relate', {"from": "products", "where": {"$exists": "name"}, "relate": "tags"}),
+        ('query', {"from": "products", "where": {"name": "Pirkka banana"}, "get": "tags", "orderBy": "$p"})
+    ])
+    def test_query_to_endpoint(self, endpoint, query):
+        instance_url = os.environ['AITO_GROCERY_DEMO_INSTANCE_URL']
+        api_key = os.environ['AITO_GROCERY_DEMO_API_KEY']
+        query_str = json.dumps(query)
+
+        expected_args = {
+            'command': endpoint,
+            'query': query_str,
+            **self.default_parser_args,
+            **{
+                'instance_url': instance_url,
+                'api_key': api_key
+            }
+        }
+        self.parse_and_execute([endpoint, '-i', instance_url, '-k', api_key, query_str], expected_args)
 
     def test_quick_predict(self):
         self.create_table()
