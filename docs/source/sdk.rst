@@ -5,7 +5,8 @@ The Aito SDK consists of:
 
   - :py:mod:`~aito.schema`: Data structure for the Aito Database Schema
   - :py:mod:`~aito.client`: A versatile client to make requests to an Aito Database Instance
-  - :py:mod:`~aito.client_request`: Different request objects used by the AitoClient so that you don't have to worry about the Aito API endpoint
+  - :py:mod:`~aito.client_request`: Request objects used in AitoClient request so that you don't have to worry about the Aito API endpoint
+  - :py:mod:`~aito.client_response`: Enriched response objects returned after executing a request with the AitoClient
   - :py:mod:`~aito.api`: Different useful functions that uses an AitoClient object to interact with an Aito Database Instance
   - :py:class:`~aito.utils.data_frame_handler.DataFrameHandler`: Utility to read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema
 

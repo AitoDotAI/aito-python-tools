@@ -1,7 +1,7 @@
 Quickstart
 ==========
 
-This section explains how to upload data to Aito with either :doc:`CLI <cli>` or :doc:`Python SDK <sdk>`.
+This section explains how to upload data to Aito and send your first query with either :doc:`CLI <cli>` or :doc:`Python SDK <sdk>`.
 
 Essentially, uploading data into Aito can be broken down into the following steps:
 
@@ -10,6 +10,7 @@ Essentially, uploading data into Aito can be broken down into the following step
 3. Create a table :ref:`cli <cliQuickstartCreateTable>` | :ref:`sdk <sdkQuickstartCreateTable>`
 4. Convert the data :ref:`cli <cliQuickstartConvertData>` | :ref:`sdk <sdkQuickstartConvertData>`
 5. Upload the data :ref:`cli <cliQuickstartUploadData>` | :ref:`sdk <sdkQuickstartUploadData>`
+6. Send a query to an Aito Endpoint :ref:`cli <cliQuickstartSendQuery>` | :ref:`sdk <sdkQuickstartSendQuery>`
 
 .. note::
 
@@ -18,8 +19,8 @@ Essentially, uploading data into Aito can be broken down into the following step
 
 If you don't have a data file, you can download our `example file <https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv>`_ and follow the guide.
 
-Upload Data with the CLI
-------------------------
+Upload data and send your first query with the CLI
+--------------------------------------------------
 
 :ref:`Setup Aito credentials <cliSetUpAitoCredentials>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,10 +106,24 @@ You can upload the data by either:
 
       $ aito upload-file tableName tableEntries.ndjson.gz
 
+.. _cliQuickstartSendQuery:
+
+Send your first query
+~~~~~~~~~~~~~~~~~~~~~
+
+You can send a query to an Aito endpoint by::
+
+  $ aito <endpoint> <query>
+
+For example::
+
+  $ aito search '{"from": "products"}'
+  $ aito predict '{"from": "products", "where": {"name": {"$match": "rye bread"}}, "predict": "tags"}'
+
 .. _sdkQuickstartUpload:
 
-Upload Data with the SDK
-------------------------
+Upload data and send your first query with the SDK
+--------------------------------------------------
 
 The Aito Python SDK uses `Pandas DataFrame`_ for multiple operations.
 
@@ -350,6 +365,35 @@ The `Batch Upload`_ can also be done using a generator:
       batch_size=2,
       optimize_on_finished=False
     )
+
+.. _sdkQuickstartSendQuery:
+
+Send your first query
+~~~~~~~~~~~~~~~~~~~~~
+
+You can send a query to an Aito endpoint by using the AitoClient method:
+
+  .. testsetup:: [grocery_demo]
+
+    from os import environ
+
+    INSTANCE_URL = environ['AITO_GROCERY_DEMO_INSTANCE_URL']
+    INSTANCE_API_KEY = environ['AITO_GROCERY_DEMO_API_KEY']
+
+  .. testcode:: [grocery_demo]
+
+    from aito.client import AitoClient
+    aito_client = AitoClient(instance_url=INSTANCE_URL, api_key=INSTANCE_API_KEY)
+    aito_client.search({
+      "from": "products",
+      "where": {"name": {"$match": "rye bread"}}
+    })
+
+    aito_client.predict({
+      "from": "products",
+      "where": {"name": "rye bread"},
+      "predict": "tags"
+    })
 
 .. _Analyzer: https://aito.ai/docs/api/#schema-analyzer
 .. _Batch Upload: https://aito.ai/docs/api/#post-api-v1-data-table-batch
