@@ -3,18 +3,35 @@
 """
 
 import logging
-from typing import Optional, Union, Dict, List
+from abc import ABC, abstractmethod
+from typing import Optional, Union, Dict, List, TypeVar, Generic, Type
+
+from aito.client_response import BaseResponse, SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
+    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
 
 LOG = logging.getLogger('AitoClientRequest')
 
 
-class BaseRequest:
-    """Base request to the Aito instance"""
+class AitoRequest(ABC):
     _query_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
     _query_endpoints = [f'/api/v1/{p}' for p in _query_paths] + ['/version']
     _database_endpoints = ['/api/v1/schema', '/api/v1/data']
     _job_endpoint = '/api/v1/jobs'
     _request_methods = ['PUT', 'POST', 'GET', 'DELETE']
+
+    def __init__(self, method: str, endpoint: str, query: Optional[Union[Dict, List]] = None):
+        """
+
+        :param method: request method
+        :type method: str
+        :param endpoint: request endpoint
+        :type endpoint: str
+        :param query: an Aito query if applicable, optional
+        :type query: Optional[Union[Dict, List]]
+        """
+        self.method = self._check_method(method)
+        self.endpoint = self._check_endpoint(endpoint)
+        self.query = query
 
     def _check_endpoint(self, endpoint: str):
         """raise error if erroneous endpoint and warn if the unrecognized endpoint, else return the endpoint
@@ -37,71 +54,125 @@ class BaseRequest:
             )
         return method
 
-    def __init__(self, method: str, endpoint: str, query: Optional[Union[Dict, List]] = None):
-        """
-
-        :param method: request method
-        :type method: str
-        :param endpoint: request endpoint
-        :type endpoint: str
-        :param query: an Aito query if applicable, optional
-        :type query: Optional[Union[Dict, List]]
-        """
-        self.method = self._check_method(method)
-        self.endpoint = self._check_endpoint(endpoint)
-        self.query = query
-
     def __str__(self):
         return f'{self.method}({self.endpoint}): {str(self.query)[:100]}'
 
-    def _is_same_type(self, req: 'BaseRequest'):
-        """check if another request object is of the same type by comaring method and endpoint"""
-        return self.method == req.method and self.endpoint == req.endpoint
+    @property
+    @abstractmethod
+    def response_cls(self) -> Type[BaseResponse]:
+        """the class of the response for this request class
+
+        :rtype: Type[BaseResponse]
+        """
+        pass
 
 
-class SearchRequest(BaseRequest):
-    """Request of the `Search query <https://aito.ai/docs/api/#post-api-v1-search>`__"""
+class BaseRequest(AitoRequest):
+    """Base request to the Aito instance"""
+    @property
+    def response_cls(self) -> Type[BaseResponse]:
+        return BaseResponse
+
+
+class SearchRequest(AitoRequest):
+    """Request to the `Search API <https://aito.ai/docs/api/#post-api-v1-search>`__"""
+    method = 'POST'
+    endpoint = '/api/v1/_search'
+
     def __init__(self, query: Dict):
-        super().__init__('POST', '/api/v1/_search', query)
+        super().__init__(self.method, self.endpoint, query)
+
+    @property
+    def response_cls(self) -> Type[BaseResponse]:
+        return SearchResponse
 
 
-class PredictRequest(BaseRequest):
-    """Request of the `Predict query <https://aito.ai/docs/api/#post-api-v1-predict>`__"""
+class PredictRequest(AitoRequest):
+    """Request to the `Predict API <https://aito.ai/docs/api/#post-api-v1-predict>`__"""
+    method = 'POST'
+    endpoint = '/api/v1/_predict'
+
     def __init__(self, query: Dict):
-        super().__init__('POST', '/api/v1/_predict', query)
+        super().__init__(self.method, self.endpoint, query)
+
+    @property
+    def response_cls(self) -> Type[BaseResponse]:
+        return PredictResponse
 
 
-class RecommendRequest(BaseRequest):
-    """Request of the `Recommend query <https://aito.ai/docs/api/#post-api-v1-recommend>`__"""
+class RecommendRequest(AitoRequest):
+    """Request to the `Recommend API <https://aito.ai/docs/api/#post-api-v1-recommend>`__"""
+    method = 'POST'
+    endpoint = '/api/v1/_recommend'
+
     def __init__(self, query: Dict):
-        super().__init__('POST', '/api/v1/_recommend', query)
+        super().__init__(self.method, self.endpoint, query)
+
+    @property
+    def response_cls(self) -> Type[BaseResponse]:
+        return RecommendResponse
 
 
-class EvaluateRequest(BaseRequest):
-    """Request of the `Evaluate query <https://aito.ai/docs/api/#post-api-v1-evaluate>`__"""
+class EvaluateRequest(AitoRequest):
+    """Request to the `Evaluate API <https://aito.ai/docs/api/#post-api-v1-evaluate>`__"""
+    method = 'POST'
+    endpoint = '/api/v1/_evaluate'
+
     def __init__(self, query: Dict):
-        super().__init__('POST', '/api/v1/_evaluate', query)
+        super().__init__(self.method, self.endpoint, query)
+
+    @property
+    def response_cls(self) -> Type[BaseResponse]:
+        return EvaluateResponse
 
 
-class SimilarityRequest(BaseRequest):
-    """Request of the `Similarity query <https://aito.ai/docs/api/#post-api-v1-similarity>`__"""
+class SimilarityRequest(AitoRequest):
+    """Request to the `Similarity API <https://aito.ai/docs/api/#post-api-v1-similarity>`__"""
+    method = 'POST'
+    endpoint = '/api/v1/_similarity'
+
     def __init__(self, query: Dict):
-        super().__init__('POST', '/api/v1/_similarity', query)
+        super().__init__(self.method, self.endpoint, query)
+
+    @property
+    def response_cls(self) -> Type[BaseResponse]:
+        return SimilarityResponse
 
 
-class MatchRequest(BaseRequest):
-    """Request of the `Match query <https://aito.ai/docs/api/#post-api-v1-match>`__"""
+class MatchRequest(AitoRequest):
+    """Request to the `Match query <https://aito.ai/docs/api/#post-api-v1-match>`__"""
+    method = 'POST'
+    endpoint = '/api/v1/_match'
+
     def __init__(self, query: Dict):
-        super().__init__('POST', '/api/v1/_match', query)
+        super().__init__(self.method, self.endpoint, query)
+
+    @property
+    def response_cls(self) -> Type[BaseResponse]:
+        return MatchResponse
 
 
-class RelateRequest(BaseRequest):
-    """Request of the `Relate query <https://aito.ai/docs/api/#post-api-v1-relate>`__"""
+class RelateRequest(AitoRequest):
+    """Request to the `Relate API <https://aito.ai/docs/api/#post-api-v1-relate>`__"""
+    method = 'POST'
+    endpoint = '/api/v1/_relate'
+
     def __init__(self, query: Dict):
-        super().__init__('POST', '/api/v1/_relate', query)
+        super().__init__(self.method, self.endpoint, query)
+
+    @property
+    def response_cls(self) -> Type[BaseResponse]:
+        return RelateResponse
 
 
-class GenericQueryRequest(BaseRequest):
-    """Response of the `Generic query <https://aito.ai/docs/api/#post-api-v1-query>`__"""
+class GenericQueryRequest(AitoRequest):
+    """Response to the `Generic Query API <https://aito.ai/docs/api/#post-api-v1-query>`__"""
+    method = 'POST'
+    endpoint = '/api/v1/_query'
+
     def __init__(self, query: Dict):
-        super().__init__('POST', '/api/v1/_query', query)
+        super().__init__(self.method, self.endpoint, query)
+
+    @property
+    def response_cls(self) -> Type[BaseResponse]:
+        return HitsResponse

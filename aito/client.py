@@ -11,7 +11,7 @@ import requests as requestslib
 from aiohttp import ClientSession, ClientResponseError
 
 from .client_request import BaseRequest, SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
-    SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest
+    SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest, AitoRequest
 from .client_response import BaseResponse, SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
     SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
 from aito.exceptions import BaseError
@@ -30,11 +30,11 @@ class RequestError(Error):
     """An error occurred when sending a request to the Aito instance
 
     """
-    def __init__(self, request_obj: BaseRequest, error: Exception):
+    def __init__(self, request_obj: AitoRequest, error: Exception):
         """
 
         :param request_obj: the request object
-        :type request_obj: BaseRequest
+        :type request_obj: AitoRequest
         :param error: the error
         :type error: Exception
         """
@@ -54,17 +54,6 @@ class AitoClient:
     """A versatile client that connects to the Aito Database Instance
 
     """
-    _request_response_map = {
-        SearchRequest: SearchResponse,
-        PredictRequest: PredictResponse,
-        RecommendRequest: RecommendResponse,
-        EvaluateRequest: EvaluateResponse,
-        SimilarityRequest: SimilarityResponse,
-        MatchRequest: MatchResponse,
-        RelateRequest: RelateResponse,
-        GenericQueryRequest: HitsResponse
-    }
-
     def __init__(
             self,
             instance_url: str,
@@ -105,22 +94,14 @@ class AitoClient:
         """
         return {'Content-Type': 'application/json', 'x-api-key': self.api_key}
 
-    # noinspection PyProtectedMember
-    def _get_response(self, request: BaseRequest, json_response: Dict) -> BaseResponse:
-        """return the appropriate response object"""
-        for req_type, resp_type in self._request_response_map.items():
-            if request._is_same_type(req_type({})):
-                return resp_type(json_response)
-        return BaseResponse(json_response)
-
     def request(
-            self, request_obj: BaseRequest, raise_for_status: Optional[bool] = None
+            self, request_obj: AitoRequest, raise_for_status: Optional[bool] = None,
     ) -> Union[BaseResponse, RequestError]:
         """make a request to an Aito API endpoint
         The client returns a JSON response if the request succeed and a :class:`.RequestError` if the request fails
 
         :param request_obj: request object
-        :type request_obj: BaseRequest
+        :type request_obj: AitoRequest
         :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
             If set to None, value from Client will be used. Defaults to True
         :type raise_for_status: bool
@@ -187,17 +168,17 @@ class AitoClient:
                 raise req_err
             else:
                 return req_err
-        return self._get_response(request_obj, json_resp)
+        return request_obj.response_cls(json_resp)
 
     async def async_request(
-            self, session: ClientSession, request_obj: BaseRequest, raise_for_status: Optional[bool] = None
+            self, session: ClientSession, request_obj: AitoRequest, raise_for_status: Optional[bool] = None
     ) -> Union[BaseResponse, RequestError]:
         """execute a request asynchronously using aiohttp ClientSession
 
         :param session: aiohttp ClientSession for making request
         :type session: ClientSession
         :param request_obj: the request object
-        :type request_obj: BaseRequest
+        :type request_obj: AitoRequest
         :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
             If set to None, value from Client will be used. Defaults to True
         :type raise_for_status: bool
@@ -212,7 +193,7 @@ class AitoClient:
                     headers=self.headers,
                     raise_for_status=True
             ) as resp:
-                return self._get_response(request_obj, await resp.json())
+                return request_obj.response_cls(await resp.json())
         except Exception as e:
             req_err = RequestError(request_obj, e)
             _raise = raise_for_status if raise_for_status is not None else self.raise_for_status
@@ -255,7 +236,7 @@ class AitoClient:
 
     def batch_requests(
             self,
-            requests: List[BaseRequest],
+            requests: List[AitoRequest],
             max_concurrent_requests: int = 10
     ) -> List[BaseResponse]:
         """execute a batch of requests asynchronously
@@ -263,7 +244,7 @@ class AitoClient:
         This method is useful when sending a batch of requests, for example, when sending a batch of predict requests.
 
         :param requests: list of request objects
-        :type requests: List[BaseRequest]
+        :type requests: List[AitoRequest]
         :param max_concurrent_requests: the number of queries to be sent per batch
         :type max_concurrent_requests: int
         :return: list of request response or exception if a request did not succeed

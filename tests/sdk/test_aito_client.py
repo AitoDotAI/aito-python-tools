@@ -8,7 +8,7 @@ from aito.client import AitoClient, Error, RequestError
 from aito.client_request import BaseRequest, SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
     SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest
 from aito.client_response import SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
-    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
+    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse, BaseResponse
 from tests.cases import CompareTestCase
 from tests.sdk.contexts import default_client, grocery_demo_client
 
@@ -115,7 +115,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
             [BaseRequest('POST', '/api/v1/_query', query) for query in queries],
             max_concurrent_requests=max_concurrent
         )
-        self.assertTrue(all([isinstance(res, HitsResponse) for res in responses]))
+        self.assertTrue(all([isinstance(res, BaseResponse) for res in responses]))
         self.assertEqual(
             [res.json for res in responses],
             [{'offset': 0, 'total': 3, 'hits': [{'username': 'veronica'}]}] * 3

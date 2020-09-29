@@ -169,8 +169,8 @@ class BaseResponse(JsonFormat):
 HitType = TypeVar('HitType', bound=BaseHit)
 
 
-class _BaseHitsResponse(BaseResponse, Generic[HitType], ABC):
-    """The response contains entries or `hits <https://aito.ai/docs/api/#schema-hits>`__ returned for a given query"""
+class _GenericHitsResponse(BaseResponse, Generic[HitType], ABC):
+    """HitsResponse with information of the HitType"""
     def __init__(self, json):
         """
 
@@ -182,10 +182,10 @@ class _BaseHitsResponse(BaseResponse, Generic[HitType], ABC):
 
     @property
     @abstractmethod
-    def hit_cls(self) -> Type[BaseHit]:
+    def hit_cls(self) -> Type[HitType]:
         """the class of the hit
 
-        :rtype: Type[BaseHit]
+        :rtype: Type[HitType]
         """
         pass
 
@@ -234,24 +234,24 @@ class _BaseHitsResponse(BaseResponse, Generic[HitType], ABC):
         return self._hits[0]
 
 
-class HitsResponse(_BaseHitsResponse[BaseHit]):
+class HitsResponse(_GenericHitsResponse[BaseHit]):
     """The response contains entries or `hits <https://aito.ai/docs/api/#schema-hits>`__ returned for a given query"""
     @property
-    def hit_cls(self) -> Type[BaseHit]:
+    def hit_cls(self) -> Type[HitType]:
         return BaseHit
 
 
-class SearchResponse(_BaseHitsResponse[BaseHit]):
+class SearchResponse(_GenericHitsResponse[BaseHit]):
     """Response of the `Search query <https://aito.ai/docs/api/#post-api-v1-search>`__"""
     @property
-    def hit_cls(self) -> Type[BaseHit]:
+    def hit_cls(self) -> Type[HitType]:
         return BaseHit
 
 
-class PredictResponse(_BaseHitsResponse[ProbabilityHit]):
+class PredictResponse(_GenericHitsResponse[ProbabilityHit]):
     """Response of the `Predict query <https://aito.ai/docs/api/#post-api-v1-predict>`__"""
     @property
-    def hit_cls(self) -> Type[BaseHit]:
+    def hit_cls(self) -> Type[HitType]:
         return ProbabilityHit
 
     @property
@@ -274,10 +274,10 @@ class PredictResponse(_BaseHitsResponse[ProbabilityHit]):
         return self.first_hit
 
 
-class RecommendResponse(_BaseHitsResponse[ProbabilityHit]):
+class RecommendResponse(_GenericHitsResponse[ProbabilityHit]):
     """Response of the `Recommend query <https://aito.ai/docs/api/#post-api-v1-recommend>`__"""
     @property
-    def hit_cls(self) -> Type[BaseHit]:
+    def hit_cls(self) -> Type[HitType]:
         return ProbabilityHit
 
     @property
@@ -300,10 +300,10 @@ class RecommendResponse(_BaseHitsResponse[ProbabilityHit]):
         return self.first_hit
 
 
-class SimilarityResponse(_BaseHitsResponse[ScoredHit]):
+class SimilarityResponse(_GenericHitsResponse[ScoredHit]):
     """Response of the `Similarity query <https://aito.ai/docs/api/#post-api-v1-similarity>`__"""
     @property
-    def hit_cls(self) -> Type[BaseHit]:
+    def hit_cls(self) -> Type[HitType]:
         return ScoredHit
 
     @property
@@ -326,10 +326,10 @@ class SimilarityResponse(_BaseHitsResponse[ScoredHit]):
         return self.first_hit
 
 
-class MatchResponse(_BaseHitsResponse[ProbabilityHit]):
+class MatchResponse(_GenericHitsResponse[ProbabilityHit]):
     """Response of the `Match query <https://aito.ai/docs/api/#post-api-v1-match>`__"""
     @property
-    def hit_cls(self) -> Type[BaseHit]:
+    def hit_cls(self) -> Type[HitType]:
         return ProbabilityHit
 
     @property
@@ -352,10 +352,10 @@ class MatchResponse(_BaseHitsResponse[ProbabilityHit]):
         return self.first_hit
 
 
-class RelateResponse(_BaseHitsResponse[RelateHit]):
+class RelateResponse(_GenericHitsResponse[RelateHit]):
     """Response of the `Relate query <https://aito.ai/docs/api/#post-api-v1-relate>`__"""
     @property
-    def hit_cls(self) -> Type[BaseHit]:
+    def hit_cls(self) -> Type[HitType]:
         return RelateHit
 
     @property

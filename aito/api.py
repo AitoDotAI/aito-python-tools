@@ -12,7 +12,7 @@ import ndjson
 import requests as requestslib
 
 from aito.client import AitoClient
-from aito.client_request import BaseRequest, GenericQueryRequest, PredictRequest
+from aito.client_request import BaseRequest, PredictRequest
 from aito.schema import AitoDatabaseSchema, AitoTableSchema
 from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 
@@ -566,7 +566,7 @@ def get_table_size(client: AitoClient, table_name: str) -> int:
     :return: the number of entries in the table
     :rtype: int
     """
-    resp = client.request(BaseRequest('POST', '/api/v1/_query', {'from': table_name}))
+    resp = client.query({'from': table_name})
     return resp['total']
 
 
@@ -590,9 +590,7 @@ def query_entries(
     :return: the table entries
     :rtype: List[Dict]
     """
-
-    query = {'from': table_name, 'offset': offset, 'limit': limit, 'select': select}
-    resp = client.request(BaseRequest('POST', '/api/v1/_query', query))
+    resp = client.query({'from': table_name, 'offset': offset, 'limit': limit, 'select': select})
     return resp['hits']
 
 
