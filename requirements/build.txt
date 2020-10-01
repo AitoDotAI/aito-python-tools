@@ -6,5 +6,5 @@ aiohttp == 3.6.0; python_version < "3.8"
 ndjson == 0.2.0
 langdetect == 1.0.7
 argcomplete == 1.11.1
-xlrd == 1.1.0
-jsonschema==3.2.0
+xlrd <2.0.0,>= 1.2.0
+jsonschema == 3.2.0
