@@ -13,6 +13,7 @@ LOG = logging.getLogger('AitoClientRequest')
 
 
 class AitoRequest(ABC):
+    """Request abstract class"""
     _query_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
     _query_endpoints = [f'/api/v1/{p}' for p in _query_paths] + ['/version']
     _database_endpoints = ['/api/v1/schema', '/api/v1/data']
@@ -68,6 +69,14 @@ class AitoRequest(ABC):
         :rtype: Type[BaseResponse]
         """
         pass
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]):
+        for sub_cls in cls.__subclasses__():
+            if hasattr(sub_cls, 'method') and hasattr(sub_cls, 'endpoint'):
+                if method == sub_cls.method and endpoint == sub_cls.endpoint:
+                    return sub_cls(query=query)
+        return BaseRequest(method=method, endpoint=endpoint, query=query)
 
 
 class BaseRequest(AitoRequest):
