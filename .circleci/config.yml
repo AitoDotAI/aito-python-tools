@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   win: circleci/windows@2.2.0
+  jira: circleci/jira@1.2.2
 
 workflows:
   version: 2
@@ -340,6 +341,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_build_and_test
       - *create_venv_and_install_build_and_test_dependencies_linux
       - *save_venv_cache_build_and_test
@@ -374,6 +376,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *install_odbc_driver_linux
       - *install_postgres_odbc_driver_linux
       - *restore_venv_cache_build_and_test
@@ -424,6 +427,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_build_and_test
       - *create_venv_and_install_build_and_test_dependencies_linux
       - *save_venv_cache_build_and_test
@@ -466,6 +470,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *install_pyenv_osx
       - *restore_pyenv_cache
       - *install_python_pyenv
@@ -502,6 +507,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *install_odbc_driver_osx
       - *install_postgres_odbc_driver_osx
       - *install_pyenv_osx
@@ -575,6 +581,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
@@ -601,6 +608,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
@@ -633,6 +641,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
@@ -653,6 +662,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_build_doc_venv_cache
       - *create_build_doc_venv
       - *save_build_doc_venv_cache
@@ -684,6 +694,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify:
+          job_type: deployment
+          environment_type: testing
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
