@@ -12,7 +12,6 @@ import ndjson
 import requests as requestslib
 
 from aito.client import AitoClient
-from aito.client_request import BaseRequest, PredictRequest
 from aito.schema import AitoDatabaseSchema, AitoTableSchema
 from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 
@@ -27,11 +26,11 @@ def get_version(client: AitoClient) -> str:
     :return: version information in json format
     :rtype: Dict
     """
-    resp = client.request(BaseRequest('GET', '/version'))
+    resp = client.request(method='GET', endpoint='/version')
     return resp['version']
 
 
-def create_database(client: AitoClient, database_schema: Dict):
+def create_database(client: AitoClient, database_schema: Union[AitoDatabaseSchema, Dict]):
     """`create a database <https://aito.ai/docs/api/#put-api-v1-schema>`__ using the specified database schema
 
     .. note::
@@ -45,7 +44,9 @@ def create_database(client: AitoClient, database_schema: Dict):
     :return: the database schema
     :rtype: Dict
     """
-    client.request(BaseRequest('PUT', '/api/v1/schema', database_schema))
+    if not isinstance(database_schema, AitoDatabaseSchema):
+        database_schema = AitoDatabaseSchema.from_deserialized_object(database_schema)
+    client.request(method='PUT', endpoint='', query=database_schema.to_json_serializable())
     LOG.info('database schema created')
 
 
@@ -57,7 +58,7 @@ def get_database_schema(client: AitoClient) -> AitoDatabaseSchema:
     :return: Aito database schema
     :rtype: Dict
     """
-    res = client.request(BaseRequest('GET', '/api/v1/schema'))
+    res = client.request(method='GET', endpoint='/api/v1/schema')
     return AitoDatabaseSchema.from_deserialized_object(res.json)
 
 
@@ -73,7 +74,7 @@ def delete_database(client: AitoClient):
     :return: deleted tables
     :rtype: Dict
     """
-    client.request(BaseRequest('DELETE', '/api/v1/schema'))
+    client.request(method='DELETE', endpoint='/api/v1/schema')
     LOG.info('database deleted')
 
 
@@ -100,7 +101,7 @@ def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTa
         if not isinstance(table_schema, dict):
             raise ValueError("the input table schema must be either an AitoTableSchema object or a dict")
         table_schema = AitoTableSchema.from_deserialized_object(table_schema)
-    client.request(BaseRequest('PUT', f'/api/v1/schema/{table_name}', table_schema.to_json_serializable()))
+    client.request(method='PUT', endpoint=f'/api/v1/schema/{table_name}', query=table_schema.to_json_serializable())
     LOG.info(f'table `{table_name}` created')
 
 
@@ -114,7 +115,7 @@ def get_table_schema(client: AitoClient, table_name: str) -> AitoTableSchema:
     :return: the table schema
     :rtype: AitoTableSchema
     """
-    resp = client.request(BaseRequest('GET', f'/api/v1/schema/{table_name}'))
+    resp = client.request(method='GET', endpoint=f'/api/v1/schema/{table_name}')
     return AitoTableSchema.from_deserialized_object(resp.json)
 
 
@@ -132,7 +133,7 @@ def delete_table(client: AitoClient, table_name: str):
     :return: deleted table
     :rtype: Dict
     """
-    client.request(BaseRequest('DELETE', f'/api/v1/schema/{table_name}'))
+    client.request(method='DELETE', endpoint=f'/api/v1/schema/{table_name}')
     LOG.info(f'table `{table_name}` deleted')
 
 
@@ -178,9 +179,11 @@ def rename_table(client: AitoClient, old_name: str, new_name: str, replace: bool
     :param replace: replace an existing table of which name is the new name, defaults to False
     :type replace: bool, optional
     """
-    client.request(BaseRequest(
-        'POST', '/api/v1/schema/_rename', {'from': old_name, 'rename': new_name, 'replace': replace}
-    ))
+    client.request(
+        method='POST',
+        endpoint='/api/v1/schema/_rename',
+        query={'from': old_name, 'rename': new_name, 'replace': replace}
+    )
 
 
 def copy_table(client: AitoClient, table_name: str, copy_table_name: str, replace: bool = False):
@@ -199,11 +202,11 @@ def copy_table(client: AitoClient, table_name: str, copy_table_name: str, replac
     :param replace: replace an existing table of which name is the name of the copy table, defaults to False
     :type replace: bool, optional
     """
-    client.request(BaseRequest(
-        'POST',
-        '/api/v1/schema/_copy',
-        {'from': table_name, 'copy': copy_table_name, 'replace': replace}
-    ))
+    client.request(
+        method='POST',
+        endpoint='/api/v1/schema/_copy',
+        query={'from': table_name, 'copy': copy_table_name, 'replace': replace}
+    )
 
 
 def optimize_table(client: AitoClient, table_name):
@@ -218,7 +221,7 @@ def optimize_table(client: AitoClient, table_name):
     :rtype:
     """
     try:
-        client.request(BaseRequest('POST', f'/api/v1/data/{table_name}/optimize', {}))
+        client.request(method='POST', endpoint=f'/api/v1/data/{table_name}/optimize', query={})
     except Exception as e:
         LOG.error(f'failed to optimize: {e}')
     LOG.info(f'table {table_name} optimized')
@@ -277,7 +280,7 @@ def upload_entries(
     def _upload_a_batch(begin_idx, last_idx, populated_c, batch_content):
         try:
             LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-            client.request(BaseRequest('POST', f"/api/v1/data/{table_name}/batch", batch_content))
+            client.request(method='POST', endpoint=f"/api/v1/data/{table_name}/batch", query=batch_content)
             populated_c += len(batch_content)
             LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
         except Exception as e:
@@ -318,7 +321,7 @@ def initiate_upload_file(client: AitoClient, table_name: str) -> Dict:
     :rtype: Dict
     """
     LOG.debug('initiating file upload...')
-    r = client.request(BaseRequest('POST', f"/api/v1/data/{table_name}/file"))
+    r = client.request(method='POST', endpoint=f"/api/v1/data/{table_name}/file")
     return r.json
 
 
@@ -356,7 +359,7 @@ def trigger_file_processing(client: AitoClient, table_name: str, upload_session_
     """
     LOG.debug('triggering file processing...')
     session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
-    client.request(BaseRequest('POST', session_end_point))
+    client.request(method='POST', endpoint=session_end_point)
     LOG.info('triggered file processing')
 
 
@@ -377,7 +380,7 @@ def poll_file_processing_status(client: AitoClient, table_name: str, upload_sess
     session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
     while True:
         try:
-            processing_progress_resp = client.request(BaseRequest('GET', session_end_point))
+            processing_progress_resp = client.request(method='GET', endpoint=session_end_point)
             status = processing_progress_resp['status']
             LOG.debug(f"completed count: {status['completedCount']}, throughput: {status['throughput']}")
             if processing_progress_resp['errors']['message'] != 'Last 0 failing rows':
@@ -477,7 +480,7 @@ def create_job(client: AitoClient, job_endpoint: str, query: Union[List, Dict]) 
     :return: job information
     :rtype: Dict
     """
-    resp = client.request(BaseRequest('POST', job_endpoint, query))
+    resp = client.request(method='POST', endpoint=job_endpoint, query=query)
     return resp.json
 
 
@@ -491,7 +494,7 @@ def get_job_status(client: AitoClient, job_id: str) -> Dict:
     :return: job status
     :rtype: Dict
     """
-    resp = client.request(BaseRequest(method='GET', endpoint=f'/api/v1/jobs/{job_id}'))
+    resp = client.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}')
     return resp.json
 
 
@@ -505,7 +508,7 @@ def get_job_result(client: AitoClient, job_id: str) -> Dict:
     :return: the job result
     :rtype: Dict
     """
-    resp = client.request(BaseRequest(method='GET', endpoint=f'/api/v1/jobs/{job_id}/result'))
+    resp = client.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}/result')
     return resp.json
 
 

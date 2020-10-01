@@ -27,9 +27,15 @@ class TestAitoClient(CompareTestCase):
         with self.assertRaises(Error):
             AitoClient(os.environ['AITO_INSTANCE_URL'], "under_pressure")
 
+    def test_request_with_request_obj_kwarg(self):
+        self.client.request(request_obj=BaseRequest('GET', '/api/v1/schema'))
+
+    def test_request_with_method_and_endpoint_kwarg(self):
+        self.client.request(method='GET', endpoint='/api/v1/schema')
+
     def test_erroneous_query(self):
         with self.assertRaises(RequestError):
-            self.client.request(BaseRequest('POST', '/api/v1/_query', {"from": "catch_me_if_you_can"}))
+            self.client.request(request_obj=BaseRequest('POST', '/api/v1/_query', {"from": "catch_me_if_you_can"}))
 
 
 class TestAitoClientGroceryCase(CompareTestCase):
@@ -94,7 +100,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
 
         self.logger.debug('test request method')
         req = request_cls(query)
-        resp = self.client.request(req)
+        resp = self.client.request(request_obj=req)
         self.assertTrue(isinstance(resp, response_cls))
 
         self.logger.debug('test endpoint method')

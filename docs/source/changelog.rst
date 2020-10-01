@@ -4,14 +4,15 @@ Changelog
 0.4.0
 -----
 
-This version contains major change on how you make requests with the :py:class:`~aito.client.AitoClient`.
-Instead of specifying the request method, endpoint, and the query as before, you can now use the
-:py:mod:`Request objects <aito.client_request>` or use the endpoint methods. The client will also returns the enriched
+This version contains changes on how you make requests with the :py:class:`~aito.client.AitoClient`.
+In addition to specifying the request method, endpoint as before, you can now use different
+:py:mod:`Request objects <aito.client_request>` or use the endpoint methods of the client,
+i.e: :py:func:`aito.client.AitoClient.predict`. The client now returns the enriched
 :py:mod:`Response objects <aito.client_response>` instead of JSON as before.
 
 Helper methods of the AitoClient, e.g: create_table, are moved to the :py:mod:`aito.api` module.
 
-You can now execute requests from the CLI.
+You can now execute requests from the CLI
 
 
 SDK
@@ -24,17 +25,16 @@ SDK
 AitoClient
 """"""""""
 
-  - The :py:class:`~aito.client.AitoClient` now has a `raise_for_status` argument which controls if the client should return an error object or raise when an error occurred during sending a request.
-  - The :py:func:`~aito.client.AitoClient.request` method no longer takes `method`, `endpoint`, and `query` but instead takes a :py:class:`~aito.client_request.AitoRequest` object.
-  - The :py:func:`~aito.client.AitoClient.request` method also has the `raise_for_status` argument which overrrides AitoClient.raise_for_status
-  - :py:func:`~aito.client.AitoClient.async_request` method added to execute a request asynchronously using `aiohttp ClientSession`_
-  - method **async_requests** is deprecated, use :py:func:`~aito.client.AitoClient.batch_requests` instead.
-  - Added the following methods to send a query to Aito API Endpoint: :py:func:`~aito.client.AitoClient.search`, :py:func:`~aito.client.AitoClient.predict`, :py:func:`~aito.client.AitoClient.recommend`, :py:func:`~aito.client.AitoClient.evaluate`, :py:func:`~aito.client.AitoClient.similarity`, :py:func:`~aito.client.AitoClient.match`, :py:func:`~aito.client.AitoClient.relate`, :py:func:`~aito.client.AitoClient.query`
+  - The **AitoClient.request** method no longer takes positional argument. You now have to specify either `method`, `endpoint` or `request_obj`.
+  - Both **AitoClient** and **AitoClient.request** now has a `raise_for_status` argument which controls whether the client should raise or return an **aito_client.RequestError** object when an error occurred during sending a request.
+  - Added the **aito.AitoClient.async_request** method to execute a request asynchronously using `aiohttp ClientSession`_
+  - The **async_requests** method is deprecated, use **AitoClient.batch_requests** instead.
+  - Added the following methods to send a query to Aito API Endpoint: **AitoClient.search**, **AitoClient.predict**, **AitoClient.recommend**, **AitoClient.evaluate**, **AitoClient.similarity**, **AitoClient.match**, **AitoClient.relate**, **AitoClient.query**
 
 
 API functions
 """""""""""""
-- Helper methods of the AitoClient are moved to the :py:mod:`aito.api` module. The functions in the api module takes an AitoClient object as the first argument
+- Helper methods of the AitoClient are moved to the :py:mod:`aito.api` module. The functions in the api module takes an **AitoClient** object as the first argument
 
   .. code-block:: python
 
