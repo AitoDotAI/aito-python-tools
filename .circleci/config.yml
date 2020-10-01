@@ -559,7 +559,6 @@ jobs:
           name: stop git from adding carriage return in windows
           command: git config --global core.autocrlf false
       - checkout
-      - jira/notify
       - *install_python_and_build_and_test_dependencies_win
       - *run_sdk_and_cli_tests_windows
       - *store_log_files
