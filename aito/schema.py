@@ -912,7 +912,7 @@ class AitoColumnLinkSchema(AitoSchema):
 
     @classmethod
     def json_schema(cls):
-        return {'type': 'string', 'pattern': r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+$'}
+        return {'type': 'string', 'pattern': r'^[^/".$\r\n\s]+\.[^/".$\r\n\s]+$'}
 
     @classmethod
     def from_deserialized_object(cls, obj: str) -> "AitoColumnLinkSchema":
@@ -1260,7 +1260,11 @@ class AitoTableSchema(AitoSchema):
             'type': 'object',
             'properties': {
                 'type': {'const': 'table'},
-                'columns': {'type': 'object', 'minProperties': 1}
+                'columns': {
+                    'type': 'object',
+                    'minProperties': 1,
+                    'propertyNames': {'pattern': r'^[^/".$\r\n\s]+$'}
+                }
             },
             'required': ['type', 'columns'],
             'additionalProperties': False
@@ -1407,7 +1411,10 @@ class AitoDatabaseSchema(AitoSchema):
         return {
             'type': 'object',
             'properties': {
-                'schema': {'type': 'object'}
+                'schema': {
+                    'type': 'object',
+                    'propertyNames': {'pattern': r'^[^/".$\r\n\s]+$'}
+                }
             },
             'required': ['schema'],
             'additionalProperties': False
