@@ -11,9 +11,6 @@ from ..parser import InputArgType, ParseError, create_sql_connecting_from_parsed
 
 class InferFromFormatSubCommand(SubCommand):
     def build_parser(self, parser):
-        # add share arguments between formats
-        parser.add_argument('-e', '--encoding', type=str, default='utf-8',
-                            help="encoding to use (default: 'utf-8')")
         parser.add_argument(
             'input', default='-', type=InputArgType(), nargs='?',
             help="path to the input file (when no input file is given or when input is -, read from the standard input)"
@@ -26,9 +23,7 @@ class InferFromFormatSubCommand(SubCommand):
         read_args = {
             'read_input': parsed_args['input'],
             'in_format': in_format,
-            'read_options': {
-                'encoding': parsed_args['encoding']
-            }
+            'read_options': {}
         }
 
         if in_format == 'csv':

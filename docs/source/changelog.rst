@@ -50,6 +50,7 @@ CLI
 ^^^
 - Added the following commands to send a query to Aito API Endpoint: **search**, **predict**, **recommend**, **evaluate**, **similarity**, **match**, **relate**, **query**
 - Added the **create-database** command to create database using the Database Schema
+- Removed the **--encoding** flag in the **convert** and the **infer-table-schema** command
 - **Beta**: Added the **quick-predict** command to generate an example predict query and evaluate its performance
 
 0.3.1
