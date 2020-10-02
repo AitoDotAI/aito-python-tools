@@ -116,7 +116,7 @@ class AitoClient:
         :type request_obj: AitoRequest
         :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
             If set to None, value from Client will be used. Defaults to True
-        :type raise_for_status: bool
+        :type raise_for_status: Optional[bool]
         :raises RequestError: an error occurred during the execution of the request and raise_for_status
         :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
         :rtype: Union[BaseResponse, RequestError]
@@ -188,20 +188,36 @@ class AitoClient:
         return request_obj.response_cls(json_resp)
 
     async def async_request(
-            self, session: ClientSession, request_obj: AitoRequest, raise_for_status: Optional[bool] = None
+            self, session: ClientSession, *,
+            method: Optional[str] = None,
+            endpoint: Optional[str] = None,
+            query: Optional[Union[Dict, List]] = None,
+            request_obj: Optional[AitoRequest] = None,
+            raise_for_status: Optional[bool] = None
     ) -> Union[BaseResponse, RequestError]:
         """execute a request asynchronously using aiohttp ClientSession
 
         :param session: aiohttp ClientSession for making request
         :type session: ClientSession
-        :param request_obj: the request object
+        :param method: method for the new :class:`.AitoRequest` object
+        :type method: str
+        :param endpoint: endpoint for the new :class:`.AitoRequest` object
+        :type endpoint: str
+        :param query: an Aito query if applicable, defaults to None
+        :type query: Optional[Union[Dict, List]]
+        :param request_obj: use an :class:`.AitoRequest` object
         :type request_obj: AitoRequest
         :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
             If set to None, value from Client will be used. Defaults to True
-        :type raise_for_status: bool
+        :type raise_for_status: Optional[bool]
         :raises RequestError: an error occurred during the execution of the request and raise_for_status
         """
         LOG.debug(f'async {request_obj}')
+        if request_obj is None:
+            if method is not None and endpoint is not None:
+                request_obj = AitoRequest.make_request(method, endpoint, query)
+            else:
+                raise TypeError("'request() requires either 'request_obj' or 'method' and 'endpoint'")
         try:
             async with session.request(
                     method=request_obj.method,
@@ -219,17 +235,20 @@ class AitoClient:
             else:
                 return req_err
 
-    async def bounded_async_request(self, semaphore: asyncio.Semaphore, **kwargs) -> Union[BaseResponse, RequestError]:
+    async def bounded_async_request(
+            self, semaphore: asyncio.Semaphore, *args, **kwargs
+    ) -> Union[BaseResponse, RequestError]:
         """bounded concurrent requests with asyncio semaphore
 
         :param semaphore: asyncio Semaphore
         :type semaphore: asyncio.Semaphore
+        :param args: :func:`.async_request` positional arguments
         :param kwargs: :func:`.async_request` keyword arguments
         :return: tuple of request status code and request json content
         :rtype: Tuple[int, Union[Dict, List]]
         """
         async with semaphore:
-            return await self.async_request(**kwargs)
+            return await self.async_request(*args, **kwargs)
 
     def async_requests(
             self,
