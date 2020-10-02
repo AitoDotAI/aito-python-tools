@@ -681,7 +681,7 @@ def quick_predict_and_evaluate(
         from_table: str,
         predicting_field: str
 ) -> Tuple[Dict, Dict]:
-    """generate an example predict query to predict a field
+    """generate an example predict query to predict a field and the corresponding evaluate query
 
     The example query will use all fields of the table as the hypothesis and the first entry of the table as the
     input data
@@ -725,7 +725,7 @@ def quick_predict_and_evaluate(
         'select': ['$p', 'feature', '$why']
     }
 
-    pred_query_with_get_op = predict_query
+    pred_query_with_get_op = dict(predict_query)
     for col in pred_query_with_get_op['where']:
         pred_query_with_get_op['where'][col] = {'$get': col}
 
@@ -735,3 +735,29 @@ def quick_predict_and_evaluate(
     }
 
     return predict_query, evaluate_query
+
+
+def quick_predict(
+        client: AitoClient,
+        from_table: str,
+        predicting_field: str
+):
+    """generate an example predict query to predict a field
+
+    The example query will use all fields of the table as the hypothesis and the first entry of the table as the
+    input data
+
+    :param client: the AitoClient object
+    :type client: AitoClient
+    :param from_table: the name of the table the will be use as context for prediction.
+    :type from_table: str
+    :param predicting_field: the name of the predicting field. If the field belongs to a linked table,
+        it should be in the format of <column_with_link>.<field_name>
+    :type predicting_field: str
+    :return: The example predict query
+    :rtype: Dict
+    """
+    predict_query, evaluate_query = quick_predict_and_evaluate(
+        client=client, from_table=from_table, predicting_field=predicting_field
+    )
+    return predict_query

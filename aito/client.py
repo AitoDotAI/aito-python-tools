@@ -217,7 +217,7 @@ class AitoClient:
             if method is not None and endpoint is not None:
                 request_obj = AitoRequest.make_request(method, endpoint, query)
             else:
-                raise TypeError("'request() requires either 'request_obj' or 'method' and 'endpoint'")
+                raise TypeError("request() requires either 'request_obj' or 'method' and 'endpoint'")
         try:
             async with session.request(
                     method=request_obj.method,

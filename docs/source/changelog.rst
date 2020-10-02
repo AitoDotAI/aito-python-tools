@@ -44,6 +44,8 @@ API functions
     client = AitoClient(your_instance_url, your_instance_api_key)
     get_database_schema(client)
 
+- **Beta**: Added 2 new api functions: **quick_predict** and **quick_predict_and_evaluate** to generate an example Predict query
+
 CLI
 ^^^
 - Added the following commands to send a query to Aito API Endpoint: **search**, **predict**, **recommend**, **evaluate**, **similarity**, **match**, **relate**, **query**
