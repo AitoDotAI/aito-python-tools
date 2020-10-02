@@ -95,7 +95,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
     def test_request(self, endpoint, request_cls, query, response_cls):
         async def test_async_request():
             async with ClientSession() as session:
-                a_resp = await self.client.async_request(session, request_cls(query))
+                a_resp = await self.client.async_request(session, request_obj=request_cls(query))
                 self.assertTrue(isinstance(a_resp, response_cls))
 
         self.logger.debug('test request method')
