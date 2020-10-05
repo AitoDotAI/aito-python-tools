@@ -1304,6 +1304,7 @@ class AitoTableSchema(AitoSchema):
         LOG.debug('inferring table schema...')
         columns_schema = {}
         for col in df.columns.values:
+            LOG.debug(f'inferring column {col}...')
             col_type_schema = AitoColumnTypeSchema._infer_from_pandas_series(df[col], max_sample_size)
             columns_schema[col] = col_type_schema
         table_schema = cls(columns=columns_schema)
