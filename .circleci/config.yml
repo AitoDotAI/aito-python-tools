@@ -8,6 +8,7 @@ workflows:
   version: 2
   commit:
     jobs:
+      - run_dependencies_security_check
       - run_sdk_and_cli_tests_linux_py_36
       - run_sdk_and_cli_tests_linux_py_37:
           requires:
@@ -203,7 +204,6 @@ commonYAMLStructure:
       command:          |
         sudo apt-get -qy update
         sudo apt-get install postgresql-client
-
   - &install_mysql_cli_linux
     run:
       name: install mysql cli
@@ -332,8 +332,27 @@ commonYAMLStructure:
         . venv/bin/activate
         ./scripts/deploy test.pypi --no-publish --bump-version dev
         pip install dist/*.whl
+  - &install_and_run_safety_check
+    run:
+      name: install safety and security check dependencies
+      command: |
+        . venv/bin/activate
+        pip install safety
+        safety check
 
 jobs:
+  run_dependencies_security_check:
+    docker:
+      - image: circleci/python:3.6.9
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - jira/notify
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_linux
+      - *save_venv_cache_build_and_test
+      - *install_and_run_safety_check
+
   run_sdk_and_cli_tests_linux_py_36: &run_sdk_and_cli_tests_linux_template
     docker:
       - image: circleci/python:3.6.9
