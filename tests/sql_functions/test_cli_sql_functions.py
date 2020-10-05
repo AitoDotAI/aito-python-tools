@@ -63,7 +63,7 @@ class TestSQLFunctions(ParserAndCLITestCase):
         self.parse_and_execute(
             ['upload-data-from-sql', self.default_table_name, 'SELECT * FROM invoice'],
             expected_args,
-            execute_exception=RequestError
+            execute_exception=SystemExit
         )
 
     def parse_and_execute_quick_add_table(self):

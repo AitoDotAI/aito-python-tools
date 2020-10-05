@@ -71,7 +71,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(
             ['upload-entries', self.default_table_name, str(self.input_folder / 'invoice.json')],
             expected_args,
-            execute_exception=Exception
+            execute_exception=SystemExit
         )
 
     def test_upload_entries_invalid_entries(self):
@@ -135,7 +135,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(
             ['upload-file', self.default_table_name, str(self.input_folder / 'invoice.ndjson')],
             expected_args,
-            execute_exception=RequestError
+            execute_exception=SystemExit
         )
 
     def test_upload_file(self):
