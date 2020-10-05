@@ -6,7 +6,7 @@ from typing import Dict
 
 from aito.api import get_database_schema, delete_database, create_table, get_table_schema, delete_table, \
     get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file, quick_predict_and_evaluate, \
-    create_database
+    create_database, quick_add_table
 from aito.cli.parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
     load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, \
     get_credentials_file_config, write_credentials_file_profile
@@ -72,44 +72,22 @@ class QuickAddTableSubCommand(SubCommand):
         parser.add_aito_default_credentials_arguments()
         parser.add_argument(
             '-n', '--table-name', type=str,
-            help='name of the table to be created (default: the input file name without the extension)')
-        file_format_choices = ['infer'] + DataFrameHandler.allowed_format
+            help='name of the table to be created (default: the name of the input file)'
+        )
         parser.add_argument(
-            '-f', '--file-format', type=str, choices=file_format_choices, default='infer',
-            help='specify the input file format (default: infer from the file extension)')
+            '-f', '--file-format', type=str, choices=DataFrameHandler.allowed_format,
+            help='specify the input file format (default: the input file extension)'
+        )
         parser.add_argument('input-file', type=PathArgType(must_exist=True), help="path to the input file")
         return parser
 
     def parse_and_execute(self, parsed_args: Dict):
-        df_handler = DataFrameHandler()
         in_f_path = parsed_args['input-file']
-        in_format = in_f_path.suffixes[0].replace('.', '') \
-            if parsed_args['file_format'] == 'infer' else parsed_args['file_format']
-
-        if in_format not in df_handler.allowed_format:
-            raise ParseError(f'failed to infer file {in_f_path} format. '
-                             f'Please give the exact file format instead of `infer`')
-
-        table_name = parsed_args['table_name'] if parsed_args['table_name'] else in_f_path.stem
-        converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
-        convert_options = {
-            'read_input': in_f_path,
-            'write_output': converted_tmp_file.name,
-            'in_format': in_format,
-            'out_format': 'ndjson',
-            'convert_options': {'compression': 'gzip'}
-        }
-        converted_df = df_handler.convert_file(**convert_options)
-        converted_tmp_file.close()
-
-        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(converted_df)
+        in_format = parsed_args.get('file_format')
+        table_name = parsed_args.get('table_name')
         client = create_client_from_parsed_args(parsed_args)
-        create_table(client, table_name, inferred_schema)
 
-        with open(converted_tmp_file.name, 'rb') as in_f:
-            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
-        converted_tmp_file.close()
-        unlink(converted_tmp_file.name)
+        quick_add_table(client=client, input_file=in_f_path, input_format=in_format, table_name=table_name)
         return 0
 
 

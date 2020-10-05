@@ -3,8 +3,9 @@
 """
 
 import logging
+import tempfile
 import time
-from os import PathLike
+from os import PathLike, unlink
 from pathlib import Path
 from typing import Dict, List, BinaryIO, Union, Tuple, Iterable
 
@@ -14,6 +15,7 @@ import requests as requestslib
 from aito.client import AitoClient
 from aito.schema import AitoDatabaseSchema, AitoTableSchema
 from aito.utils._file_utils import gzip_file, check_file_is_gzipped
+from aito.utils.data_frame_handler import DataFrameHandler
 
 LOG = logging.getLogger('AitoAPI')
 
@@ -21,7 +23,7 @@ LOG = logging.getLogger('AitoAPI')
 def get_version(client: AitoClient) -> str:
     """get the aito instance version
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :return: version information in json format
     :rtype: Dict
@@ -37,7 +39,7 @@ def create_database(client: AitoClient, database_schema: Union[AitoDatabaseSchem
 
         requires the client to be setup with the READ-WRITE API key
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param database_schema: Aito database schema
     :type database_schema: Dict
@@ -53,7 +55,7 @@ def create_database(client: AitoClient, database_schema: Union[AitoDatabaseSchem
 def get_database_schema(client: AitoClient) -> AitoDatabaseSchema:
     """`get the schema of the database <https://aito.ai/docs/api/#get-api-v1-schema>`__
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :return: Aito database schema
     :rtype: Dict
@@ -69,7 +71,7 @@ def delete_database(client: AitoClient):
 
         requires the client to be setup with the READ-WRITE API key
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :return: deleted tables
     :rtype: Dict
@@ -88,7 +90,7 @@ def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTa
 
         requires the client to be setup with the READ-WRITE API key
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -108,7 +110,7 @@ def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTa
 def get_table_schema(client: AitoClient, table_name: str) -> AitoTableSchema:
     """`get the schema of the specified table <https://aito.ai/docs/api/#get-api-v1-schema-table>`__
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -126,7 +128,7 @@ def delete_table(client: AitoClient, table_name: str):
 
         requires the client to be setup with the READ-WRITE API key
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -140,7 +142,7 @@ def delete_table(client: AitoClient, table_name: str):
 def get_existing_tables(client: AitoClient) -> List[str]:
     """get a list of existing tables in the instance
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :return: list of the names of existing tables
     :rtype: List[str]
@@ -152,7 +154,7 @@ def get_existing_tables(client: AitoClient) -> List[str]:
 def check_table_exists(client: AitoClient, table_name: str) -> bool:
     """check if a table exists in the instance
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -170,7 +172,7 @@ def rename_table(client: AitoClient, old_name: str, new_name: str, replace: bool
 
         requires the client to be setup with the READ-WRITE API key
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param old_name: the name of the table to be renamed
     :type old_name: str
@@ -193,7 +195,7 @@ def copy_table(client: AitoClient, table_name: str, copy_table_name: str, replac
 
         requires the client to be setup with the READ-WRITE API key
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table to be copied
     :type table_name: str
@@ -213,7 +215,7 @@ def optimize_table(client: AitoClient, table_name):
     """`optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
     the specified table after uploading the data
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -240,7 +242,7 @@ def upload_entries(
 
         requires the client to be setup with the READ-WRITE API key
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -313,7 +315,7 @@ def upload_entries(
 def initiate_upload_file(client: AitoClient, table_name: str) -> Dict:
     """`Initial uploading a file to a table <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table to be uploaded
     :type table_name: str
@@ -350,7 +352,7 @@ def trigger_file_processing(client: AitoClient, table_name: str, upload_session_
     """`Trigger file processing of uploading a file to a table
     <https://aito.ai/docs/api/#post-api-v1-data-table-file-uuid>`__
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table to be uploaded
     :type table_name: str
@@ -367,7 +369,7 @@ def poll_file_processing_status(client: AitoClient, table_name: str, upload_sess
     """Polling the `file processing status <https://aito.ai/docs/api/#get-api-v1-data-table-file-uuid>`__ until
     the processing finished
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table to be uploaded
     :type table_name: str
@@ -405,7 +407,7 @@ def upload_binary_file(
 
         requires the client to be setup with the READ-WRITE API key
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table to be uploaded
     :type table_name: str
@@ -443,7 +445,7 @@ def upload_file(
 
         requires the client to be setup with the READ-WRITE API key
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -467,11 +469,57 @@ def upload_file(
         )
 
 
+def quick_add_table(
+        client: AitoClient, input_file: Union[Path, PathLike], table_name: str = None, input_format: str = None
+):
+    """Create a table and upload a file to the table, using the default inferred schema
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param input_file: path to the input file to be uploaded
+    :type input_file: Union[Path, PathLike]
+    :param table_name: the name of the table, defaults to the name of the input file
+    :type table_name: Optional[str]
+    :param input_format: specify the format of the input file, defaults to the input file extension
+    :type input_format: Optional[str]
+    """
+    df_handler = DataFrameHandler()
+
+    try:
+        in_f_path = Path(input_file)
+    except Exception:
+        raise ValueError(f'invalid path: {input_file}')
+    in_format = in_f_path.suffixes[0].replace('.', '') if input_format is None else input_format
+    if in_format not in df_handler.allowed_format:
+        raise ValueError(f'invalid file format {in_format}. Must be one of {"|".join(df_handler.allowed_format)}')
+
+    table_name = in_f_path.stem if table_name is None else table_name
+
+    converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
+
+    converted_df = df_handler.convert_file(
+        read_input=in_f_path,
+        write_output=converted_tmp_file.name,
+        in_format=in_format,
+        out_format='ndjson',
+        convert_options={'compression': 'gzip'}
+    )
+    converted_tmp_file.close()
+
+    inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(converted_df)
+    create_table(client, table_name, inferred_schema)
+
+    with open(converted_tmp_file.name, 'rb') as in_f:
+        upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
+    converted_tmp_file.close()
+    unlink(converted_tmp_file.name)
+
+
 def create_job(client: AitoClient, job_endpoint: str, query: Union[List, Dict]) -> Dict:
     """Create a `job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
     for a query that takes longer than 30 seconds to run
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param job_endpoint: job endpoint
     :type job_endpoint: str
@@ -487,7 +535,7 @@ def create_job(client: AitoClient, job_endpoint: str, query: Union[List, Dict]) 
 def get_job_status(client: AitoClient, job_id: str) -> Dict:
     """`Get the status of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__ with the specified job id
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param job_id: the id of the job
     :type job_id: str
@@ -501,7 +549,7 @@ def get_job_status(client: AitoClient, job_id: str) -> Dict:
 def get_job_result(client: AitoClient, job_id: str) -> Dict:
     """`Get the result of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid-result>`__ with the specified job id
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param job_id: the id of the job
     :type job_id: str
@@ -536,7 +584,7 @@ def job_request(
     >>> print(response["accuracy"]) # doctest: +ELLIPSIS
     0.72...
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param job_endpoint: job end point
     :type job_endpoint: str
@@ -562,7 +610,7 @@ def job_request(
 def get_table_size(client: AitoClient, table_name: str) -> int:
     """return the number of entries of the specified table
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -580,7 +628,7 @@ def query_entries(
 
     use offset and limit for `pagination <https://aito.ai/docs/api/#pagination>`__
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -605,7 +653,7 @@ def query_all_entries(
 ) -> List[Dict]:
     """`query <https://aito.ai/docs/api/#post-api-v1-query>`__  all entries of the specified table
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -640,7 +688,7 @@ def download_table(
 ):
     """download a table to a NDJSON file or a gzipped NDJSON file
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
@@ -686,7 +734,7 @@ def quick_predict_and_evaluate(
     The example query will use all fields of the table as the hypothesis and the first entry of the table as the
     input data
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param from_table: the name of the table the will be use as context for prediction.
     :type from_table: str
@@ -747,7 +795,7 @@ def quick_predict(
     The example query will use all fields of the table as the hypothesis and the first entry of the table as the
     input data
 
-    :param client: the AitoClient object
+    :param client: the AitoClient instance
     :type client: AitoClient
     :param from_table: the name of the table the will be use as context for prediction.
     :type from_table: str

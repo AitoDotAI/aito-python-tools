@@ -1,4 +1,6 @@
 import json
+import shutil
+from pathlib import Path
 from uuid import uuid4
 
 import ndjson
@@ -6,7 +8,7 @@ from parameterized import parameterized
 
 from aito.api import delete_table, check_table_exists, create_table, get_table_schema, upload_entries, query_entries, \
     query_all_entries, job_request, optimize_table, download_table, copy_table, get_existing_tables, rename_table, \
-    quick_predict_and_evaluate
+    quick_predict_and_evaluate, quick_add_table
 from aito.utils._file_utils import read_ndjson_gz_file
 from tests.cases import CompareTestCase
 from tests.sdk.contexts import default_client, grocery_demo_client
@@ -142,6 +144,56 @@ class TestAPI(CompareTestCase):
             delete_table(self.client, rename_table_name)
 
         self.addCleanup(clean_up)
+
+
+class TestQuickAddTableAPI(CompareTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.client = default_client()
+        cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
+        cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
+
+    def setUp(self):
+        super().setUp()
+
+        def _default_clean_up():
+            try:
+                delete_table(self.client, self.default_table_name)
+            except Exception as e:
+                self.logger.error(f"failed to delete table in cleanup: {e}")
+        self.addCleanup(_default_clean_up)
+
+    def compare_table_entries_to_file_content(self, table_name: str, exp_file_path: Path, compare_order: bool = False):
+        table_entries = query_entries(self.client, table_name)
+        with exp_file_path.open() as exp_f:
+            file_content = json.load(exp_f)
+        if compare_order:
+            self.assertEqual(table_entries, file_content)
+        else:
+            self.assertCountEqual(table_entries, file_content)
+
+    def test_quick_add_table(self):
+        input_file = self.input_folder / f'{self.default_table_name}.csv'
+        self.addCleanup(input_file.unlink)
+        shutil.copyfile(self.input_folder / 'invoice.csv', input_file)
+        quick_add_table(client=self.client, input_file=input_file)
+
+        self.compare_table_entries_to_file_content(
+            self.default_table_name, self.input_folder / 'invoice_no_null_value.json')
+
+    def test_quick_add_table_different_name_different_format(self):
+        input_file = self.input_folder / 'invoice.txt'
+        self.addCleanup(input_file.unlink)
+        shutil.copyfile(self.input_folder / 'invoice.json', input_file)
+        with self.assertRaises(ValueError):
+            quick_add_table(client=self.client, input_file=input_file)
+        quick_add_table(
+            client=self.client, input_file=input_file, table_name=self.default_table_name, input_format='json'
+        )
+        self.compare_table_entries_to_file_content(
+            self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
+        )
 
 
 class TestAPIGroceryCase(CompareTestCase):

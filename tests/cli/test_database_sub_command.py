@@ -265,36 +265,38 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.assertFalse(check_table_exists(self.client, self.default_table_name))
 
     def test_quick_add_table(self):
+        input_file = self.input_folder / f'{self.default_table_name}.csv'
+        self.addCleanup(input_file.unlink)
+        shutil.copyfile(self.input_folder / 'invoice.csv', input_file)
+
         expected_args = {
             'command': 'quick-add-table',
             'table_name': None,
-            'file_format': 'infer',
-            'input-file': self.input_folder / f'{self.default_table_name}.csv',
+            'file_format': None,
+            'input-file': input_file,
             **self.default_parser_args
         }
-        # create a file with the same name as the default table name to test table name inference
-        default_table_name_file = self.input_folder / f'{self.default_table_name}.csv'
-        shutil.copyfile(self.input_folder / 'invoice.csv', default_table_name_file)
-        self.parse_and_execute(
-            ['quick-add-table', str(default_table_name_file)], expected_args
-        )
-        default_table_name_file.unlink()
+        self.parse_and_execute(['quick-add-table', str(input_file)], expected_args)
+
         self.compare_table_entries_to_file_content(
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json')
 
     def test_quick_add_table_different_name(self):
+        input_file = self.input_folder / 'invoice.txt'
+        self.addCleanup(input_file.unlink)
+        shutil.copyfile(self.input_folder / 'invoice.json', input_file)
+
         expected_args = {
             'command': 'quick-add-table',
             'table_name': self.default_table_name,
             'file_format': 'json',
-            'input-file': self.input_folder / 'invoice.json',
+            'input-file': input_file,
             **self.default_parser_args
         }
         self.parse_and_execute(
-            ['quick-add-table', '-n', self.default_table_name, '-f', 'json',
-             str(self.input_folder / 'invoice.json')],
-            expected_args
+            ['quick-add-table', '-n', self.default_table_name, '-f', 'json', str(input_file)], expected_args
         )
+
         self.compare_table_entries_to_file_content(
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
         )
