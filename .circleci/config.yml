@@ -105,6 +105,7 @@ commonYAMLStructure:
       command: |
         python -m venv venv
         . venv/bin/activate
+        pip install --upgrade pip
         pip install -r requirements/build.txt
         pip install -r requirements/test.txt
   - &create_venv_and_install_build_and_test_dependencies_osx
@@ -116,6 +117,7 @@ commonYAMLStructure:
         python --version
         python -m venv venv
         . venv/bin/activate
+        pip install --upgrade pip
         pip install -r requirements/build.txt
         pip install -r requirements/test.txt
   - &restore_venv_cache_deploy_and_test
@@ -132,6 +134,7 @@ commonYAMLStructure:
       command: |
         python -m venv venv
         . venv/bin/activate
+        pip install --upgrade pip
         pip install -r requirements/deploy.txt
         pip install -r requirements/test.txt
   - &restore_build_doc_venv_cache
@@ -148,6 +151,7 @@ commonYAMLStructure:
       command: |
         python -m venv venv
         . venv/bin/activate
+        pip install --upgrade pip
         pip install -r requirements/build.txt
         pip install -r requirements/test.txt
         pip install -r requirements/docs.txt
@@ -161,6 +165,7 @@ commonYAMLStructure:
         .\python\tools\python.exe -m virtualenv venv
         venv\Scripts\activate.ps1
         python --version
+        pip install --upgrade pip
         pip install -r requirements/build.txt
         pip install -r requirements/test.txt
   - &install_odbc_driver_linux
