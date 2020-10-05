@@ -9,6 +9,7 @@ from typing import List
 import argcomplete
 
 from aito import __version__
+from aito.exceptions import BaseError
 from .parser import ArgParser, ParseError, DEFAULT_CONFIG_DIR
 from .sub_commands.convert_sub_command import ConvertSubCommand
 from .sub_commands.database_sub_command import ConfigureSubCommand, QuickAddTableSubCommand, CreateTableSubCommand, \
@@ -167,8 +168,10 @@ To see the help text, you can run:
         else:
             try:
                 self._commands_map[command_name].parse_and_execute(parsed_args)
-            except ParseError as e:
-                self.error(e.message)
+            except BaseError:
+                self.exit(2)
+            except Exception as e:
+                self.exit(2, f"{self.prog}: error: {e}\n")
         return 0
 
 
