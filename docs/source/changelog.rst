@@ -5,28 +5,28 @@ Changelog
 -----
 
 This version contains changes on how you make requests with the :py:class:`~aito.client.AitoClient`.
-In addition to specifying the request method, endpoint as before, you can now use different
+In addition to specifying the request method and endpoint as before, you can now use different
 :py:mod:`Request objects <aito.client_request>` or use the endpoint methods of the client,
 i.e: :py:func:`aito.client.AitoClient.predict`. The client now returns the enriched
 :py:mod:`Response objects <aito.client_response>` instead of JSON as before.
 
 Helper methods of the AitoClient, e.g: create_table, are moved to the :py:mod:`aito.api` module.
 
-You can now execute requests from the CLI
+You can now execute requests from the CLI.
 
 
 SDK
 ^^^
 
-- Schema objects validation in the :py:mod:`aito.schema` module is improved
+- Schema objects validation in the :py:mod:`aito.schema` module is improved.
 - Added the :py:mod:`aito.client_request` module which contains the request objects for :py:class:`~aito.client.AitoClient`.
 - Added the :py:mod:`aito.client_response` module which contains the response objects returned by the :py:class:`~aito.client.AitoClient`.
 
 AitoClient
 """"""""""
 
-  - The **AitoClient.request** method no longer takes positional argument. You now have to specify either `method`, `endpoint` or `request_obj`.
-  - Both **AitoClient** and **AitoClient.request** now has a `raise_for_status` argument which controls whether the client should raise or return an **aito_client.RequestError** object when an error occurred during sending a request.
+  - The **AitoClient.request** method no longer takes positional arguments. You now have to specify either `request_obj` or `method` and `endpoint`.
+  - Both **AitoClient** and **AitoClient.request** now have a `raise_for_status` argument which controls whether the client should raise or return an **aito_client.RequestError** object when an error occurs during sending a request.
   - Added the **aito.AitoClient.async_request** method to execute a request asynchronously using `aiohttp ClientSession`_
   - The **async_requests** method is deprecated, use **AitoClient.batch_requests** instead.
   - Added the following methods to send a query to Aito API Endpoint: **AitoClient.search**, **AitoClient.predict**, **AitoClient.recommend**, **AitoClient.evaluate**, **AitoClient.similarity**, **AitoClient.match**, **AitoClient.relate**, **AitoClient.query**

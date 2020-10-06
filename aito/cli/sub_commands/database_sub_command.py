@@ -406,7 +406,7 @@ class QueryToEndpointSubCommand(SubCommand, ABC):
 
     def build_parser(self, parser):
         parser.add_aito_default_credentials_arguments()
-        parser.add_argument('query', type=str, help='the query to be send')
+        parser.add_argument('query', type=str, help='the query to be sent')
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
