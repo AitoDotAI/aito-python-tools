@@ -48,7 +48,7 @@ def create_database(client: AitoClient, database_schema: Union[AitoDatabaseSchem
     """
     if not isinstance(database_schema, AitoDatabaseSchema):
         database_schema = AitoDatabaseSchema.from_deserialized_object(database_schema)
-    client.request(method='PUT', endpoint='', query=database_schema.to_json_serializable())
+    client.request(method='PUT', endpoint='/api/v1/schema', query=database_schema.to_json_serializable())
     LOG.info('database schema created')
 
 

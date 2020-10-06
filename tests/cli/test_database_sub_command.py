@@ -12,7 +12,6 @@ from parameterized import parameterized
 
 from aito.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries, upload_entries
 from aito.cli.parser import get_credentials_file_config
-from aito.client import RequestError
 from aito.schema import AitoTableSchema, AitoDatabaseSchema
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 from tests.sdk.contexts import default_client
@@ -189,23 +188,6 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
         )
 
-    @unittest.skipUnless(os.environ.get('RUN_DELETE_DATABASE_TEST'), "Avoid create DB when running other tests")
-    def test_create_database(self):
-        database_schema = {'schema': {self.default_table_name: self.default_table_schema.to_json_serializable()}}
-        database_schema_fp = self.output_folder / 'database_schema.json'
-        with database_schema_fp.open('w') as f:
-            json.dump(database_schema, f)
-
-        self.addCleanup(database_schema_fp.unlink)
-
-        expected_args = {
-            'command': 'create-database',
-            'input': database_schema_fp,
-            **self.default_parser_args
-        }
-        self.parse_and_execute(['create-database', str(database_schema_fp)], expected_args)
-        self.assertTrue(check_table_exists(self.client, self.default_table_name))
-
     def test_create_table(self):
         expected_args = {
             'command': 'create-table',
@@ -360,19 +342,6 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         listed_tables = content.splitlines()
 
         self.assertIn(self.default_table_name, listed_tables)
-
-    @unittest.skipUnless(os.environ.get('RUN_DELETE_DATABASE_TEST'), "Avoid delete DB when running other tests")
-    def test_delete_database(self):
-        self.create_table()
-        with (self.input_folder / 'invoice_aito_schema_altered.json').open() as f:
-            another_tbl_schema = json.load(f)
-        create_table(self.client, 'invoice_altered', another_tbl_schema)
-
-        expected_args = {'command': 'delete-database', **self.default_parser_args}
-        with patch('builtins.input', return_value='yes'):
-            self.parse_and_execute(['delete-database'], expected_args)
-        self.assertFalse(check_table_exists(self.client, self.default_table_name))
-        self.assertFalse(check_table_exists(self.client, 'invoice_altered'))
 
     def test_get_database(self):
         self.create_table()
@@ -536,3 +505,44 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             returned_content = f.read()
         self.assertIn('[Predict Query Example]', returned_content)
         self.assertIn('[Evaluation Result]', returned_content)
+
+    @unittest.skipUnless(os.environ.get('RUN_DELETE_DATABASE_TEST'), "Avoid create DB when running other tests")
+    def test_create_database(self):
+        database_schema = {'schema': {self.default_table_name: self.default_table_schema.to_json_serializable()}}
+        database_schema_fp = self.output_folder / 'database_schema.json'
+        with database_schema_fp.open('w') as f:
+            json.dump(database_schema, f)
+
+        self.addCleanup(database_schema_fp.unlink)
+
+        expected_args = {
+            'command': 'create-database',
+            'input': database_schema_fp,
+            **self.default_parser_args
+        }
+        self.parse_and_execute(['create-database', str(database_schema_fp)], expected_args)
+        self.assertTrue(check_table_exists(self.client, self.default_table_name))
+
+    @unittest.skipUnless(
+        os.environ.get('RUN_ALTER_INSTANCE_DB_TESTS'),
+        "Avoid altering the instance DB when running other tests"
+    )
+    def test_delete_and_create_database(self):
+        with patch('builtins.input', return_value='yes'):
+            self.parse_and_execute(['delete-database'], {'command': 'delete-database', **self.default_parser_args})
+
+        self.assertEqual(len(get_existing_tables(self.client)), 0)
+
+        database_schema = {'schema': {self.default_table_name: self.default_table_schema.to_json_serializable()}}
+        database_schema_fp = self.output_folder / 'database_schema.json'
+        with database_schema_fp.open('w') as f:
+            json.dump(database_schema, f)
+        self.addCleanup(database_schema_fp.unlink)
+        expected_args = {
+            'command': 'create-database',
+            'input': database_schema_fp,
+            **self.default_parser_args
+        }
+        self.parse_and_execute(['create-database', str(database_schema_fp)], expected_args)
+        self.assertEqual(len(get_existing_tables(self.client)), 1)
+        self.assertTrue(check_table_exists(self.client, self.default_table_name))
