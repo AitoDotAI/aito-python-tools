@@ -345,7 +345,7 @@ commonYAMLStructure:
       name: build and install package
       command: |
         . venv/bin/activate
-        ./scripts/deploy test.pypi --no-publish --bump-version dev
+        ./scripts/deploy test.pypi --no-publish --bump-version dev --no-check-git-tree
         pip install dist/*.whl
   - &install_and_run_safety_check
     run:
@@ -756,6 +756,6 @@ jobs:
           command: |
             [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- aito && echo "NO CHANGE" && exit 0
             . venv/bin/activate
-            ./scripts/deploy test.pypi -b dev
+            ./scripts/deploy test.pypi -b dev --no-check-git-tree
       - store_artifacts:
           path: ./dist
