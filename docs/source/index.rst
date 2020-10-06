@@ -3,8 +3,6 @@ Aito Python SDK
 
 Version |release|
 
-|PyPI| |PyPI version|
-
 
 The Aito Python SDK is an open-source library that helps you to integrate your Python application
 to Aito_ quicker and more efficiently.
@@ -101,8 +99,3 @@ Aito SDK Overview
 .. _Aito: https://aito.ai/
 .. _Slack channel: https://aito.ai/join-slack
 .. _Issue tracker: https://github.com/AitoDotAI/aito-python-tools/issues
-
-.. |PyPI| image:: https://img.shields.io/pypi/v/aitoai?style=plastic
-  :target: https://pypi.org/project/aitoai/
-.. |PyPI version| image:: https://img.shields.io/pypi/pyversions/aitoai?style=plastic
-  :target: https://github.com/AitoDotAI/aito-python-tools
