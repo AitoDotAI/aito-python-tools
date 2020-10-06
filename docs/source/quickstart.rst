@@ -1,7 +1,7 @@
 Quickstart
 ==========
 
-This section explains how to upload data to Aito with either :doc:`CLI <cli>` or :doc:`Python SDK <sdk>`.
+This section explains how to upload data to Aito and send your first query with either :doc:`CLI <cli>` or :doc:`Python SDK <sdk>`.
 
 Essentially, uploading data into Aito can be broken down into the following steps:
 
@@ -10,6 +10,7 @@ Essentially, uploading data into Aito can be broken down into the following step
 3. Create a table :ref:`cli <cliQuickstartCreateTable>` | :ref:`sdk <sdkQuickstartCreateTable>`
 4. Convert the data :ref:`cli <cliQuickstartConvertData>` | :ref:`sdk <sdkQuickstartConvertData>`
 5. Upload the data :ref:`cli <cliQuickstartUploadData>` | :ref:`sdk <sdkQuickstartUploadData>`
+6. Send a query to an Aito Endpoint :ref:`cli <cliQuickstartSendQuery>` | :ref:`sdk <sdkQuickstartSendQuery>`
 
 .. note::
 
@@ -18,8 +19,8 @@ Essentially, uploading data into Aito can be broken down into the following step
 
 If you don't have a data file, you can download our `example file <https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv>`_ and follow the guide.
 
-Upload Data with the CLI
-------------------------
+Upload data and send your first query with the CLI
+--------------------------------------------------
 
 :ref:`Setup Aito credentials <cliSetUpAitoCredentials>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,10 +106,24 @@ You can upload the data by either:
 
       $ aito upload-file tableName tableEntries.ndjson.gz
 
+.. _cliQuickstartSendQuery:
+
+Send your first query
+~~~~~~~~~~~~~~~~~~~~~
+
+You can send a query to an Aito endpoint by::
+
+  $ aito <endpoint> <query>
+
+For example::
+
+  $ aito search '{"from": "products"}'
+  $ aito predict '{"from": "products", "where": {"name": {"$match": "rye bread"}}, "predict": "tags"}'
+
 .. _sdkQuickstartUpload:
 
-Upload Data with the SDK
-------------------------
+Upload data and send your first query with the SDK
+--------------------------------------------------
 
 The Aito Python SDK uses `Pandas DataFrame`_ for multiple operations.
 
@@ -137,7 +152,7 @@ You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFram
   from aito.schema import AitoTableSchema
   from pprint import pprint
   reddit_schema = AitoTableSchema.infer_from_pandas_data_frame(reddit_df)
-  pprint(reddit_schema)
+  print(reddit_schema.to_json_string(indent=2, sort_keys=True))
 
 .. testoutput::
   :options: +NORMALIZE_WHITESPACE
@@ -162,7 +177,7 @@ You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFram
       "created_utc": {
         "analyzer": {
           "delimiter": ":",
-          "trimWhiteSpace": true,
+          "trimWhitespace": true,
           "type": "delimiter"
         },
         "nullable": false,
@@ -171,7 +186,7 @@ You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFram
       "date": {
         "analyzer": {
           "delimiter": "-",
-          "trimWhiteSpace": true,
+          "trimWhitespace": true,
           "type": "delimiter"
         },
         "nullable": false,
@@ -242,7 +257,7 @@ You can access and update the column schema by using the column name as the key:
 Create a table
 ~~~~~~~~~~~~~~
 
-The :py:class:`~aito.client.AitoClient` can create a table using a table name and a table schema
+You can :py:func:`~aito.api.create_table` using an :py:class:`~aito.client.AitoClient` and specifying the table name and the table schema
 
 .. note::
   The example is not direclty copy-pastable. Please use your own Aito environment credentials
@@ -257,8 +272,9 @@ The :py:class:`~aito.client.AitoClient` can create a table using a table name an
 .. testcode::
 
   from aito.client import AitoClient
+  from aito.api import create_table
   aito_client = AitoClient(instance_url=YOUR_AITO_INSTANCE_URL, api_key=YOUR_AITO_INSTANCE_API_KEY)
-  aito_client.create_table(table_name='reddit', table_schema=reddit_schema)
+  create_table(client=aito_client, table_name='reddit', table_schema=reddit_schema)
 
 .. _sdkQuickstartConvertData:
 
@@ -300,24 +316,26 @@ A DataFrame can be converted to:
 Upload the Data
 ~~~~~~~~~~~~~~~
 
-The :py:class:`~aito.client.AitoClient` can upload the data with either `Batch Upload`_ or `File Upload`_:
+You can :py:func:`~aito.api.upload_entries` using an :py:class:`~aito.client.AitoClient`
 
   - Batch Upload:
 
     .. code-block:: python
 
-      aito_client.upload_entries(table_name='reddit', entries=reddit_entries)
+      from aito.api import upload_entries
+      upload_entries(aito_client, table_name='reddit', entries=reddit_entries)
 
   - File Upload:
 
     .. testcode::
 
       from pathlib import Path
+      from aito.api import upload_file, get_table_size
 
-      aito_client.upload_file(table_name='reddit', file_path=Path('reddit_sample.ndjson.gz'))
+      upload_file(aito_client, table_name='reddit', file_path=Path('reddit_sample.ndjson.gz'))
 
       # Check that the data has been uploaded
-      print(aito_client.get_table_size('reddit'))
+      print(get_table_size(aito_client, 'reddit'))
 
     .. testoutput::
 
@@ -326,7 +344,8 @@ The :py:class:`~aito.client.AitoClient` can upload the data with either `Batch U
     .. testcleanup::
 
       import os
-      aito_client.delete_table('reddit')
+      from aito.api import delete_table
+      delete_table(aito_client, 'reddit')
       os.unlink('reddit_sample.ndjson.gz')
 
 
@@ -339,12 +358,42 @@ The `Batch Upload`_ can also be done using a generator:
         entry = {'id': idx}
         yield entry
 
-    aito_client.upload_entries(
+    upload_entries(
+      aito_client,
       table_name="table_name",
       entries=entries_generator(start=0, end=4),
       batch_size=2,
       optimize_on_finished=False
     )
+
+.. _sdkQuickstartSendQuery:
+
+Send your first query
+~~~~~~~~~~~~~~~~~~~~~
+
+You can send a query to an Aito endpoint by using the AitoClient method:
+
+  .. testsetup:: [grocery_demo]
+
+    from os import environ
+
+    INSTANCE_URL = environ['AITO_GROCERY_DEMO_INSTANCE_URL']
+    INSTANCE_API_KEY = environ['AITO_GROCERY_DEMO_API_KEY']
+
+  .. testcode:: [grocery_demo]
+
+    from aito.client import AitoClient
+    aito_client = AitoClient(instance_url=INSTANCE_URL, api_key=INSTANCE_API_KEY)
+    aito_client.search({
+      "from": "products",
+      "where": {"name": {"$match": "rye bread"}}
+    })
+
+    aito_client.predict({
+      "from": "products",
+      "where": {"name": "rye bread"},
+      "predict": "tags"
+    })
 
 .. _Analyzer: https://aito.ai/docs/api/#schema-analyzer
 .. _Batch Upload: https://aito.ai/docs/api/#post-api-v1-data-table-batch

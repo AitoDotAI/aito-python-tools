@@ -20,7 +20,6 @@ class ConvertFromFormatSubCommand(SubCommand):
             '-s', '--use-table-schema', metavar='schema-input-file', type=PathArgType(must_exist=True),
             help='convert the data to match the input table schema'
         )
-        parser.add_argument('-e', '--encoding', type=str, default='utf-8', help="encoding to use (default: 'utf-8')")
         parser.add_argument('-j', '--json', action='store_true', help='convert to json format')
         parser.add_argument(
             'input', default='-', type=InputArgType(), nargs='?',
@@ -35,9 +34,7 @@ class ConvertFromFormatSubCommand(SubCommand):
             'write_output': sys.stdout,
             'in_format': parsed_args['input-format'],
             'out_format': 'json' if parsed_args['json'] else 'ndjson',
-            'read_options': {
-                'encoding': parsed_args['encoding']
-            },
+            'read_options': {},
             'convert_options': {},
         }
 

@@ -150,13 +150,14 @@ class DataFrameHandler:
         :param convert_options: dictionary contains arguments for pandas write function, defaults to None
         :type convert_options: Dict, optional
         """
-        LOG.debug(f'converting to {out_format} and writing to {write_output}...')
         convert_functions = {'csv': df.to_csv, 'excel': df.to_excel, 'json': df.to_json, 'ndjson': df.to_json}
         if not convert_options:
             options = self.default_options[out_format]
         else:
             options = convert_options
             options.update(self.default_options[out_format])
+
+        LOG.debug(f'converting to {out_format} and writing to {write_output} with options {options}...')
 
         convert_functions[out_format](write_output, **options)
 

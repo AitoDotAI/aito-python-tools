@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from aito.cli.parser import ParseError, ArgParser, parse_env_variable, create_client_from_parsed_args, \
     get_credentials_file_config, write_credentials_file_profile
-from aito.client import AitoClient, BaseError
+from aito.client import AitoClient, Error
 from tests.cases import BaseTestCase, CompareTestCase
 
 
@@ -131,5 +131,5 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
                 create_client_from_parsed_args(vars(self.parser.parse_args(['--profile', 'random'])))
 
     def test_create_error_client(self):
-        with self.assertRaises(BaseError):
+        with self.assertRaises(Error):
             create_client_from_parsed_args(vars(self.parser.parse_args(['-i', 'some_url', '-k', 'some_key'])))

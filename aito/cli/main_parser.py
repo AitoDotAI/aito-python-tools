@@ -9,13 +9,17 @@ from typing import List
 import argcomplete
 
 from aito import __version__
+from aito.exceptions import BaseError
 from .parser import ArgParser, ParseError, DEFAULT_CONFIG_DIR
 from .sub_commands.convert_sub_command import ConvertSubCommand
 from .sub_commands.database_sub_command import ConfigureSubCommand, QuickAddTableSubCommand, CreateTableSubCommand, \
     DeleteTableSubCommand, CopyTableSubCommand, RenameTableSubCommand, ShowTablesSubCommand, DeleteDatabaseSubCommand, \
     UploadEntriesSubCommand, UploadBatchSubCommand, UploadFileSubCommand, UploadDataFromSQLSubCommand, \
-    QuickAddTableFromSQLSubCommand, GetDatabaseSubCommand, GetTableSubCommand, SubCommand
+    QuickAddTableFromSQLSubCommand, GetDatabaseSubCommand, GetTableSubCommand, QuickPredictSubCommand, SearchSubCommand, \
+    PredictSubCommand, RecommendSubCommand, EvaluateSubCommand, SimilaritySubCommand, MatchSubCommand, RelateSubCommand, \
+    QuerySubCommand, CreateDatabaseSubCommand
 from .sub_commands.infer_table_schema_sub_command import InferTableSchemaSubCommand
+from .sub_commands.sub_command import SubCommand
 
 
 class MainParser(ArgParser):
@@ -24,6 +28,7 @@ class MainParser(ArgParser):
         ConvertSubCommand(),
         ConfigureSubCommand(),
         QuickAddTableSubCommand(),
+        CreateDatabaseSubCommand(),
         CreateTableSubCommand(),
         GetTableSubCommand(),
         DeleteTableSubCommand(),
@@ -36,7 +41,16 @@ class MainParser(ArgParser):
         UploadBatchSubCommand(),
         UploadFileSubCommand(),
         UploadDataFromSQLSubCommand(),
-        QuickAddTableFromSQLSubCommand()
+        QuickAddTableFromSQLSubCommand(),
+        QuickPredictSubCommand(),
+        SearchSubCommand(),
+        PredictSubCommand(),
+        RecommendSubCommand(),
+        EvaluateSubCommand(),
+        SimilaritySubCommand(),
+        MatchSubCommand(),
+        RelateSubCommand(),
+        QuerySubCommand()
     ]
 
     def __init__(self, commands: List[SubCommand] = None):
@@ -67,11 +81,11 @@ class MainParser(ArgParser):
 To see the help text, you can run:
   {self.prog} -h
   {self.prog} <command> -h
-  {self.prog} <command> <subcommand> -h
 """
         argcomplete.autocomplete(self)
 
-    def config_logging(self, default_level='INFO'):
+    @staticmethod
+    def config_logging(default_level='INFO'):
         if not DEFAULT_CONFIG_DIR.exists():
             DEFAULT_CONFIG_DIR.mkdir(parents=True)
 
@@ -149,13 +163,15 @@ To see the help text, you can run:
         command_name = parsed_args['command']
         if not command_name:
             self.error_and_print_help('the following arguments are required: <command>')
-        if command_name == 'list':
+        elif command_name == 'list':
             self.list_commands()
         else:
             try:
                 self._commands_map[command_name].parse_and_execute(parsed_args)
-            except ParseError as e:
-                self.error(e.message)
+            except BaseError:
+                self.exit(2)
+            except Exception as e:
+                self.exit(2, f"{self.prog}: error: {e}\n")
         return 0
 
 

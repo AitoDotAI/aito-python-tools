@@ -10,12 +10,12 @@ class TestInferTableSchema(ParserAndCLITestCase):
         super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.default_main_parser_args = {
-            'encoding': 'utf-8', 'command': 'infer-table-schema', 'verbose': False, 'version': False, 'quiet': False
+            'command': 'infer-table-schema', 'verbose': False, 'version': False, 'quiet': False
         }
 
     def test_parsed_args_to_df_handler_read_args(self):
         self.assertEqual(
-            {'read_input': sys.stdin, 'in_format': 'json', 'read_options': {'encoding': 'utf-8'}},
+            {'read_input': sys.stdin, 'in_format': 'json', 'read_options': {}},
             InferFromFormatSubCommand.parsed_args_to_data_frame_handler_read_args(
                 vars(self.parser.parse_args(['infer-table-schema', 'json']))
             )
@@ -25,7 +25,7 @@ class TestInferTableSchema(ParserAndCLITestCase):
             {
                 'read_input': self.input_folder / 'invoice.ndjson',
                 'in_format': 'ndjson',
-                'read_options': {'encoding': 'utf-8'}
+                'read_options': {}
             },
             InferFromFormatSubCommand.parsed_args_to_data_frame_handler_read_args(
                 vars(self.parser.parse_args([
@@ -38,7 +38,7 @@ class TestInferTableSchema(ParserAndCLITestCase):
             {
                 'read_input': sys.stdin,
                 'in_format': 'csv',
-                'read_options': {'encoding': 'utf-8', 'delimiter': ';', 'decimal': ','}
+                'read_options': {'delimiter': ';', 'decimal': ','}
             },
             InferFromFormatSubCommand.parsed_args_to_data_frame_handler_read_args(
                 vars(self.parser.parse_args(['infer-table-schema', 'csv', '-d', ';', '-p', ',']))
@@ -49,7 +49,7 @@ class TestInferTableSchema(ParserAndCLITestCase):
             {
                 'read_input': self.input_folder / 'invoice.xlsx',
                 'in_format': 'excel',
-                'read_options': {'encoding': 'utf-8', 'sheet_name': 'sheet_name'}
+                'read_options': {'sheet_name': 'sheet_name'}
             },
             InferFromFormatSubCommand.parsed_args_to_data_frame_handler_read_args(
                 vars(self.parser.parse_args([

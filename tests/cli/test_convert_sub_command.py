@@ -10,7 +10,7 @@ class TestConvert(ParserAndCLITestCase):
         super().setUpClass()
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.default_main_parser_args = {
-            'encoding': 'utf-8', 'command': 'convert', 'verbose': False, 'version': False, 'quiet': False
+            'command': 'convert', 'verbose': False, 'version': False, 'quiet': False
         }
 
     def test_parse_args_to_df_handler_convert_args(self):
@@ -24,7 +24,7 @@ class TestConvert(ParserAndCLITestCase):
                 'write_output': sys.stdout,
                 'in_format': 'json',
                 'out_format': 'ndjson',
-                'read_options': {'encoding': 'utf-8'},
+                'read_options': {},
                 'convert_options': {},
             },
             ConvertFromFormatSubCommand.parsed_args_to_data_frame_handler_convert_args(
@@ -38,7 +38,7 @@ class TestConvert(ParserAndCLITestCase):
                 'write_output': sys.stdout,
                 'in_format': 'ndjson',
                 'out_format': 'json',
-                'read_options': {'encoding': 'utf-8'},
+                'read_options': {},
                 'convert_options': {},
                 'use_table_schema': schema
             },
@@ -55,7 +55,7 @@ class TestConvert(ParserAndCLITestCase):
                 'write_output': sys.stdout,
                 'in_format': 'csv',
                 'out_format': 'ndjson',
-                'read_options': {'encoding': 'utf-8', 'delimiter': ';', 'decimal': ','},
+                'read_options': {'delimiter': ';', 'decimal': ','},
                 'convert_options': {},
                 'use_table_schema': schema
             },
@@ -72,7 +72,7 @@ class TestConvert(ParserAndCLITestCase):
                 'write_output': sys.stdout,
                 'in_format': 'excel',
                 'out_format': 'ndjson',
-                'read_options': {'encoding': 'utf-8', 'sheet_name': 'sheet_name'},
+                'read_options': {'sheet_name': 'sheet_name'},
                 'convert_options': {},
             },
             ConvertFromFormatSubCommand.parsed_args_to_data_frame_handler_convert_args(

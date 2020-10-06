@@ -3,6 +3,7 @@ import datetime
 from parameterized import parameterized
 
 from aito.schema import *
+from aito.utils._json_format import JsonValidationError
 from tests.cases import BaseTestCase
 
 
@@ -37,17 +38,17 @@ class TestAitoAnalyzerSchema(BaseTestCase):
                 token_separator=' ')
         ),
     ])
-    def test_from_deserialized_object(self, test_name, deserialized_obj, expected):
+    def test_from_deserialized_object(self, _, deserialized_obj, expected):
         self.assertEqual(AitoAnalyzerSchema.from_deserialized_object(deserialized_obj), expected)
 
     @parameterized.expand([
-        ('invalid_alias', 'spacewhite', ValueError),
-        ('missing_type', {'minGram': 1, 'maxGram': 2}, ValueError),
-        ('invalid_language', {'type': 'language', 'language': 'elvish'}, ValueError),
-        ('no_delimiter', {'type': 'delimiter', 'trimWhiteSpace': True}, ValueError),
-        ('invalid_source', {'type': 'token-ngram', 'source': 'aGram', 'minGram': 1, 'maxGram': 2}, ValueError),
+        ('invalid_alias', 'spacewhite', JsonValidationError),
+        ('missing_type', {'minGram': 1, 'maxGram': 2}, JsonValidationError),
+        ('invalid_language', {'type': 'language', 'language': 'elvish'}, JsonValidationError),
+        ('no_delimiter', {'type': 'delimiter', 'trimWhitespace': True}, JsonValidationError),
+        ('invalid_source', {'type': 'token-ngram', 'source': 'aGram', 'minGram': 1, 'maxGram': 2}, JsonValidationError),
     ])
-    def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
+    def test_erroneous_from_deserialized_object(self, _, deserialized_obj, error):
         with self.assertRaises(error):
             AitoAnalyzerSchema.from_deserialized_object(deserialized_obj)
 
@@ -68,16 +69,18 @@ class TestAitoAnalyzerSchema(BaseTestCase):
         (
                 'delimiter',
                 AitoDelimiterAnalyzerSchema(delimiter=','),
-                {'type': 'delimiter', 'delimiter': ',', 'trimWhiteSpace': True}
+                {'type': 'delimiter', 'delimiter': ',', 'trimWhitespace': True}
         ),
         ('char-ngram', AitoCharNGramAnalyzerSchema(1, 2), {'type': 'char-ngram', 'minGram': 1, 'maxGram': 2}),
         (
                 'token-ngram',
-                AitoTokenNgramAnalyzerSchema(source=AitoAliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' '),
+                AitoTokenNgramAnalyzerSchema(
+                    source=AitoAliasAnalyzerSchema('fr'), min_gram=1, max_gram=2, token_separator=' '
+                ),
                 {'type': 'token-ngram', 'source': 'french', 'minGram': 1, 'maxGram': 2, 'tokenSeparator': ' '},
         )
     ])
-    def test_to_json_serializable(self, test_name, analyzer, expected):
+    def test_to_json_serializable(self, _, analyzer, expected):
         self.assertEqual(analyzer.to_json_serializable(), expected)
 
     @parameterized.expand([
@@ -97,7 +100,7 @@ class TestAitoAnalyzerSchema(BaseTestCase):
         ('alias_lang', AitoAliasAnalyzerSchema('fr'), AitoLanguageAnalyzerSchema('french'), True),
         ('alias_delimiter', AitoAliasAnalyzerSchema('whitespace'), AitoDelimiterAnalyzerSchema(' '), True),
     ])
-    def test_comparison(self, test_name, first, second, is_equal):
+    def test_comparison(self, _, first, second, is_equal):
         self.assertEqual(first == second, is_equal)
 
     @parameterized.expand([
@@ -107,7 +110,7 @@ class TestAitoAnalyzerSchema(BaseTestCase):
         ('tab', ['tab\tseperated\ttext', 'another\tone'], '\t'),
         ('whitespace', ['abc abca abcab', 'abcd dcba'], ' ')
     ])
-    def test_infer_delimited_text(self, test_name, samples, delimiter):
+    def test_infer_delimited_text(self, _, samples, delimiter):
         self.assertEqual(AitoAnalyzerSchema.infer_from_samples(samples), AitoDelimiterAnalyzerSchema(delimiter))
 
     @parameterized.expand([
@@ -141,9 +144,9 @@ class TestAitoDataType(BaseTestCase):
         ('unsupported type', 'Type'),
         ('not string', {'type': 'String'})
     ])
-    def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj):
-        with self.assertRaises(ValueError):
-            AitoAnalyzerSchema.from_deserialized_object(deserialized_obj)
+    def test_erroneous_from_deserialized_object(self, _, deserialized_obj):
+        with self.assertRaises(JsonValidationError):
+            AitoDataTypeSchema.from_deserialized_object(deserialized_obj)
 
     def test_comparison(self):
         self.assertNotEqual(AitoIntType(), AitoStringType())
@@ -156,7 +159,7 @@ class TestAitoDataType(BaseTestCase):
         ('datetime', [datetime.datetime.now(), datetime.datetime.utcnow()]),
         ('timedelta', [datetime.date.today() - datetime.date(1981, 9, 21), datetime.timedelta(seconds=20)])
     ])
-    def test_infer_from_datetime_type(self, test_name, samples):
+    def test_infer_from_datetime_type(self, _, samples):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), AitoStringType())
 
     @parameterized.expand([
@@ -164,34 +167,38 @@ class TestAitoDataType(BaseTestCase):
         ('float', [1.0, 2.0, 3.0], AitoDecimalType()),
         ('mixed', [1, 2, 3.0], AitoDecimalType()),
     ])
-    def test_infer_from_numeric_type(self, test_name, samples, expected):
+    def test_infer_from_numeric_type(self, _, samples, expected):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
 
     @parameterized.expand([
         ('bool', [True, False, False], AitoBooleanType()),
     ])
-    def test_infer_from_boolean_type(self, test_name, samples, expected):
+    def test_infer_from_boolean_type(self, _, samples, expected):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
 
     @parameterized.expand([
         ('str_num', ['good', 1, 'bad'], AitoTextType()),
         ('num_bool', [1, 0, 0, True, False], AitoTextType())
     ])
-    def test_infer_from_mixed_type(self, test_name, samples, expected):
+    def test_infer_from_mixed_type(self, _, samples, expected):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
 
 
 class TestAitoColumnLink(BaseTestCase):
     def test_from_deserialized_object(self):
-        self.assertEqual(AitoColumnLink.from_deserialized_object('tbl.col'), AitoColumnLink('tbl', 'col'))
+        self.assertEqual(AitoColumnLinkSchema.from_deserialized_object('tbl.col'), AitoColumnLinkSchema('tbl', 'col'))
 
     def test_to_serialized_object(self):
-        self.assertEqual(AitoColumnLink('tbl', 'col').to_json_serializable(), 'tbl.col')
+        self.assertEqual(AitoColumnLinkSchema('tbl', 'col').to_json_serializable(), 'tbl.col')
 
     def test_comparison(self):
-        self.assertEqual(AitoColumnLink('tbl', 'col'), AitoColumnLink('tbl', 'col'))
-        self.assertNotEqual(AitoColumnLink('tbl', 'col'), AitoColumnLink.from_deserialized_object('tbl.col1'))
-        self.assertNotEqual(AitoColumnLink.from_deserialized_object('tbl1.col'), AitoColumnLink('tbl', 'col'))
+        self.assertEqual(AitoColumnLinkSchema('tbl', 'col'), AitoColumnLinkSchema('tbl', 'col'))
+        self.assertNotEqual(
+            AitoColumnLinkSchema('tbl', 'col'), AitoColumnLinkSchema.from_deserialized_object('tbl.col1')
+        )
+        self.assertNotEqual(
+            AitoColumnLinkSchema.from_deserialized_object('tbl1.col'), AitoColumnLinkSchema('tbl', 'col')
+        )
 
 
 class TestAitoColumnTypeSchema(BaseTestCase):
@@ -210,20 +217,20 @@ class TestAitoColumnTypeSchema(BaseTestCase):
         (
                 'link',
                 {'type': 'Int', 'link': 'infinity.beyond'},
-                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('infinity', 'beyond'))
+                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('infinity', 'beyond'))
         )
     ])
-    def test_from_deserialized_object(self, test_name, deserialized_obj, expected):
+    def test_from_deserialized_object(self, _, deserialized_obj, expected):
         self.assertEqual(AitoColumnTypeSchema.from_deserialized_object(deserialized_obj), expected)
 
     @parameterized.expand([
-        ('missing_type', {'analyzer': 'fi'}, ValueError),
-        ('invalid_type', {'type': 'array'}, ValueError),
-        ('invalid_analyzer', {'type': 'Text', 'analyzer': 'elvish'}, ValueError),
+        ('missing_type', {'analyzer': 'fi'}, JsonValidationError),
+        ('invalid_type', {'type': 'array'}, JsonValidationError),
+        ('invalid_analyzer', {'type': 'Text', 'analyzer': 'elvish'}, JsonValidationError),
         ('unsupported_analyzer', {'type': 'String', 'analyzer': 'english'}, ValueError),
-        ('invalid_link', {'type': 'Int', 'link': 'infinity'}, ValueError),
+        ('invalid_link', {'type': 'Int', 'link': 'infinity'}, JsonValidationError),
     ])
-    def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
+    def test_erroneous_from_deserialized_object(self, _, deserialized_obj, error):
         with self.assertRaises(error):
             AitoColumnTypeSchema.from_deserialized_object(deserialized_obj)
 
@@ -236,27 +243,27 @@ class TestAitoColumnTypeSchema(BaseTestCase):
         ),
         (
                 'link',
-                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('infinity', 'beyond')),
+                AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('infinity', 'beyond')),
                 {'type': 'Int', 'nullable': False, 'link': 'infinity.beyond'}
         )
     ])
-    def test_to_json_serializable(self, test_name, column_type, expected):
+    def test_to_json_serializable(self, _, column_type, expected):
         self.assertEqual(column_type.to_json_serializable(), expected)
 
     def test_comparison(self):
         self.assertEqual(
             AitoColumnTypeSchema(
-                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLink('table', 'column')),
+                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLinkSchema('table', 'column')),
             AitoColumnTypeSchema(
                 AitoTextType(),
                 nullable=False,
                 analyzer=AitoLanguageAnalyzerSchema('french'),
-                link=AitoColumnLink('table', 'column')
+                link=AitoColumnLinkSchema('table', 'column')
             )
         )
         self.assertNotEqual(
             AitoColumnTypeSchema(
-                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLink('table', 'column')
+                AitoTextType(), analyzer=AitoAliasAnalyzerSchema('fr'), link=AitoColumnLinkSchema('table', 'column')
             ),
             AitoColumnTypeSchema(
                 AitoTextType(), analyzer=AitoAliasAnalyzerSchema('french')
@@ -264,9 +271,9 @@ class TestAitoColumnTypeSchema(BaseTestCase):
         )
 
     def test_link(self):
-        col_schema_1 = AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('infinity', 'beyond'))
+        col_schema_1 = AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('infinity', 'beyond'))
         self.assertTrue(col_schema_1.has_link)
-        self.assertEqual(col_schema_1.link, AitoColumnLink('infinity', 'beyond'))
+        self.assertEqual(col_schema_1.link, AitoColumnLinkSchema('infinity', 'beyond'))
 
 
 class TestAitoTableSchema(BaseTestCase):
@@ -290,18 +297,18 @@ class TestAitoTableSchema(BaseTestCase):
                     AitoTextType(),
                     nullable=True,
                     analyzer=AitoLanguageAnalyzerSchema('finnish'),
-                    link=AitoColumnLink('another', 'one')
+                    link=AitoColumnLinkSchema('another', 'one')
                 )
             })
         )
 
     @parameterized.expand([
-        ('missing_type', {'columns': {'col1': {'type': 'Int'}}}, ValueError),
-        ('wrong_type', {'type': 'something_else', 'columns': {}}, ValueError),
-        ('invalid_column', {'type': 'table', 'columns': {'col2': {'type': 'array'}}}, ValueError)
+        ('missing_type', {'columns': {'col1': {'type': 'Int'}}}, JsonValidationError),
+        ('wrong_type', {'type': 'something_else', 'columns': {}}, JsonValidationError),
+        ('invalid_column', {'type': 'table', 'columns': {'col2': {'type': 'array'}}}, JsonValidationError)
 
     ])
-    def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
+    def test_erroneous_from_deserialized_object(self, _, deserialized_obj, error):
         with self.assertRaises(error):
             AitoTableSchema.from_deserialized_object(deserialized_obj)
 
@@ -312,7 +319,7 @@ class TestAitoTableSchema(BaseTestCase):
                     AitoTextType(),
                     nullable=True,
                     analyzer=AitoAliasAnalyzerSchema('fi'),
-                    link=AitoColumnLink('another', 'one')
+                    link=AitoColumnLinkSchema('another', 'one')
                 )
             }).to_json_serializable(),
             {
@@ -344,12 +351,12 @@ class TestAitoTableSchema(BaseTestCase):
 
     def test_link(self):
         table_schema = AitoTableSchema({
-            'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('first', 'link')),
-            'col2': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('second', 'link'))
+            'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('first', 'link')),
+            'col2': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('second', 'link'))
         })
         self.assertEqual(
             table_schema.links,
-            {'col1': AitoColumnLink('first', 'link'), 'col2': AitoColumnLink('second', 'link')}
+            {'col1': AitoColumnLinkSchema('first', 'link'), 'col2': AitoColumnLinkSchema('second', 'link')}
         )
 
 
@@ -375,10 +382,10 @@ class TestAitoDatabaseSchema(BaseTestCase):
         )
 
     @parameterized.expand([
-        ('missing_schema', {'tbl1': {'type': 'table', 'columns': {'col1': {'type': 'Boolean'}}}}, ValueError),
-        ('invalid_table', {'schema': {'tbl1': {'type': 'table', 'columns': {'col1': {}}}}}, ValueError)
+        ('missing_schema', {'tbl1': {'type': 'table', 'columns': {'col1': {'type': 'Boolean'}}}}, JsonValidationError),
+        ('invalid_table', {'schema': {'tbl1': {'type': 'table', 'columns': {'col1': {}}}}}, JsonValidationError)
     ])
-    def test_erroneous_from_deserialized_object(self, test_name, deserialized_obj, error):
+    def test_erroneous_from_deserialized_object(self, _, deserialized_obj, error):
         with self.assertRaises(error):
             AitoDatabaseSchema.from_deserialized_object(deserialized_obj)
 
@@ -392,7 +399,7 @@ class TestAitoDatabaseSchema(BaseTestCase):
                                 AitoTextType(),
                                 nullable=True,
                                 analyzer=AitoAliasAnalyzerSchema('fi'),
-                                link=AitoColumnLink('another', 'one')
+                                link=AitoColumnLinkSchema('another', 'one')
                             )
                         }
                     ),
@@ -432,7 +439,7 @@ class TestAitoDatabaseSchema(BaseTestCase):
     def test_link(self):
         db_schema = AitoDatabaseSchema(tables={
             'tbl1': AitoTableSchema(columns={
-                'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLink('tbl2', 'col1'))
+                'col1': AitoColumnTypeSchema(AitoIntType(), link=AitoColumnLinkSchema('tbl2', 'col1'))
             }),
             'tbl2': AitoTableSchema(columns={
                 'col1': AitoColumnTypeSchema(AitoIntType()),
@@ -440,6 +447,6 @@ class TestAitoDatabaseSchema(BaseTestCase):
             })
         })
         self.assertEqual(
-            db_schema.get_linked_columns('tbl1'),
-            ['tbl2.col1', 'tbl2.col2']
+            db_schema.reachable_columns('tbl1'),
+            ['col1', 'tbl2.col1', 'tbl2.col2']
         )

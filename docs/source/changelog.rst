@@ -1,6 +1,58 @@
 Changelog
 =========
 
+0.4.0
+-----
+
+This version contains changes on how you make requests with the :py:class:`~aito.client.AitoClient`.
+In addition to specifying the request method and endpoint as before, you can now use different
+:py:mod:`Request objects <aito.client_request>` or use the endpoint methods of the client,
+i.e: :py:func:`aito.client.AitoClient.predict`. The client now returns the enriched
+:py:mod:`Response objects <aito.client_response>` instead of JSON as before.
+
+Helper methods of the AitoClient, e.g: create_table, are moved to the :py:mod:`aito.api` module.
+
+You can now execute requests from the CLI.
+
+
+SDK
+^^^
+
+- Schema objects validation in the :py:mod:`aito.schema` module is improved.
+- Added the :py:mod:`aito.client_request` module which contains the request objects for :py:class:`~aito.client.AitoClient`.
+- Added the :py:mod:`aito.client_response` module which contains the response objects returned by the :py:class:`~aito.client.AitoClient`.
+
+AitoClient
+""""""""""
+
+  - The **AitoClient.request** method no longer takes positional arguments. You now have to specify either `request_obj` or `method` and `endpoint`.
+  - Both **AitoClient** and **AitoClient.request** now have a `raise_for_status` argument which controls whether the client should raise or return an **aito_client.RequestError** object when an error occurs during sending a request.
+  - Added the **aito.AitoClient.async_request** method to execute a request asynchronously using `aiohttp ClientSession`_
+  - The **async_requests** method is deprecated, use **AitoClient.batch_requests** instead.
+  - Added the following methods to send a query to Aito API Endpoint: **AitoClient.search**, **AitoClient.predict**, **AitoClient.recommend**, **AitoClient.evaluate**, **AitoClient.similarity**, **AitoClient.match**, **AitoClient.relate**, **AitoClient.query**
+
+
+API functions
+"""""""""""""
+- Helper methods of the AitoClient are moved to the :py:mod:`aito.api` module. The functions in the api module takes an **AitoClient** object as the first argument
+
+  .. code-block:: python
+
+    from aito.client import AitoClient
+    from aito.api import get_database_schema
+
+    client = AitoClient(your_instance_url, your_instance_api_key)
+    get_database_schema(client)
+
+- Added 3 new api functions: **quick_add_table**,  **quick_predict (BETA)** and **quick_predict_and_evaluate (BETA)**
+
+CLI
+^^^
+- Added the following commands to send a query to Aito API Endpoint: **search**, **predict**, **recommend**, **evaluate**, **similarity**, **match**, **relate**, **query**
+- Added the **create-database** command to create database using the Database Schema
+- Removed the **--encoding** flag in the **convert** and the **infer-table-schema** command
+- **Beta**: Added the **quick-predict** command to generate an example predict query and evaluate its performance
+
 0.3.1
 -----
 
@@ -97,9 +149,9 @@ CLI
 0.2.1
 -----
 
-- - :py:class:`~aito.client.AitoClient` :py:func:`~aito.client.AitoClient.upload_entries` now accepts `generators`_ as well as lists.
+- :py:class:`~aito.client.AitoClient` :py:func:`~aito.client.AitoClient.upload_entries` now accepts `generators`_ as well as lists.
 
-- - :py:class:`~aito.client.AitoClient` **upload_entries_by_batches** is deprecated and will be removed in an upcoming release, use :py:func:`~aito.client.AitoClient.upload_entries` instead.
+- :py:class:`~aito.client.AitoClient` **upload_entries_by_batches** is deprecated and will be removed in an upcoming release, use :py:func:`~aito.client.AitoClient.upload_entries` instead.
 
 
 0.2.0
@@ -199,7 +251,7 @@ Supported database:
 - Convert always use standard out
 - Improved documentation
 
-
+.. _aiohttp ClientSession: https://docs.aiohttp.org/en/stable/client_reference.html#client-session
 .. _generators: https://aito-python-sdk.readthedocs.io/en/latest/sdk.html#sdkuploaddata
 .. _Column Type: https://aito.ai/docs/api/#schema-column-type
 .. _Analyzer: https://aito.ai/docs/api/#schema-analyzer

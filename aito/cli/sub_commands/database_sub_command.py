@@ -1,14 +1,19 @@
+import json
 import tempfile
+from abc import ABC, abstractmethod
 from os import unlink
 from typing import Dict
 
-from aito.client import AitoClient, BaseError
-from aito.schema import AitoTableSchema
-from aito.utils.data_frame_handler import DataFrameHandler
-from .sub_command import SubCommand
-from ..parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
+from aito.api import get_database_schema, delete_database, create_table, get_table_schema, delete_table, \
+    get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file, quick_predict_and_evaluate, \
+    create_database, quick_add_table
+from aito.cli.parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
     load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, \
     get_credentials_file_config, write_credentials_file_profile
+from aito.cli.sub_commands.sub_command import SubCommand
+from aito.client import AitoClient, Error
+from aito.schema import AitoTableSchema
+from aito.utils.data_frame_handler import DataFrameHandler
 
 
 class ConfigureSubCommand(SubCommand):
@@ -53,7 +58,7 @@ class ConfigureSubCommand(SubCommand):
 
         try:
             AitoClient(instance_url=new_instance_url, api_key=new_api_key, check_credentials=True)
-        except BaseError:
+        except Error:
             raise ParseError('invalid credentials, please try again')
 
         write_credentials_file_profile(parsed_args['profile'], new_instance_url, new_api_key)
@@ -67,44 +72,39 @@ class QuickAddTableSubCommand(SubCommand):
         parser.add_aito_default_credentials_arguments()
         parser.add_argument(
             '-n', '--table-name', type=str,
-            help='name of the table to be created (default: the input file name without the extension)')
-        file_format_choices = ['infer'] + DataFrameHandler.allowed_format
+            help='name of the table to be created (default: the name of the input file)'
+        )
         parser.add_argument(
-            '-f', '--file-format', type=str, choices=file_format_choices, default='infer',
-            help='specify the input file format (default: infer from the file extension)')
+            '-f', '--file-format', type=str, choices=DataFrameHandler.allowed_format,
+            help='specify the input file format (default: the input file extension)'
+        )
         parser.add_argument('input-file', type=PathArgType(must_exist=True), help="path to the input file")
         return parser
 
     def parse_and_execute(self, parsed_args: Dict):
-        df_handler = DataFrameHandler()
         in_f_path = parsed_args['input-file']
-        in_format = in_f_path.suffixes[0].replace('.', '') \
-            if parsed_args['file_format'] == 'infer' else parsed_args['file_format']
-
-        if in_format not in df_handler.allowed_format:
-            raise ParseError(f'failed to infer file {in_f_path} format. '
-                             f'Please give the exact file format instead of `infer`')
-
-        table_name = parsed_args['table_name'] if parsed_args['table_name'] else in_f_path.stem
-        converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
-        convert_options = {
-            'read_input': in_f_path,
-            'write_output': converted_tmp_file.name,
-            'in_format': in_format,
-            'out_format': 'ndjson',
-            'convert_options': {'compression': 'gzip'}
-        }
-        converted_df = df_handler.convert_file(**convert_options)
-        converted_tmp_file.close()
-
-        inferred_schema = AitoTableSchema.infer_from_pandas_data_frame(converted_df)
+        in_format = parsed_args.get('file_format')
+        table_name = parsed_args.get('table_name')
         client = create_client_from_parsed_args(parsed_args)
-        client.create_table(table_name, inferred_schema.to_json_serializable())
 
-        with open(converted_tmp_file.name, 'rb') as in_f:
-            client.upload_binary_file(table_name, in_f)
-        converted_tmp_file.close()
-        unlink(converted_tmp_file.name)
+        quick_add_table(client=client, input_file=in_f_path, input_format=in_format, table_name=table_name)
+        return 0
+
+
+class CreateDatabaseSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('create-database', 'create the database using the input database schema')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument(
+            'input', default='-', type=InputArgType(), nargs='?',
+            help="path to the schema file (when no file is given or when input is -, read from the standard input)")
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        database_schema = load_json_from_parsed_input_arg(parsed_args['input'], 'database schema')
+        create_database(client=client, database_schema=database_schema)
         return 0
 
 
@@ -123,7 +123,7 @@ class CreateTableSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         table_schema = load_json_from_parsed_input_arg(parsed_args['input'], 'table schema')
-        client.create_table(table_name, table_schema)
+        create_table(client, table_name, table_schema)
         return 0
 
 
@@ -138,7 +138,7 @@ class GetTableSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
-        print(client.get_table_schema(table_name).to_json_string(indent=2))
+        print(get_table_schema(client, table_name).to_json_string(indent=2))
         return 0
 
 
@@ -154,7 +154,7 @@ class DeleteTableSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         if prompt_confirmation(f'Confirm delete table `{table_name}`? The action is irreversible', False):
-            client.delete_table(table_name)
+            delete_table(client, table_name)
         return 0
 
 
@@ -170,7 +170,7 @@ class CopyTableSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        client.copy_table(parsed_args['table-name'], parsed_args['copy-table-name'], parsed_args['replace'])
+        copy_table(client, parsed_args['table-name'], parsed_args['copy-table-name'], parsed_args['replace'])
         return 0
 
 
@@ -186,7 +186,7 @@ class RenameTableSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        client.rename_table(parsed_args['old-name'], parsed_args['new-name'], parsed_args['replace'])
+        rename_table(client, parsed_args['old-name'], parsed_args['new-name'], parsed_args['replace'])
         return 0
 
 
@@ -199,7 +199,7 @@ class ShowTablesSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        tables = client.get_existing_tables()
+        tables = get_existing_tables(client)
         print(*sorted(tables), sep='\n')
         pass
 
@@ -213,7 +213,7 @@ class GetDatabaseSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        print(client.get_database_schema().to_json_string(indent=2))
+        print(get_database_schema(client).to_json_string(indent=2))
         return 0
 
 
@@ -227,7 +227,7 @@ class DeleteDatabaseSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         if prompt_confirmation('Confirm delete the whole database? The action is irreversible', False):
-            client.delete_database()
+            delete_database(client)
 
 
 class UploadEntriesSubCommand(SubCommand):
@@ -246,7 +246,7 @@ class UploadEntriesSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         table_entries = load_json_from_parsed_input_arg(parsed_args['input'])
-        client.upload_entries(table_name=table_name, entries=table_entries)
+        upload_entries(client, table_name=table_name, entries=table_entries)
         return 0
 
 
@@ -289,14 +289,14 @@ class UploadFileSubCommand(SubCommand):
             'in_format': in_format,
             'out_format': 'ndjson',
             'convert_options': {'compression': 'gzip'},
-            'use_table_schema': client.get_table_schema(table_name)
+            'use_table_schema': get_table_schema(client, table_name)
         }
         df_handler = DataFrameHandler()
         df_handler.convert_file(**convert_options)
         converted_tmp_file.close()
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            client.upload_binary_file(table_name, in_f)
+            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
 
@@ -322,7 +322,7 @@ class UploadDataFromSQLSubCommand(SubCommand):
         converted_tmp_file.close()
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            client.upload_binary_file(table_name, in_f)
+            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0
@@ -352,9 +352,80 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
         DataFrameHandler().df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
         converted_tmp_file.close()
 
-        client.create_table(table_name, inferred_schema.to_json_serializable())
+        create_table(client, table_name, inferred_schema)
         with open(converted_tmp_file.name, 'rb') as in_f:
-            client.upload_binary_file(table_name, in_f)
+            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0
+
+
+class QuickPredictSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__(
+            'quick-predict', 'generate an example predict query to predict a field'
+        )
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument(
+            'from-table', type=str, help='the name of the table the will be use as context for prediction'
+        )
+        parser.add_argument('predicting-field', type=str, help='the name of the predicting field')
+        parser.add_argument('--evaluate', action='store_true', help="get the accuracy of the example prediction query")
+
+    def parse_and_execute(self, parsed_args: Dict):
+        from_table = parsed_args['from-table']
+        predicting_field = parsed_args['predicting-field']
+        client = create_client_from_parsed_args(parsed_args)
+
+        predict_query, evaluate_query = quick_predict_and_evaluate(
+            client=client, from_table=from_table, predicting_field=predicting_field
+        )
+        print("[Predict Query Example]")
+        print(json.dumps(predict_query, indent=2))
+
+        if parsed_args['evaluate']:
+            evaluate_result = client.evaluate(evaluate_query)
+            print("[Evaluation Result]")
+            print(f"- Train samples count: {evaluate_result.train_sample_count}")
+            print(f"- Test samples count: {evaluate_result.test_sample_count}")
+            print(f"- Accuracy: {evaluate_result.accuracy}")
+
+        return 0
+
+
+class QueryToEndpointSubCommand(SubCommand, ABC):
+    @property
+    @abstractmethod
+    def endpoint(self) -> str:
+        pass
+
+    def __init__(self):
+        super().__init__(self.endpoint, f'send a query to the {self.endpoint.upper()} API')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument('query', type=str, help='the query to be sent')
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+
+        query_str = parsed_args['query']
+        query = json.loads(query_str)
+
+        client_method = getattr(client, self.endpoint)
+        resp = client_method(query)
+
+        print(resp.to_json_string(indent=2))
+        return 0
+
+
+SearchSubCommand = type('SearchSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'search'})
+PredictSubCommand = type('PredictSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'predict'})
+RecommendSubCommand = type('RecommendSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'recommend'})
+EvaluateSubCommand = type('EvaluateSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'evaluate'})
+SimilaritySubCommand = type('SimilaritySubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'similarity'})
+MatchSubCommand = type('MatchSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'match'})
+RelateSubCommand = type('RelateSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'relate'})
+QuerySubCommand = type('QuerySubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'query'})

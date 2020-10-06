@@ -21,7 +21,8 @@ class ParserAndCLITestCase(CompareTestCase):
             else:
                 subprocess.run([self.program_name] + parsing_args, stdin=stub_stdin, stdout=stub_stdout, check=True)
         else:
-            self.assertDictEqual(vars(self.parser.parse_args(parsing_args)), expected_args)
+            parsed_args = vars(self.parser.parse_args(parsing_args))
+            self.assertDictEqual(parsed_args, expected_args)
             if stub_stdin:
                 self.stub_stdin(stub_stdin)
             if stub_stdout:

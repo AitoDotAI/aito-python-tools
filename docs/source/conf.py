@@ -41,7 +41,8 @@ extensions = [
     'sphinx.ext.doctest',
 ]
 autodoc_mock_imports = [] if SPHINX_DISABLE_MOCK_REQUIREMENTS else [
-    'pandas', 'dotenv', 'requests', 'aiohttp', 'ndjson', 'langdetect', 'argcomplete', 'xlrd', 'numpy', 'pyodbc'
+    'pandas', 'dotenv', 'requests', 'aiohttp', 'ndjson', 'langdetect', 'argcomplete', 'xlrd', 'numpy', 'pyodbc',
+    'jsonschema'
 ]
 autodoc_default_flags = [
     "members",

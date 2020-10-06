@@ -66,14 +66,12 @@ def bump_version(current_version: Version, bump_part: str) -> Version:
             for idx, part in enumerate(FINAL_RELEASE_PARTS)
         ]
     else:
-        parts = [str(getattr(current_version, part)) for part in FINAL_RELEASE_PARTS]
         # dev versioning has date intead of integer
         if bump_part == "dev":
-            now = datetime.now()
-            dt_string = now.strftime("%Y%m%d%H%M%S")
-            parts.append(f'{DEFAULT_SPECIAL_RELEASE_LETTER[bump_part]}{dt_string}')
-            return Version('.'.join(parts))
+            now = datetime.utcnow()
+            return Version(f'{now.strftime("%Y.%m.%d.%H.%M.%S")}.dev')
 
+        parts = [str(getattr(current_version, part)) for part in FINAL_RELEASE_PARTS]
         special_version_number = getattr(current_version, bump_part)
 
         # only pre-release version return tuples, others return number

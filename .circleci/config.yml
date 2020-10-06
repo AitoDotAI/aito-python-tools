@@ -2,11 +2,13 @@ version: 2.1
 
 orbs:
   win: circleci/windows@2.2.0
+  jira: circleci/jira@1.2.2
 
 workflows:
   version: 2
   commit:
     jobs:
+      - run_dependencies_security_check
       - run_sdk_and_cli_tests_linux_py_36
       - run_sdk_and_cli_tests_linux_py_37:
           requires:
@@ -49,8 +51,7 @@ workflows:
       - run_sdk_and_cli_tests_built_package
       - run_postgres_tests_built_package
       - run_mysql_tests_built_package
-      - build_docs
-      - build_and_deploy_to_test_pypi:
+      - run_alter_instance_db_tests:
           requires:
             - run_sdk_and_cli_tests_linux_py_37
             - run_sdk_and_cli_tests_linux_py_38
@@ -63,10 +64,14 @@ workflows:
             - run_postgres_tests_osx_py_38
             - run_sdk_and_cli_tests_win_py_37
             - run_sdk_and_cli_tests_win_py_38
-            - build_docs
             - run_sdk_and_cli_tests_built_package
             - run_postgres_tests_built_package
             - run_mysql_tests_built_package
+      - build_docs
+      - build_and_deploy_to_test_pypi:
+          requires:
+            - build_docs
+            - run_alter_instance_db_tests
           filters:
             branches:
               only: master
@@ -103,6 +108,7 @@ commonYAMLStructure:
       command: |
         python -m venv venv
         . venv/bin/activate
+        pip install --upgrade pip
         pip install -r requirements/build.txt
         pip install -r requirements/test.txt
   - &create_venv_and_install_build_and_test_dependencies_osx
@@ -114,6 +120,7 @@ commonYAMLStructure:
         python --version
         python -m venv venv
         . venv/bin/activate
+        pip install --upgrade pip
         pip install -r requirements/build.txt
         pip install -r requirements/test.txt
   - &restore_venv_cache_deploy_and_test
@@ -130,6 +137,7 @@ commonYAMLStructure:
       command: |
         python -m venv venv
         . venv/bin/activate
+        pip install --upgrade pip
         pip install -r requirements/deploy.txt
         pip install -r requirements/test.txt
   - &restore_build_doc_venv_cache
@@ -146,6 +154,7 @@ commonYAMLStructure:
       command: |
         python -m venv venv
         . venv/bin/activate
+        pip install --upgrade pip
         pip install -r requirements/build.txt
         pip install -r requirements/test.txt
         pip install -r requirements/docs.txt
@@ -159,6 +168,7 @@ commonYAMLStructure:
         .\python\tools\python.exe -m virtualenv venv
         venv\Scripts\activate.ps1
         python --version
+        pip install --upgrade pip
         pip install -r requirements/build.txt
         pip install -r requirements/test.txt
   - &install_odbc_driver_linux
@@ -202,7 +212,6 @@ commonYAMLStructure:
       command:          |
         sudo apt-get -qy update
         sudo apt-get install postgresql-client
-
   - &install_mysql_cli_linux
     run:
       name: install mysql cli
@@ -213,8 +222,7 @@ commonYAMLStructure:
     run:
       name: start postgres
       command: |
-        initdb -D /usr/local/var/postgres/
-        brew services start postgresql
+        pg_ctl -D /usr/local/var/postgres start
   - &wait_postgres
     run:
       name: wait for postgres to be ready
@@ -322,6 +330,13 @@ commonYAMLStructure:
         [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
         . venv/bin/activate
         python -m tests -v case sql_functions.test_cli_sql_functions.TestMySQLFunctions
+  - &run_alter_db_unittests
+    run:
+      name: run tests that alter the instance database
+      command: |
+        [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
+        . venv/bin/activate
+        python -m tests method cli.test_database_sub_command.TestDatabaseSubCommands.test_delete_and_create_database
   - &store_log_files
     store_artifacts:
       path: ./.logs
@@ -332,14 +347,34 @@ commonYAMLStructure:
         . venv/bin/activate
         ./scripts/deploy test.pypi --no-publish --bump-version dev
         pip install dist/*.whl
+  - &install_and_run_safety_check
+    run:
+      name: install safety and security check dependencies
+      command: |
+        . venv/bin/activate
+        pip install safety
+        safety check
 
 jobs:
+  run_dependencies_security_check:
+    docker:
+      - image: circleci/python:3.6.9
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - jira/notify
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_linux
+      - *save_venv_cache_build_and_test
+      - *install_and_run_safety_check
+
   run_sdk_and_cli_tests_linux_py_36: &run_sdk_and_cli_tests_linux_template
     docker:
       - image: circleci/python:3.6.9
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_build_and_test
       - *create_venv_and_install_build_and_test_dependencies_linux
       - *save_venv_cache_build_and_test
@@ -374,6 +409,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *install_odbc_driver_linux
       - *install_postgres_odbc_driver_linux
       - *restore_venv_cache_build_and_test
@@ -424,6 +460,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_build_and_test
       - *create_venv_and_install_build_and_test_dependencies_linux
       - *save_venv_cache_build_and_test
@@ -466,6 +503,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *install_pyenv_osx
       - *restore_pyenv_cache
       - *install_python_pyenv
@@ -499,9 +537,11 @@ jobs:
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
       PYTHON_VERSION: 3.6.9
+      HOMEBREW_NO_AUTO_UPDATE: 1
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *install_odbc_driver_osx
       - *install_postgres_odbc_driver_osx
       - *install_pyenv_osx
@@ -530,6 +570,7 @@ jobs:
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
       PYTHON_VERSION: 3.7.5
+      HOMEBREW_NO_AUTO_UPDATE: 1
 
   run_postgres_tests_osx_py_38:
     <<: *run_postgres_tests_osx_template
@@ -541,6 +582,7 @@ jobs:
       SQL_PASSWORD: test_pw
       CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
       PYTHON_VERSION: 3.8.0
+      HOMEBREW_NO_AUTO_UPDATE: 1
 
   run_sdk_and_cli_tests_win_py_36: &run_sdk_and_cli_tests_win_template
     executor:
@@ -575,6 +617,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
@@ -601,6 +644,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
@@ -633,6 +677,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
@@ -647,12 +692,28 @@ jobs:
       - *run_mysql_cli_test
       - *store_log_files
 
+  run_alter_instance_db_tests:
+    docker:
+      - image: circleci/python:3.6.9
+    working_directory: ~/repo
+    environment:
+      RUN_ALTER_INSTANCE_DB_TESTS: True
+    steps:
+      - checkout
+      - jira/notify
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_linux
+      - *save_venv_cache_build_and_test
+      - *run_alter_db_unittests
+      - *store_log_files
+
   build_docs:
     docker:
       - image: circleci/python:3.6.9
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify
       - *restore_build_doc_venv_cache
       - *create_build_doc_venv
       - *save_build_doc_venv_cache
@@ -684,6 +745,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - jira/notify:
+          job_type: deployment
+          environment_type: testing
       - *restore_venv_cache_deploy_and_test
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test

@@ -8,11 +8,13 @@ from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
+from parameterized import parameterized
+
+from aito.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries, upload_entries
 from aito.cli.parser import get_credentials_file_config
-from aito.client import AitoClient
-from aito.client import RequestError, BaseError
 from aito.schema import AitoTableSchema, AitoDatabaseSchema
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
+from tests.sdk.contexts import default_client
 
 
 class TestDatabaseSubCommands(ParserAndCLITestCase):
@@ -24,24 +26,32 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             'verbose': False, 'version': False, 'quiet': False,
             'profile': 'default', 'api_key': '.env', 'instance_url': '.env'
         }
-        cls.client = AitoClient(os.environ['AITO_INSTANCE_URL'], os.environ['AITO_API_KEY'])
+        cls.client = default_client()
         with (cls.input_folder / "invoice_aito_schema.json").open() as f:
             json_schema = json.load(f)
         cls.default_table_schema = AitoTableSchema.from_deserialized_object(json_schema)
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
+        with (cls.input_folder / "invoice_no_null_value.json").open() as f:
+            cls.default_entries = json.load(f)
+
+    def setUp(self):
+        super().setUp()
+
+        def _default_clean_up():
+            try:
+                delete_table(self.client, self.default_table_name)
+            except Exception as e:
+                self.logger.error(f"failed to delete table in cleanup: {e}")
+        self.addCleanup(_default_clean_up)
 
     def create_table(self):
-        self.client.create_table(self.default_table_name, self.default_table_schema)
+        create_table(self.client, self.default_table_name, self.default_table_schema)
 
-    def tearDown(self):
-        super().tearDown()
-        try:
-            self.client.delete_table(self.default_table_name)
-        except Exception as e:
-            self.logger.error(f"failed to delete table in tearDown: {e}")
+    def upload_entries_to_table(self):
+        upload_entries(self.client, self.default_table_name, self.default_entries)
 
     def compare_table_entries_to_file_content(self, table_name: str, exp_file_path: Path, compare_order: bool = False):
-        table_entries = self.client.query_entries(table_name)
+        table_entries = query_entries(self.client, table_name)
         with exp_file_path.open() as exp_f:
             file_content = json.load(exp_f)
         if compare_order:
@@ -60,7 +70,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(
             ['upload-entries', self.default_table_name, str(self.input_folder / 'invoice.json')],
             expected_args,
-            execute_exception=BaseError
+            execute_exception=SystemExit
         )
 
     def test_upload_entries_invalid_entries(self):
@@ -124,7 +134,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(
             ['upload-file', self.default_table_name, str(self.input_folder / 'invoice.ndjson')],
             expected_args,
-            execute_exception=RequestError
+            execute_exception=SystemExit
         )
 
     def test_upload_file(self):
@@ -189,7 +199,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             ['create-table', self.default_table_name, f'{self.input_folder}/invoice_aito_schema.json'],
             expected_args
         )
-        self.assertTrue(self.client.check_table_exists(self.default_table_name))
+        self.assertTrue(check_table_exists(self.client, self.default_table_name))
 
     def test_create_table_stdin(self):
         expected_args = {
@@ -202,7 +212,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.parse_and_execute(
                 ['create-table', self.default_table_name], expected_args, stub_stdin=in_f
             )
-        self.assertTrue(self.client.check_table_exists(self.default_table_name))
+        self.assertTrue(check_table_exists(self.client, self.default_table_name))
 
     def test_get_table(self):
         self.create_table()
@@ -234,46 +244,54 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         else:
             with patch('builtins.input', return_value='yes'):
                 self.parse_and_execute(['delete-table', self.default_table_name], expected_args)
-        self.assertFalse(self.client.check_table_exists(self.default_table_name))
+        self.assertFalse(check_table_exists(self.client, self.default_table_name))
 
     def test_quick_add_table(self):
+        input_file = self.input_folder / f'{self.default_table_name}.csv'
+        self.addCleanup(input_file.unlink)
+        shutil.copyfile(self.input_folder / 'invoice.csv', input_file)
+
         expected_args = {
             'command': 'quick-add-table',
             'table_name': None,
-            'file_format': 'infer',
-            'input-file': self.input_folder / f'{self.default_table_name}.csv',
+            'file_format': None,
+            'input-file': input_file,
             **self.default_parser_args
         }
-        # create a file with the same name as the default table name to test table name inference
-        default_table_name_file = self.input_folder / f'{self.default_table_name}.csv'
-        shutil.copyfile(self.input_folder / 'invoice.csv', default_table_name_file)
-        self.parse_and_execute(
-            ['quick-add-table', str(default_table_name_file)], expected_args
-        )
-        default_table_name_file.unlink()
+        self.parse_and_execute(['quick-add-table', str(input_file)], expected_args)
+
         self.compare_table_entries_to_file_content(
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json')
 
     def test_quick_add_table_different_name(self):
+        input_file = self.input_folder / 'invoice.txt'
+        self.addCleanup(input_file.unlink)
+        shutil.copyfile(self.input_folder / 'invoice.json', input_file)
+
         expected_args = {
             'command': 'quick-add-table',
             'table_name': self.default_table_name,
             'file_format': 'json',
-            'input-file': self.input_folder / 'invoice.json',
+            'input-file': input_file,
             **self.default_parser_args
         }
         self.parse_and_execute(
-            ['quick-add-table', '-n', self.default_table_name, '-f', 'json',
-             str(self.input_folder / 'invoice.json')],
-            expected_args
+            ['quick-add-table', '-n', self.default_table_name, '-f', 'json', str(input_file)], expected_args
         )
+
         self.compare_table_entries_to_file_content(
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
         )
 
     def test_copy_table(self):
-        self.create_table()
         copy_table_name = f'{self.default_table_name}_copy'
+
+        def clean_up():
+            delete_table(self.client, copy_table_name)
+        self.addCleanup(clean_up)
+
+        self.create_table()
+
         expected_args = {
             'command': 'copy-table',
             'table-name': self.default_table_name,
@@ -284,17 +302,19 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(
             ['copy-table', self.default_table_name, copy_table_name], expected_args
         )
-        db_tables = self.client.get_existing_tables()
+        db_tables = get_existing_tables(self.client)
         self.assertIn(self.default_table_name, db_tables)
         self.assertIn(copy_table_name, db_tables)
 
+    def test_rename_table(self):
+        rename_table_name = f'{self.default_table_name}_rename'
+
         def clean_up():
-            self.client.delete_table(copy_table_name)
+            delete_table(self.client, rename_table_name)
         self.addCleanup(clean_up)
 
-    def test_rename_table(self):
         self.create_table()
-        rename_table_name = f'{self.default_table_name}_rename'
+
         expected_args = {
             'command': 'rename-table',
             'old-name': self.default_table_name,
@@ -305,13 +325,9 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(
             ['rename-table', self.default_table_name, rename_table_name], expected_args
         )
-        db_tables = self.client.get_existing_tables()
+        db_tables = get_existing_tables(self.client)
         self.assertIn(rename_table_name, db_tables)
         self.assertNotIn(self.default_table_name, db_tables)
-
-        def clean_up():
-            self.client.delete_table(rename_table_name)
-        self.addCleanup(clean_up)
 
     def test_show_tables(self):
         self.addCleanup(self.delete_out_file)
@@ -326,19 +342,6 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         listed_tables = content.splitlines()
 
         self.assertIn(self.default_table_name, listed_tables)
-
-    @unittest.skipUnless(os.environ.get('RUN_DELETE_DATABASE_TEST'), "Avoid delete DB when running other tests")
-    def test_delete_database(self):
-        self.create_table()
-        with (self.input_folder / 'invoice_aito_schema_altered.json').open() as f:
-            another_tbl_schema = json.load(f)
-        self.client.create_table('invoice_altered', another_tbl_schema)
-
-        expected_args = {'command': 'delete-database', **self.default_parser_args}
-        with patch('builtins.input', return_value='yes'):
-            self.parse_and_execute(['delete-database'], expected_args)
-        self.assertFalse(self.client.check_table_exists(self.default_table_name))
-        self.assertFalse(self.client.check_table_exists('invoice_altered'))
 
     def test_get_database(self):
         self.create_table()
@@ -427,3 +430,119 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
                 content = in_f.read()
             listed_tables = content.splitlines()
             self.assertIn(self.default_table_name, listed_tables)
+
+    @parameterized.expand([
+        ('search', {"from": "users"}),
+        ('predict', {"from": "products", "where": {"name": "Pirkka banana"}, "predict": "tags"}),
+        ('recommend', {"from": "impressions", "recommend": "product", "goal": {"session.user": "veronica"}}),
+        ('evaluate', {"test": {"$index": {"$mod": [10, 0]}}, "evaluate": {"from": "products", "predict": "tags"}}),
+        ('similarity', {"from": "products", "similarity": {"name": "rye bread"}}),
+        ('match', {"from": "impressions", "where": {"session.user": "veronica"}, "match": "product"}),
+        ('relate', {"from": "products", "where": {"$exists": "name"}, "relate": "tags"}),
+        ('query', {"from": "products", "where": {"name": "Pirkka banana"}, "get": "tags", "orderBy": "$p"})
+    ])
+    def test_query_to_endpoint(self, endpoint, query):
+        instance_url = os.environ['AITO_GROCERY_DEMO_INSTANCE_URL']
+        api_key = os.environ['AITO_GROCERY_DEMO_API_KEY']
+        query_str = json.dumps(query)
+
+        expected_args = {
+            'command': endpoint,
+            'query': query_str,
+            **self.default_parser_args,
+            **{
+                'instance_url': instance_url,
+                'api_key': api_key
+            }
+        }
+        self.parse_and_execute([endpoint, '-i', instance_url, '-k', api_key, query_str], expected_args)
+
+    def test_quick_predict(self):
+        self.create_table()
+        self.upload_entries_to_table()
+
+        predicting_field = 'name'
+
+        expected_args = {
+            'command': 'quick-predict',
+            'from-table': self.default_table_name,
+            'predicting-field': predicting_field,
+            'evaluate': False,
+            **self.default_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(
+                ['quick-predict', self.default_table_name, predicting_field],
+                expected_args,
+                stub_stdout=out_f
+            )
+
+        with self.out_file_path.open() as f:
+            returned_content = f.read()
+        self.assertIn('[Predict Query Example]', returned_content)
+
+    def test_quick_predict_and_evaluate(self):
+        self.create_table()
+        self.upload_entries_to_table()
+
+        predicting_field = 'name'
+
+        expected_args = {
+            'command': 'quick-predict',
+            'from-table': self.default_table_name,
+            'predicting-field': predicting_field,
+            'evaluate': True,
+            **self.default_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(
+                ['quick-predict', self.default_table_name, predicting_field, '--evaluate'],
+                expected_args,
+                stub_stdout=out_f
+            )
+
+        with self.out_file_path.open() as f:
+            returned_content = f.read()
+        self.assertIn('[Predict Query Example]', returned_content)
+        self.assertIn('[Evaluation Result]', returned_content)
+
+    @unittest.skipUnless(os.environ.get('RUN_DELETE_DATABASE_TEST'), "Avoid create DB when running other tests")
+    def test_create_database(self):
+        database_schema = {'schema': {self.default_table_name: self.default_table_schema.to_json_serializable()}}
+        database_schema_fp = self.output_folder / 'database_schema.json'
+        with database_schema_fp.open('w') as f:
+            json.dump(database_schema, f)
+
+        self.addCleanup(database_schema_fp.unlink)
+
+        expected_args = {
+            'command': 'create-database',
+            'input': database_schema_fp,
+            **self.default_parser_args
+        }
+        self.parse_and_execute(['create-database', str(database_schema_fp)], expected_args)
+        self.assertTrue(check_table_exists(self.client, self.default_table_name))
+
+    @unittest.skipUnless(
+        os.environ.get('RUN_ALTER_INSTANCE_DB_TESTS'),
+        "Avoid altering the instance DB when running other tests"
+    )
+    def test_delete_and_create_database(self):
+        with patch('builtins.input', return_value='yes'):
+            self.parse_and_execute(['delete-database'], {'command': 'delete-database', **self.default_parser_args})
+
+        self.assertEqual(len(get_existing_tables(self.client)), 0)
+
+        database_schema = {'schema': {self.default_table_name: self.default_table_schema.to_json_serializable()}}
+        database_schema_fp = self.output_folder / 'database_schema.json'
+        with database_schema_fp.open('w') as f:
+            json.dump(database_schema, f)
+        self.addCleanup(database_schema_fp.unlink)
+        expected_args = {
+            'command': 'create-database',
+            'input': database_schema_fp,
+            **self.default_parser_args
+        }
+        self.parse_and_execute(['create-database', str(database_schema_fp)], expected_args)
+        self.assertEqual(len(get_existing_tables(self.client)), 1)
+        self.assertTrue(check_table_exists(self.client, self.default_table_name))

@@ -4,6 +4,7 @@ import ndjson
 
 from aito.utils.data_frame_handler import DataFrameHandler
 from tests.cases import CompareTestCase
+from aito.utils._file_utils import read_ndjson_gz_file
 
 
 class TestDataFrameHandler(CompareTestCase):
@@ -26,6 +27,16 @@ class TestDataFrameHandler(CompareTestCase):
         self.df_handler.convert_file(self.input_folder / 'invoice.csv', self.out_file_path, 'csv', 'ndjson')
         self.assertCountEqual(ndjson.load(self.out_file_path.open()),
                               ndjson.load((self.input_folder / 'invoice.ndjson').open()))
+
+    def test_csv_to_compressed_ndjson(self):
+        self.df_handler.convert_file(
+            self.input_folder / 'invoice.csv', self.out_file_path, 'csv', 'ndjson',
+            convert_options={'compression': 'gzip'}
+        )
+        self.assertCountEqual(
+            read_ndjson_gz_file(self.out_file_path),
+            ndjson.load((self.input_folder / 'invoice.ndjson').open())
+        )
 
     def test_csv_compressed_to_ndjson(self):
         self.df_handler.convert_file(self.input_folder / 'invoice.csv.gz', self.out_file_path, 'csv', 'ndjson')
@@ -61,5 +72,6 @@ class TestDataFrameHandler(CompareTestCase):
         with (self.input_folder / 'invoice_aito_schema_error_nullable.json').open() as f:
             input_schema = json.load(f)
         with self.assertRaises(ValueError):
-            self.df_handler.convert_file(self.input_folder / 'invoice.csv', self.out_file_path, 'csv', 'ndjson',
-                                         use_table_schema=input_schema)
+            self.df_handler.convert_file(
+                self.input_folder / 'invoice.csv', self.out_file_path, 'csv', 'ndjson', use_table_schema=input_schema
+            )

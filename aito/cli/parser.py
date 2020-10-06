@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Union, TextIO
 
 from aito.client import AitoClient
+from aito.exceptions import BaseError
 
 DEFAULT_CONFIG_DIR = Path.home() / '.config' / 'aito'
 DEFAULT_LOG_DIR = DEFAULT_CONFIG_DIR / 'logs'
@@ -69,11 +70,9 @@ The CLI checks for flag options, environment variables, and credentials of the s
         self.add_argument('-o', '--one-sheet', type=str, metavar='sheet-name', help='read a sheet by sheet name')
 
 
-class ParseError(Exception):
+class ParseError(BaseError):
     def __init__(self, message):
-        super().__init__(message)
-        self.message = message
-        LOG.debug(message, stack_info=True)
+        super().__init__(message=message, logger=LOG)
 
 
 class ArgType(ABC):
