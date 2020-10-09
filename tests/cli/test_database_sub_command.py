@@ -14,7 +14,7 @@ from aito.api import create_table, delete_table, get_existing_tables, check_tabl
 from aito.cli.parser import get_credentials_file_config
 from aito.schema import AitoTableSchema, AitoDatabaseSchema
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
-from tests.sdk.contexts import default_client
+from tests.sdk.contexts import default_client, endpoint_methods_test_context
 
 
 class TestDatabaseSubCommands(ParserAndCLITestCase):
@@ -431,23 +431,15 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             listed_tables = content.splitlines()
             self.assertIn(self.default_table_name, listed_tables)
 
-    @parameterized.expand([
-        ('search', {"from": "users"}),
-        ('predict', {"from": "products", "where": {"name": "Pirkka banana"}, "predict": "tags"}),
-        ('recommend', {"from": "impressions", "recommend": "product", "goal": {"session.user": "veronica"}}),
-        ('evaluate', {"test": {"$index": {"$mod": [10, 0]}}, "evaluate": {"from": "products", "predict": "tags"}}),
-        ('similarity', {"from": "products", "similarity": {"name": "rye bread"}}),
-        ('match', {"from": "impressions", "where": {"session.user": "veronica"}, "match": "product"}),
-        ('relate', {"from": "products", "where": {"$exists": "name"}, "relate": "tags"}),
-        ('generic-query', {"from": "products", "where": {"name": "Pirkka banana"}, "get": "tags", "orderBy": "$p"})
-    ])
-    def test_query_to_endpoint(self, endpoint, query):
+    @parameterized.expand(endpoint_methods_test_context)
+    def test_query_to_endpoint(self, endpoint, request_cls, query, response_cls):
+        command = endpoint.replace('_', '-')
         instance_url = os.environ['AITO_GROCERY_DEMO_INSTANCE_URL']
         api_key = os.environ['AITO_GROCERY_DEMO_API_KEY']
         query_str = json.dumps(query)
 
         expected_args = {
-            'command': endpoint,
+            'command': command,
             'query': query_str,
             **self.default_parser_args,
             **{
@@ -455,7 +447,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
                 'api_key': api_key
             }
         }
-        self.parse_and_execute([endpoint, '-i', instance_url, '-k', api_key, query_str], expected_args)
+        self.parse_and_execute([command, '-i', instance_url, '-k', api_key, query_str], expected_args)
 
     def test_quick_predict(self):
         self.create_table()
@@ -505,23 +497,6 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             returned_content = f.read()
         self.assertIn('[Predict Query Example]', returned_content)
         self.assertIn('[Evaluation Result]', returned_content)
-
-    @unittest.skipUnless(os.environ.get('RUN_DELETE_DATABASE_TEST'), "Avoid create DB when running other tests")
-    def test_create_database(self):
-        database_schema = {'schema': {self.default_table_name: self.default_table_schema.to_json_serializable()}}
-        database_schema_fp = self.output_folder / 'database_schema.json'
-        with database_schema_fp.open('w') as f:
-            json.dump(database_schema, f)
-
-        self.addCleanup(database_schema_fp.unlink)
-
-        expected_args = {
-            'command': 'create-database',
-            'input': database_schema_fp,
-            **self.default_parser_args
-        }
-        self.parse_and_execute(['create-database', str(database_schema_fp)], expected_args)
-        self.assertTrue(check_table_exists(self.client, self.default_table_name))
 
     @unittest.skipUnless(
         os.environ.get('RUN_ALTER_INSTANCE_DB_TESTS'),

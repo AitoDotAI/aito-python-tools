@@ -146,6 +146,7 @@ class AitoClient:
 
          Sends a `PREDICT <https://aito.ai/docs/api/#post-api-v1-predict>`__ query:
 
+         >>> from aito.client_request import PredictRequest
          >>> res = client.request(request_obj=PredictRequest(
          ...    query={
          ...        "from": "impressions",
@@ -287,6 +288,7 @@ class AitoClient:
 
         Find products that multiple users would most likely buy
 
+        >>> from aito.client_request import MatchRequest
         >>> users = ['veronica', 'larry', 'alice']
         >>> responses = client.batch_requests([
         ...     MatchRequest(
