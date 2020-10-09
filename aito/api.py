@@ -7,12 +7,16 @@ import tempfile
 import time
 from os import PathLike, unlink
 from pathlib import Path
-from typing import Dict, List, BinaryIO, Union, Tuple, Iterable
+from typing import Dict, List, BinaryIO, Union, Tuple, Iterable, Optional
 
 import ndjson
 import requests as requestslib
 
-from aito.client import AitoClient
+from aito.client import AitoClient, RequestError
+from aito.client_request import SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, SimilarityRequest, \
+    MatchRequest, RelateRequest, GenericQueryRequest
+from aito.client_response import SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
+    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
 from aito.schema import AitoDatabaseSchema, AitoTableSchema
 from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 from aito.utils.data_frame_handler import DataFrameHandler
@@ -617,7 +621,7 @@ def get_table_size(client: AitoClient, table_name: str) -> int:
     :return: the number of entries in the table
     :rtype: int
     """
-    resp = client.query({'from': table_name})
+    resp = generic_query(client=client, query={'from': table_name})
     return resp['total']
 
 
@@ -641,7 +645,7 @@ def query_entries(
     :return: the table entries
     :rtype: List[Dict]
     """
-    resp = client.query({'from': table_name, 'offset': offset, 'limit': limit, 'select': select})
+    resp = generic_query(client=client, query={'from': table_name, 'offset': offset, 'limit': limit, 'select': select})
     return resp['hits']
 
 
@@ -809,3 +813,155 @@ def quick_predict(
         client=client, from_table=from_table, predicting_field=predicting_field
     )
     return predict_query
+
+
+def search(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+) -> Union[SearchResponse, RequestError]:
+    """send a query to the `Search API <https://aito.ai/docs/api/#post-api-v1-search>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the search query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :return: :class:`SearchResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: SearchResponse
+    """
+    req = SearchRequest(query=query)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def predict(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+) -> Union[PredictResponse, RequestError]:
+    """send a query to the `Predict API <https://aito.ai/docs/api/#post-api-v1-predict>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the predict query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :return: :class:`.PredictResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[PredictResponse, RequestError]
+    """
+    req = PredictRequest(query)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def recommend(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+) -> Union[RecommendResponse, RequestError]:
+    """send a query to the `Recommend API <https://aito.ai/docs/api/#post-api-v1-recommend>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the recommend query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :return: :class:`.RecommendResponse`  or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[RecommendResponse, RequestError]
+    """
+    req = RecommendRequest(query)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def evaluate(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+) -> Union[EvaluateResponse, RequestError]:
+    """send a query to the `Evaluate API <https://aito.ai/docs/api/#post-api-v1-evaluate>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the evaluate query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :return: :class:`.EvaluateResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[EvaluateResponse, RequestError]
+    """
+    req = EvaluateRequest(query)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def similarity(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+) -> Union[SimilarityResponse, RequestError]:
+    """send a query to the `Similarity API <https://aito.ai/docs/api/#post-api-v1-similarity>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the similarity query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :return: :class:`.SimilarityResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[SimilarityResponse, RequestError]
+    """
+    req = SimilarityRequest(query)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def match(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+) -> Union[MatchResponse, RequestError]:
+    """send a query to the `Match API <https://aito.ai/docs/api/#post-api-v1-match>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the match query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :return: :class:`.MatchResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[MatchResponse, RequestError]
+    """
+    req = MatchRequest(query)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def relate(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+) -> Union[RelateResponse, RequestError]:
+    """send a query to the `Relate API <https://aito.ai/docs/api/#post-api-v1-relate>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the relate query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :return: :class:`.RelateResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[RelateResponse, RequestError]
+    """
+    req = RelateRequest(query)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def generic_query(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+) -> Union[HitsResponse, RequestError]:
+    """send a query to the `Generic Query API <https://aito.ai/docs/api/#post-api-v1-qyert>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :return: :class:`HitsResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[HitsResponse, RequestError]
+    """
+    req = GenericQueryRequest(query)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)

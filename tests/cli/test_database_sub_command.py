@@ -439,7 +439,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         ('similarity', {"from": "products", "similarity": {"name": "rye bread"}}),
         ('match', {"from": "impressions", "where": {"session.user": "veronica"}, "match": "product"}),
         ('relate', {"from": "products", "where": {"$exists": "name"}, "relate": "tags"}),
-        ('query', {"from": "products", "where": {"name": "Pirkka banana"}, "get": "tags", "orderBy": "$p"})
+        ('generic-query', {"from": "products", "where": {"name": "Pirkka banana"}, "get": "tags", "orderBy": "$p"})
     ])
     def test_query_to_endpoint(self, endpoint, query):
         instance_url = os.environ['AITO_GROCERY_DEMO_INSTANCE_URL']
