@@ -383,13 +383,14 @@ You can send a query to an Aito endpoint by using the AitoClient method:
   .. testcode:: [grocery_demo]
 
     from aito.client import AitoClient
+    from aito.api import search, predict
     aito_client = AitoClient(instance_url=INSTANCE_URL, api_key=INSTANCE_API_KEY)
-    aito_client.search({
+    search(client=aito_client, query={
       "from": "products",
       "where": {"name": {"$match": "rye bread"}}
     })
 
-    aito_client.predict({
+    predict(client=aito_client, query={
       "from": "products",
       "where": {"name": "rye bread"},
       "predict": "tags"
