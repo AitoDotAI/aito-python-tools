@@ -5,10 +5,15 @@ Installation
 
 Install with `pip <https://pip.pypa.io/en/stable/>`_:
 
-.. code-block:: console
+To install the latest stable version with pip, run::
 
-  $ pip install aitoai
+  pip install aitoai
 
+To install this version with pip, run:
+
+.. parsed-literal::
+
+  pip install aitoai==\ |release|\
 
 .. note::
   Aitoai is only available in Python version 3.6 or higher.
