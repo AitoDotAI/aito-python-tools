@@ -13,7 +13,15 @@ using commands in your command-line shell, e.g: infer a table schema from a file
 Quick Installation
 ------------------
 
-To install with pip, run: ``pip install aitoai``
+To install the latest stable version with pip, run::
+
+  pip install aitoai
+
+To install this version with pip, run:
+
+.. parsed-literal::
+
+  pip install aitoai==\ |release|\
 
 For more installation options, please check :doc:`install`
 
