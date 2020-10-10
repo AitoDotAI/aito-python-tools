@@ -4,28 +4,29 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional, Union, Dict, List, TypeVar, Generic, Type
+from typing import Optional, Union, Dict, List, Type
 
-from aito.client_response import BaseResponse, SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
-    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
+import aito.client_response as aito_resp
 
 LOG = logging.getLogger('AitoClientRequest')
 
 
 class AitoRequest(ABC):
-    """Request abstract class"""
-    _query_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
-    _query_endpoints = [f'/api/v1/{p}' for p in _query_paths] + ['/version']
-    _database_endpoints = ['/api/v1/schema', '/api/v1/data']
-    _job_endpoint = '/api/v1/jobs'
+    """The base class of Request"""
+    _endpoint_prefix = '/api/v1'
+    _query_api_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
+    _schema_api_path = 'schema'
+    _data_api_path = 'data'
+    _jobs_api_path = 'jobs'
+    _version_endpoint = '/version'
     _request_methods = ['PUT', 'POST', 'GET', 'DELETE']
 
     def __init__(self, method: str, endpoint: str, query: Optional[Union[Dict, List]] = None):
         """
 
-        :param method: request method
+        :param method: the method of the request
         :type method: str
-        :param endpoint: request endpoint
+        :param endpoint: the endpoint of the request
         :type endpoint: str
         :param query: an Aito query if applicable, optional
         :type query: Optional[Union[Dict, List]]
@@ -38,11 +39,14 @@ class AitoRequest(ABC):
         """raise error if erroneous endpoint and warn if the unrecognized endpoint, else return the endpoint
         """
         if not endpoint.startswith('/'):
-            raise ValueError('endpoint must start with the `/` character')
-        is_database_path = any([endpoint.startswith(db_endpoint) for db_endpoint in self._database_endpoints])
-        is_job_path = endpoint.startswith(self._job_endpoint)
-        if not is_database_path and not is_job_path and endpoint not in self._query_endpoints:
-            LOG.warning(f'unrecognized endpoint {endpoint}')
+            raise ValueError(f"endpoint must start with the '/' character")
+        is_query_ep = endpoint in [f'{self._endpoint_prefix}/{path}' for path in self._query_api_paths]
+        is_prefix_ep = any([
+            endpoint.startswith(f'{self._endpoint_prefix}/{path}')
+            for path in [self._data_api_path, self._schema_api_path, self._jobs_api_path]]
+        )
+        if endpoint != self._version_endpoint and not is_query_ep and not is_prefix_ep:
+            raise ValueError(f'invalid endpoint {endpoint}')
         return endpoint
 
     def _check_method(self, method: str):
@@ -51,7 +55,7 @@ class AitoRequest(ABC):
         method = method.upper()
         if method not in self._request_methods:
             raise ValueError(
-                f"incorrect request method `{method}`. Method must be one of {'|'.join(self._request_methods)}"
+                f"invalid request method `{method}`. Method must be one of {'|'.join(self._request_methods)}"
             )
         return method
 
@@ -63,7 +67,7 @@ class AitoRequest(ABC):
 
     @property
     @abstractmethod
-    def response_cls(self) -> Type[BaseResponse]:
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
         """the class of the response for this request class
 
         :rtype: Type[BaseResponse]
@@ -72,119 +76,113 @@ class AitoRequest(ABC):
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]):
-        for sub_cls in cls.__subclasses__():
-            if hasattr(sub_cls, 'method') and hasattr(sub_cls, 'endpoint'):
-                if method == sub_cls.method and endpoint == sub_cls.endpoint:
-                    return sub_cls(query=query)
+        """return the appropriate request class instance with the similar method and endpoint"""
+        # Check if is a QueryAPIRequest
+        for sub_cls in QueryAPIRequest.__subclasses__():
+            if method == sub_cls.method and endpoint == QueryAPIRequest.endpoint_from_path(sub_cls.path):
+                return sub_cls(query=query)
         return BaseRequest(method=method, endpoint=endpoint, query=query)
 
 
 class BaseRequest(AitoRequest):
     """Base request to the Aito instance"""
     @property
-    def response_cls(self) -> Type[BaseResponse]:
-        return BaseResponse
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.BaseResponse
 
 
-class SearchRequest(AitoRequest):
+class QueryAPIRequest(AitoRequest, ABC):
+    """Request to a `Query API <https://aito.ai/docs/api/#query-api>`__
+    """
+    method: str = 'POST'
+    path: str = None
+
+    def __init__(self, query: Optional[Union[Dict, List]]):
+        """
+
+        :param query: an Aito query if applicable, optional
+        :type query: Optional[Union[Dict, List]]
+        """
+        if self.path is None:
+            raise NotImplementedError(f'The API path must be implemented')
+        endpoint = self.endpoint_from_path(self.path)
+        super().__init__(method=self.method, endpoint=endpoint, query=query)
+
+    @classmethod
+    def endpoint_from_path(cls, path: str):
+        """return the correct endpoint from the API path"""
+        if path not in cls._query_api_paths:
+            raise ValueError(f"path must be one of {'|'.join(cls._query_api_paths)}")
+        return f'{cls._endpoint_prefix}/{path}'
+
+
+class SearchRequest(QueryAPIRequest):
     """Request to the `Search API <https://aito.ai/docs/api/#post-api-v1-search>`__"""
-    method = 'POST'
-    endpoint = '/api/v1/_search'
-
-    def __init__(self, query: Dict):
-        super().__init__(self.method, self.endpoint, query)
+    path: str = '_search'
 
     @property
-    def response_cls(self) -> Type[BaseResponse]:
-        return SearchResponse
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.SearchResponse
 
 
-class PredictRequest(AitoRequest):
+class PredictRequest(QueryAPIRequest):
     """Request to the `Predict API <https://aito.ai/docs/api/#post-api-v1-predict>`__"""
-    method = 'POST'
-    endpoint = '/api/v1/_predict'
-
-    def __init__(self, query: Dict):
-        super().__init__(self.method, self.endpoint, query)
+    path: str = '_predict'
 
     @property
-    def response_cls(self) -> Type[BaseResponse]:
-        return PredictResponse
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.PredictResponse
 
 
-class RecommendRequest(AitoRequest):
+class RecommendRequest(QueryAPIRequest):
     """Request to the `Recommend API <https://aito.ai/docs/api/#post-api-v1-recommend>`__"""
-    method = 'POST'
-    endpoint = '/api/v1/_recommend'
-
-    def __init__(self, query: Dict):
-        super().__init__(self.method, self.endpoint, query)
+    path: str = '_recommend'
 
     @property
-    def response_cls(self) -> Type[BaseResponse]:
-        return RecommendResponse
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.RecommendResponse
 
 
-class EvaluateRequest(AitoRequest):
+class EvaluateRequest(QueryAPIRequest):
     """Request to the `Evaluate API <https://aito.ai/docs/api/#post-api-v1-evaluate>`__"""
-    method = 'POST'
-    endpoint = '/api/v1/_evaluate'
-
-    def __init__(self, query: Dict):
-        super().__init__(self.method, self.endpoint, query)
+    path: str = '_evaluate'
 
     @property
-    def response_cls(self) -> Type[BaseResponse]:
-        return EvaluateResponse
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.EvaluateResponse
 
 
-class SimilarityRequest(AitoRequest):
+class SimilarityRequest(QueryAPIRequest):
     """Request to the `Similarity API <https://aito.ai/docs/api/#post-api-v1-similarity>`__"""
-    method = 'POST'
-    endpoint = '/api/v1/_similarity'
-
-    def __init__(self, query: Dict):
-        super().__init__(self.method, self.endpoint, query)
+    path: str = '_similarity'
 
     @property
-    def response_cls(self) -> Type[BaseResponse]:
-        return SimilarityResponse
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.SimilarityResponse
 
 
-class MatchRequest(AitoRequest):
+class MatchRequest(QueryAPIRequest):
     """Request to the `Match query <https://aito.ai/docs/api/#post-api-v1-match>`__"""
-    method = 'POST'
-    endpoint = '/api/v1/_match'
-
-    def __init__(self, query: Dict):
-        super().__init__(self.method, self.endpoint, query)
+    path: str = '_match'
 
     @property
-    def response_cls(self) -> Type[BaseResponse]:
-        return MatchResponse
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.MatchResponse
 
 
-class RelateRequest(AitoRequest):
+class RelateRequest(QueryAPIRequest):
     """Request to the `Relate API <https://aito.ai/docs/api/#post-api-v1-relate>`__"""
-    method = 'POST'
-    endpoint = '/api/v1/_relate'
-
-    def __init__(self, query: Dict):
-        super().__init__(self.method, self.endpoint, query)
+    path: str = '_relate'
 
     @property
-    def response_cls(self) -> Type[BaseResponse]:
-        return RelateResponse
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.RelateResponse
 
 
-class GenericQueryRequest(AitoRequest):
-    """Response to the `Generic Query API <https://aito.ai/docs/api/#post-api-v1-query>`__"""
-    method = 'POST'
-    endpoint = '/api/v1/_query'
-
-    def __init__(self, query: Dict):
-        super().__init__(self.method, self.endpoint, query)
+class GenericQueryRequest(QueryAPIRequest):
+    """Request to the `Generic Query API <https://aito.ai/docs/api/#post-api-v1-query>`__"""
+    path: str = '_query'
 
     @property
-    def response_cls(self) -> Type[BaseResponse]:
-        return HitsResponse
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.HitsResponse
