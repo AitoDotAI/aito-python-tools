@@ -11,7 +11,7 @@ import requests as requestslib
 from aiohttp import ClientSession, ClientResponseError
 
 from aito.exceptions import BaseError
-from .client_request import BaseRequest, AitoRequest
+from .client_request import BaseRequest, AitoRequest, GetVersionRequest
 from .client_response import BaseResponse
 
 LOG = logging.getLogger('AitoClient')
@@ -79,9 +79,11 @@ class AitoClient:
         self.instance_url = instance_url.strip("/")
         self.api_key = api_key
         self.raise_for_status = raise_for_status
+        self.instance_version = None
         if check_credentials:
             try:
-                self.request(method='GET', endpoint='/version')
+                version_resp = self.request(request_obj=GetVersionRequest(), raise_for_status=True)
+                self.instance_version = version_resp.version
             except Exception:
                 raise Error('failed to instantiate Aito Client, please check your credentials')
 

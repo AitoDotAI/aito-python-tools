@@ -91,6 +91,19 @@ class BaseRequest(AitoRequest):
         return aito_resp.BaseResponse
 
 
+class GetVersionRequest(AitoRequest):
+    """Request to get the Aito instance version"""
+    method = 'GET'
+    endpoint = '/version'
+
+    def __init__(self):
+        super().__init__(method=self.method, endpoint=self.endpoint, query=None)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.GetVersionResponse
+
+
 class QueryAPIRequest(AitoRequest, ABC):
     """Request to a `Query API <https://aito.ai/docs/api/#query-api>`__
     """

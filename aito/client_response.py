@@ -154,6 +154,9 @@ class BaseResponse(JsonFormat):
     def __iter__(self):
         return iter(self._json)
 
+    def __len__(self):
+        return len(self._json)
+
     @classmethod
     def json_schema(cls):
         return {'type': 'object'}
@@ -164,7 +167,6 @@ class BaseResponse(JsonFormat):
     @classmethod
     def from_deserialized_object(cls, obj: Any):
         return cls(obj)
-
 
 HitType = TypeVar('HitType', bound=BaseHit)
 
@@ -375,11 +377,28 @@ class EvaluateResponse(BaseResponse):
         return self.__getitem__('accuracy')
 
     @property
-    def test_sample_count(self):
-        """the number of entries in the table that was used as test set"""
+    def test_sample_count(self) -> int:
+        """the number of entries in the table that was used as test set
+
+        :rtype: int
+        """
         return self.__getitem__('testSamples')
 
     @property
-    def train_sample_count(self):
-        """the number of entries in the table that was used to train Aito during evaluation"""
+    def train_sample_count(self) -> int:
+        """the number of entries in the table that was used to train Aito during evaluation
+
+        :rtype: int
+        """
         return self.__getitem__('trainSamples')
+
+
+class GetVersionResponse(BaseResponse):
+    """Response of the get version request"""
+    @property
+    def version(self) -> str:
+        """the Aito instance version
+
+        :rtype: str
+        """
+        return self.__getitem__('version')
