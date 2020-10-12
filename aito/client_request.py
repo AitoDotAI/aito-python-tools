@@ -13,7 +13,7 @@ LOG = logging.getLogger('AitoClientRequest')
 
 class AitoRequest(ABC):
     """The base class of Request"""
-    _endpoint_prefix = '/api/v1'
+    endpoint_prefix = '/api/v1'
     _query_api_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
     _schema_api_path = 'schema'
     _data_api_path = 'data'
@@ -40,9 +40,9 @@ class AitoRequest(ABC):
         """
         if not endpoint.startswith('/'):
             raise ValueError(f"endpoint must start with the '/' character")
-        is_query_ep = endpoint in [f'{self._endpoint_prefix}/{path}' for path in self._query_api_paths]
+        is_query_ep = endpoint in [f'{self.endpoint_prefix}/{path}' for path in self._query_api_paths]
         is_prefix_ep = any([
-            endpoint.startswith(f'{self._endpoint_prefix}/{path}')
+            endpoint.startswith(f'{self.endpoint_prefix}/{path}')
             for path in [self._data_api_path, self._schema_api_path, self._jobs_api_path]]
         )
         if endpoint != self._version_endpoint and not is_query_ep and not is_prefix_ep:
@@ -126,7 +126,7 @@ class QueryAPIRequest(AitoRequest, ABC):
         """return the correct endpoint from the API path"""
         if path not in cls._query_api_paths:
             raise ValueError(f"path must be one of {'|'.join(cls._query_api_paths)}")
-        return f'{cls._endpoint_prefix}/{path}'
+        return f'{cls.endpoint_prefix}/{path}'
 
 
 class SearchRequest(QueryAPIRequest):
@@ -199,3 +199,46 @@ class GenericQueryRequest(QueryAPIRequest):
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
         return aito_resp.HitsResponse
+
+
+class SchemaAPIRequest(AitoRequest, ABC):
+    """Request to manipulate the schema"""
+    endpoint_prefix = f'{AitoRequest.endpoint_prefix}/schema'
+
+    @classmethod
+    def check_endpoint(cls, endpoint: str):
+        """returns True if the input endpoint is a Data API endpoint"""
+        return endpoint.startswith(cls.endpoint_prefix)
+
+
+class GetDatabaseSchemaRequest(SchemaAPIRequest):
+    """Request to `Get the schema of the database <https://aito.ai/docs/api/#database-api>`__"""
+
+    method = 'GET'
+    endpoint = SchemaAPIRequest.endpoint_prefix
+
+    def __init__(self):
+        super().__init__(method=self.method, endpoint=self.endpoint)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.GetDatabaseSchemaResponse
+
+
+class GetTableSchemaRequest(SchemaAPIRequest):
+    """Request to `Get the schema of a table <https://aito.ai/docs/api/#get-api-v1-schema-table>`__"""
+
+    method = 'GET'
+
+    def __init__(self, table_name: str):
+        """
+
+        :param table_name: the name of the table
+        :type table_name: str
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.GetTableSchemaResponse

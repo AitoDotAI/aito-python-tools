@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Type, TypeVar, Generic
 
 from aito.utils._json_format import JsonFormat
+from aito.schema import AitoSchema, AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema
 
 LOG = logging.getLogger('AitoResponse')
 
@@ -167,6 +168,7 @@ class BaseResponse(JsonFormat):
     @classmethod
     def from_deserialized_object(cls, obj: Any):
         return cls(obj)
+
 
 HitType = TypeVar('HitType', bound=BaseHit)
 
@@ -402,3 +404,35 @@ class GetVersionResponse(BaseResponse):
         :rtype: str
         """
         return self.__getitem__('version')
+
+
+class GetSchemaResponse(BaseResponse, ABC):
+    """Response of get schema request"""
+    @property
+    @abstractmethod
+    def schema_cls(self) -> Type[AitoSchema]:
+        """the class of the schema component
+
+        :rtype: Type[AitoSchema]
+        """
+        pass
+
+    @property
+    def schema(self) -> AitoSchema:
+        """return an instance of the appropriate AitoSchema
+
+        :rtype: AitoSchema
+        """
+        return self.schema_cls.from_deserialized_object(self._json)
+
+
+class GetDatabaseSchemaResponse(GetSchemaResponse):
+    @property
+    def schema_cls(self) -> Type[AitoSchema]:
+        return AitoDatabaseSchema
+
+
+class GetTableSchemaResponse(GetSchemaResponse):
+    @property
+    def schema_cls(self) -> Type[AitoSchema]:
+        return AitoTableSchema

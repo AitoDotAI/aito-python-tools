@@ -164,7 +164,7 @@ class AitoClient:
          >>> client.request(method="GET", endpoint="/api/v1/incorrect-path") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
          Traceback (most recent call last):
             ...
-         ValueError: invalid endpoint /api/v1/incorrect-path
+         ValueError: invalid endpoint '/api/v1/incorrect-path'
          """
         if request_obj is None:
             if method is not None and endpoint is not None:

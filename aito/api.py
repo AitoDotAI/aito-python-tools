@@ -31,7 +31,7 @@ def get_version(client: AitoClient) -> str:
     :rtype: Dict
     """
     resp = client.request(request_obj=aito_requests.GetVersionRequest())
-    return resp['version']
+    return resp.version
 
 
 def create_database(client: AitoClient, database_schema: Union[AitoDatabaseSchema, Dict]):
@@ -62,8 +62,8 @@ def get_database_schema(client: AitoClient) -> AitoDatabaseSchema:
     :return: Aito database schema
     :rtype: Dict
     """
-    res = client.request(method='GET', endpoint='/api/v1/schema')
-    return AitoDatabaseSchema.from_deserialized_object(res.json)
+    res = client.request(request_obj=aito_requests.GetDatabaseSchemaRequest())
+    return res.schema
 
 
 def delete_database(client: AitoClient):
@@ -119,8 +119,8 @@ def get_table_schema(client: AitoClient, table_name: str) -> AitoTableSchema:
     :return: the table schema
     :rtype: AitoTableSchema
     """
-    resp = client.request(method='GET', endpoint=f'/api/v1/schema/{table_name}')
-    return AitoTableSchema.from_deserialized_object(resp.json)
+    resp = client.request(request_obj=aito_requests.GetTableSchemaRequest(table_name=table_name))
+    return resp.schema
 
 
 def delete_table(client: AitoClient, table_name: str):
