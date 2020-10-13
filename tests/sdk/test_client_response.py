@@ -1,15 +1,17 @@
 import requests
-from parameterized import parameterized_class
+from parameterized import parameterized, parameterized_class
 
+import aito.client_request as aito_requests
+import aito.schema as aito_schema
 from aito.client import AitoClient
-import aito.client_request as aito_req
 from tests.cases import CompareTestCase
 from tests.sdk.contexts import grocery_demo_client
 
 
-def get_requests_resp_and_aito_resp(aito_client: AitoClient, request_obj: aito_req.AitoRequest):
+def get_requests_resp_and_aito_resp(aito_client: AitoClient, request_obj: aito_requests.AitoRequest):
     """returns the json content from requests lib response and aito response for comparison"""
-    raw_resp_obj = requests.post(
+    raw_resp_obj = requests.request(
+        method=request_obj.method,
         url=aito_client.instance_url + request_obj.endpoint,
         headers=aito_client.headers,
         json=request_obj.query
@@ -25,7 +27,7 @@ class TestBaseHitsResponse(CompareTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.client = grocery_demo_client()
-        cls.request_obj = aito_req.GenericQueryRequest(query={'from': 'users', 'limit': 3})
+        cls.request_obj = aito_requests.GenericQueryRequest(query={'from': 'users', 'limit': 3})
         cls.raw_resp_json, cls.aito_resp = get_requests_resp_and_aito_resp(cls.client, cls.request_obj)
 
     def test_attributes(self):
@@ -48,15 +50,15 @@ class TestBaseHitsResponse(CompareTestCase):
         self.assertCountEqual(aito_res_fields, json_res_fields)
 
 
-@parameterized_class(("request_obj", "score_field"), [
-    (aito_req.PredictRequest({"from": "products", "predict": "tags", "limit": 3}), "$p"),
-    (aito_req.RecommendRequest(
+@parameterized_class(("test_name", "request_obj", "score_field"), [
+    ("predict", aito_requests.PredictRequest({"from": "products", "predict": "tags", "limit": 3}), "$p"),
+    ("recommend", aito_requests.RecommendRequest(
         {"from": "impressions", "recommend": "product", "goal": {"session.user": "veronica"}, "limit": 3}
     ), "$p" ),
-    (aito_req.MatchRequest(
+    ("match", aito_requests.MatchRequest(
         {"from": "impressions", "where": {"session.user": "veronica"}, "match": "product", "limit": 3}
     ), "$p"),
-    (aito_req.SimilarityRequest({"from": "products", "similarity": {"name": "rye bread"}}), "$score")
+    ("similarity", aito_requests.SimilarityRequest({"from": "products", "similarity": {"name": "rye bread"}}), "$score")
 ])
 class TestScoredHitsResponse(CompareTestCase):
     @classmethod
@@ -86,7 +88,7 @@ class TestRelateResponse(CompareTestCase):
     def test_relate_response(self):
         raw_resp_json, aito_resp = get_requests_resp_and_aito_resp(
             self.client,
-            aito_req.RelateRequest({"from": "products", "where": {"$exists": "name"}, "relate": "tags", "limit": 2})
+            aito_requests.RelateRequest({"from": "products", "where": {"$exists": "name"}, "relate": "tags", "limit": 2})
         )
 
         self.assertEqual(aito_resp.relations[0].json, raw_resp_json['hits'][0])
@@ -103,16 +105,36 @@ class TestEvaluateResponse(CompareTestCase):
     def test_relate_response(self):
         raw_resp_json, aito_resp = get_requests_resp_and_aito_resp(
             self.client,
-            aito_req.EvaluateRequest({
-            "test": {"$index": {"$mod": [10, 0]}},
-            "evaluate": {
-                "from": "products",
-                "where": {"name": {"$get": "name"}},
-                "match": "tags"
-            }
+            aito_requests.EvaluateRequest({
+                "test": {"$index": {"$mod": [10, 0]}},
+                "evaluate": {
+                    "from": "products",
+                    "where": {"name": {"$get": "name"}},
+                    "match": "tags"
+                }
             })
         )
 
         self.assertEqual(aito_resp.accuracy, raw_resp_json['accuracy'])
         self.assertEqual(aito_resp.test_sample_count, raw_resp_json['testSamples'])
         self.assertEqual(aito_resp.train_sample_count, raw_resp_json['trainSamples'])
+
+
+class TestGetSchemaResponse(CompareTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.client = grocery_demo_client()
+
+    @parameterized.expand([
+        ('get_database_schema', aito_requests.GetDatabaseSchemaRequest(), aito_schema.AitoDatabaseSchema),
+        ('get_table_schema', aito_requests.GetTableSchemaRequest(table_name='products'), aito_schema.AitoTableSchema),
+        (
+                'get_column_schema',
+                aito_requests.GetColumnSchemaRequest(table_name='products', column_name='name'),
+                aito_schema.AitoColumnTypeSchema
+        )
+    ])
+    def test_get_schema_response(self, _, request_instance, schema_cls):
+        raw_resp_json, aito_resp = get_requests_resp_and_aito_resp(self.client, request_instance)
+        self.assertEqual(aito_resp.schema, schema_cls.from_deserialized_object(raw_resp_json))

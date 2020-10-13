@@ -1,37 +1,38 @@
 from tests.cases import CompareTestCase
-from aito.client_request import BaseRequest, PredictRequest, SearchRequest, RecommendRequest, EvaluateRequest, \
-    SimilarityRequest, RelateRequest, GenericQueryRequest, AitoRequest
+import aito.client_request as aito_requests
 from parameterized import parameterized
 
 
 class TestClientRequest(CompareTestCase):
     @parameterized.expand([
-        ('search', 'POST', '/api/v1/_search', {}, SearchRequest, None),
-        ('predict', 'POST', '/api/v1/_predict', {}, PredictRequest, None),
-        ('recommend', 'POST', '/api/v1/_recommend', {}, RecommendRequest, None),
-        ('evaluate', 'POST', '/api/v1/_evaluate', {}, EvaluateRequest, None),
-        ('similarity', 'POST', '/api/v1/_similarity', {}, SimilarityRequest, None),
-        ('relate', 'POST', '/api/v1/_relate', {}, RelateRequest, None),
-        ('query', 'POST', '/api/v1/_query', {}, GenericQueryRequest, None),
-        ('get_database_schema', 'GET', '/api/v1/schema', {}, BaseRequest, None),
-        ('get_table_schema', 'GET', '/api/v1/schema/table_name', {}, BaseRequest, None),
+        ('search', 'POST', '/api/v1/_search', {}, aito_requests.SearchRequest, None),
+        ('predict', 'POST', '/api/v1/_predict', {}, aito_requests.PredictRequest, None),
+        ('recommend', 'POST', '/api/v1/_recommend', {}, aito_requests.RecommendRequest, None),
+        ('evaluate', 'POST', '/api/v1/_evaluate', {}, aito_requests.EvaluateRequest, None),
+        ('similarity', 'POST', '/api/v1/_similarity', {}, aito_requests.SimilarityRequest, None),
+        ('relate', 'POST', '/api/v1/_relate', {}, aito_requests.RelateRequest, None),
+        ('query', 'POST', '/api/v1/_query', {}, aito_requests.GenericQueryRequest, None),
+        ('get_database_schema', 'GET', '/api/v1/schema', {}, aito_requests.GetDatabaseSchemaRequest, None),
+        ('get_table_schema', 'GET', '/api/v1/schema/table_name', {}, aito_requests.GetTableSchemaRequest, None),
+        (
+                'get_column_schema', 'GET', '/api/v1/schema/table_name/column_name', {},
+                aito_requests.GetColumnSchemaRequest, None
+        ),
         ('erroneous_method', 'PATCH', '/api/v1/schema', {}, None, ValueError),
         ('erroneous_endpoint', 'GET', 'api/v1/schema', {}, None, ValueError),
-        ('erroneous_schema_endpoint', 'GET', '/api/v1/schema/table_name/column_name/unknown', {}, None, ValueError),
     ])
     def test_make_request(self, _, method, endpoint, query, request_cls, error):
         if error:
             with self.assertRaises(error):
-                AitoRequest.make_request(method=method, endpoint=endpoint, query=query)
+                aito_requests.AitoRequest.make_request(method=method, endpoint=endpoint, query=query)
         else:
-            req = AitoRequest.make_request(method=method, endpoint=endpoint, query=query)
+            req = aito_requests.AitoRequest.make_request(method=method, endpoint=endpoint, query=query)
             self.assertTrue(isinstance(req, request_cls))
 
     def test_base_request_erroneous_method(self):
         with self.assertRaises(ValueError):
-            BaseRequest('PATCH', '/api/v1/schema')
+            aito_requests.BaseRequest('PATCH', '/api/v1/schema')
 
     def test_base_request_erroneous_endpoint(self):
         with self.assertRaises(ValueError):
-            BaseRequest('GET', 'api/v1/schema')
-
+            aito_requests.BaseRequest('GET', 'api/v1/schema')

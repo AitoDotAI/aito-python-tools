@@ -86,6 +86,7 @@ class AitoRequest(ABC):
         :return: the appropriate request class intsnace
         :rtype: AitoRequest
         """
+        method = method.upper()
         for sub_cls in cls.__subclasses__():
             if sub_cls != BaseRequest and sub_cls.check_method(method) and sub_cls.check_endpoint(endpoint):
                 try:
@@ -183,11 +184,11 @@ class _QueryAPIRequest(AitoRequest, ABC):
     path: str = None  # get around of not having abstract class attribute
     query_api_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
 
-    def __init__(self, query: Optional[Union[Dict, List]]):
+    def __init__(self, query: Dict):
         """
 
         :param query: an Aito query if applicable, optional
-        :type query: Optional[Union[Dict, List]]
+        :type query: Dict
         """
         if self.path is None:
             raise NotImplementedError(f'The API path must be implemented')
@@ -297,6 +298,11 @@ class _SchemaAPIRequest(AitoRequest, ABC):
 
     @classmethod
     @abstractmethod
+    def check_method(cls, method: str) -> bool:
+        return method in cls.request_methods
+
+    @classmethod
+    @abstractmethod
     def check_endpoint(cls, endpoint: str) -> bool:
         return endpoint.startswith(cls.endpoint_prefix)
 
@@ -328,7 +334,7 @@ class _ColumnSchemaRequest:
     """Request to manipulate a column schema"""
     @classmethod
     def check_endpoint(cls, endpoint: str):
-        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/[^/".$\r\n\s]+/[^/".$\r\n\s]$')
+        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/[^/".$\r\n\s]+/[^/".$\r\n\s]+$')
         return pattern.match(endpoint) is not None
 
 
@@ -338,11 +344,11 @@ class _GetSchemaRequest:
 
     @classmethod
     def check_method(cls, method: str):
-        return method == 'GET'
+        return method == cls.method
 
 
 class GetDatabaseSchemaRequest(_DatabaseSchemaRequest, _GetSchemaRequest, _SchemaAPIRequest):
-    """Request to `Get the schema of the database <https://aito.ai/docs/api/#database-api>`__"""
+    """Request to `Get the schema of the database <https://aito.ai/docs/api/#get-api-v1-schema>`__"""
     endpoint = _SchemaAPIRequest.endpoint_prefix
 
     def __init__(self):
@@ -380,3 +386,28 @@ class GetTableSchemaRequest(_TableSchemaRequest, _GetSchemaRequest, _SchemaAPIRe
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name = matched.group(1)
         return cls(table_name=table_name)
+
+
+class GetColumnSchemaRequest(_ColumnSchemaRequest, _GetSchemaRequest, _SchemaAPIRequest):
+    """Request to `Get the schema of a table <https://aito.ai/docs/api/#get-api-v1-schema-table>`__"""
+    def __init__(self, table_name: str, column_name: str):
+        """
+
+        :param table_name: the name of the table
+        :type table_name: str
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}/{column_name}'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.GetColumnSchemaResponse
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)/([^/".$\r\n\s]+)$')
+        matched = pattern.search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        table_name, column_name = matched.group(1), matched.group(2)
+        return cls(table_name=table_name, column_name=column_name)

@@ -436,3 +436,9 @@ class GetTableSchemaResponse(GetSchemaResponse):
     @property
     def schema_cls(self) -> Type[AitoSchema]:
         return AitoTableSchema
+
+
+class GetColumnSchemaResponse(GetSchemaResponse):
+    @property
+    def schema_cls(self) -> Type[AitoSchema]:
+        return AitoColumnTypeSchema
