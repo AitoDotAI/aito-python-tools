@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union, Dict, List, Type
 
 import aito.client_response as aito_resp
+import re
 
 LOG = logging.getLogger('AitoClientRequest')
 
@@ -49,38 +50,77 @@ class AitoRequest(ABC):
         pass
 
     @classmethod
-    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]):
-        """return the appropriate request class instance with the similar method and endpoint"""
-        # Check if is a QueryAPIRequest
-        for sub_cls in QueryAPIRequest.__subclasses__():
-            if method == sub_cls.method and endpoint == QueryAPIRequest.endpoint_from_path(sub_cls.path):
-                return sub_cls(query=query)
+    @abstractmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
+        """check if the input endpoint is a valid endpoint of the Request class
+
+        :param endpoint: the input endpoint
+        :type endpoint: str
+        :return: True if the endpoint is valid
+        :rtype: bool
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def check_method(cls, method: str) -> bool:
+        """check if the input method is a valid endpoint of the Request class
+
+        :param method: the input method
+        :type method: str
+        :return: True if the method is valid
+        :rtype: bool
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        """factory method to return the appropriate request class instance after checking the input endpoint and method
+        :param method: the method of the request
+        :type method: str
+        :param endpoint: the endpoint of the request
+        :type endpoint: str
+        :param query: an Aito query if applicable, optional
+        :type query: Optional[Union[Dict, List]]
+        :return: the appropriate request class intsnace
+        :rtype: AitoRequest
+        """
+        for sub_cls in cls.__subclasses__():
+            if sub_cls != BaseRequest and sub_cls.check_method(method) and sub_cls.check_endpoint(endpoint):
+                try:
+                    instance = sub_cls.make_request(method=method, endpoint=endpoint, query=query)
+                    return instance
+                except Exception as e:
+                    LOG.debug(f"invalid {sub_cls.__name__} with '{method}({endpoint}): {e}'")
         return BaseRequest(method=method, endpoint=endpoint, query=query)
 
 
 class BaseRequest(AitoRequest):
     """Base request to the Aito instance"""
 
-    def check_endpoint(self, endpoint: str) -> bool:
+    @classmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
         """check if the input endpoint is a valid Aito endpoint
         """
         if not endpoint.startswith('/'):
             LOG.debug(f"endpoint must start with the '/' character")
             return False
         is_version_ep = endpoint == GetVersionRequest.endpoint
-        is_schema_ep = SchemaAPIRequest.check_endpoint(endpoint)
-        is_query_ep = QueryAPIRequest.check_endpoint(endpoint)
+        is_schema_ep = _SchemaAPIRequest.check_endpoint(endpoint)
+        is_query_ep = _QueryAPIRequest.check_endpoint(endpoint)
         is_prefix_ep = any([
-            endpoint.startswith(f'{self.api_version_endpoint_prefix}/{path}')
-            for path in [self._data_api_path, self._jobs_api_path]]
+            endpoint.startswith(f'{cls.api_version_endpoint_prefix}/{path}')
+            for path in [cls._data_api_path, cls._jobs_api_path]]
         )
         if not any([is_version_ep, is_schema_ep, is_query_ep, is_prefix_ep]):
             return False
         return True
 
-    def check_method(self, method: str) -> bool:
+    @classmethod
+    def check_method(cls, method: str) -> bool:
         """returns True if the input request method is valid"""
-        return method in self.request_methods
+        return method in cls.request_methods
 
     def __init__(self, method: str, endpoint: str, query: Optional[Union[Dict, List]] = None):
         """
@@ -101,6 +141,10 @@ class BaseRequest(AitoRequest):
             )
         super().__init__(method=method, endpoint=endpoint, query=query)
 
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        return cls(method=method, endpoint=endpoint, query=query)
+
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
         return aito_resp.BaseResponse
@@ -114,16 +158,29 @@ class GetVersionRequest(AitoRequest):
     def __init__(self):
         super().__init__(method=self.method, endpoint=self.endpoint, query=None)
 
+    @classmethod
+    def check_method(cls, method: str) -> bool:
+        return method == cls.method
+
+    @classmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
+        return endpoint == cls.endpoint
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        return cls()
+
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
         return aito_resp.GetVersionResponse
 
 
-class QueryAPIRequest(AitoRequest, ABC):
+class _QueryAPIRequest(AitoRequest, ABC):
     """Request to a `Query API <https://aito.ai/docs/api/#query-api>`__
     """
+
     method: str = 'POST'
-    path: str = None # get around of not having abstract class attribute
+    path: str = None  # get around of not having abstract class attribute
     query_api_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
 
     def __init__(self, query: Optional[Union[Dict, List]]):
@@ -141,8 +198,18 @@ class QueryAPIRequest(AitoRequest, ABC):
 
     @classmethod
     def check_endpoint(cls, endpoint: str):
-        """returns True if the input endpoint is a Query API endpoint"""
         return endpoint in [f'{cls.api_version_endpoint_prefix}/{path}' for path in cls.query_api_paths]
+
+    @classmethod
+    def check_method(cls, method: str) -> bool:
+        return method == cls.method
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        for sub_cls in cls.__subclasses__():
+            if method == sub_cls.method and endpoint == _QueryAPIRequest.endpoint_from_path(sub_cls.path):
+                return sub_cls(query=query)
+        raise ValueError(f"invalid {cls.__name__} with '{method}({endpoint})'")
 
     @classmethod
     def endpoint_from_path(cls, path: str):
@@ -152,7 +219,7 @@ class QueryAPIRequest(AitoRequest, ABC):
         return f'{cls.api_version_endpoint_prefix}/{path}'
 
 
-class SearchRequest(QueryAPIRequest):
+class SearchRequest(_QueryAPIRequest):
     """Request to the `Search API <https://aito.ai/docs/api/#post-api-v1-search>`__"""
     path: str = '_search'
 
@@ -161,7 +228,7 @@ class SearchRequest(QueryAPIRequest):
         return aito_resp.SearchResponse
 
 
-class PredictRequest(QueryAPIRequest):
+class PredictRequest(_QueryAPIRequest):
     """Request to the `Predict API <https://aito.ai/docs/api/#post-api-v1-predict>`__"""
     path: str = '_predict'
 
@@ -170,7 +237,7 @@ class PredictRequest(QueryAPIRequest):
         return aito_resp.PredictResponse
 
 
-class RecommendRequest(QueryAPIRequest):
+class RecommendRequest(_QueryAPIRequest):
     """Request to the `Recommend API <https://aito.ai/docs/api/#post-api-v1-recommend>`__"""
     path: str = '_recommend'
 
@@ -179,7 +246,7 @@ class RecommendRequest(QueryAPIRequest):
         return aito_resp.RecommendResponse
 
 
-class EvaluateRequest(QueryAPIRequest):
+class EvaluateRequest(_QueryAPIRequest):
     """Request to the `Evaluate API <https://aito.ai/docs/api/#post-api-v1-evaluate>`__"""
     path: str = '_evaluate'
 
@@ -188,7 +255,7 @@ class EvaluateRequest(QueryAPIRequest):
         return aito_resp.EvaluateResponse
 
 
-class SimilarityRequest(QueryAPIRequest):
+class SimilarityRequest(_QueryAPIRequest):
     """Request to the `Similarity API <https://aito.ai/docs/api/#post-api-v1-similarity>`__"""
     path: str = '_similarity'
 
@@ -197,7 +264,7 @@ class SimilarityRequest(QueryAPIRequest):
         return aito_resp.SimilarityResponse
 
 
-class MatchRequest(QueryAPIRequest):
+class MatchRequest(_QueryAPIRequest):
     """Request to the `Match query <https://aito.ai/docs/api/#post-api-v1-match>`__"""
     path: str = '_match'
 
@@ -206,7 +273,7 @@ class MatchRequest(QueryAPIRequest):
         return aito_resp.MatchResponse
 
 
-class RelateRequest(QueryAPIRequest):
+class RelateRequest(_QueryAPIRequest):
     """Request to the `Relate API <https://aito.ai/docs/api/#post-api-v1-relate>`__"""
     path: str = '_relate'
 
@@ -215,7 +282,7 @@ class RelateRequest(QueryAPIRequest):
         return aito_resp.RelateResponse
 
 
-class GenericQueryRequest(QueryAPIRequest):
+class GenericQueryRequest(_QueryAPIRequest):
     """Request to the `Generic Query API <https://aito.ai/docs/api/#post-api-v1-query>`__"""
     path: str = '_query'
 
@@ -224,21 +291,59 @@ class GenericQueryRequest(QueryAPIRequest):
         return aito_resp.HitsResponse
 
 
-class SchemaAPIRequest(AitoRequest, ABC):
+class _SchemaAPIRequest(AitoRequest, ABC):
     """Request to manipulate the schema"""
     endpoint_prefix = f'{AitoRequest.api_version_endpoint_prefix}/schema'
 
     @classmethod
-    def check_endpoint(cls, endpoint: str):
-        """returns True if the input endpoint is a Data API endpoint"""
+    @abstractmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
         return endpoint.startswith(cls.endpoint_prefix)
 
+    @classmethod
+    @abstractmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        for sub_cls in cls.__subclasses__():
+            if sub_cls.check_method(method) and sub_cls.check_endpoint(endpoint):
+                return sub_cls.make_request(method=method, endpoint=endpoint, query=query)
+        raise ValueError(f"invalid {cls.__name__} with '{method}({endpoint})'")
 
-class GetDatabaseSchemaRequest(SchemaAPIRequest):
-    """Request to `Get the schema of the database <https://aito.ai/docs/api/#database-api>`__"""
 
+class _DatabaseSchemaRequest:
+    """Request to manipulate the database schema"""
+    @classmethod
+    def check_endpoint(cls, endpoint: str):
+        return endpoint == _SchemaAPIRequest.endpoint_prefix
+
+
+class _TableSchemaRequest:
+    """Request to manipulate a table schema"""
+    @classmethod
+    def check_endpoint(cls, endpoint: str):
+        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/[^/".$\r\n\s]+$')
+        return pattern.match(endpoint) is not None
+
+
+class _ColumnSchemaRequest:
+    """Request to manipulate a column schema"""
+    @classmethod
+    def check_endpoint(cls, endpoint: str):
+        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/[^/".$\r\n\s]+/[^/".$\r\n\s]$')
+        return pattern.match(endpoint) is not None
+
+
+class _GetSchemaRequest:
+    """Request to get schema"""
     method = 'GET'
-    endpoint = SchemaAPIRequest.endpoint_prefix
+
+    @classmethod
+    def check_method(cls, method: str):
+        return method == 'GET'
+
+
+class GetDatabaseSchemaRequest(_DatabaseSchemaRequest, _GetSchemaRequest, _SchemaAPIRequest):
+    """Request to `Get the schema of the database <https://aito.ai/docs/api/#database-api>`__"""
+    endpoint = _SchemaAPIRequest.endpoint_prefix
 
     def __init__(self):
         super().__init__(method=self.method, endpoint=self.endpoint)
@@ -247,12 +352,13 @@ class GetDatabaseSchemaRequest(SchemaAPIRequest):
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
         return aito_resp.GetDatabaseSchemaResponse
 
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        return cls()
 
-class GetTableSchemaRequest(SchemaAPIRequest):
+
+class GetTableSchemaRequest(_TableSchemaRequest, _GetSchemaRequest, _SchemaAPIRequest):
     """Request to `Get the schema of a table <https://aito.ai/docs/api/#get-api-v1-schema-table>`__"""
-
-    method = 'GET'
-
     def __init__(self, table_name: str):
         """
 
@@ -265,3 +371,12 @@ class GetTableSchemaRequest(SchemaAPIRequest):
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
         return aito_resp.GetTableSchemaResponse
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)$')
+        matched = pattern.search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        table_name = matched.group(1)
+        return cls(table_name=table_name)

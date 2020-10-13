@@ -13,9 +13,11 @@ class TestClientRequest(CompareTestCase):
         ('similarity', 'POST', '/api/v1/_similarity', {}, SimilarityRequest, None),
         ('relate', 'POST', '/api/v1/_relate', {}, RelateRequest, None),
         ('query', 'POST', '/api/v1/_query', {}, GenericQueryRequest, None),
-        ('schema', 'POST', '/api/v1/schema', {}, BaseRequest, None),
+        ('get_database_schema', 'GET', '/api/v1/schema', {}, BaseRequest, None),
+        ('get_table_schema', 'GET', '/api/v1/schema/table_name', {}, BaseRequest, None),
         ('erroneous_method', 'PATCH', '/api/v1/schema', {}, None, ValueError),
-        ('erroneous_endpoint', 'GET', 'api/v1/schema', {}, None, ValueError)
+        ('erroneous_endpoint', 'GET', 'api/v1/schema', {}, None, ValueError),
+        ('erroneous_schema_endpoint', 'GET', '/api/v1/schema/table_name/column_name/unknown', {}, None, ValueError),
     ])
     def test_make_request(self, _, method, endpoint, query, request_cls, error):
         if error:
@@ -32,3 +34,4 @@ class TestClientRequest(CompareTestCase):
     def test_base_request_erroneous_endpoint(self):
         with self.assertRaises(ValueError):
             BaseRequest('GET', 'api/v1/schema')
+
