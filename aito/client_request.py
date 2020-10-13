@@ -13,13 +13,11 @@ LOG = logging.getLogger('AitoClientRequest')
 
 class AitoRequest(ABC):
     """The base class of Request"""
-    endpoint_prefix = '/api/v1'
-    _query_api_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
-    _schema_api_path = 'schema'
+    api_version_endpoint_prefix = '/api/v1'
+    request_methods = ['PUT', 'POST', 'GET', 'DELETE']
+
     _data_api_path = 'data'
     _jobs_api_path = 'jobs'
-    _version_endpoint = '/version'
-    _request_methods = ['PUT', 'POST', 'GET', 'DELETE']
 
     def __init__(self, method: str, endpoint: str, query: Optional[Union[Dict, List]] = None):
         """
@@ -31,33 +29,9 @@ class AitoRequest(ABC):
         :param query: an Aito query if applicable, optional
         :type query: Optional[Union[Dict, List]]
         """
-        self.method = self._check_method(method)
-        self.endpoint = self._check_endpoint(endpoint)
+        self.method = method
+        self.endpoint = endpoint
         self.query = query
-
-    def _check_endpoint(self, endpoint: str):
-        """raise error if erroneous endpoint and warn if the unrecognized endpoint, else return the endpoint
-        """
-        if not endpoint.startswith('/'):
-            raise ValueError(f"endpoint must start with the '/' character")
-        is_query_ep = endpoint in [f'{self.endpoint_prefix}/{path}' for path in self._query_api_paths]
-        is_prefix_ep = any([
-            endpoint.startswith(f'{self.endpoint_prefix}/{path}')
-            for path in [self._data_api_path, self._schema_api_path, self._jobs_api_path]]
-        )
-        if endpoint != self._version_endpoint and not is_query_ep and not is_prefix_ep:
-            raise ValueError(f'invalid endpoint {endpoint}')
-        return endpoint
-
-    def _check_method(self, method: str):
-        """raise error if incorrect method else return the method
-        """
-        method = method.upper()
-        if method not in self._request_methods:
-            raise ValueError(
-                f"invalid request method `{method}`. Method must be one of {'|'.join(self._request_methods)}"
-            )
-        return method
 
     def __str__(self):
         query_str = str(self.query)
@@ -86,6 +60,47 @@ class AitoRequest(ABC):
 
 class BaseRequest(AitoRequest):
     """Base request to the Aito instance"""
+
+    def check_endpoint(self, endpoint: str) -> bool:
+        """check if the input endpoint is a valid Aito endpoint
+        """
+        if not endpoint.startswith('/'):
+            LOG.debug(f"endpoint must start with the '/' character")
+            return False
+        is_version_ep = endpoint == GetVersionRequest.endpoint
+        is_schema_ep = SchemaAPIRequest.check_endpoint(endpoint)
+        is_query_ep = QueryAPIRequest.check_endpoint(endpoint)
+        is_prefix_ep = any([
+            endpoint.startswith(f'{self.api_version_endpoint_prefix}/{path}')
+            for path in [self._data_api_path, self._jobs_api_path]]
+        )
+        if not any([is_version_ep, is_schema_ep, is_query_ep, is_prefix_ep]):
+            return False
+        return True
+
+    def check_method(self, method: str) -> bool:
+        """returns True if the input request method is valid"""
+        return method in self.request_methods
+
+    def __init__(self, method: str, endpoint: str, query: Optional[Union[Dict, List]] = None):
+        """
+
+        :param method: the method of the request
+        :type method: str
+        :param endpoint: the endpoint of the request
+        :type endpoint: str
+        :param query: an Aito query if applicable, optional
+        :type query: Optional[Union[Dict, List]]
+        """
+        if not self.check_endpoint(endpoint):
+            raise ValueError(f"invalid endpoint '{endpoint}'")
+        method = method.upper()
+        if not self.check_method(method):
+            raise ValueError(
+                f"invalid request method `{method}`. Method must be one of {'|'.join(self.request_methods)}"
+            )
+        super().__init__(method=method, endpoint=endpoint, query=query)
+
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
         return aito_resp.BaseResponse
@@ -108,7 +123,8 @@ class QueryAPIRequest(AitoRequest, ABC):
     """Request to a `Query API <https://aito.ai/docs/api/#query-api>`__
     """
     method: str = 'POST'
-    path: str = None
+    path: str = None # get around of not having abstract class attribute
+    query_api_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
 
     def __init__(self, query: Optional[Union[Dict, List]]):
         """
@@ -118,15 +134,22 @@ class QueryAPIRequest(AitoRequest, ABC):
         """
         if self.path is None:
             raise NotImplementedError(f'The API path must be implemented')
+        if self.path not in self.query_api_paths:
+            raise ValueError(f"invalid path, path must be one of {'|'.join(self.query_api_paths)}")
         endpoint = self.endpoint_from_path(self.path)
         super().__init__(method=self.method, endpoint=endpoint, query=query)
 
     @classmethod
+    def check_endpoint(cls, endpoint: str):
+        """returns True if the input endpoint is a Query API endpoint"""
+        return endpoint in [f'{cls.api_version_endpoint_prefix}/{path}' for path in cls.query_api_paths]
+
+    @classmethod
     def endpoint_from_path(cls, path: str):
-        """return the correct endpoint from the API path"""
-        if path not in cls._query_api_paths:
-            raise ValueError(f"path must be one of {'|'.join(cls._query_api_paths)}")
-        return f'{cls.endpoint_prefix}/{path}'
+        """return the query api endpoint from the query API path"""
+        if path not in cls.query_api_paths:
+            raise ValueError(f"path must be one of {'|'.join(cls.query_api_paths)}")
+        return f'{cls.api_version_endpoint_prefix}/{path}'
 
 
 class SearchRequest(QueryAPIRequest):
@@ -203,7 +226,7 @@ class GenericQueryRequest(QueryAPIRequest):
 
 class SchemaAPIRequest(AitoRequest, ABC):
     """Request to manipulate the schema"""
-    endpoint_prefix = f'{AitoRequest.endpoint_prefix}/schema'
+    endpoint_prefix = f'{AitoRequest.api_version_endpoint_prefix}/schema'
 
     @classmethod
     def check_endpoint(cls, endpoint: str):
