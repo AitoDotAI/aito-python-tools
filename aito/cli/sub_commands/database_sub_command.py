@@ -102,7 +102,7 @@ class CreateDatabaseSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         database_schema = load_json_from_parsed_input_arg(parsed_args['input'], 'database schema')
-        api.create_database(client=client, database_schema=database_schema)
+        api.create_database(client=client, schema=database_schema)
         return 0
 
 
@@ -121,7 +121,7 @@ class CreateTableSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         table_schema = load_json_from_parsed_input_arg(parsed_args['input'], 'table schema')
-        api.create_table(client, table_name, table_schema)
+        api.create_table(client=client, table_name=table_name, schema=table_schema)
         return 0
 
 

@@ -34,7 +34,7 @@ def get_version(client: AitoClient) -> str:
     return resp.version
 
 
-def create_database(client: AitoClient, database_schema: Union[AitoDatabaseSchema, Dict]):
+def create_database(client: AitoClient, schema: Union[AitoDatabaseSchema, Dict]):
     """`create a database <https://aito.ai/docs/api/#put-api-v1-schema>`__ using the specified database schema
 
     .. note::
@@ -43,14 +43,10 @@ def create_database(client: AitoClient, database_schema: Union[AitoDatabaseSchem
 
     :param client: the AitoClient instance
     :type client: AitoClient
-    :param database_schema: Aito database schema
-    :type database_schema: Dict
-    :return: the database schema
-    :rtype: Dict
+    :param schema: the schema of the database
+    :type schema: Dict
     """
-    if not isinstance(database_schema, AitoDatabaseSchema):
-        database_schema = AitoDatabaseSchema.from_deserialized_object(database_schema)
-    client.request(method='PUT', endpoint='/api/v1/schema', query=database_schema.to_json_serializable())
+    client.request(request_obj=aito_requests.CreateDatabaseSchemaRequest(schema=schema))
     LOG.info('database schema created')
 
 
@@ -82,7 +78,7 @@ def delete_database(client: AitoClient):
     LOG.info('database deleted')
 
 
-def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTableSchema, Dict]):
+def create_table(client: AitoClient, table_name: str, schema: Union[AitoTableSchema, Dict]):
     """`create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__
     with the specified table name and schema
 
@@ -96,16 +92,10 @@ def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTa
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
-    :param table_schema: Aito table schema
-    :type table_schema: an AitoTableSchema object or a Dict, optional
-    :return: the table schema
-    :rtype: Dict
+    :param schema: Aito table schema
+    :type schema: an AitoTableSchema object or a Dict, optional
     """
-    if not isinstance(table_schema, AitoTableSchema):
-        if not isinstance(table_schema, dict):
-            raise ValueError("the input table schema must be either an AitoTableSchema object or a dict")
-        table_schema = AitoTableSchema.from_deserialized_object(table_schema)
-    client.request(method='PUT', endpoint=f'/api/v1/schema/{table_name}', query=table_schema.to_json_serializable())
+    client.request(request_obj=aito_requests.CreateTableSchemaRequest(table_name=table_name, schema=schema))
     LOG.info(f'table `{table_name}` created')
 
 

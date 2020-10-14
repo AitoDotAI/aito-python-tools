@@ -274,7 +274,7 @@ You can :py:func:`~aito.api.create_table` using an :py:class:`~aito.client.AitoC
   from aito.client import AitoClient
   from aito.api import create_table
   aito_client = AitoClient(instance_url=YOUR_AITO_INSTANCE_URL, api_key=YOUR_AITO_INSTANCE_API_KEY)
-  create_table(client=aito_client, table_name='reddit', table_schema=reddit_schema)
+  create_table(client=aito_client, table_name='reddit', schema=reddit_schema)
 
 .. _sdkQuickstartConvertData:
 

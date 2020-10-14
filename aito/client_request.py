@@ -3,11 +3,12 @@
 """
 
 import logging
+import re
 from abc import ABC, abstractmethod
-from typing import Optional, Union, Dict, List, Type
+from typing import Optional, Union, Dict, List, Type, Tuple
 
 import aito.client_response as aito_resp
-import re
+from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema
 
 LOG = logging.getLogger('AitoClientRequest')
 
@@ -39,6 +40,9 @@ class AitoRequest(ABC):
         if len(query_str) > 100:
             query_str = query_str[:100] + '...'
         return f'{self.method}({self.endpoint}): {query_str}'
+
+    def __eq__(self, other):
+        return self.method == other.method and self.endpoint == other.endpoint and self.query == other.query
 
     @property
     @abstractmethod
@@ -317,6 +321,8 @@ class _SchemaAPIRequest(AitoRequest, ABC):
 
 class _DatabaseSchemaRequest:
     """Request to manipulate the database schema"""
+    endpoint = _SchemaAPIRequest.endpoint_prefix
+
     @classmethod
     def check_endpoint(cls, endpoint: str):
         return endpoint == _SchemaAPIRequest.endpoint_prefix
@@ -325,17 +331,35 @@ class _DatabaseSchemaRequest:
 class _TableSchemaRequest:
     """Request to manipulate a table schema"""
     @classmethod
-    def check_endpoint(cls, endpoint: str):
+    def check_endpoint(cls, endpoint: str) -> bool:
         pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/[^/".$\r\n\s]+$')
         return pattern.match(endpoint) is not None
+
+    @classmethod
+    def endpoint_to_table_name(cls, endpoint) -> str:
+        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)$')
+        matched = pattern.search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        table_name = matched.group(1)
+        return table_name
 
 
 class _ColumnSchemaRequest:
     """Request to manipulate a column schema"""
     @classmethod
-    def check_endpoint(cls, endpoint: str):
+    def check_endpoint(cls, endpoint: str) -> bool:
         pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/[^/".$\r\n\s]+/[^/".$\r\n\s]+$')
         return pattern.match(endpoint) is not None
+
+    @classmethod
+    def endpoint_to_table_name_and_column_name(cls, endpoint: str) -> Tuple[str, str]:
+        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)/([^/".$\r\n\s]+)$')
+        matched = pattern.search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        table_name, column_name = matched.group(1), matched.group(2)
+        return table_name, column_name
 
 
 class _GetSchemaRequest:
@@ -349,14 +373,12 @@ class _GetSchemaRequest:
 
 class GetDatabaseSchemaRequest(_DatabaseSchemaRequest, _GetSchemaRequest, _SchemaAPIRequest):
     """Request to `Get the schema of the database <https://aito.ai/docs/api/#get-api-v1-schema>`__"""
-    endpoint = _SchemaAPIRequest.endpoint_prefix
-
     def __init__(self):
         super().__init__(method=self.method, endpoint=self.endpoint)
 
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
-        return aito_resp.GetDatabaseSchemaResponse
+        return aito_resp.DatabaseSchemaResponse
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
@@ -376,20 +398,16 @@ class GetTableSchemaRequest(_TableSchemaRequest, _GetSchemaRequest, _SchemaAPIRe
 
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
-        return aito_resp.GetTableSchemaResponse
+        return aito_resp.TableSchemaResponse
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)$')
-        matched = pattern.search(endpoint)
-        if matched is None:
-            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
-        table_name = matched.group(1)
+        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
         return cls(table_name=table_name)
 
 
 class GetColumnSchemaRequest(_ColumnSchemaRequest, _GetSchemaRequest, _SchemaAPIRequest):
-    """Request to `Get the schema of a table <https://aito.ai/docs/api/#get-api-v1-schema-table>`__"""
+    """Request to `Get the schema of a column <https://aito.ai/docs/api/#get-api-v1-schema-column>`__"""
     def __init__(self, table_name: str, column_name: str):
         """
 
@@ -401,13 +419,89 @@ class GetColumnSchemaRequest(_ColumnSchemaRequest, _GetSchemaRequest, _SchemaAPI
 
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
-        return aito_resp.GetColumnSchemaResponse
+        return aito_resp.ColumnSchemaResponse
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)/([^/".$\r\n\s]+)$')
-        matched = pattern.search(endpoint)
-        if matched is None:
-            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
-        table_name, column_name = matched.group(1), matched.group(2)
+        table_name, column_name = cls.endpoint_to_table_name_and_column_name(endpoint=endpoint)
         return cls(table_name=table_name, column_name=column_name)
+
+
+class _CreateSchemaRequest:
+    """Request to get schema"""
+    method = 'PUT'
+
+    @classmethod
+    def check_method(cls, method: str):
+        return method == cls.method
+
+
+class CreateDatabaseSchemaRequest(_DatabaseSchemaRequest, _CreateSchemaRequest, _SchemaAPIRequest):
+    """Request to `Create the schema of the database <https://aito.ai/docs/api/#put-api-v1-schema>`__"""
+    endpoint = _SchemaAPIRequest.endpoint_prefix
+
+    def __init__(self, schema: Union[AitoDatabaseSchema, Dict]):
+        """
+
+        :param schema: Aito database schema
+        :type schema: Union[AitoDatabaseSchema, Dict]
+        """
+        query = schema.to_json_serializable() if isinstance(schema, AitoDatabaseSchema) else schema
+        super().__init__(method=self.method, endpoint=self.endpoint, query=query)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.DatabaseSchemaResponse
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        return cls(schema=query)
+
+
+class CreateTableSchemaRequest(_TableSchemaRequest, _CreateSchemaRequest, _SchemaAPIRequest):
+    """Request to `create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__"""
+    def __init__(self, table_name: str, schema: Union[AitoTableSchema, Dict]):
+        """
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param schema: the schema of the table
+        :type schema: Union[AitoDatabaseSchema, Dict]
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}'
+        query = schema.to_json_serializable() if isinstance(schema, AitoTableSchema) else schema
+        super().__init__(method=self.method, endpoint=endpoint, query=query)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.TableSchemaResponse
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
+        return cls(table_name=table_name, schema=query)
+
+
+class CreateColumnSchemaRequest(_ColumnSchemaRequest, _CreateSchemaRequest, _SchemaAPIRequest):
+    """Request to `Add or replace a column <https://aito.ai/docs/api/#put-api-v1-schema-column>`__"""
+    def __init__(self, table_name: str, column_name: str, schema: Union[AitoColumnTypeSchema, Dict]):
+        """
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param column_name: the name of the column
+        :type column_name: str
+        :param schema: the schema of the column
+        :type schema: Union[AitoColumnTypeSchema, Dict]
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}/{column_name}'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.ColumnSchemaResponse
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        table_name, column_name = cls.endpoint_to_table_name_and_column_name(endpoint)
+        return cls(table_name=table_name, column_name=column_name, schema=query)

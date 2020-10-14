@@ -169,7 +169,7 @@ class TestQuickAddTableAPI(CompareTestCase):
         with exp_file_path.open() as exp_f:
             file_content = json.load(exp_f)
         if compare_order:
-            self.assertEqual(table_entries, file_content)
+            self.assertEquala(table_entries, file_content)
         else:
             self.assertCountEqual(table_entries, file_content)
 
