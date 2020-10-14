@@ -486,7 +486,7 @@ class CreateTableSchemaRequest(_TableSchemaRequest, _CreateSchemaRequest, _Schem
 
 class CreateColumnSchemaRequest(_ColumnSchemaRequest, _CreateSchemaRequest, _SchemaAPIRequest):
     """Request to `Add or replace a column <https://aito.ai/docs/api/#put-api-v1-schema-column>`__"""
-    def __init__(self, table_name: str, column_name: str, schema: Union[AitoColumnTypeSchema, Dict]):
+    def __init__(self, table_name: str, column_name: str, schema: Dict):
         """
 
         :param table_name: the name of the table containing the column
@@ -497,8 +497,7 @@ class CreateColumnSchemaRequest(_ColumnSchemaRequest, _CreateSchemaRequest, _Sch
         :type schema: Union[AitoColumnTypeSchema, Dict]
         """
         endpoint = f'{self.endpoint_prefix}/{table_name}/{column_name}'
-        query = schema.to_json_serializable() if isinstance(schema, AitoColumnTypeSchema) else schema
-        super().__init__(method=self.method, endpoint=endpoint, query=query)
+        super().__init__(method=self.method, endpoint=endpoint, query=schema)
 
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:

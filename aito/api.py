@@ -127,7 +127,7 @@ def delete_table(client: AitoClient, table_name: str):
     LOG.info(f'table `{table_name}` deleted')
 
 
-def create_column(client: AitoClient, table_name: str, column_name: str, schema: Union[AitoColumnTypeSchema, Dict]):
+def create_column(client: AitoClient, table_name: str, column_name: str, schema: Dict):
     """`add or replace a column <https://aito.ai/docs/api/#put-api-v1-schema-table-column>`__
 
     .. note::
@@ -141,7 +141,7 @@ def create_column(client: AitoClient, table_name: str, column_name: str, schema:
     :param column_name: the name of the column
     :type column_name: str
     :param schema: the schema of the column
-    :type schema: Union[AitoColumnTypeSchema, Dict]
+    :type schema: Dict
     """
     client.request(request_obj=aito_requests.CreateColumnSchemaRequest(
         table_name=table_name, column_name=column_name, schema=schema)

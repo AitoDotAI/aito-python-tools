@@ -43,8 +43,7 @@ class TestClientRequest(CompareTestCase):
                 'create_column_schema', 'PUT', '/api/v1/schema/table_name/column_name',
                 {'type': 'String', 'nullable': False},
                 aito_requests.CreateColumnSchemaRequest(
-                    table_name='table_name', column_name='column_name',
-                    schema=AitoColumnTypeSchema(data_type=AitoStringType())
+                    table_name='table_name', column_name='column_name', schema={'type': 'String', 'nullable': False}
                 ),
                 None
         ),
