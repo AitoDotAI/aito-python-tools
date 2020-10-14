@@ -55,24 +55,24 @@ class AitoRequest(ABC):
 
     @classmethod
     @abstractmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
-        """check if the input endpoint is a valid endpoint of the Request class
-
-        :param endpoint: the input endpoint
-        :type endpoint: str
-        :return: True if the endpoint is valid
-        :rtype: bool
-        """
-        pass
-
-    @classmethod
-    @abstractmethod
     def check_method(cls, method: str) -> bool:
         """check if the input method is a valid endpoint of the Request class
 
         :param method: the input method
         :type method: str
         :return: True if the method is valid
+        :rtype: bool
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
+        """check if the input endpoint is a valid endpoint of the Request class
+
+        :param endpoint: the input endpoint
+        :type endpoint: str
+        :return: True if the endpoint is valid
         :rtype: bool
         """
         pass
@@ -155,13 +155,17 @@ class BaseRequest(AitoRequest):
         return aito_resp.BaseResponse
 
 
-class GetVersionRequest(AitoRequest):
-    """Request to get the Aito instance version"""
-    method = 'GET'
-    endpoint = '/version'
+class _FinalRequest(AitoRequest, ABC):
+    """Request with fixed method and endpoint"""
+    method = None
+    endpoint = None
 
-    def __init__(self):
-        super().__init__(method=self.method, endpoint=self.endpoint, query=None)
+    def __init__(self, query: Optional[Union[Dict, List]] = None):
+        if self.method is None:
+            raise NotImplementedError(f"The request 'method' must be implemented")
+        if self.endpoint is None:
+            raise NotImplementedError(f"The request 'endpoint' must be implemented")
+        super().__init__(method=self.method, endpoint=self.endpoint, query=query)
 
     @classmethod
     def check_method(cls, method: str) -> bool:
@@ -173,18 +177,69 @@ class GetVersionRequest(AitoRequest):
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        return cls()
+        return cls(query=query)
+
+
+class _PatternEndpoint(ABC):
+    """Request whose endpoint has a pattern"""
+    @classmethod
+    @abstractmethod
+    def endpoint_pattern(cls):
+        pass
+
+    @classmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
+        return cls.endpoint_pattern().search(endpoint) is not None
+
+
+class _GetRequest:
+    method = 'GET'
+
+    @classmethod
+    def check_method(cls, method: str):
+        return method == cls.method
+
+
+class _PostRequest:
+    method = 'POST'
+
+    @classmethod
+    def check_method(cls, method: str):
+        return method == cls.method
+
+
+class _PutRequest:
+    method = 'PUT'
+
+    @classmethod
+    def check_method(cls, method: str):
+        return method == cls.method
+
+
+class _DeleteRequest:
+    method = 'DELETE'
+
+    @classmethod
+    def check_method(cls, method: str):
+        return method == cls.method
+
+
+class GetVersionRequest(_GetRequest, _FinalRequest):
+    """Request to get the Aito instance version"""
+    endpoint = '/version'
+
+    def __init__(self):
+        super().__init__(query=None)
 
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
         return aito_resp.GetVersionResponse
 
 
-class _QueryAPIRequest(AitoRequest, ABC):
+class _QueryAPIRequest(_PostRequest, AitoRequest, ABC):
     """Request to a `Query API <https://aito.ai/docs/api/#query-api>`__
     """
 
-    method: str = 'POST'
     path: str = None  # get around of not having abstract class attribute
     query_api_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
 
@@ -204,10 +259,6 @@ class _QueryAPIRequest(AitoRequest, ABC):
     @classmethod
     def check_endpoint(cls, endpoint: str):
         return endpoint in [f'{cls.api_version_endpoint_prefix}/{path}' for path in cls.query_api_paths]
-
-    @classmethod
-    def check_method(cls, method: str) -> bool:
-        return method == cls.method
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
@@ -328,50 +379,37 @@ class _DatabaseSchemaRequest:
         return endpoint == _SchemaAPIRequest.endpoint_prefix
 
 
-class _TableSchemaRequest:
+class _TableSchemaRequest(_PatternEndpoint):
     """Request to manipulate a table schema"""
     @classmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
-        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/[^/".$\r\n\s]+$')
-        return pattern.match(endpoint) is not None
+    def endpoint_pattern(cls):
+        return re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)$')
 
     @classmethod
     def endpoint_to_table_name(cls, endpoint) -> str:
-        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)$')
-        matched = pattern.search(endpoint)
+        matched = cls.endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name = matched.group(1)
         return table_name
 
 
-class _ColumnSchemaRequest:
+class _ColumnSchemaRequest(_PatternEndpoint):
     """Request to manipulate a column schema"""
     @classmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
-        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/[^/".$\r\n\s]+/[^/".$\r\n\s]+$')
-        return pattern.match(endpoint) is not None
+    def endpoint_pattern(cls):
+        return re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)/([^/".$\r\n\s]+)$')
 
     @classmethod
     def endpoint_to_table_name_and_column_name(cls, endpoint: str) -> Tuple[str, str]:
-        pattern = re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)/([^/".$\r\n\s]+)$')
-        matched = pattern.search(endpoint)
+        matched = cls.endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name, column_name = matched.group(1), matched.group(2)
         return table_name, column_name
 
 
-class _GetSchemaRequest:
-    """Request to get schema"""
-    method = 'GET'
-
-    @classmethod
-    def check_method(cls, method: str):
-        return method == cls.method
-
-
-class GetDatabaseSchemaRequest(_DatabaseSchemaRequest, _GetSchemaRequest, _SchemaAPIRequest):
+class GetDatabaseSchemaRequest(_GetRequest, _DatabaseSchemaRequest, _SchemaAPIRequest):
     """Request to `Get the schema of the database <https://aito.ai/docs/api/#get-api-v1-schema>`__"""
     def __init__(self):
         super().__init__(method=self.method, endpoint=self.endpoint)
@@ -385,7 +423,7 @@ class GetDatabaseSchemaRequest(_DatabaseSchemaRequest, _GetSchemaRequest, _Schem
         return cls()
 
 
-class GetTableSchemaRequest(_TableSchemaRequest, _GetSchemaRequest, _SchemaAPIRequest):
+class GetTableSchemaRequest(_GetRequest, _TableSchemaRequest, _SchemaAPIRequest):
     """Request to `Get the schema of a table <https://aito.ai/docs/api/#get-api-v1-schema-table>`__"""
     def __init__(self, table_name: str):
         """
@@ -406,7 +444,7 @@ class GetTableSchemaRequest(_TableSchemaRequest, _GetSchemaRequest, _SchemaAPIRe
         return cls(table_name=table_name)
 
 
-class GetColumnSchemaRequest(_ColumnSchemaRequest, _GetSchemaRequest, _SchemaAPIRequest):
+class GetColumnSchemaRequest(_GetRequest, _ColumnSchemaRequest, _SchemaAPIRequest):
     """Request to `Get the schema of a column <https://aito.ai/docs/api/#get-api-v1-schema-column>`__"""
     def __init__(self, table_name: str, column_name: str):
         """
@@ -429,16 +467,7 @@ class GetColumnSchemaRequest(_ColumnSchemaRequest, _GetSchemaRequest, _SchemaAPI
         return cls(table_name=table_name, column_name=column_name)
 
 
-class _CreateSchemaRequest:
-    """Request to create schema"""
-    method = 'PUT'
-
-    @classmethod
-    def check_method(cls, method: str):
-        return method == cls.method
-
-
-class CreateDatabaseSchemaRequest(_DatabaseSchemaRequest, _CreateSchemaRequest, _SchemaAPIRequest):
+class CreateDatabaseSchemaRequest(_PutRequest, _DatabaseSchemaRequest, _SchemaAPIRequest):
     """Request to `Create the schema of the database <https://aito.ai/docs/api/#put-api-v1-schema>`__"""
     endpoint = _SchemaAPIRequest.endpoint_prefix
 
@@ -460,7 +489,7 @@ class CreateDatabaseSchemaRequest(_DatabaseSchemaRequest, _CreateSchemaRequest, 
         return cls(schema=query)
 
 
-class CreateTableSchemaRequest(_TableSchemaRequest, _CreateSchemaRequest, _SchemaAPIRequest):
+class CreateTableSchemaRequest(_PutRequest, _TableSchemaRequest, _SchemaAPIRequest):
     """Request to `Create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__"""
     def __init__(self, table_name: str, schema: Union[AitoTableSchema, Dict]):
         """
@@ -484,7 +513,7 @@ class CreateTableSchemaRequest(_TableSchemaRequest, _CreateSchemaRequest, _Schem
         return cls(table_name=table_name, schema=query)
 
 
-class CreateColumnSchemaRequest(_ColumnSchemaRequest, _CreateSchemaRequest, _SchemaAPIRequest):
+class CreateColumnSchemaRequest(_PutRequest, _ColumnSchemaRequest, _SchemaAPIRequest):
     """Request to `Add or replace a column <https://aito.ai/docs/api/#put-api-v1-schema-column>`__"""
     def __init__(self, table_name: str, column_name: str, schema: Dict):
         """
@@ -509,16 +538,7 @@ class CreateColumnSchemaRequest(_ColumnSchemaRequest, _CreateSchemaRequest, _Sch
         return cls(table_name=table_name, column_name=column_name, schema=query)
 
 
-class _DeleteSchemaRequest:
-    """Request to delete schema"""
-    method = 'DELETE'
-
-    @classmethod
-    def check_method(cls, method: str):
-        return method == cls.method
-
-
-class DeleteDatabaseSchemaRequest(_DatabaseSchemaRequest, _DeleteSchemaRequest, _SchemaAPIRequest):
+class DeleteDatabaseSchemaRequest(_DeleteRequest, _DatabaseSchemaRequest, _SchemaAPIRequest):
     """Request to `Delete the schema of the database <https://aito.ai/docs/api/#delete-api-v1-schema>`__"""
     endpoint = _SchemaAPIRequest.endpoint_prefix
 
@@ -534,7 +554,7 @@ class DeleteDatabaseSchemaRequest(_DatabaseSchemaRequest, _DeleteSchemaRequest, 
         return cls()
 
 
-class DeleteTableSchemaRequest(_TableSchemaRequest, _DeleteSchemaRequest, _SchemaAPIRequest):
+class DeleteTableSchemaRequest(_DeleteRequest, _TableSchemaRequest, _SchemaAPIRequest):
     """Request to `Delete a table <https://aito.ai/docs/api/#delete-api-v1-schema-table>`__"""
     def __init__(self, table_name: str):
         """
@@ -555,7 +575,7 @@ class DeleteTableSchemaRequest(_TableSchemaRequest, _DeleteSchemaRequest, _Schem
         return cls(table_name=table_name)
 
 
-class DeleteColumnSchemaRequest(_ColumnSchemaRequest, _DeleteSchemaRequest, _SchemaAPIRequest):
+class DeleteColumnSchemaRequest(_DeleteRequest, _ColumnSchemaRequest, _SchemaAPIRequest):
     """Request to `Delete a column <https://aito.ai/docs/api/#delete-api-v1-schema-column>`__"""
     def __init__(self, table_name: str, column_name: str):
         """
@@ -601,23 +621,15 @@ class _DataAPIRequest(AitoRequest, ABC):
         raise ValueError(f"invalid {cls.__name__} with '{method}({endpoint})'")
 
 
-class UploadEntriesRequest(_DataAPIRequest):
+class UploadEntriesRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
     """Request to `Insert entries to a table <https://aito.ai/docs/api/#post-api-v1-data-table>`__"""
-    method = 'POST'
-
     @classmethod
-    def check_method(cls, method: str) -> bool:
-        return method == cls.method
-
-    @classmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
-        pattern = re.compile(f'^{cls.endpoint_prefix}/[^/".$\r\n\s]+/batch$')
-        return pattern.match(endpoint) is not None
+    def endpoint_pattern(cls):
+        return re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/batch$')
 
     @classmethod
     def endpoint_to_table_name(cls, endpoint) -> str:
-        pattern = re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/batch$')
-        matched = pattern.search(endpoint)
+        matched = cls.endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name = matched.group(1)
@@ -644,48 +656,20 @@ class UploadEntriesRequest(_DataAPIRequest):
         return aito_resp.BaseResponse
 
 
-class DeleteEntries(_DataAPIRequest):
+class DeleteEntries(_PostRequest, _FinalRequest, _DataAPIRequest):
     """Request to `Delete entries of a table <https://aito.ai/docs/api/#post-api-v1-data-delete>`__"""
-    method = 'POST'
     endpoint = f'{_DataAPIRequest.endpoint_prefix}/_delete'
-
-    @classmethod
-    def check_method(cls, method: str) -> bool:
-        return method == cls.method
-
-    @classmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
-        return endpoint == cls.endpoint
-
-    def __init__(self, query: Dict):
-        """
-
-        :param query: the query to describe the target table and filters for which entries to delete.
-        :type query: Dict
-        """
-        super().__init__(method=self.method, endpoint=self.endpoint, query=query)
-
-    @classmethod
-    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        return cls(query=query)
 
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
         return aito_resp.BaseResponse
 
 
-class InitiateFileUploadRequest(_DataAPIRequest):
+class InitiateFileUploadRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
     """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
-    method = 'POST'
-
     @classmethod
-    def check_method(cls, method: str) -> bool:
-        return method == cls.method
-
-    @classmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
-        pattern = re.compile(f'^{cls.endpoint_prefix}/[^/".$\r\n\s]+/file$')
-        return pattern.match(endpoint) is not None
+    def endpoint_pattern(cls):
+        return re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/file$')
 
     def __init__(self, table_name: str):
         """
@@ -698,8 +682,7 @@ class InitiateFileUploadRequest(_DataAPIRequest):
 
     @classmethod
     def endpoint_to_table_name(cls, endpoint) -> str:
-        pattern = re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)+/file$')
-        matched = pattern.search(endpoint)
+        matched = cls.endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name = matched.group(1)
@@ -715,18 +698,11 @@ class InitiateFileUploadRequest(_DataAPIRequest):
         return aito_resp.BaseResponse
 
 
-class TriggerFileProcessingRequest(_DataAPIRequest):
+class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
     """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
-    method = 'POST'
-
     @classmethod
-    def check_method(cls, method: str) -> bool:
-        return method == cls.method
-
-    @classmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
-        pattern = re.compile(f'^{cls.endpoint_prefix}/[^/".$\r\n\s]+/file/.+$')
-        return pattern.match(endpoint) is not None
+    def endpoint_pattern(cls):
+        return re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/file/(.+)$')
 
     def __init__(self, table_name: str, session_id: str):
         """
@@ -741,8 +717,7 @@ class TriggerFileProcessingRequest(_DataAPIRequest):
 
     @classmethod
     def endpoint_to_table_name_and_session_id(cls, endpoint) -> Tuple[str, str]:
-        pattern = re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)+/file/(.+)$')
-        matched = pattern.search(endpoint)
+        matched = cls.endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name = matched.group(1)
@@ -759,6 +734,5 @@ class TriggerFileProcessingRequest(_DataAPIRequest):
         return aito_resp.BaseResponse
 
 
-class GetFileProcessingRequest(TriggerFileProcessingRequest):
+class GetFileProcessingRequest(_GetRequest, TriggerFileProcessingRequest, _DataAPIRequest):
     """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
-    method = 'GET'
