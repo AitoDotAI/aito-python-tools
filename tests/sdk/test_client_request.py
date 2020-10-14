@@ -28,7 +28,8 @@ class TestClientRequest(CompareTestCase):
                         columns={'col1': AitoColumnTypeSchema(data_type=AitoStringType())}
                     )}
                 )),
-                None),
+                None
+        ),
         (
                 'create_table_schema', 'PUT', '/api/v1/schema/table_name',
                 {'type': 'table', 'columns': {'col1': {'type': 'String', 'nullable': False}}},
@@ -46,6 +47,14 @@ class TestClientRequest(CompareTestCase):
                     schema=AitoColumnTypeSchema(data_type=AitoStringType())
                 ),
                 None
+        ),
+        ('delete_database_schema', 'DELETE', '/api/v1/schema', {}, aito_requests.DeleteDatabaseSchemaRequest(), None),
+        (
+                'delete_table_schema', 'DELETE', '/api/v1/schema/table_name', {},
+                aito_requests.DeleteTableSchemaRequest(table_name='table_name'), None),
+        (
+                'delete_column_schema', 'DELETE', '/api/v1/schema/table_name/column_name', {},
+                aito_requests.DeleteColumnSchemaRequest(table_name='table_name', column_name='column_name'), None
         ),
         ('erroneous_method', 'PATCH', '/api/v1/schema', {}, None, ValueError),
         ('erroneous_endpoint', 'GET', 'api/v1/schema', {}, None, ValueError),

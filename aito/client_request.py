@@ -428,7 +428,7 @@ class GetColumnSchemaRequest(_ColumnSchemaRequest, _GetSchemaRequest, _SchemaAPI
 
 
 class _CreateSchemaRequest:
-    """Request to get schema"""
+    """Request to create schema"""
     method = 'PUT'
 
     @classmethod
@@ -459,7 +459,7 @@ class CreateDatabaseSchemaRequest(_DatabaseSchemaRequest, _CreateSchemaRequest, 
 
 
 class CreateTableSchemaRequest(_TableSchemaRequest, _CreateSchemaRequest, _SchemaAPIRequest):
-    """Request to `create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__"""
+    """Request to `Create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__"""
     def __init__(self, table_name: str, schema: Union[AitoTableSchema, Dict]):
         """
 
@@ -495,7 +495,8 @@ class CreateColumnSchemaRequest(_ColumnSchemaRequest, _CreateSchemaRequest, _Sch
         :type schema: Union[AitoColumnTypeSchema, Dict]
         """
         endpoint = f'{self.endpoint_prefix}/{table_name}/{column_name}'
-        super().__init__(method=self.method, endpoint=endpoint)
+        query = schema.to_json_serializable() if isinstance(schema, AitoColumnTypeSchema) else schema
+        super().__init__(method=self.method, endpoint=endpoint, query=query)
 
     @property
     def response_cls(self) -> Type[aito_resp.BaseResponse]:
@@ -505,3 +506,72 @@ class CreateColumnSchemaRequest(_ColumnSchemaRequest, _CreateSchemaRequest, _Sch
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
         table_name, column_name = cls.endpoint_to_table_name_and_column_name(endpoint)
         return cls(table_name=table_name, column_name=column_name, schema=query)
+
+
+class _DeleteSchemaRequest:
+    """Request to delete schema"""
+    method = 'DELETE'
+
+    @classmethod
+    def check_method(cls, method: str):
+        return method == cls.method
+
+
+class DeleteDatabaseSchemaRequest(_DatabaseSchemaRequest, _DeleteSchemaRequest, _SchemaAPIRequest):
+    """Request to `Delete the schema of the database <https://aito.ai/docs/api/#delete-api-v1-schema>`__"""
+    endpoint = _SchemaAPIRequest.endpoint_prefix
+
+    def __init__(self):
+        super().__init__(method=self.method, endpoint=self.endpoint)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.BaseResponse
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        return cls()
+
+
+class DeleteTableSchemaRequest(_TableSchemaRequest, _DeleteSchemaRequest, _SchemaAPIRequest):
+    """Request to `Delete a table <https://aito.ai/docs/api/#delete-api-v1-schema-table>`__"""
+    def __init__(self, table_name: str):
+        """
+
+        :param table_name: the name of the table
+        :type table_name: str
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.BaseResponse
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
+        return cls(table_name=table_name)
+
+
+class DeleteColumnSchemaRequest(_ColumnSchemaRequest, _DeleteSchemaRequest, _SchemaAPIRequest):
+    """Request to `Delete a column <https://aito.ai/docs/api/#delete-api-v1-schema-column>`__"""
+    def __init__(self, table_name: str, column_name: str):
+        """
+
+        :param table_name: the name of the table
+        :type table_name: str
+        :param column_name: the name of the column
+        :type column_name: str
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}/{column_name}'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.BaseResponse
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        table_name, column_name = cls.endpoint_to_table_name_and_column_name(endpoint)
+        return cls(table_name=table_name, column_name=column_name)

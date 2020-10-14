@@ -74,7 +74,7 @@ def delete_database(client: AitoClient):
     :return: deleted tables
     :rtype: Dict
     """
-    client.request(method='DELETE', endpoint='/api/v1/schema')
+    client.request(request_obj=aito_requests.DeleteDatabaseSchemaRequest())
     LOG.info('database deleted')
 
 
@@ -127,7 +127,7 @@ def delete_table(client: AitoClient, table_name: str):
     :return: deleted table
     :rtype: Dict
     """
-    client.request(method='DELETE', endpoint=f'/api/v1/schema/{table_name}')
+    client.request(request_obj=aito_requests.DeleteTableSchemaRequest(table_name=table_name))
     LOG.info(f'table `{table_name}` deleted')
 
 
