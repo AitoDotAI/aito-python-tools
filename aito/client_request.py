@@ -576,3 +576,189 @@ class DeleteColumnSchemaRequest(_ColumnSchemaRequest, _DeleteSchemaRequest, _Sch
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
         table_name, column_name = cls.endpoint_to_table_name_and_column_name(endpoint)
         return cls(table_name=table_name, column_name=column_name)
+
+
+class _DataAPIRequest(AitoRequest, ABC):
+    """Request to manipulate the schema"""
+    endpoint_prefix = f'{AitoRequest.api_version_endpoint_prefix}/data'
+
+    @classmethod
+    @abstractmethod
+    def check_method(cls, method: str) -> bool:
+        return method in cls.request_methods
+
+    @classmethod
+    @abstractmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
+        return endpoint.startswith(cls.endpoint_prefix)
+
+    @classmethod
+    @abstractmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        for sub_cls in cls.__subclasses__():
+            if sub_cls.check_method(method) and sub_cls.check_endpoint(endpoint):
+                return sub_cls.make_request(method=method, endpoint=endpoint, query=query)
+        raise ValueError(f"invalid {cls.__name__} with '{method}({endpoint})'")
+
+
+class UploadEntriesRequest(_DataAPIRequest):
+    """Request to `Insert entries to a table <https://aito.ai/docs/api/#post-api-v1-data-table>`__"""
+    method = 'POST'
+
+    @classmethod
+    def check_method(cls, method: str) -> bool:
+        return method == cls.method
+
+    @classmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
+        pattern = re.compile(f'^{cls.endpoint_prefix}/[^/".$\r\n\s]+/batch$')
+        return pattern.match(endpoint) is not None
+
+    @classmethod
+    def endpoint_to_table_name(cls, endpoint) -> str:
+        pattern = re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/batch$')
+        matched = pattern.search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        table_name = matched.group(1)
+        return table_name
+
+    def __init__(self, table_name: str, entries: List[Dict]):
+        """
+
+        :param table_name: the name of the table to be uploaded
+        :type table_name: str
+        :param entries: a list of the table entries
+        :type entries: List[Dict]
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}/batch'
+        super().__init__(method=self.method, endpoint=endpoint, query=entries)
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
+        return cls(table_name=table_name, entries=query)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.BaseResponse
+
+
+class DeleteEntries(_DataAPIRequest):
+    """Request to `Delete entries of a table <https://aito.ai/docs/api/#post-api-v1-data-delete>`__"""
+    method = 'POST'
+    endpoint = f'{_DataAPIRequest.endpoint_prefix}/_delete'
+
+    @classmethod
+    def check_method(cls, method: str) -> bool:
+        return method == cls.method
+
+    @classmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
+        return endpoint == cls.endpoint
+
+    def __init__(self, query: Dict):
+        """
+
+        :param query: the query to describe the target table and filters for which entries to delete.
+        :type query: Dict
+        """
+        super().__init__(method=self.method, endpoint=self.endpoint, query=query)
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        return cls(query=query)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.BaseResponse
+
+
+class InitiateFileUploadRequest(_DataAPIRequest):
+    """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
+    method = 'POST'
+
+    @classmethod
+    def check_method(cls, method: str) -> bool:
+        return method == cls.method
+
+    @classmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
+        pattern = re.compile(f'^{cls.endpoint_prefix}/[^/".$\r\n\s]+/file$')
+        return pattern.match(endpoint) is not None
+
+    def __init__(self, table_name: str):
+        """
+
+        :param table_name: the name of the table to be uploaded
+        :type table_name: str
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}/file'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @classmethod
+    def endpoint_to_table_name(cls, endpoint) -> str:
+        pattern = re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)+/file$')
+        matched = pattern.search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        table_name = matched.group(1)
+        return table_name
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
+        return cls(table_name=table_name)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.BaseResponse
+
+
+class TriggerFileProcessingRequest(_DataAPIRequest):
+    """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
+    method = 'POST'
+
+    @classmethod
+    def check_method(cls, method: str) -> bool:
+        return method == cls.method
+
+    @classmethod
+    def check_endpoint(cls, endpoint: str) -> bool:
+        pattern = re.compile(f'^{cls.endpoint_prefix}/[^/".$\r\n\s]+/file/.+$')
+        return pattern.match(endpoint) is not None
+
+    def __init__(self, table_name: str, session_id: str):
+        """
+
+        :param table_name: the name of the table to be uploaded
+        :type table_name: str
+        :param session_id: The uuid of the file upload session from initiating file upload
+        :type session_id: str
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}/file/{session_id}'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @classmethod
+    def endpoint_to_table_name_and_session_id(cls, endpoint) -> Tuple[str, str]:
+        pattern = re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)+/file/(.+)$')
+        matched = pattern.search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        table_name = matched.group(1)
+        session_id = matched.group(2)
+        return table_name, session_id
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        table_name, session_id = cls.endpoint_to_table_name_and_session_id(endpoint=endpoint)
+        return cls(table_name=table_name, session_id=session_id)
+
+    @property
+    def response_cls(self) -> Type[aito_resp.BaseResponse]:
+        return aito_resp.BaseResponse
+
+
+class GetFileProcessingRequest(TriggerFileProcessingRequest):
+    """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
+    method = 'GET'

@@ -323,10 +323,10 @@ def upload_entries(
     begin_index, last_index, populated_count = 0, 0, 0
     entries_batch = []
 
-    def _upload_a_batch(begin_idx, last_idx, populated_c, batch_content):
+    def _upload_single_batch(begin_idx, last_idx, populated_c, batch_content):
         try:
             LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-            client.request(method='POST', endpoint=f"/api/v1/data/{table_name}/batch", query=batch_content)
+            client.request(request_obj=aito_requests.UploadEntriesRequest(table_name=table_name, entries=batch_content))
             populated_c += len(batch_content)
             LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
         except Exception as e:
@@ -338,14 +338,14 @@ def upload_entries(
         last_index += 1
 
         if last_index % batch_size == 0:
-            populated_count = _upload_a_batch(begin_index, last_index, populated_count, entries_batch)
+            populated_count = _upload_single_batch(begin_index, last_index, populated_count, entries_batch)
 
             begin_index = last_index
             entries_batch = []
 
     # upload the remaining entries
     if last_index % batch_size != 0:
-        populated_count = _upload_a_batch(begin_index, last_index, populated_count, entries_batch)
+        populated_count = _upload_single_batch(begin_index, last_index, populated_count, entries_batch)
 
     if populated_count == 0:
         raise Exception("failed to upload any data into Aito")
@@ -367,7 +367,7 @@ def initiate_upload_file(client: AitoClient, table_name: str) -> Dict:
     :rtype: Dict
     """
     LOG.debug('initiating file upload...')
-    r = client.request(method='POST', endpoint=f"/api/v1/data/{table_name}/file")
+    r = client.request(request_obj=aito_requests.InitiateFileUploadRequest(table_name=table_name))
     return r.json
 
 
@@ -392,7 +392,7 @@ def upload_binary_file_to_s3(initiate_upload_file_response: Dict, binary_file: B
     LOG.debug('uploaded file to S3')
 
 
-def trigger_file_processing(client: AitoClient, table_name: str, upload_session_id: str):
+def trigger_file_processing(client: AitoClient, table_name: str, session_id: str):
     """`Trigger file processing of uploading a file to a table
     <https://aito.ai/docs/api/#post-api-v1-data-table-file-uuid>`__
 
@@ -400,16 +400,15 @@ def trigger_file_processing(client: AitoClient, table_name: str, upload_session_
     :type client: AitoClient
     :param table_name: the name of the table to be uploaded
     :type table_name: str
-    :param upload_session_id: The upload session id from :func:`.initiate_upload_file`
-    :type upload_session_id: str
+    :param session_id: The upload session id from :func:`.initiate_upload_file`
+    :type session_id: str
     """
     LOG.debug('triggering file processing...')
-    session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
-    client.request(method='POST', endpoint=session_end_point)
+    client.request(request_obj=aito_requests.TriggerFileProcessingRequest(table_name=table_name, session_id=session_id))
     LOG.info('triggered file processing')
 
 
-def poll_file_processing_status(client: AitoClient, table_name: str, upload_session_id: str, polling_time: int = 10):
+def poll_file_processing_status(client: AitoClient, table_name: str, session_id: str, polling_time: int = 10):
     """Polling the `file processing status <https://aito.ai/docs/api/#get-api-v1-data-table-file-uuid>`__ until
     the processing finished
 
@@ -417,16 +416,17 @@ def poll_file_processing_status(client: AitoClient, table_name: str, upload_sess
     :type client: AitoClient
     :param table_name: the name of the table to be uploaded
     :type table_name: str
-    :param upload_session_id: The upload session id from :func:`.initiate_upload_file`
-    :type upload_session_id: str
+    :param session_id: The upload session id from :func:`.initiate_upload_file`
+    :type session_id: str
     :param polling_time: polling wait time
     :type polling_time: int
     """
     LOG.debug('polling processing status...')
-    session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
     while True:
         try:
-            processing_progress_resp = client.request(method='GET', endpoint=session_end_point)
+            processing_progress_resp = client.request(
+                request_obj=aito_requests.GetFileProcessingRequest(table_name=table_name, session_id=session_id)
+            )
             status = processing_progress_resp['status']
             LOG.debug(f"completed count: {status['completedCount']}, throughput: {status['throughput']}")
             if processing_progress_resp['errors']['message'] != 'Last 0 failing rows':
@@ -466,9 +466,9 @@ def upload_binary_file(
     init_upload_resp = initiate_upload_file(client=client, table_name=table_name)
     upload_binary_file_to_s3(initiate_upload_file_response=init_upload_resp, binary_file=binary_file)
     upload_session_id = init_upload_resp['id']
-    trigger_file_processing(client=client, table_name=table_name, upload_session_id=upload_session_id)
+    trigger_file_processing(client=client, table_name=table_name, session_id=upload_session_id)
     poll_file_processing_status(
-        client=client, table_name=table_name, upload_session_id=upload_session_id, polling_time=polling_time
+        client=client, table_name=table_name, session_id=upload_session_id, polling_time=polling_time
     )
 
     LOG.info(f'uploaded file object to table `{table_name}`')
