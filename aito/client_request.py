@@ -411,8 +411,10 @@ class GetColumnSchemaRequest(_ColumnSchemaRequest, _GetSchemaRequest, _SchemaAPI
     def __init__(self, table_name: str, column_name: str):
         """
 
-        :param table_name: the name of the table
+        :param table_name: the name of the table containing the column
         :type table_name: str
+        :param column_name: the name of the column
+        :type column_name: str
         """
         endpoint = f'{self.endpoint_prefix}/{table_name}/{column_name}'
         super().__init__(method=self.method, endpoint=endpoint)
@@ -487,7 +489,7 @@ class CreateColumnSchemaRequest(_ColumnSchemaRequest, _CreateSchemaRequest, _Sch
     def __init__(self, table_name: str, column_name: str, schema: Union[AitoColumnTypeSchema, Dict]):
         """
 
-        :param table_name: the name of the table
+        :param table_name: the name of the table containing the column
         :type table_name: str
         :param column_name: the name of the column
         :type column_name: str
@@ -559,7 +561,7 @@ class DeleteColumnSchemaRequest(_ColumnSchemaRequest, _DeleteSchemaRequest, _Sch
     def __init__(self, table_name: str, column_name: str):
         """
 
-        :param table_name: the name of the table
+        :param table_name: the name of the table containing the column
         :type table_name: str
         :param column_name: the name of the column
         :type column_name: str

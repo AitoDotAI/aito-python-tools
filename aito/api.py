@@ -15,7 +15,7 @@ import requests as requestslib
 import aito.client_request as aito_requests
 import aito.client_response as aito_responses
 from aito.client import AitoClient, RequestError
-from aito.schema import AitoDatabaseSchema, AitoTableSchema
+from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema
 from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 from aito.utils.data_frame_handler import DataFrameHandler
 
@@ -71,8 +71,6 @@ def delete_database(client: AitoClient):
 
     :param client: the AitoClient instance
     :type client: AitoClient
-    :return: deleted tables
-    :rtype: Dict
     """
     client.request(request_obj=aito_requests.DeleteDatabaseSchemaRequest())
     LOG.info('database deleted')
@@ -124,11 +122,65 @@ def delete_table(client: AitoClient, table_name: str):
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
-    :return: deleted table
-    :rtype: Dict
     """
     client.request(request_obj=aito_requests.DeleteTableSchemaRequest(table_name=table_name))
     LOG.info(f'table `{table_name}` deleted')
+
+
+def create_column(client: AitoClient, table_name: str, column_name: str, schema: Union[AitoColumnTypeSchema, Dict]):
+    """`add or replace a column <https://aito.ai/docs/api/#put-api-v1-schema-table-column>`__
+
+    .. note::
+
+        requires the client to be setup with the READ-WRITE API key
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param table_name: the name of the table containing the column
+    :type table_name: str
+    :param column_name: the name of the column
+    :type column_name: str
+    :param schema: the schema of the column
+    :type schema: Union[AitoColumnTypeSchema, Dict]
+    """
+    client.request(request_obj=aito_requests.CreateColumnSchemaRequest(
+        table_name=table_name, column_name=column_name, schema=schema)
+    )
+    LOG.info(f'column `{table_name}.{column_name}` created')
+
+
+def get_column_schema(client: AitoClient, table_name: str, column_name: str) -> AitoColumnTypeSchema:
+    """`get the schema of the specified column <https://aito.ai/docs/api/#get-api-v1-schema-table-column>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param table_name: the name of the table containing the column
+    :type table_name: str
+    :param column_name: the name of the column
+    :type column_name: str
+    :return: the column schema
+    :rtype: AitoColumnTypeSchema
+    """
+    resp = client.request(request_obj=aito_requests.GetColumnSchemaRequest(table_name=table_name, column_name=column_name))
+    return resp.schema
+
+
+def delete_column(client: AitoClient, table_name: str, column_name: str):
+    """`delete a column of a table <https://aito.ai/docs/api/#delete-api-v1-schema-column>`__
+
+    .. note::
+
+        requires the client to be setup with the READ-WRITE API key
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param table_name: the name of the table containing the column
+    :type table_name: str
+    :param column_name: the name of the column
+    :type column_name: str
+    """
+    client.request(request_obj=aito_requests.DeleteColumnSchemaRequest(table_name=table_name, column_name=column_name))
+    LOG.info(f'column `{table_name}.{column_name}` deleted')
 
 
 def get_existing_tables(client: AitoClient) -> List[str]:

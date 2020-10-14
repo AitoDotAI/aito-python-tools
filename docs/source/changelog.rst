@@ -44,7 +44,7 @@ API functions
     get_database_schema(client)
 
 - Added the endpoint methods to send a query to Aito API Endpoint: **search**, **predict**, **recommend**, **evaluate**, **similarity**, **match**, **relate**, **generic_query**
-- Added 3 new api functions: **quick_add_table**,  **quick_predict (BETA)** and **quick_predict_and_evaluate (BETA)**
+- Added the following new api functions: **create_column**, **get_column_schema**, **delete_column**, **quick_add_table**,  **quick_predict (BETA)** and **quick_predict_and_evaluate (BETA)**
 
 CLI
 ^^^
