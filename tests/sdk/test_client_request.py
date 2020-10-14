@@ -55,6 +55,18 @@ class TestClientRequest(CompareTestCase):
                 'delete_column_schema', 'DELETE', '/api/v1/schema/table_name/column_name', {},
                 aito_requests.DeleteColumnSchemaRequest(table_name='table_name', column_name='column_name'), None
         ),
+        (
+                'init_file_upload', 'POST', '/api/v1/data/table_name/file', {},
+                aito_requests.InitiateFileUploadRequest(table_name='table_name'), None
+        ),
+        (
+                'trigger_file_processing', 'POST', '/api/v1/data/table_name/file/1234-1234', {},
+                aito_requests.TriggerFileProcessingRequest(table_name='table_name', session_id='1234-1234'), None
+        ),
+        (
+                'get_file_processing_status', 'GET', '/api/v1/data/table_name/file/1234-1234', {},
+                aito_requests.GetFileProcessingRequest(table_name='table_name', session_id='1234-1234'), None
+        ),
         ('erroneous_method', 'PATCH', '/api/v1/schema', {}, None, ValueError),
         ('erroneous_endpoint', 'GET', 'api/v1/schema', {}, None, ValueError),
     ])
