@@ -202,6 +202,22 @@ class TestAlterSchemaAPI(_TestAPIContext):
         self.get_default_table_schema_and_check()
 
 
+class TestAlterTableEntries(_TestAPIContext):
+    def test_upload_and_delete_entries(self):
+        self.addCleanup(self.delete_default_table_and_check)
+
+        self.create_default_table_and_check()
+        entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(10)]
+        api.upload_entries(client=self.client, table_name=self.default_table_name, entries=entries)
+
+        instance_entries = api.query_entries(self.client, self.default_table_name)
+        self.assertEqual(instance_entries, entries)
+
+        api.delete_entries(client=self.client, query={'from': self.default_table_name, 'where': {'id': {'$gte': 5}}})
+        instance_entries = api.query_entries(self.client, self.default_table_name)
+        self.assertEqual(instance_entries, entries[:5])
+
+
 class TestQuickAddTableAPI(CompareTestCase):
     @classmethod
     def setUpClass(cls):

@@ -273,6 +273,19 @@ def optimize_table(client: AitoClient, table_name):
     LOG.info(f'table {table_name} optimized')
 
 
+def delete_entries(client: AitoClient, query: Dict):
+    """`Delete the entries <https://aito.ai/docs/api/#post-api-v1-data-delete>`__ according to the criteria
+    given in the query
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the query to describe the target table and filters for which entries to delete.
+    :type query: Dict
+    """
+    client.request(request_obj=aito_requests.DeleteEntries(query=query))
+    LOG.info(f'entries deleted')
+
+
 def upload_entries(
         client: AitoClient,
         table_name: str,
