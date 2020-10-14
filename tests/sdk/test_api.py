@@ -1,5 +1,7 @@
 import json
+import os
 import shutil
+import unittest
 from pathlib import Path
 from uuid import uuid4
 
@@ -7,12 +9,13 @@ import ndjson
 from parameterized import parameterized
 
 import aito.api as api
+from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema, AitoIntType
 from aito.utils._file_utils import read_ndjson_gz_file
 from tests.cases import CompareTestCase
 from tests.sdk.contexts import default_client, grocery_demo_client, endpoint_methods_test_context
 
 
-class TestAPI(CompareTestCase):
+class _TestAPIContext(CompareTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -20,20 +23,22 @@ class TestAPI(CompareTestCase):
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         with (cls.input_folder / 'invoice_aito_schema.json').open() as f:
-            cls.default_schema = json.load(f)
+            cls.default_table_schema = json.load(f)
 
-    def delete_table_step(self):
+    def delete_default_table_and_check(self):
         api.delete_table(self.client, self.default_table_name)
-        self.assertEqual(api.check_table_exists(self.client, self.default_table_name), False)
+        self.assertFalse(api.check_table_exists(self.client, self.default_table_name))
 
-    def create_table_step(self):
-        api.create_table(self.client, self.default_table_name, self.default_schema)
-        self.assertEqual(api.check_table_exists(self.client, self.default_table_name), True)
+    def create_default_table_and_check(self):
+        api.create_table(self.client, self.default_table_name, self.default_table_schema)
+        self.assertTrue(api.check_table_exists(self.client, self.default_table_name))
 
-    def get_table_schema_step(self):
-        tbl_schema = api.get_table_schema(self.client, self.default_table_name)
-        self.assertDictEqual(tbl_schema.to_json_serializable(), self.default_schema)
+    def get_default_table_schema_and_check(self):
+        instance_tbl_schema = api.get_table_schema(self.client, self.default_table_name)
+        self.assertEqual(AitoTableSchema.from_deserialized_object(self.default_table_schema), instance_tbl_schema)
 
+
+class TestAPI(_TestAPIContext):
     def upload_by_batch_step(self, start, end):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)]
         api.upload_entries(
@@ -110,7 +115,7 @@ class TestAPI(CompareTestCase):
         self.assertEqual(entries,  [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)])
 
     def test_functions(self):
-        self.create_table_step()
+        self.create_default_table_and_check()
         self.query_table_all_entries_step(expected_result=0)
         self.upload_by_batch_step(start=0, end=4)
         self.query_table_all_entries_step(expected_result=4)
@@ -122,10 +127,39 @@ class TestAPI(CompareTestCase):
         self.get_all_table_entries_step(start=0, end=12)
         self.download_table_step(start=0, end=12)
         self.download_table_gzipped_step(start=0, end=12)
-        self.addCleanup(self.delete_table_step)
+        self.addCleanup(self.delete_default_table_and_check)
+
+
+class TestAlterSchemaAPI(_TestAPIContext):
+    @unittest.skipUnless(
+        os.environ.get('RUN_ALTER_INSTANCE_DB_TESTS'),
+        "Avoid altering the instance DB when running other tests"
+    )
+    def test_create_and_delete_database(self):
+        self.addCleanup(self.delete_default_table_and_check)
+
+        api.delete_database(client=self.client)
+        self.assertEqual(len(api.get_existing_tables(client=self.client)), 0)
+
+        db_schema = {'schema': {self.default_table_name: self.default_table_schema}}
+        api.create_database(client=self.client, schema=db_schema)
+
+        instance_db_schema = api.get_database_schema(client=self.client)
+        self.assertEqual(AitoDatabaseSchema.from_deserialized_object(db_schema), instance_db_schema)
+        self.assertEqual(len(api.get_existing_tables(client=self.client)), 1)
+        self.assertTrue(api.check_table_exists(self.client, self.default_table_name))
+
+        api.delete_database(client=self.client)
+        self.assertEqual(len(api.get_existing_tables(client=self.client)), 0)
+
+    def test_create_and_delete_table(self):
+        self.addCleanup(self.delete_default_table_and_check)
+        self.create_default_table_and_check()
+        self.get_default_table_schema_and_check()
+        self.delete_default_table_and_check()
 
     def test_alter_table(self):
-        self.create_table_step()
+        self.create_default_table_and_check()
         copy_table_name = f'{self.default_table_name}_copy'
         api.copy_table(self.client, self.default_table_name, copy_table_name)
         db_tables = api.get_existing_tables(self.client)
@@ -144,6 +178,28 @@ class TestAPI(CompareTestCase):
             api.delete_table(self.client, rename_table_name)
 
         self.addCleanup(clean_up)
+
+    def test_create_and_delete_column(self):
+        self.addCleanup(self.delete_default_table_and_check)
+        self.create_default_table_and_check()
+        api.create_column(
+            client=self.client, table_name=self.default_table_name, column_name='new_col', schema={'type': 'Int'}
+        )
+
+        updated_tbl_schema = AitoTableSchema.from_deserialized_object(self.default_table_schema)
+        new_col_schema = AitoColumnTypeSchema(data_type=AitoIntType())
+        updated_tbl_schema['new_col'] = new_col_schema
+
+        instance_tbl_schema = api.get_table_schema(client=self.client, table_name=self.default_table_name)
+        self.assertEqual(updated_tbl_schema, instance_tbl_schema)
+
+        instance_col_schema = api.get_column_schema(
+            client=self.client, table_name=self.default_table_name, column_name='new_col'
+        )
+        self.assertEqual(new_col_schema, instance_col_schema)
+
+        api.delete_column(client=self.client, table_name=self.default_table_name, column_name='new_col')
+        self.get_default_table_schema_and_check()
 
 
 class TestQuickAddTableAPI(CompareTestCase):
@@ -169,7 +225,7 @@ class TestQuickAddTableAPI(CompareTestCase):
         with exp_file_path.open() as exp_f:
             file_content = json.load(exp_f)
         if compare_order:
-            self.assertEquala(table_entries, file_content)
+            self.assertEqual(table_entries, file_content)
         else:
             self.assertCountEqual(table_entries, file_content)
 

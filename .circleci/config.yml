@@ -336,6 +336,7 @@ commonYAMLStructure:
       command: |
         [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
         . venv/bin/activate
+        python -m tests method sdk.test_api.TestAlterSchemaAPI.test_create_and_delete_database
         python -m tests method cli.test_database_sub_command.TestDatabaseSubCommands.test_delete_and_create_database
   - &store_log_files
     store_artifacts:
