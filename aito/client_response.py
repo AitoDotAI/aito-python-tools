@@ -406,7 +406,7 @@ class GetVersionResponse(BaseResponse):
         return self.__getitem__('version')
 
 
-class _GetSchemaResponse(BaseResponse, ABC):
+class _SchemaResponse(BaseResponse, ABC):
     """Response that contains a schema component"""
     @property
     @abstractmethod
@@ -426,21 +426,21 @@ class _GetSchemaResponse(BaseResponse, ABC):
         return self.schema_cls.from_deserialized_object(self._json)
 
 
-class DatabaseSchemaResponse(_GetSchemaResponse):
+class DatabaseSchemaResponse(_SchemaResponse):
     """Response that contains a database schema"""
     @property
     def schema_cls(self) -> Type[AitoSchema]:
         return AitoDatabaseSchema
 
 
-class TableSchemaResponse(_GetSchemaResponse):
+class TableSchemaResponse(_SchemaResponse):
     """Response that contains a table schema"""
     @property
     def schema_cls(self) -> Type[AitoSchema]:
         return AitoTableSchema
 
 
-class ColumnSchemaResponse(_GetSchemaResponse):
+class ColumnSchemaResponse(_SchemaResponse):
     """Response that contains a column schema"""
     @property
     def schema_cls(self) -> Type[AitoSchema]:
