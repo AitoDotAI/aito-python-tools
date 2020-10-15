@@ -572,38 +572,55 @@ def quick_add_table(
     unlink(converted_tmp_file.name)
 
 
-def create_job(client: AitoClient, job_endpoint: str, query: Union[List, Dict]) -> Dict:
+def create_job(
+        client: AitoClient,
+        job_endpoint: Optional[str] = None,
+        query: Optional[Union[List, Dict]] = None,
+        request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]] = None,
+) -> aito_responses.CreateJobResponse:
     """Create a `job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
     for a query that takes longer than 30 seconds to run
 
     :param client: the AitoClient instance
     :type client: AitoClient
-    :param job_endpoint: job endpoint
-    :type job_endpoint: str
+    :param job_endpoint: the job endpoint
+    :type job_endpoint: Optional[str]
     :param query: the query for the endpoint
-    :type query: Union[List, Dict]
+    :type query: Optional[Union[List, Dict]]
+    :param request_obj: a :class:`.CreateJobRequest` or an :class:`.QueryAPIRequest` instance
+    :type request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]]
     :return: job information
     :rtype: Dict
     """
-    resp = client.request(method='POST', endpoint=job_endpoint, query=query)
-    return resp.json
+    if request_obj is None:
+        if job_endpoint is not None and query is not None:
+            create_job_req = aito_requests.CreateJobRequest(endpoint=job_endpoint, query=query)
+        else:
+            raise TypeError("create_job() requires either 'request_obj' or 'job_endpoint' and 'query'")
+    else:
+        if isinstance(request_obj, aito_requests.QueryAPIRequest):
+            create_job_req = aito_requests.CreateJobRequest.from_query_api_request(request_obj=request_obj)
+        else:
+            create_job_req = request_obj
+    resp = client.request(request_obj=create_job_req)
+    return resp
 
 
-def get_job_status(client: AitoClient, job_id: str) -> Dict:
+def get_job_status(client: AitoClient, job_id: str) -> aito_responses.GetJobStatusResponse:
     """`Get the status of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__ with the specified job id
 
     :param client: the AitoClient instance
     :type client: AitoClient
-    :param job_id: the id of the job
+    :param job_id: the id of the job session
     :type job_id: str
     :return: job status
     :rtype: Dict
     """
-    resp = client.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}')
-    return resp.json
+    resp = client.request(request_obj=aito_requests.GetJobStatusRequest(job_id=job_id))
+    return resp
 
 
-def get_job_result(client: AitoClient, job_id: str) -> Dict:
+def get_job_result(client: AitoClient, job_id: str) -> aito_responses.BaseResponse:
     """`Get the result of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid-result>`__ with the specified job id
 
     :param client: the AitoClient instance
@@ -613,13 +630,13 @@ def get_job_result(client: AitoClient, job_id: str) -> Dict:
     :return: the job result
     :rtype: Dict
     """
-    resp = client.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}/result')
-    return resp.json
+    resp = client.request(request_obj=aito_requests.GetJobResultRequest(job_id=job_id))
+    return resp
 
 
 def job_request(
         client: AitoClient, job_endpoint: str, query: Union[Dict, List] = None, polling_time: int = 10
-) -> Dict:
+) -> aito_responses.BaseResponse:
     """make a request to an Aito API endpoint using job
 
     This method should be used for requests that take longer than 30 seconds, e.g: evaluate

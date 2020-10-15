@@ -81,7 +81,7 @@ class TestAPI(_TestAPIContext):
             {'from': self.default_table_name, 'offset': 0, 'limit': 1}
         )
         self.assertEqual(
-            resp,
+            resp.json,
             {'offset': 0, 'total': 8, 'hits': [{'id': 0, 'name': 'some_name', 'amount': 0}]}
         )
 
@@ -123,6 +123,7 @@ class TestAPI(_TestAPIContext):
         self.query_table_all_entries_step(expected_result=8)
         self.query_table_entries_step()
         self.job_query_step()
+        self.job_query_from_request_obj_step()
         self.upload_more_and_optimize_step(start=8, end=12)
         self.get_all_table_entries_step(start=0, end=12)
         self.download_table_step(start=0, end=12)
