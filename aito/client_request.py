@@ -38,9 +38,9 @@ class AitoRequest(ABC):
             raise NotImplementedError("The request 'response_cls' must be implemented")
 
         method = method.upper()
-        if not self.check_method(method=method):
+        if not self._check_method(method=method):
             raise ValueError(f"invalid method '{method}' for {self.__class__.__name__}")
-        if not self.check_endpoint(endpoint=endpoint):
+        if not self._check_endpoint(endpoint=endpoint):
             raise ValueError(f"invalid endpoint '{endpoint}' for {self.__class__.__name__}")
 
         self.method = method
@@ -58,7 +58,7 @@ class AitoRequest(ABC):
 
     @classmethod
     @abstractmethod
-    def check_method(cls, method: str) -> bool:
+    def _check_method(cls, method: str) -> bool:
         """check if the input method is a valid endpoint of the Request class
 
         :param method: the input method
@@ -70,7 +70,7 @@ class AitoRequest(ABC):
 
     @classmethod
     @abstractmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
+    def _check_endpoint(cls, endpoint: str) -> bool:
         """check if the input endpoint is a valid endpoint of the Request class
 
         :param endpoint: the input endpoint
@@ -95,7 +95,7 @@ class AitoRequest(ABC):
         """
         method = method.upper()
         for sub_cls in cls.__subclasses__():
-            if sub_cls != BaseRequest and sub_cls.check_method(method) and sub_cls.check_endpoint(endpoint):
+            if sub_cls != BaseRequest and sub_cls._check_method(method) and sub_cls._check_endpoint(endpoint):
                 try:
                     instance = sub_cls.make_request(method=method, endpoint=endpoint, query=query)
                     return instance
@@ -110,7 +110,7 @@ class BaseRequest(AitoRequest):
     response_cls = aito_resp.BaseResponse
 
     @classmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
+    def _check_endpoint(cls, endpoint: str) -> bool:
         """check if the input endpoint is a valid Aito endpoint
         """
         if not endpoint.startswith('/'):
@@ -120,7 +120,7 @@ class BaseRequest(AitoRequest):
         return True
 
     @classmethod
-    def check_method(cls, method: str) -> bool:
+    def _check_method(cls, method: str) -> bool:
         """returns True if the input request method is valid"""
         return method in cls._request_methods
 
@@ -142,11 +142,11 @@ class _FinalRequest(AitoRequest, ABC):
         super().__init__(method=self.method, endpoint=self.endpoint, query=query)
 
     @classmethod
-    def check_method(cls, method: str) -> bool:
+    def _check_method(cls, method: str) -> bool:
         return method == cls.method
 
     @classmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
+    def _check_endpoint(cls, endpoint: str) -> bool:
         return endpoint == cls.endpoint
 
     @classmethod
@@ -158,19 +158,19 @@ class _PatternEndpoint(ABC):
     """Request whose endpoint has a pattern"""
     @classmethod
     @abstractmethod
-    def endpoint_pattern(cls):
+    def _endpoint_pattern(cls):
         pass
 
     @classmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
-        return cls.endpoint_pattern().search(endpoint) is not None
+    def _check_endpoint(cls, endpoint: str) -> bool:
+        return cls._endpoint_pattern().search(endpoint) is not None
 
 
 class _GetRequest:
     method = 'GET'
 
     @classmethod
-    def check_method(cls, method: str):
+    def _check_method(cls, method: str):
         return method == cls.method
 
 
@@ -178,7 +178,7 @@ class _PostRequest:
     method = 'POST'
 
     @classmethod
-    def check_method(cls, method: str):
+    def _check_method(cls, method: str):
         return method == cls.method
 
 
@@ -186,7 +186,7 @@ class _PutRequest:
     method = 'PUT'
 
     @classmethod
-    def check_method(cls, method: str):
+    def _check_method(cls, method: str):
         return method == cls.method
 
 
@@ -194,7 +194,7 @@ class _DeleteRequest:
     method = 'DELETE'
 
     @classmethod
-    def check_method(cls, method: str):
+    def _check_method(cls, method: str):
         return method == cls.method
 
 
@@ -222,22 +222,22 @@ class QueryAPIRequest(_PostRequest, _PatternEndpoint, AitoRequest, ABC):
         """
         if self.path is None:
             raise NotImplementedError(f'The API path must be implemented')
-        endpoint = self.endpoint_from_path(self.path)
+        endpoint = self._endpoint_from_path(self.path)
         super().__init__(method=self.method, endpoint=endpoint, query=query)
 
     @classmethod
-    def endpoint_pattern(cls):
+    def _endpoint_pattern(cls):
         return re.compile(f"^{cls._api_version_endpoint_prefix}/({'|'.join(cls._query_api_paths)})$")
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
         for sub_cls in cls.__subclasses__():
-            if method == sub_cls.method and endpoint == QueryAPIRequest.endpoint_from_path(sub_cls.path):
+            if method == sub_cls.method and endpoint == QueryAPIRequest._endpoint_from_path(sub_cls.path):
                 return sub_cls(query=query)
         raise ValueError(f"invalid {cls.__name__} with '{method}({endpoint})'")
 
     @classmethod
-    def endpoint_from_path(cls, path: str):
+    def _endpoint_from_path(cls, path: str):
         """return the query api endpoint from the Query API path"""
         if path not in cls._query_api_paths:
             raise ValueError(f"path must be one of {'|'.join(cls._query_api_paths)}")
@@ -307,19 +307,19 @@ class _SchemaAPIRequest(AitoRequest, ABC):
 
     @classmethod
     @abstractmethod
-    def check_method(cls, method: str) -> bool:
+    def _check_method(cls, method: str) -> bool:
         return method in cls._request_methods
 
     @classmethod
     @abstractmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
+    def _check_endpoint(cls, endpoint: str) -> bool:
         return endpoint.startswith(cls.endpoint_prefix)
 
     @classmethod
     @abstractmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
         for sub_cls in cls.__subclasses__():
-            if sub_cls.check_method(method) and sub_cls.check_endpoint(endpoint):
+            if sub_cls._check_method(method) and sub_cls._check_endpoint(endpoint):
                 return sub_cls.make_request(method=method, endpoint=endpoint, query=query)
         raise ValueError(f"invalid {cls.__name__} with '{method}({endpoint})'")
 
@@ -329,19 +329,19 @@ class _DatabaseSchemaRequest:
     endpoint = _SchemaAPIRequest.endpoint_prefix
 
     @classmethod
-    def check_endpoint(cls, endpoint: str):
+    def _check_endpoint(cls, endpoint: str):
         return endpoint == _SchemaAPIRequest.endpoint_prefix
 
 
 class _TableSchemaRequest(_PatternEndpoint):
     """Request to manipulate a table schema"""
     @classmethod
-    def endpoint_pattern(cls):
+    def _endpoint_pattern(cls):
         return re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)$')
 
     @classmethod
-    def endpoint_to_table_name(cls, endpoint) -> str:
-        matched = cls.endpoint_pattern().search(endpoint)
+    def _endpoint_to_table_name(cls, endpoint) -> str:
+        matched = cls._endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name = matched.group(1)
@@ -351,12 +351,12 @@ class _TableSchemaRequest(_PatternEndpoint):
 class _ColumnSchemaRequest(_PatternEndpoint):
     """Request to manipulate a column schema"""
     @classmethod
-    def endpoint_pattern(cls):
+    def _endpoint_pattern(cls):
         return re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)/([^/".$\r\n\s]+)$')
 
     @classmethod
-    def endpoint_to_table_name_and_column_name(cls, endpoint: str) -> Tuple[str, str]:
-        matched = cls.endpoint_pattern().search(endpoint)
+    def _endpoint_to_table_name_and_column_name(cls, endpoint: str) -> Tuple[str, str]:
+        matched = cls._endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name, column_name = matched.group(1), matched.group(2)
@@ -390,7 +390,7 @@ class GetTableSchemaRequest(_GetRequest, _TableSchemaRequest, _SchemaAPIRequest)
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
+        table_name = cls._endpoint_to_table_name(endpoint=endpoint)
         return cls(table_name=table_name)
 
 
@@ -411,7 +411,7 @@ class GetColumnSchemaRequest(_GetRequest, _ColumnSchemaRequest, _SchemaAPIReques
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        table_name, column_name = cls.endpoint_to_table_name_and_column_name(endpoint=endpoint)
+        table_name, column_name = cls._endpoint_to_table_name_and_column_name(endpoint=endpoint)
         return cls(table_name=table_name, column_name=column_name)
 
 
@@ -452,7 +452,7 @@ class CreateTableSchemaRequest(_PutRequest, _TableSchemaRequest, _SchemaAPIReque
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
+        table_name = cls._endpoint_to_table_name(endpoint=endpoint)
         return cls(table_name=table_name, schema=query)
 
 
@@ -475,7 +475,7 @@ class CreateColumnSchemaRequest(_PutRequest, _ColumnSchemaRequest, _SchemaAPIReq
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        table_name, column_name = cls.endpoint_to_table_name_and_column_name(endpoint)
+        table_name, column_name = cls._endpoint_to_table_name_and_column_name(endpoint)
         return cls(table_name=table_name, column_name=column_name, schema=query)
 
 
@@ -507,7 +507,7 @@ class DeleteTableSchemaRequest(_DeleteRequest, _TableSchemaRequest, _SchemaAPIRe
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
+        table_name = cls._endpoint_to_table_name(endpoint=endpoint)
         return cls(table_name=table_name)
 
 
@@ -528,7 +528,7 @@ class DeleteColumnSchemaRequest(_DeleteRequest, _ColumnSchemaRequest, _SchemaAPI
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        table_name, column_name = cls.endpoint_to_table_name_and_column_name(endpoint)
+        table_name, column_name = cls._endpoint_to_table_name_and_column_name(endpoint)
         return cls(table_name=table_name, column_name=column_name)
 
 
@@ -538,19 +538,19 @@ class _DataAPIRequest(AitoRequest, ABC):
 
     @classmethod
     @abstractmethod
-    def check_method(cls, method: str) -> bool:
+    def _check_method(cls, method: str) -> bool:
         return method in cls._request_methods
 
     @classmethod
     @abstractmethod
-    def check_endpoint(cls, endpoint: str) -> bool:
+    def _check_endpoint(cls, endpoint: str) -> bool:
         return endpoint.startswith(cls.endpoint_prefix)
 
     @classmethod
     @abstractmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
         for sub_cls in cls.__subclasses__():
-            if sub_cls.check_method(method) and sub_cls.check_endpoint(endpoint):
+            if sub_cls._check_method(method) and sub_cls._check_endpoint(endpoint):
                 return sub_cls.make_request(method=method, endpoint=endpoint, query=query)
         raise ValueError(f"invalid {cls.__name__} with '{method}({endpoint})'")
 
@@ -560,12 +560,12 @@ class UploadEntriesRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
     response_cls = aito_resp.BaseResponse
 
     @classmethod
-    def endpoint_pattern(cls):
+    def _endpoint_pattern(cls):
         return re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/batch$')
 
     @classmethod
-    def endpoint_to_table_name(cls, endpoint) -> str:
-        matched = cls.endpoint_pattern().search(endpoint)
+    def _endpoint_to_table_name(cls, endpoint) -> str:
+        matched = cls._endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name = matched.group(1)
@@ -584,7 +584,7 @@ class UploadEntriesRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
+        table_name = cls._endpoint_to_table_name(endpoint=endpoint)
         return cls(table_name=table_name, entries=query)
 
 
@@ -599,7 +599,7 @@ class InitiateFileUploadRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest)
     response_cls = aito_resp.BaseResponse
 
     @classmethod
-    def endpoint_pattern(cls):
+    def _endpoint_pattern(cls):
         return re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/file$')
 
     def __init__(self, table_name: str):
@@ -612,8 +612,8 @@ class InitiateFileUploadRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest)
         super().__init__(method=self.method, endpoint=endpoint)
 
     @classmethod
-    def endpoint_to_table_name(cls, endpoint) -> str:
-        matched = cls.endpoint_pattern().search(endpoint)
+    def _endpoint_to_table_name(cls, endpoint) -> str:
+        matched = cls._endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name = matched.group(1)
@@ -621,7 +621,7 @@ class InitiateFileUploadRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest)
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        table_name = cls.endpoint_to_table_name(endpoint=endpoint)
+        table_name = cls._endpoint_to_table_name(endpoint=endpoint)
         return cls(table_name=table_name)
 
 
@@ -630,7 +630,7 @@ class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, _DataAPIReque
     response_cls = aito_resp.BaseResponse
 
     @classmethod
-    def endpoint_pattern(cls):
+    def _endpoint_pattern(cls):
         return re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/file/(.+)$')
 
     def __init__(self, table_name: str, session_id: str):
@@ -645,8 +645,8 @@ class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, _DataAPIReque
         super().__init__(method=self.method, endpoint=endpoint)
 
     @classmethod
-    def endpoint_to_table_name_and_session_id(cls, endpoint) -> Tuple[str, str]:
-        matched = cls.endpoint_pattern().search(endpoint)
+    def _endpoint_to_table_name_and_session_id(cls, endpoint) -> Tuple[str, str]:
+        matched = cls._endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         table_name = matched.group(1)
@@ -655,7 +655,7 @@ class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, _DataAPIReque
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
-        table_name, session_id = cls.endpoint_to_table_name_and_session_id(endpoint=endpoint)
+        table_name, session_id = cls._endpoint_to_table_name_and_session_id(endpoint=endpoint)
         return cls(table_name=table_name, session_id=session_id)
 
 
@@ -677,14 +677,14 @@ class CreateJobRequest(_PostRequest, _PatternEndpoint, AitoRequest):
         :param query: the query
         :type query: Dict
         """
-        matched = self.endpoint_pattern().search(endpoint)
+        matched = self._endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {self.__class__.__name__} endpoint: '{endpoint}'")
         self.path = matched.group(1)
         super().__init__(method=self.method, endpoint=endpoint, query=query)
 
     @classmethod
-    def endpoint_pattern(cls):
+    def _endpoint_pattern(cls):
         return re.compile(f"^{cls.endpoint_prefix}/({'|'.join(QueryAPIRequest._query_api_paths)})$")
 
     @classmethod
@@ -692,9 +692,9 @@ class CreateJobRequest(_PostRequest, _PatternEndpoint, AitoRequest):
         return cls(endpoint=endpoint, query=query)
 
     @classmethod
-    def endpoint_to_query_path(cls, endpoint: str) -> str:
+    def _endpoint_to_query_path(cls, endpoint: str) -> str:
         """return the Query API path from the input endpoint"""
-        matched = cls.endpoint_pattern().search(endpoint)
+        matched = cls._endpoint_pattern().search(endpoint)
         if matched is None:
             raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
         path = matched.group(1)
