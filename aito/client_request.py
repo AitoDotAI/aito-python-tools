@@ -15,7 +15,7 @@ LOG = logging.getLogger('AitoClientRequest')
 
 class AitoRequest(ABC):
     """The base class of Request"""
-    api_version_endpoint_prefix = '/api/v1'
+    _api_version_endpoint_prefix = '/api/v1'
     _request_methods = ['PUT', 'POST', 'GET', 'DELETE']
 
     _data_api_path = 'data'
@@ -36,6 +36,13 @@ class AitoRequest(ABC):
         """
         if self.response_cls is None:
             raise NotImplementedError("The request 'response_cls' must be implemented")
+
+        method = method.upper()
+        if not self.check_method(method=method):
+            raise ValueError(f"invalid method '{method}' for {self.__class__.__name__}")
+        if not self.check_endpoint(endpoint=endpoint):
+            raise ValueError(f"invalid endpoint '{endpoint}' for {self.__class__.__name__}")
+
         self.method = method
         self.endpoint = endpoint
         self.query = query
@@ -113,7 +120,7 @@ class BaseRequest(AitoRequest):
         is_schema_ep = _SchemaAPIRequest.check_endpoint(endpoint)
         is_query_ep = QueryAPIRequest.check_endpoint(endpoint)
         is_prefix_ep = any([
-            endpoint.startswith(f'{cls.api_version_endpoint_prefix}/{path}')
+            endpoint.startswith(f'{cls._api_version_endpoint_prefix}/{path}')
             for path in [cls._data_api_path, cls._jobs_api_path]]
         )
         if not any([is_version_ep, is_schema_ep, is_query_ep, is_prefix_ep]):
@@ -124,25 +131,6 @@ class BaseRequest(AitoRequest):
     def check_method(cls, method: str) -> bool:
         """returns True if the input request method is valid"""
         return method in cls._request_methods
-
-    def __init__(self, method: str, endpoint: str, query: Optional[Union[Dict, List]] = None):
-        """
-
-        :param method: the method of the request
-        :type method: str
-        :param endpoint: the endpoint of the request
-        :type endpoint: str
-        :param query: an Aito query if applicable, optional
-        :type query: Optional[Union[Dict, List]]
-        """
-        if not self.check_endpoint(endpoint):
-            raise ValueError(f"invalid endpoint '{endpoint}'")
-        method = method.upper()
-        if not self.check_method(method):
-            raise ValueError(
-                f"invalid request method `{method}`. Method must be one of {'|'.join(self._request_methods)}"
-            )
-        super().__init__(method=method, endpoint=endpoint, query=query)
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
@@ -247,7 +235,7 @@ class QueryAPIRequest(_PostRequest, _PatternEndpoint, AitoRequest, ABC):
 
     @classmethod
     def endpoint_pattern(cls):
-        return re.compile(f"^{cls.api_version_endpoint_prefix}/({'|'.join(cls._query_api_paths)})$")
+        return re.compile(f"^{cls._api_version_endpoint_prefix}/({'|'.join(cls._query_api_paths)})$")
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
@@ -261,7 +249,7 @@ class QueryAPIRequest(_PostRequest, _PatternEndpoint, AitoRequest, ABC):
         """return the query api endpoint from the Query API path"""
         if path not in cls._query_api_paths:
             raise ValueError(f"path must be one of {'|'.join(cls._query_api_paths)}")
-        return f'{cls.api_version_endpoint_prefix}/{path}'
+        return f'{cls._api_version_endpoint_prefix}/{path}'
 
 
 class SearchRequest(QueryAPIRequest):
@@ -323,7 +311,7 @@ class GenericQueryRequest(QueryAPIRequest):
 
 class _SchemaAPIRequest(AitoRequest, ABC):
     """Request to manipulate the schema"""
-    endpoint_prefix = f'{AitoRequest.api_version_endpoint_prefix}/schema'
+    endpoint_prefix = f'{AitoRequest._api_version_endpoint_prefix}/schema'
 
     @classmethod
     @abstractmethod
@@ -398,6 +386,7 @@ class GetDatabaseSchemaRequest(_GetRequest, _DatabaseSchemaRequest, _SchemaAPIRe
 class GetTableSchemaRequest(_GetRequest, _TableSchemaRequest, _SchemaAPIRequest):
     """Request to `Get the schema of a table <https://aito.ai/docs/api/#get-api-v1-schema-table>`__"""
     response_cls = aito_resp.TableSchemaResponse
+
     def __init__(self, table_name: str):
         """
 
@@ -553,7 +542,7 @@ class DeleteColumnSchemaRequest(_DeleteRequest, _ColumnSchemaRequest, _SchemaAPI
 
 class _DataAPIRequest(AitoRequest, ABC):
     """Request to manipulate the schema"""
-    endpoint_prefix = f'{AitoRequest.api_version_endpoint_prefix}/data'
+    endpoint_prefix = f'{AitoRequest._api_version_endpoint_prefix}/data'
 
     @classmethod
     @abstractmethod
