@@ -668,7 +668,7 @@ class CreateJobRequest(_PostRequest, _PatternEndpoint, _JobAPIRequest):
 
     @property
     def path(self):
-        return self.endpoint.replace(self.endpoint_prefix, '')
+        return self.endpoint.replace(f'{self.endpoint_prefix}/', '')
 
     @classmethod
     def _endpoint_pattern(cls):
