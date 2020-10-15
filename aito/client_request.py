@@ -718,3 +718,69 @@ class CreateJobRequest(_PostRequest, _PatternEndpoint, AitoRequest):
         for sub_cls in QueryAPIRequest.__subclasses__():
             if self.path == sub_cls.path:
                 return sub_cls.response_cls
+
+
+class GetJobStatusRequest(_GetRequest, _PatternEndpoint, AitoRequest):
+    """Request to `create a job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__ for an Aito API endpoint
+    """
+    endpoint_prefix = f'{AitoRequest._api_version_endpoint_prefix}/jobs'
+    response_cls = aito_resp.GetJobStatusResponse
+
+    def __init__(self, session_id: str):
+        """
+
+        :param session_id: the id of the job session
+        :type session_id: str
+        """
+        endpoint = f'{self.endpoint_prefix}/{session_id}'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @classmethod
+    def _endpoint_pattern(cls):
+        return re.compile(f'^{cls.endpoint_prefix}/(.+)/result$')
+
+    @classmethod
+    def _endpoint_to_session_id(cls, endpoint) -> str:
+        matched = cls._endpoint_pattern().search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        session_id = matched.group(1)
+        return session_id
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        session_id = cls._endpoint_to_session_id(endpoint=endpoint)
+        return cls(session_id=session_id)
+
+
+class GetJobResultRequest(_GetRequest, _PatternEndpoint, AitoRequest):
+    """Request to `create a job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__ for an Aito API endpoint
+    """
+    endpoint_prefix = f'{AitoRequest._api_version_endpoint_prefix}/jobs'
+    response_cls = aito_resp.BaseResponse
+
+    def __init__(self, session_id: str):
+        """
+
+        :param session_id: the id of the job session
+        :type session_id: str
+        """
+        endpoint = f'{self.endpoint_prefix}/{session_id}/result'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @classmethod
+    def _endpoint_pattern(cls):
+        return re.compile(f'^{cls.endpoint_prefix}/(.+)/result$')
+
+    @classmethod
+    def _endpoint_to_session_id(cls, endpoint) -> str:
+        matched = cls._endpoint_pattern().search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        session_id = matched.group(1)
+        return session_id
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        session_id = cls._endpoint_to_session_id(endpoint=endpoint)
+        return cls(session_id=session_id)

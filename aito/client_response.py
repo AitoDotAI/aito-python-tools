@@ -4,10 +4,10 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Type, TypeVar, Generic
+from typing import List, Dict, Any, Type, TypeVar, Generic, Optional
 
-from aito.utils._json_format import JsonFormat
 from aito.schema import AitoSchema, AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema
+from aito.utils._json_format import JsonFormat
 
 LOG = logging.getLogger('AitoResponse')
 
@@ -460,3 +460,27 @@ class CreateJobResponse(BaseResponse):
     def started_at(self) -> str:
         """when the job was started"""
         return self.__getitem__('startedAt')
+
+
+class GetJobStatusResponse(BaseResponse):
+    """Response of the `Get job status <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__"""
+
+    @property
+    def id(self) -> str:
+        """the id of the job session"""
+        return self.__getitem__('id')
+
+    @property
+    def started_at(self) -> str:
+        """when the job was started"""
+        return self.__getitem__('startedAt')
+
+    @property
+    def finished(self) -> bool:
+        """if the job has finished"""
+        return self.__contains__('finishedAt')
+
+    @property
+    def expires_at(self) -> Optional[str]:
+        """when the job result will not be available, returns None if job hasn't finished"""
+        return self.__getitem__('startedAt') if self.finished else None

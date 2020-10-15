@@ -71,6 +71,14 @@ class TestClientRequest(CompareTestCase):
                 'create_job', 'POST', '/api/v1/jobs/_search', {},
                 aito_requests.CreateJobRequest(endpoint='/api/v1/jobs/_search', query={}), None
         ),
+        (
+                'get_job_status', 'GET', '/api/v1/jobs/1234-1234', {},
+                aito_requests.GetJobStatusRequest(session_id='1234-1234'), None
+        ),
+        (
+                'get_job_result', 'GET', '/api/v1/jobs/1234-1234/result', {},
+                aito_requests.GetJobStatusRequest(session_id='1234-1234'), None
+        ),
         ('erroneous_method', 'PATCH', '/api/v1/schema', {}, None, ValueError),
         ('erroneous_endpoint', 'GET', 'api/v1/schema', {}, None, ValueError),
     ])
