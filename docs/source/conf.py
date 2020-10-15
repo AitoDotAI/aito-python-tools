@@ -46,7 +46,7 @@ autodoc_mock_imports = [] if SPHINX_DISABLE_MOCK_REQUIREMENTS else [
 ]
 autodoc_default_flags = [
     "members",
-    "show-inheritence"
+    "show-inheritence",
     "inherited-members"
 ]
 autoclass_content = "both"
