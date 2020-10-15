@@ -572,6 +572,25 @@ def quick_add_table(
     unlink(converted_tmp_file.name)
 
 
+def _create_job_request(
+        job_endpoint: Optional[str] = None,
+        query: Optional[Union[List, Dict]] = None,
+        request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]] = None
+) -> aito_requests.CreateJobRequest:
+    """Return the Create Job Request"""
+    if request_obj is None:
+        if job_endpoint is not None and query is not None:
+            create_job_req = aito_requests.CreateJobRequest(endpoint=job_endpoint, query=query)
+        else:
+            raise TypeError("create_job() requires either 'request_obj' or 'job_endpoint' and 'query'")
+    else:
+        if isinstance(request_obj, aito_requests.QueryAPIRequest):
+            create_job_req = aito_requests.CreateJobRequest.from_query_api_request(request_obj=request_obj)
+        else:
+            create_job_req = request_obj
+    return create_job_req
+
+
 def create_job(
         client: AitoClient,
         job_endpoint: Optional[str] = None,
@@ -592,16 +611,7 @@ def create_job(
     :return: job information
     :rtype: Dict
     """
-    if request_obj is None:
-        if job_endpoint is not None and query is not None:
-            create_job_req = aito_requests.CreateJobRequest(endpoint=job_endpoint, query=query)
-        else:
-            raise TypeError("create_job() requires either 'request_obj' or 'job_endpoint' and 'query'")
-    else:
-        if isinstance(request_obj, aito_requests.QueryAPIRequest):
-            create_job_req = aito_requests.CreateJobRequest.from_query_api_request(request_obj=request_obj)
-        else:
-            create_job_req = request_obj
+    create_job_req = _create_job_request(job_endpoint=job_endpoint, query=query, request_obj=request_obj)
     resp = client.request(request_obj=create_job_req)
     return resp
 
@@ -635,7 +645,11 @@ def get_job_result(client: AitoClient, job_id: str) -> aito_responses.BaseRespon
 
 
 def job_request(
-        client: AitoClient, job_endpoint: str, query: Union[Dict, List] = None, polling_time: int = 10
+        client: AitoClient,
+        job_endpoint: Optional[str] = None,
+        query: Optional[Union[List, Dict]] = None,
+        request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]] = None,
+        polling_time: int = 10
 ) -> aito_responses.BaseResponse:
     """make a request to an Aito API endpoint using job
 
@@ -661,24 +675,30 @@ def job_request(
     :param client: the AitoClient instance
     :type client: AitoClient
     :param job_endpoint: job end point
-    :type job_endpoint: str
-    :param query: an Aito query, defaults to None
-    :type query: Union[Dict, List], optional
+    :type job_endpoint: Optional[str]
+    :param query: the query for the endpoint
+    :type query: Optional[Union[List, Dict]]
+    :param request_obj: a :class:`.CreateJobRequest` or an :class:`.QueryAPIRequest` instance
+    :type request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]]
     :param polling_time: polling wait time, defaults to 10
     :type polling_time: int
     :raises RequestError: an error occurred during the execution of the job
     :return: request JSON content
     :rtype: Dict
     """
-    resp = create_job(client, job_endpoint, query)
-    job_id = resp['id']
-    LOG.debug('polling job status...')
+    create_job_req = _create_job_request(job_endpoint=job_endpoint, query=query, request_obj=request_obj)
+    create_job_resp = client.request(request_obj=create_job_req)
+    job_id = create_job_resp.id
+    LOG.debug(f'polling job {job_id} status...')
     while True:
         job_status_resp = get_job_status(client, job_id)
-        if 'finishedAt' in job_status_resp:
+        if job_status_resp.finished:
+            LOG.debug(f'job {job_id} finished')
             break
         time.sleep(polling_time)
-    return get_job_result(client, job_id)
+    job_result_resp = get_job_result(client, job_id)
+    casted_job_result_resp = create_job_req.result_response_cls(job_result_resp.json)
+    return casted_job_result_resp
 
 
 def get_table_size(client: AitoClient, table_name: str) -> int:

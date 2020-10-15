@@ -10,6 +10,8 @@ from parameterized import parameterized
 
 import aito.api as api
 from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema, AitoIntType
+import aito.client_request as aito_requests
+import aito.client_response as aito_responses
 from aito.utils._file_utils import read_ndjson_gz_file
 from tests.cases import CompareTestCase
 from tests.sdk.contexts import default_client, grocery_demo_client, endpoint_methods_test_context
@@ -123,7 +125,6 @@ class TestAPI(_TestAPIContext):
         self.query_table_all_entries_step(expected_result=8)
         self.query_table_entries_step()
         self.job_query_step()
-        self.job_query_from_request_obj_step()
         self.upload_more_and_optimize_step(start=8, end=12)
         self.get_all_table_entries_step(start=0, end=12)
         self.download_table_step(start=0, end=12)
@@ -296,4 +297,10 @@ class TestAPIGroceryCase(CompareTestCase):
     def test_endpoint_method(self, endpoint, request_cls, query, response_cls):
         method = getattr(api, endpoint)
         resp = method(self.client, query)
+        self.assertTrue(isinstance(resp, response_cls))
+
+    @parameterized.expand(endpoint_methods_test_context)
+    def test_job_request_api(self, endpoint, request_cls, query, response_cls):
+        request_obj = request_cls(query)
+        resp = api.job_request(client=self.client, request_obj=request_obj)
         self.assertTrue(isinstance(resp, response_cls))
