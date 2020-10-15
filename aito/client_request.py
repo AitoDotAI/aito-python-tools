@@ -661,3 +661,60 @@ class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, _DataAPIReque
 
 class GetFileProcessingRequest(_GetRequest, TriggerFileProcessingRequest, _DataAPIRequest):
     """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
+
+
+class CreateJobRequest(_PostRequest, _PatternEndpoint, AitoRequest):
+    """Request to `create a job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__ for an Aito API endpoint
+    """
+    endpoint_prefix = f'{AitoRequest._api_version_endpoint_prefix}/jobs'
+    response_cls = aito_resp.CreateJobResponse
+
+    def __init__(self, endpoint: str, query: Dict):
+        """
+
+        :param endpoint: the job endpoint
+        :type endpoint: str
+        :param query: the query
+        :type query: Dict
+        """
+        matched = self.endpoint_pattern().search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {self.__class__.__name__} endpoint: '{endpoint}'")
+        self.path = matched.group(1)
+        super().__init__(method=self.method, endpoint=endpoint, query=query)
+
+    @classmethod
+    def endpoint_pattern(cls):
+        return re.compile(f"^{cls.endpoint_prefix}/({'|'.join(QueryAPIRequest._query_api_paths)})$")
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        return cls(endpoint=endpoint, query=query)
+
+    @classmethod
+    def endpoint_to_query_path(cls, endpoint: str) -> str:
+        """return the Query API path from the input endpoint"""
+        matched = cls.endpoint_pattern().search(endpoint)
+        if matched is None:
+            raise ValueError(f"invalid {cls.__name__} endpoint: '{endpoint}'")
+        path = matched.group(1)
+        return path
+
+    @classmethod
+    def from_query_api_request(cls, request_obj: QueryAPIRequest) -> 'CreateJobRequest':
+        """Create a job from a QueryAPI request
+
+        :param request_obj: a :class:`.QueryAPIRequest` instance
+        :type request_obj: QueryAPIRequest
+        :return: the corresponding create job request
+        :rtype: CreateJobRequest
+        """
+        endpoint = f'{cls.endpoint_prefix}/{request_obj.path}'
+        return cls(endpoint=endpoint, query=request_obj.query)
+
+    @property
+    def result_response_cls(self) -> Type[aito_resp.BaseResponse]:
+        """returns the response class of the job request result"""
+        for sub_cls in QueryAPIRequest.__subclasses__():
+            if self.path == sub_cls.path:
+                return sub_cls.response_cls

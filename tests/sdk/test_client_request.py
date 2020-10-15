@@ -67,6 +67,10 @@ class TestClientRequest(CompareTestCase):
                 'get_file_processing_status', 'GET', '/api/v1/data/table_name/file/1234-1234', {},
                 aito_requests.GetFileProcessingRequest(table_name='table_name', session_id='1234-1234'), None
         ),
+        (
+                'create_job', 'POST', '/api/v1/jobs/_search', {},
+                aito_requests.CreateJobRequest(endpoint='/api/v1/jobs/_search', query={}), None
+        ),
         ('erroneous_method', 'PATCH', '/api/v1/schema', {}, None, ValueError),
         ('erroneous_endpoint', 'GET', 'api/v1/schema', {}, None, ValueError),
     ])

@@ -445,3 +445,18 @@ class ColumnSchemaResponse(_SchemaResponse):
     @property
     def schema_cls(self) -> Type[AitoSchema]:
         return AitoColumnTypeSchema
+
+
+class CreateJobResponse(BaseResponse):
+    """Response of the `Create job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
+    containing the job information
+    """
+    @property
+    def id(self) -> str:
+        """the id of a job"""
+        return self.__getitem__('id')
+
+    @property
+    def started_at(self) -> str:
+        """when the job was started"""
+        return self.__getitem__('startedAt')
