@@ -1,10 +1,10 @@
 from os import getenv
 
 from aito.client import AitoClient
-from aito.client_request import SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, SimilarityRequest, \
-    MatchRequest, RelateRequest, GenericQueryRequest
-from aito.client_response import SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
-    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
+from aito.client.requests import SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
+    SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest
+from aito.client.responses import HitsResponse, SearchResponse, PredictResponse, RecommendResponse, \
+    SimilarityResponse, MatchResponse, RelateResponse, EvaluateResponse
 
 
 def get_env_var(var_name):

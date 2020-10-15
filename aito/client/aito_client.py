@@ -11,8 +11,8 @@ import requests as requestslib
 from aiohttp import ClientSession, ClientResponseError
 
 from aito.exceptions import BaseError
-from .client_request import BaseRequest, AitoRequest, GetVersionRequest
-from .client_response import BaseResponse
+from .requests import AitoRequest, BaseRequest, GetVersionRequest
+from .responses import BaseResponse
 
 LOG = logging.getLogger('AitoClient')
 

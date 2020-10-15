@@ -1,7 +1,7 @@
 import requests
 from parameterized import parameterized, parameterized_class
 
-import aito.client_request as aito_requests
+import aito.client.requests as aito_requests
 import aito.schema as aito_schema
 from aito.client import AitoClient
 from tests.cases import CompareTestCase

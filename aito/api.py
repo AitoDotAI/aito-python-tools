@@ -12,8 +12,8 @@ from typing import Dict, List, BinaryIO, Union, Tuple, Iterable, Optional
 import ndjson
 import requests as requestslib
 
-import aito.client_request as aito_requests
-import aito.client_response as aito_responses
+import aito.client.requests as aito_requests
+import aito.client.responses as aito_responses
 from aito.client import AitoClient, RequestError
 from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema
 from aito.utils._file_utils import gzip_file, check_file_is_gzipped

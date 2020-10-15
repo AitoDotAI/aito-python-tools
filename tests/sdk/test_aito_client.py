@@ -5,8 +5,8 @@ from aiohttp import ClientSession
 from parameterized import parameterized
 
 from aito.client import AitoClient, Error, RequestError
-from aito.client_request import BaseRequest, GenericQueryRequest
-from aito.client_response import HitsResponse, BaseResponse
+from aito.client.requests import BaseRequest, GenericQueryRequest
+from aito.client.responses import BaseResponse, HitsResponse
 from tests.cases import CompareTestCase
 from tests.sdk.contexts import default_client, grocery_demo_client, endpoint_methods_test_context
 
