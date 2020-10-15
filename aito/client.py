@@ -161,10 +161,10 @@ class AitoClient:
 
          Returns an error when make a request to an incorrect path:
 
-         >>> client.request(method="GET", endpoint="/api/v1/incorrect-path") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+         >>> client.request(method="GET", endpoint="api/v1/incorrect-path") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
          Traceback (most recent call last):
             ...
-         ValueError: invalid endpoint '/api/v1/incorrect-path'
+         ValueError: invalid endpoint 'api/v1/incorrect-path' for BaseRequest
          """
         if request_obj is None:
             if method is not None and endpoint is not None:

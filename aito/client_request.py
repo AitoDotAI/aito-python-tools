@@ -114,16 +114,8 @@ class BaseRequest(AitoRequest):
         """check if the input endpoint is a valid Aito endpoint
         """
         if not endpoint.startswith('/'):
-            LOG.debug(f"endpoint must start with the '/' character")
             return False
-        is_version_ep = endpoint == GetVersionRequest.endpoint
-        is_schema_ep = _SchemaAPIRequest.check_endpoint(endpoint)
-        is_query_ep = QueryAPIRequest.check_endpoint(endpoint)
-        is_prefix_ep = any([
-            endpoint.startswith(f'{cls._api_version_endpoint_prefix}/{path}')
-            for path in [cls._data_api_path, cls._jobs_api_path]]
-        )
-        if not any([is_version_ep, is_schema_ep, is_query_ep, is_prefix_ep]):
+        if not endpoint.startswith(cls._api_version_endpoint_prefix) and endpoint != GetVersionRequest.endpoint:
             return False
         return True
 
