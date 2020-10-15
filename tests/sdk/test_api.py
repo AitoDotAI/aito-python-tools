@@ -300,6 +300,12 @@ class TestAPIGroceryCase(CompareTestCase):
         self.assertTrue(isinstance(resp, response_cls))
 
     @parameterized.expand(endpoint_methods_test_context)
+    def test_endpoint_method_with_job(self, endpoint, request_cls, query, response_cls):
+        method = getattr(api, endpoint)
+        resp = method(client=self.client, query=query, use_job=True)
+        self.assertTrue(isinstance(resp, response_cls))
+
+    @parameterized.expand(endpoint_methods_test_context)
     def test_job_request_api(self, endpoint, request_cls, query, response_cls):
         request_obj = request_cls(query)
         resp = api.job_request(client=self.client, request_obj=request_obj)

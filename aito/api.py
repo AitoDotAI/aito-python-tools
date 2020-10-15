@@ -651,7 +651,7 @@ def job_request(
         request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]] = None,
         polling_time: int = 10
 ) -> aito_responses.BaseResponse:
-    """make a request to an Aito API endpoint using job
+    """make a request to an Aito API endpoint using `Job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
 
     This method should be used for requests that take longer than 30 seconds, e.g: evaluate
 
@@ -906,7 +906,7 @@ def quick_predict(
 
 
 def search(
-        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
 ) -> Union[aito_responses.SearchResponse, RequestError]:
     """send a query to the `Search API <https://aito.ai/docs/api/#post-api-v1-search>`__
 
@@ -917,15 +917,19 @@ def search(
     :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
         If set to None, value from Client will be used. Defaults to None
     :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
     :return: :class:`SearchResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
     :rtype: SearchResponse
     """
     req = aito_requests.SearchRequest(query=query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
     return client.request(request_obj=req, raise_for_status=raise_for_status)
 
 
 def predict(
-        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
 ) -> Union[aito_responses.PredictResponse, RequestError]:
     """send a query to the `Predict API <https://aito.ai/docs/api/#post-api-v1-predict>`__
 
@@ -936,15 +940,19 @@ def predict(
     :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
         If set to None, value from Client will be used. Defaults to None
     :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
     :return: :class:`.PredictResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
     :rtype: Union[PredictResponse, RequestError]
     """
     req = aito_requests.PredictRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
     return client.request(request_obj=req, raise_for_status=raise_for_status)
 
 
 def recommend(
-        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
 ) -> Union[aito_responses.RecommendResponse, RequestError]:
     """send a query to the `Recommend API <https://aito.ai/docs/api/#post-api-v1-recommend>`__
 
@@ -955,15 +963,19 @@ def recommend(
     :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
         If set to None, value from Client will be used. Defaults to None
     :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
     :return: :class:`.RecommendResponse`  or :class:`.RequestError` if an error occurred and not raise_for_status
     :rtype: Union[RecommendResponse, RequestError]
     """
     req = aito_requests.RecommendRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
     return client.request(request_obj=req, raise_for_status=raise_for_status)
 
 
 def evaluate(
-        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
 ) -> Union[aito_responses.EvaluateResponse, RequestError]:
     """send a query to the `Evaluate API <https://aito.ai/docs/api/#post-api-v1-evaluate>`__
 
@@ -974,15 +986,19 @@ def evaluate(
     :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
         If set to None, value from Client will be used. Defaults to None
     :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
     :return: :class:`.EvaluateResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
     :rtype: Union[EvaluateResponse, RequestError]
     """
     req = aito_requests.EvaluateRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
     return client.request(request_obj=req, raise_for_status=raise_for_status)
 
 
 def similarity(
-        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
 ) -> Union[aito_responses.SimilarityResponse, RequestError]:
     """send a query to the `Similarity API <https://aito.ai/docs/api/#post-api-v1-similarity>`__
 
@@ -993,15 +1009,19 @@ def similarity(
     :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
         If set to None, value from Client will be used. Defaults to None
     :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
     :return: :class:`.SimilarityResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
     :rtype: Union[SimilarityResponse, RequestError]
     """
     req = aito_requests.SimilarityRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
     return client.request(request_obj=req, raise_for_status=raise_for_status)
 
 
 def match(
-        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
 ) -> Union[aito_responses.MatchResponse, RequestError]:
     """send a query to the `Match API <https://aito.ai/docs/api/#post-api-v1-match>`__
 
@@ -1012,15 +1032,19 @@ def match(
     :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
         If set to None, value from Client will be used. Defaults to None
     :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
     :return: :class:`.MatchResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
     :rtype: Union[MatchResponse, RequestError]
     """
     req = aito_requests.MatchRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
     return client.request(request_obj=req, raise_for_status=raise_for_status)
 
 
 def relate(
-        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
 ) -> Union[aito_responses.RelateResponse, RequestError]:
     """send a query to the `Relate API <https://aito.ai/docs/api/#post-api-v1-relate>`__
 
@@ -1031,15 +1055,19 @@ def relate(
     :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
         If set to None, value from Client will be used. Defaults to None
     :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
     :return: :class:`.RelateResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
     :rtype: Union[RelateResponse, RequestError]
     """
     req = aito_requests.RelateRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
     return client.request(request_obj=req, raise_for_status=raise_for_status)
 
 
 def generic_query(
-        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
 ) -> Union[aito_responses.HitsResponse, RequestError]:
     """send a query to the `Generic Query API <https://aito.ai/docs/api/#post-api-v1-qyert>`__
 
@@ -1050,8 +1078,12 @@ def generic_query(
     :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
         If set to None, value from Client will be used. Defaults to None
     :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
     :return: :class:`HitsResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
     :rtype: Union[HitsResponse, RequestError]
     """
     req = aito_requests.GenericQueryRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
     return client.request(request_obj=req, raise_for_status=raise_for_status)
