@@ -10,7 +10,7 @@ import argcomplete
 
 from aito import __version__
 from aito.exceptions import BaseError
-from .parser import ArgParser, ParseError, DEFAULT_CONFIG_DIR
+from .parser import ArgParser, DEFAULT_CONFIG_DIR
 from .sub_commands.convert_sub_command import ConvertSubCommand
 from .sub_commands.database_sub_command import ConfigureSubCommand, QuickAddTableSubCommand, CreateTableSubCommand, \
     DeleteTableSubCommand, CopyTableSubCommand, RenameTableSubCommand, ShowTablesSubCommand, DeleteDatabaseSubCommand, \

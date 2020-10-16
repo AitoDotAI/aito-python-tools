@@ -346,8 +346,8 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
     def test_get_database(self):
         self.create_table()
         expected_args = {
-            'command': 'get-database',
-            **self.default_parser_args
+            **self.default_parser_args,
+            'command': 'get-database'
         }
         with self.out_file_path.open('w') as out_f:
             self.parse_and_execute(['get-database'], expected_args, stub_stdout=out_f)
@@ -358,78 +358,70 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.assertIn(self.default_table_name, returned_table_schema.tables)
         self.assertEqual(returned_table_schema[self.default_table_name], self.default_table_schema)
 
-    def test_configure_default_profile(self):
-        # TODO: Test built package: communicate with getpass and stub existing credentials file
-        if os.environ.get('TEST_BUILT_PACKAGE'):
-            return
+    def check_show_table_output_with_profile(self, profile_name: str = None):
+        # remove env var to use profile
+        self.stub_environment_variable('AITO_INSTANCE_URL', None)
+        self.stub_environment_variable('AITO_API_KEY', None)
+        self.create_table()
 
-        self.addCleanup(self.delete_out_file)
+        parsing_args = ['show-tables'] if profile_name is None else ['show-tables', '--profile', profile_name]
+        with (self.output_folder / 'show_table_result_out.txt').open('w') as out_f:
+            self.parse_and_execute(
+                parsing_args,
+                {
+                    **self.default_parser_args,
+                    'command': 'show-tables',
+                    'profile': 'default' if profile_name is None else profile_name
+                },
+                stub_stdout=out_f
+            )
+        with (self.output_folder / 'show_table_result_out.txt').open() as in_f:
+            content = in_f.read()
+        listed_tables = content.splitlines()
+        self.assertIn(self.default_table_name, listed_tables)
 
-        configure_args = {
-            'command': 'configure', 'verbose': False, 'version': False, 'quiet': False, 'profile': 'default'
-        }
+    def check_config_profile(self, profile_name: str = None, reconfigure = False):
+        parsing_args = ['configure'] if profile_name is None else ['configure', '--profile', profile_name]
         instance_url = os.environ['AITO_INSTANCE_URL']
         api_key = os.environ['AITO_API_KEY']
+        inputs = ['y', instance_url, api_key] if reconfigure else [instance_url, api_key]
+        if profile_name is None:
+            profile_name = 'default'
 
-        with patch('aito.cli.parser.DEFAULT_CREDENTIAL_FILE', self.out_file_path):
-            with patch('builtins.input', side_effect=[instance_url, api_key]):
-                self.parse_and_execute(['configure'], configure_args)
+        with patch('builtins.input', side_effect=inputs):
+            self.parse_and_execute(
+                parsing_args,
+                {
+                    'command': 'configure', 'verbose': False, 'version': False, 'quiet': False,
+                    'profile': profile_name
+                }
+            )
 
-            config = get_credentials_file_config()
-            self.assertEqual(config.get('default', 'instance_url'), instance_url)
-            self.assertEqual(config.get('default', 'api_key'), api_key)
+        config = get_credentials_file_config()
+        self.assertEqual(config.get(profile_name, 'instance_url'), instance_url)
+        self.assertEqual(config.get(profile_name, 'api_key'), api_key)
 
-            # remove env to trigger use default profile
-            self.stub_environment_variable('AITO_INSTANCE_URL', None)
-            self.stub_environment_variable('AITO_API_KEY', None)
-            self.create_table()
-            with (self.output_folder / 'show_table_result_out.txt').open('w') as out_f:
-                self.parse_and_execute(
-                    ['show-tables'],
-                    {'command': 'show-tables', **self.default_parser_args},
-                    stub_stdout=out_f
-                )
-            with (self.output_folder / 'show_table_result_out.txt').open() as in_f:
-                content = in_f.read()
-            listed_tables = content.splitlines()
-            self.assertIn(self.default_table_name, listed_tables)
-
-    def test_configure_new_profile(self):
-        if os.environ.get('TEST_BUILT_PACKAGE'):
-            return
-
+    @parameterized.expand([
+        ('default_profile', None),
+        ('new_profile', 'another_profile')
+    ])
+    @unittest.skipIf(os.environ.get('TEST_BUILT_PACKAGE') is not None, "stub credentials file does not work")
+    # TODO: Test built package: communicate with getpass and stub existing credentials file
+    def test_configure(self, _, profile_name):
         self.addCleanup(self.delete_out_file)
 
-        configure_expected_args = {
-            'command': 'configure', 'profile': 'new_profile', 'verbose': False, 'version': False, 'quiet': False
-        }
-        instance_url = os.environ['AITO_INSTANCE_URL']
-        api_key = os.environ['AITO_API_KEY']
+        with patch('aito.utils._credentials_file_utils.DEFAULT_CREDENTIAL_FILE', self.out_file_path):
+            self.check_config_profile(profile_name=profile_name)
+            self.check_show_table_output_with_profile(profile_name=profile_name)
 
-        with patch('aito.cli.parser.DEFAULT_CREDENTIAL_FILE', self.out_file_path):
-            with patch('builtins.input', side_effect=[instance_url, api_key]):
-                self.parse_and_execute(
-                    ['configure', '--profile', 'new_profile'], configure_expected_args
-                )
+    @unittest.skipIf(os.environ.get('TEST_BUILT_PACKAGE') is not None, "stub credentials file does not work")
+    def test_reconfigure(self,):
+        self.addCleanup(self.delete_out_file)
 
-            config = get_credentials_file_config()
-            self.assertEqual(config.get('new_profile', 'instance_url'), instance_url)
-            self.assertEqual(config.get('new_profile', 'api_key'), api_key)
-
-            # remove env to trigger use default profile
-            self.stub_environment_variable('AITO_INSTANCE_URL', None)
-            self.stub_environment_variable('AITO_API_KEY', None)
-            self.create_table()
-            with (self.output_folder / 'show_table_result_out.txt').open('w') as out_f:
-                self.parse_and_execute(
-                    ['show-tables', '--profile', 'new_profile'],
-                    {**self.default_parser_args, 'command': 'show-tables', 'profile': 'new_profile'},
-                    stub_stdout=out_f
-                )
-            with (self.output_folder / 'show_table_result_out.txt').open() as in_f:
-                content = in_f.read()
-            listed_tables = content.splitlines()
-            self.assertIn(self.default_table_name, listed_tables)
+        with patch('aito.utils._credentials_file_utils.DEFAULT_CREDENTIAL_FILE', self.out_file_path):
+            self.check_config_profile(profile_name='another_profile')
+            self.check_config_profile(profile_name='another_profile', reconfigure=True)
+            self.check_show_table_output_with_profile('another_profile')
 
     @parameterized.expand(endpoint_methods_test_context)
     def test_query_to_endpoint(self, endpoint, request_cls, query, response_cls):

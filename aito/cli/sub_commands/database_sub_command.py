@@ -26,34 +26,26 @@ class ConfigureSubCommand(SubCommand):
         )
 
     def parse_and_execute(self, parsed_args: Dict):
-        def mask(string):
-            if string is None:
-                return None
-            if len(string) <= 4:
-                return '****'
-            return (len(string) - 4) * '*' + string[-4:]
+        profile = parsed_args['profile']
+        existing_instance_url, existing_api_key = get_existing_credentials(profile_name=profile)
+        if existing_instance_url is not None or existing_api_key is not None:
+            if not prompt_confirmation(f'Profile {profile} already exists. Do you want to replace?'):
+                return 0
 
-        def get_existing_credentials():
-            config = get_credentials_file_config()
-            profile = parsed_args['profile']
-            if profile not in config.sections():
-                return None, None
-            else:
-                return config.get(profile, 'instance_url', fallback=None), config.get(profile, 'api_key', fallback=None)
+        input_ret_val = input(
+            'instance url (i.e: https://instance_name.aito.app): ' if not existing_instance_url
+            else f'instance url [{mask_instance_url(existing_instance_url)}]'
+        )
+        new_instance_url = input_ret_val if input_ret_val else existing_instance_url
+        if not new_instance_url:
+            raise ParseError('instance url must not be empty')
 
-        def prompt(name, existing_value):
-            masked_existing_value = mask(existing_value)
-            new_value = input(f'{name} [{masked_existing_value}]: ')
-            if not new_value:
-                if not existing_value:
-                    raise ParseError(f'{name} must not be empty')
-                else:
-                    new_value = existing_value
-            return new_value
-
-        existing_instance_url, existing_api_key = get_existing_credentials()
-        new_instance_url = prompt('instance url', existing_instance_url)
-        new_api_key = prompt('api key', existing_api_key)
+        input_ret_val = input(
+            'api key [None]' if not existing_instance_url else f'api key [{mask_api_key(existing_api_key)}]'
+        )
+        new_api_key = input_ret_val if input_ret_val else existing_api_key
+        if not new_api_key:
+            raise ParseError('api_key must not be empty')
 
         try:
             AitoClient(instance_url=new_instance_url, api_key=new_api_key, check_credentials=True)
