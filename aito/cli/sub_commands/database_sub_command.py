@@ -6,11 +6,12 @@ from typing import Dict
 
 import aito.api as api
 from aito.cli.parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
-    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, \
-    get_credentials_file_config, write_credentials_file_profile
+    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args
 from aito.cli.sub_commands.sub_command import SubCommand
 from aito.client import AitoClient, Error
 from aito.schema import AitoTableSchema
+from aito.utils._credentials_file_utils import get_existing_credentials, write_credentials_file_profile, \
+    mask_instance_url, mask_api_key
 from aito.utils.data_frame_handler import DataFrameHandler
 
 
