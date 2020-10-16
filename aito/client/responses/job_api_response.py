@@ -1,3 +1,5 @@
+"""Aito `Job API <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__ Response Class"""
+
 from typing import Optional
 
 from .aito_response import BaseResponse

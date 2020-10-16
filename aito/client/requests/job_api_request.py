@@ -1,3 +1,5 @@
+"""Aito `Job API <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__ Request Class"""
+
 import re
 from abc import abstractmethod
 from typing import Optional, Union, Dict, List, Type

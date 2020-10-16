@@ -1,3 +1,5 @@
+"""Generic Aito Response Class"""
+
 import logging
 from typing import Dict, Any
 

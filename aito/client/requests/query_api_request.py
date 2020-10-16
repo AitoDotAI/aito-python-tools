@@ -1,3 +1,5 @@
+"""Aito `Query API <https://aito.ai/docs/api/#query-api>`__ Request Class"""
+
 import re
 from abc import ABC
 from typing import Dict, Optional, Union, List

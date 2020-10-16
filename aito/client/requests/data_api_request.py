@@ -1,3 +1,5 @@
+"""Aito `Data API <https://aito.ai/docs/api/#database-api>`__ Request Class"""
+
 import re
 from abc import ABC, abstractmethod
 from typing import Optional, Union, Dict, List

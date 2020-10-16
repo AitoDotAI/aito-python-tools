@@ -1,3 +1,5 @@
+"""Aito `Query API <https://aito.ai/docs/api/#query-api>`__ Response Class"""
+
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Type, List, Dict, Any
 

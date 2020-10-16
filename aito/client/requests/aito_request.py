@@ -1,3 +1,5 @@
+"""Generic Aito Request Class"""
+
 import logging
 from abc import ABC, abstractmethod
 from typing import Optional, Union, Dict, List

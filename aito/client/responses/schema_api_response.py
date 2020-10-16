@@ -1,3 +1,5 @@
+"""Aito `Schema API <https://aito.ai/docs/api/#database-api>`__ Response Class"""
+
 from abc import ABC, abstractmethod
 from typing import Type
 
