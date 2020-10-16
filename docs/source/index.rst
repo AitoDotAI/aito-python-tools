@@ -79,12 +79,11 @@ Aito SDK Overview
 .. autosummary::
   :toctree: api_stubs
   :caption: API Documentation
+  :recursive:
 
-  schema
   client
+  schema
   api
-  client_request
-  client_response
   utils.data_frame_handler
   utils.sql_connection
 
