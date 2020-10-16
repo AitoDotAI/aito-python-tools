@@ -441,6 +441,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         expected_args = {
             'command': command,
             'query': query_str,
+            'use_job': False,
             **self.default_parser_args,
             **{
                 'instance_url': instance_url,
@@ -448,6 +449,25 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             }
         }
         self.parse_and_execute([command, '-i', instance_url, '-k', api_key, query_str], expected_args)
+
+    @parameterized.expand(endpoint_methods_test_context)
+    def test_query_to_endpoint_with_job(self, endpoint, request_cls, query, response_cls):
+        command = endpoint.replace('_', '-')
+        instance_url = os.environ['AITO_GROCERY_DEMO_INSTANCE_URL']
+        api_key = os.environ['AITO_GROCERY_DEMO_API_KEY']
+        query_str = json.dumps(query)
+
+        expected_args = {
+            'command': command,
+            'query': query_str,
+            'use_job': True,
+            **self.default_parser_args,
+            **{
+                'instance_url': instance_url,
+                'api_key': api_key
+            }
+        }
+        self.parse_and_execute([command, '-i', instance_url, '-k', api_key, query_str, '--use-job'], expected_args)
 
     def test_quick_predict(self):
         self.create_table()

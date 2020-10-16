@@ -409,15 +409,20 @@ class QueryToEndpointSubCommand(SubCommand, ABC):
     def build_parser(self, parser):
         parser.add_aito_default_credentials_arguments()
         parser.add_argument('query', type=str, help='the query to be sent')
+        parser.add_argument(
+            '--use-job', action='store_true',
+            help='use job for query that takes longer than 30s (default: False)'
+        )
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
 
         query_str = parsed_args['query']
         query = json.loads(query_str)
+        use_job = parsed_args['use_job']
 
         client_method = getattr(api, self.api_method_name)
-        resp = client_method(client, query)
+        resp = client_method(client=client, query=query, use_job=use_job)
 
         print(resp.to_json_string(indent=2))
         return 0
