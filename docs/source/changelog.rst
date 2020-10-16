@@ -6,9 +6,9 @@ Changelog
 
 This version contains changes on how you make requests with the :py:class:`~aito.client.AitoClient`.
 In addition to specifying the request method and endpoint as before, you can now use different
-:py:mod:`Request objects <aito.client_request>` or use the endpoint methods of the client,
-i.e: :py:func:`aito.client.AitoClient.predict`. The client now returns the enriched
-:py:mod:`Response objects <aito.client_response>` instead of JSON as before.
+:py:mod:`Request objects <aito.client.requests>` or use the endpoint methods in the API,
+i.e: :py:func:`aito.api.predict`.
+The client now returns enriched :py:mod:`Response objects <aito.client.responses>` instead of JSON as before.
 
 Helper methods of the AitoClient, e.g: create_table, are moved to the :py:mod:`aito.api` module.
 
@@ -19,8 +19,20 @@ SDK
 ^^^
 
 - Schema objects validation in the :py:mod:`aito.schema` module is improved.
-- Added the :py:mod:`aito.client_request` module which contains the request objects for :py:class:`~aito.client.AitoClient`.
-- Added the :py:mod:`aito.client_response` module which contains the response objects returned by the :py:class:`~aito.client.AitoClient`.
+- Refactored the client into the **aito.client** subpacakge:
+  - Added the :py:mod:`aito.client.requests` subpackage which contains Request Classes for the **AitoClient**.
+  - Added the :py:mod:`aito.client.responses` subpackage which contains Response Classes returned by the **AitoClient**.
+  - You can import the **AitoClient** the same way as before:
+
+    .. code-block:: python
+
+      from aito.client import AitoClient
+
+    You can import the request and response classes directly from the subpackage:
+
+    .. code-block:: python
+
+      from aito.client import PredictRequest, PredictResponse
 
 AitoClient
 """"""""""
