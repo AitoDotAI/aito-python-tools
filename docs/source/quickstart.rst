@@ -274,7 +274,7 @@ You can :py:func:`~aito.api.create_table` using an :py:class:`~aito.client.AitoC
   from aito.client import AitoClient
   from aito.api import create_table
   aito_client = AitoClient(instance_url=YOUR_AITO_INSTANCE_URL, api_key=YOUR_AITO_INSTANCE_API_KEY)
-  create_table(client=aito_client, table_name='reddit', table_schema=reddit_schema)
+  create_table(client=aito_client, table_name='reddit', schema=reddit_schema)
 
 .. _sdkQuickstartConvertData:
 
@@ -383,13 +383,14 @@ You can send a query to an Aito endpoint by using the AitoClient method:
   .. testcode:: [grocery_demo]
 
     from aito.client import AitoClient
+    from aito.api import search, predict
     aito_client = AitoClient(instance_url=INSTANCE_URL, api_key=INSTANCE_API_KEY)
-    aito_client.search({
+    search(client=aito_client, query={
       "from": "products",
       "where": {"name": {"$match": "rye bread"}}
     })
 
-    aito_client.predict({
+    predict(client=aito_client, query={
       "from": "products",
       "where": {"name": "rye bread"},
       "predict": "tags"

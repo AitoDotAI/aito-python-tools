@@ -1,14 +1,10 @@
-"""Response objects returned by the :class:`~aito.client.AitoClient`
+"""Aito `Query API <https://aito.ai/docs/api/#query-api>`__ Response Class"""
 
-"""
-
-import logging
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Type, TypeVar, Generic
+from typing import TypeVar, Generic, Type, List, Dict, Any
 
+from .aito_response import BaseResponse
 from aito.utils._json_format import JsonFormat
-
-LOG = logging.getLogger('AitoResponse')
 
 
 class BaseHit(JsonFormat):
@@ -121,49 +117,6 @@ class RelateHit(BaseHit):
     def probabilities(self):
         """return probabilities information of the relation"""
         return self.__getitem__('ps')
-
-
-class BaseResponse(JsonFormat):
-    """The base class for the AitoClient request response
-
-    """
-    def __init__(self, json: Dict):
-        """
-        :param json: the original JSON response of the request
-        :type json: Dict
-        """
-        self.json_schema_validate(json)
-        self._json = json
-
-    @property
-    def json(self):
-        """the original JSON response of the request
-
-        :rtype: Dict
-        """
-        return self._json
-
-    def __getitem__(self, item):
-        if item not in self._json:
-            raise KeyError(f'Response does not contain field `{item}`')
-        return self._json[item]
-
-    def __contains__(self, item):
-        return item in self._json
-
-    def __iter__(self):
-        return iter(self._json)
-
-    @classmethod
-    def json_schema(cls):
-        return {'type': 'object'}
-
-    def to_json_serializable(self):
-        return self._json
-
-    @classmethod
-    def from_deserialized_object(cls, obj: Any):
-        return cls(obj)
 
 
 HitType = TypeVar('HitType', bound=BaseHit)
@@ -375,11 +328,17 @@ class EvaluateResponse(BaseResponse):
         return self.__getitem__('accuracy')
 
     @property
-    def test_sample_count(self):
-        """the number of entries in the table that was used as test set"""
+    def test_sample_count(self) -> int:
+        """the number of entries in the table that was used as test set
+
+        :rtype: int
+        """
         return self.__getitem__('testSamples')
 
     @property
-    def train_sample_count(self):
-        """the number of entries in the table that was used to train Aito during evaluation"""
+    def train_sample_count(self) -> int:
+        """the number of entries in the table that was used to train Aito during evaluation
+
+        :rtype: int
+        """
         return self.__getitem__('trainSamples')

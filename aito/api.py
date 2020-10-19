@@ -7,13 +7,15 @@ import tempfile
 import time
 from os import PathLike, unlink
 from pathlib import Path
-from typing import Dict, List, BinaryIO, Union, Tuple, Iterable
+from typing import Dict, List, BinaryIO, Union, Tuple, Iterable, Optional
 
 import ndjson
 import requests as requestslib
 
-from aito.client import AitoClient
-from aito.schema import AitoDatabaseSchema, AitoTableSchema
+import aito.client.requests as aito_requests
+import aito.client.responses as aito_responses
+from aito.client import AitoClient, RequestError
+from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema
 from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 from aito.utils.data_frame_handler import DataFrameHandler
 
@@ -28,11 +30,11 @@ def get_version(client: AitoClient) -> str:
     :return: version information in json format
     :rtype: Dict
     """
-    resp = client.request(method='GET', endpoint='/version')
-    return resp['version']
+    resp = client.request(request_obj=aito_requests.GetVersionRequest())
+    return resp.version
 
 
-def create_database(client: AitoClient, database_schema: Union[AitoDatabaseSchema, Dict]):
+def create_database(client: AitoClient, schema: Union[AitoDatabaseSchema, Dict]):
     """`create a database <https://aito.ai/docs/api/#put-api-v1-schema>`__ using the specified database schema
 
     .. note::
@@ -41,14 +43,10 @@ def create_database(client: AitoClient, database_schema: Union[AitoDatabaseSchem
 
     :param client: the AitoClient instance
     :type client: AitoClient
-    :param database_schema: Aito database schema
-    :type database_schema: Dict
-    :return: the database schema
-    :rtype: Dict
+    :param schema: the schema of the database
+    :type schema: Dict
     """
-    if not isinstance(database_schema, AitoDatabaseSchema):
-        database_schema = AitoDatabaseSchema.from_deserialized_object(database_schema)
-    client.request(method='PUT', endpoint='/api/v1/schema', query=database_schema.to_json_serializable())
+    client.request(request_obj=aito_requests.CreateDatabaseSchemaRequest(schema=schema))
     LOG.info('database schema created')
 
 
@@ -60,8 +58,8 @@ def get_database_schema(client: AitoClient) -> AitoDatabaseSchema:
     :return: Aito database schema
     :rtype: Dict
     """
-    res = client.request(method='GET', endpoint='/api/v1/schema')
-    return AitoDatabaseSchema.from_deserialized_object(res.json)
+    res = client.request(request_obj=aito_requests.GetDatabaseSchemaRequest())
+    return res.schema
 
 
 def delete_database(client: AitoClient):
@@ -73,14 +71,12 @@ def delete_database(client: AitoClient):
 
     :param client: the AitoClient instance
     :type client: AitoClient
-    :return: deleted tables
-    :rtype: Dict
     """
-    client.request(method='DELETE', endpoint='/api/v1/schema')
+    client.request(request_obj=aito_requests.DeleteDatabaseSchemaRequest())
     LOG.info('database deleted')
 
 
-def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTableSchema, Dict]):
+def create_table(client: AitoClient, table_name: str, schema: Union[AitoTableSchema, Dict]):
     """`create a table <https://aito.ai/docs/api/#put-api-v1-schema-table>`__
     with the specified table name and schema
 
@@ -94,16 +90,10 @@ def create_table(client: AitoClient, table_name: str, table_schema: Union[AitoTa
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
-    :param table_schema: Aito table schema
-    :type table_schema: an AitoTableSchema object or a Dict, optional
-    :return: the table schema
-    :rtype: Dict
+    :param schema: Aito table schema
+    :type schema: an AitoTableSchema object or a Dict, optional
     """
-    if not isinstance(table_schema, AitoTableSchema):
-        if not isinstance(table_schema, dict):
-            raise ValueError("the input table schema must be either an AitoTableSchema object or a dict")
-        table_schema = AitoTableSchema.from_deserialized_object(table_schema)
-    client.request(method='PUT', endpoint=f'/api/v1/schema/{table_name}', query=table_schema.to_json_serializable())
+    client.request(request_obj=aito_requests.CreateTableSchemaRequest(table_name=table_name, schema=schema))
     LOG.info(f'table `{table_name}` created')
 
 
@@ -117,8 +107,8 @@ def get_table_schema(client: AitoClient, table_name: str) -> AitoTableSchema:
     :return: the table schema
     :rtype: AitoTableSchema
     """
-    resp = client.request(method='GET', endpoint=f'/api/v1/schema/{table_name}')
-    return AitoTableSchema.from_deserialized_object(resp.json)
+    resp = client.request(request_obj=aito_requests.GetTableSchemaRequest(table_name=table_name))
+    return resp.schema
 
 
 def delete_table(client: AitoClient, table_name: str):
@@ -132,11 +122,65 @@ def delete_table(client: AitoClient, table_name: str):
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
-    :return: deleted table
-    :rtype: Dict
     """
-    client.request(method='DELETE', endpoint=f'/api/v1/schema/{table_name}')
+    client.request(request_obj=aito_requests.DeleteTableSchemaRequest(table_name=table_name))
     LOG.info(f'table `{table_name}` deleted')
+
+
+def create_column(client: AitoClient, table_name: str, column_name: str, schema: Dict):
+    """`add or replace a column <https://aito.ai/docs/api/#put-api-v1-schema-table-column>`__
+
+    .. note::
+
+        requires the client to be setup with the READ-WRITE API key
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param table_name: the name of the table containing the column
+    :type table_name: str
+    :param column_name: the name of the column
+    :type column_name: str
+    :param schema: the schema of the column
+    :type schema: Dict
+    """
+    client.request(request_obj=aito_requests.CreateColumnSchemaRequest(
+        table_name=table_name, column_name=column_name, schema=schema)
+    )
+    LOG.info(f'column `{table_name}.{column_name}` created')
+
+
+def get_column_schema(client: AitoClient, table_name: str, column_name: str) -> AitoColumnTypeSchema:
+    """`get the schema of the specified column <https://aito.ai/docs/api/#get-api-v1-schema-table-column>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param table_name: the name of the table containing the column
+    :type table_name: str
+    :param column_name: the name of the column
+    :type column_name: str
+    :return: the column schema
+    :rtype: AitoColumnTypeSchema
+    """
+    resp = client.request(request_obj=aito_requests.GetColumnSchemaRequest(table_name=table_name, column_name=column_name))
+    return resp.schema
+
+
+def delete_column(client: AitoClient, table_name: str, column_name: str):
+    """`delete a column of a table <https://aito.ai/docs/api/#delete-api-v1-schema-column>`__
+
+    .. note::
+
+        requires the client to be setup with the READ-WRITE API key
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param table_name: the name of the table containing the column
+    :type table_name: str
+    :param column_name: the name of the column
+    :type column_name: str
+    """
+    client.request(request_obj=aito_requests.DeleteColumnSchemaRequest(table_name=table_name, column_name=column_name))
+    LOG.info(f'column `{table_name}.{column_name}` deleted')
 
 
 def get_existing_tables(client: AitoClient) -> List[str]:
@@ -229,6 +273,19 @@ def optimize_table(client: AitoClient, table_name):
     LOG.info(f'table {table_name} optimized')
 
 
+def delete_entries(client: AitoClient, query: Dict):
+    """`Delete the entries <https://aito.ai/docs/api/#post-api-v1-data-delete>`__ according to the criteria
+    given in the query
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the query to describe the target table and filters for which entries to delete.
+    :type query: Dict
+    """
+    client.request(request_obj=aito_requests.DeleteEntries(query=query))
+    LOG.info(f'entries deleted')
+
+
 def upload_entries(
         client: AitoClient,
         table_name: str,
@@ -279,10 +336,10 @@ def upload_entries(
     begin_index, last_index, populated_count = 0, 0, 0
     entries_batch = []
 
-    def _upload_a_batch(begin_idx, last_idx, populated_c, batch_content):
+    def _upload_single_batch(begin_idx, last_idx, populated_c, batch_content):
         try:
             LOG.debug(f'uploading batch {begin_idx}:{last_idx}...')
-            client.request(method='POST', endpoint=f"/api/v1/data/{table_name}/batch", query=batch_content)
+            client.request(request_obj=aito_requests.UploadEntriesRequest(table_name=table_name, entries=batch_content))
             populated_c += len(batch_content)
             LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
         except Exception as e:
@@ -294,14 +351,14 @@ def upload_entries(
         last_index += 1
 
         if last_index % batch_size == 0:
-            populated_count = _upload_a_batch(begin_index, last_index, populated_count, entries_batch)
+            populated_count = _upload_single_batch(begin_index, last_index, populated_count, entries_batch)
 
             begin_index = last_index
             entries_batch = []
 
     # upload the remaining entries
     if last_index % batch_size != 0:
-        populated_count = _upload_a_batch(begin_index, last_index, populated_count, entries_batch)
+        populated_count = _upload_single_batch(begin_index, last_index, populated_count, entries_batch)
 
     if populated_count == 0:
         raise Exception("failed to upload any data into Aito")
@@ -323,7 +380,7 @@ def initiate_upload_file(client: AitoClient, table_name: str) -> Dict:
     :rtype: Dict
     """
     LOG.debug('initiating file upload...')
-    r = client.request(method='POST', endpoint=f"/api/v1/data/{table_name}/file")
+    r = client.request(request_obj=aito_requests.InitiateFileUploadRequest(table_name=table_name))
     return r.json
 
 
@@ -348,7 +405,7 @@ def upload_binary_file_to_s3(initiate_upload_file_response: Dict, binary_file: B
     LOG.debug('uploaded file to S3')
 
 
-def trigger_file_processing(client: AitoClient, table_name: str, upload_session_id: str):
+def trigger_file_processing(client: AitoClient, table_name: str, session_id: str):
     """`Trigger file processing of uploading a file to a table
     <https://aito.ai/docs/api/#post-api-v1-data-table-file-uuid>`__
 
@@ -356,16 +413,15 @@ def trigger_file_processing(client: AitoClient, table_name: str, upload_session_
     :type client: AitoClient
     :param table_name: the name of the table to be uploaded
     :type table_name: str
-    :param upload_session_id: The upload session id from :func:`.initiate_upload_file`
-    :type upload_session_id: str
+    :param session_id: The upload session id from :func:`.initiate_upload_file`
+    :type session_id: str
     """
     LOG.debug('triggering file processing...')
-    session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
-    client.request(method='POST', endpoint=session_end_point)
+    client.request(request_obj=aito_requests.TriggerFileProcessingRequest(table_name=table_name, session_id=session_id))
     LOG.info('triggered file processing')
 
 
-def poll_file_processing_status(client: AitoClient, table_name: str, upload_session_id: str, polling_time: int = 10):
+def poll_file_processing_status(client: AitoClient, table_name: str, session_id: str, polling_time: int = 10):
     """Polling the `file processing status <https://aito.ai/docs/api/#get-api-v1-data-table-file-uuid>`__ until
     the processing finished
 
@@ -373,16 +429,17 @@ def poll_file_processing_status(client: AitoClient, table_name: str, upload_sess
     :type client: AitoClient
     :param table_name: the name of the table to be uploaded
     :type table_name: str
-    :param upload_session_id: The upload session id from :func:`.initiate_upload_file`
-    :type upload_session_id: str
+    :param session_id: The upload session id from :func:`.initiate_upload_file`
+    :type session_id: str
     :param polling_time: polling wait time
     :type polling_time: int
     """
     LOG.debug('polling processing status...')
-    session_end_point = f'/api/v1/data/{table_name}/file/{upload_session_id}'
     while True:
         try:
-            processing_progress_resp = client.request(method='GET', endpoint=session_end_point)
+            processing_progress_resp = client.request(
+                request_obj=aito_requests.GetFileProcessingRequest(table_name=table_name, session_id=session_id)
+            )
             status = processing_progress_resp['status']
             LOG.debug(f"completed count: {status['completedCount']}, throughput: {status['throughput']}")
             if processing_progress_resp['errors']['message'] != 'Last 0 failing rows':
@@ -422,9 +479,9 @@ def upload_binary_file(
     init_upload_resp = initiate_upload_file(client=client, table_name=table_name)
     upload_binary_file_to_s3(initiate_upload_file_response=init_upload_resp, binary_file=binary_file)
     upload_session_id = init_upload_resp['id']
-    trigger_file_processing(client=client, table_name=table_name, upload_session_id=upload_session_id)
+    trigger_file_processing(client=client, table_name=table_name, session_id=upload_session_id)
     poll_file_processing_status(
-        client=client, table_name=table_name, upload_session_id=upload_session_id, polling_time=polling_time
+        client=client, table_name=table_name, session_id=upload_session_id, polling_time=polling_time
     )
 
     LOG.info(f'uploaded file object to table `{table_name}`')
@@ -515,38 +572,65 @@ def quick_add_table(
     unlink(converted_tmp_file.name)
 
 
-def create_job(client: AitoClient, job_endpoint: str, query: Union[List, Dict]) -> Dict:
+def _create_job_request(
+        job_endpoint: Optional[str] = None,
+        query: Optional[Union[List, Dict]] = None,
+        request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]] = None
+) -> aito_requests.CreateJobRequest:
+    """Return the Create Job Request"""
+    if request_obj is None:
+        if job_endpoint is not None and query is not None:
+            create_job_req = aito_requests.CreateJobRequest(endpoint=job_endpoint, query=query)
+        else:
+            raise TypeError("create_job() requires either 'request_obj' or 'job_endpoint' and 'query'")
+    else:
+        if isinstance(request_obj, aito_requests.QueryAPIRequest):
+            create_job_req = aito_requests.CreateJobRequest.from_query_api_request(request_obj=request_obj)
+        else:
+            create_job_req = request_obj
+    return create_job_req
+
+
+def create_job(
+        client: AitoClient,
+        job_endpoint: Optional[str] = None,
+        query: Optional[Union[List, Dict]] = None,
+        request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]] = None,
+) -> aito_responses.CreateJobResponse:
     """Create a `job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
     for a query that takes longer than 30 seconds to run
 
     :param client: the AitoClient instance
     :type client: AitoClient
-    :param job_endpoint: job endpoint
-    :type job_endpoint: str
+    :param job_endpoint: the job endpoint
+    :type job_endpoint: Optional[str]
     :param query: the query for the endpoint
-    :type query: Union[List, Dict]
+    :type query: Optional[Union[List, Dict]]
+    :param request_obj: a :class:`.CreateJobRequest` or an :class:`.QueryAPIRequest` instance
+    :type request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]]
     :return: job information
     :rtype: Dict
     """
-    resp = client.request(method='POST', endpoint=job_endpoint, query=query)
-    return resp.json
+    create_job_req = _create_job_request(job_endpoint=job_endpoint, query=query, request_obj=request_obj)
+    resp = client.request(request_obj=create_job_req)
+    return resp
 
 
-def get_job_status(client: AitoClient, job_id: str) -> Dict:
+def get_job_status(client: AitoClient, job_id: str) -> aito_responses.GetJobStatusResponse:
     """`Get the status of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid>`__ with the specified job id
 
     :param client: the AitoClient instance
     :type client: AitoClient
-    :param job_id: the id of the job
+    :param job_id: the id of the job session
     :type job_id: str
     :return: job status
     :rtype: Dict
     """
-    resp = client.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}')
-    return resp.json
+    resp = client.request(request_obj=aito_requests.GetJobStatusRequest(job_id=job_id))
+    return resp
 
 
-def get_job_result(client: AitoClient, job_id: str) -> Dict:
+def get_job_result(client: AitoClient, job_id: str) -> aito_responses.BaseResponse:
     """`Get the result of a job <https://aito.ai/docs/api/#get-api-v1-jobs-uuid-result>`__ with the specified job id
 
     :param client: the AitoClient instance
@@ -556,14 +640,18 @@ def get_job_result(client: AitoClient, job_id: str) -> Dict:
     :return: the job result
     :rtype: Dict
     """
-    resp = client.request(method='GET', endpoint=f'/api/v1/jobs/{job_id}/result')
-    return resp.json
+    resp = client.request(request_obj=aito_requests.GetJobResultRequest(job_id=job_id))
+    return resp
 
 
 def job_request(
-        client: AitoClient, job_endpoint: str, query: Union[Dict, List] = None, polling_time: int = 10
-) -> Dict:
-    """make a request to an Aito API endpoint using job
+        client: AitoClient,
+        job_endpoint: Optional[str] = None,
+        query: Optional[Union[List, Dict]] = None,
+        request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]] = None,
+        polling_time: int = 10
+) -> aito_responses.BaseResponse:
+    """make a request to an Aito API endpoint using `Job <https://aito.ai/docs/api/#post-api-v1-jobs-query>`__
 
     This method should be used for requests that take longer than 30 seconds, e.g: evaluate
 
@@ -587,24 +675,30 @@ def job_request(
     :param client: the AitoClient instance
     :type client: AitoClient
     :param job_endpoint: job end point
-    :type job_endpoint: str
-    :param query: an Aito query, defaults to None
-    :type query: Union[Dict, List], optional
+    :type job_endpoint: Optional[str]
+    :param query: the query for the endpoint
+    :type query: Optional[Union[List, Dict]]
+    :param request_obj: a :class:`.CreateJobRequest` or an :class:`.QueryAPIRequest` instance
+    :type request_obj: Optional[Union[aito_requests.QueryAPIRequest, aito_requests.CreateJobRequest]]
     :param polling_time: polling wait time, defaults to 10
     :type polling_time: int
     :raises RequestError: an error occurred during the execution of the job
     :return: request JSON content
     :rtype: Dict
     """
-    resp = create_job(client, job_endpoint, query)
-    job_id = resp['id']
-    LOG.debug('polling job status...')
+    create_job_req = _create_job_request(job_endpoint=job_endpoint, query=query, request_obj=request_obj)
+    create_job_resp = client.request(request_obj=create_job_req)
+    job_id = create_job_resp.id
+    LOG.debug(f'polling job {job_id} status...')
     while True:
         job_status_resp = get_job_status(client, job_id)
-        if 'finishedAt' in job_status_resp:
+        if job_status_resp.finished:
+            LOG.debug(f'job {job_id} finished')
             break
         time.sleep(polling_time)
-    return get_job_result(client, job_id)
+    job_result_resp = get_job_result(client, job_id)
+    casted_job_result_resp = create_job_req.result_response_cls(job_result_resp.json)
+    return casted_job_result_resp
 
 
 def get_table_size(client: AitoClient, table_name: str) -> int:
@@ -617,7 +711,7 @@ def get_table_size(client: AitoClient, table_name: str) -> int:
     :return: the number of entries in the table
     :rtype: int
     """
-    resp = client.query({'from': table_name})
+    resp = generic_query(client=client, query={'from': table_name})
     return resp['total']
 
 
@@ -641,7 +735,7 @@ def query_entries(
     :return: the table entries
     :rtype: List[Dict]
     """
-    resp = client.query({'from': table_name, 'offset': offset, 'limit': limit, 'select': select})
+    resp = generic_query(client=client, query={'from': table_name, 'offset': offset, 'limit': limit, 'select': select})
     return resp['hits']
 
 
@@ -809,3 +903,187 @@ def quick_predict(
         client=client, from_table=from_table, predicting_field=predicting_field
     )
     return predict_query
+
+
+def search(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.SearchResponse, RequestError]:
+    """send a query to the `Search API <https://aito.ai/docs/api/#post-api-v1-search>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the search query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`SearchResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: SearchResponse
+    """
+    req = aito_requests.SearchRequest(query=query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def predict(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.PredictResponse, RequestError]:
+    """send a query to the `Predict API <https://aito.ai/docs/api/#post-api-v1-predict>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the predict query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`.PredictResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[PredictResponse, RequestError]
+    """
+    req = aito_requests.PredictRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def recommend(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.RecommendResponse, RequestError]:
+    """send a query to the `Recommend API <https://aito.ai/docs/api/#post-api-v1-recommend>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the recommend query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`.RecommendResponse`  or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[RecommendResponse, RequestError]
+    """
+    req = aito_requests.RecommendRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def evaluate(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.EvaluateResponse, RequestError]:
+    """send a query to the `Evaluate API <https://aito.ai/docs/api/#post-api-v1-evaluate>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the evaluate query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`.EvaluateResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[EvaluateResponse, RequestError]
+    """
+    req = aito_requests.EvaluateRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def similarity(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.SimilarityResponse, RequestError]:
+    """send a query to the `Similarity API <https://aito.ai/docs/api/#post-api-v1-similarity>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the similarity query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`.SimilarityResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[SimilarityResponse, RequestError]
+    """
+    req = aito_requests.SimilarityRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def match(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.MatchResponse, RequestError]:
+    """send a query to the `Match API <https://aito.ai/docs/api/#post-api-v1-match>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the match query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`.MatchResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[MatchResponse, RequestError]
+    """
+    req = aito_requests.MatchRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def relate(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.RelateResponse, RequestError]:
+    """send a query to the `Relate API <https://aito.ai/docs/api/#post-api-v1-relate>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the relate query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`.RelateResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[RelateResponse, RequestError]
+    """
+    req = aito_requests.RelateRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def generic_query(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.HitsResponse, RequestError]:
+    """send a query to the `Generic Query API <https://aito.ai/docs/api/#post-api-v1-qyert>`__
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`HitsResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[HitsResponse, RequestError]
+    """
+    req = aito_requests.GenericQueryRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)

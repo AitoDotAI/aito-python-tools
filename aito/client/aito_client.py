@@ -10,11 +10,10 @@ from typing import Dict, List, Union, Tuple, Optional
 import requests as requestslib
 from aiohttp import ClientSession, ClientResponseError
 
-from .client_request import BaseRequest, SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
-    SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest, AitoRequest
-from .client_response import BaseResponse, SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
-    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse
 from aito.exceptions import BaseError
+from .requests import AitoRequest, BaseRequest, GetVersionRequest
+from .responses import BaseResponse
+
 LOG = logging.getLogger('AitoClient')
 
 
@@ -80,9 +79,11 @@ class AitoClient:
         self.instance_url = instance_url.strip("/")
         self.api_key = api_key
         self.raise_for_status = raise_for_status
+        self.instance_version = None
         if check_credentials:
             try:
-                self.request(method='GET', endpoint='/version')
+                version_resp = self.request(request_obj=GetVersionRequest(), raise_for_status=True)
+                self.instance_version = version_resp.version
             except Exception:
                 raise Error('failed to instantiate Aito Client, please check your credentials')
 
@@ -118,7 +119,7 @@ class AitoClient:
             If set to None, value from Client will be used. Defaults to True
         :type raise_for_status: Optional[bool]
         :raises RequestError: an error occurred during the execution of the request and raise_for_status
-        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
+        :return: a response object or :class:`.RequestError` if an error occurred and not raise_for_status
         :rtype: Union[BaseResponse, RequestError]
 
         Simple request to get the schema of a table:
@@ -147,6 +148,7 @@ class AitoClient:
 
          Sends a `PREDICT <https://aito.ai/docs/api/#post-api-v1-predict>`__ query:
 
+         >>> from aito.client import PredictRequest
          >>> res = client.request(request_obj=PredictRequest(
          ...    query={
          ...        "from": "impressions",
@@ -159,10 +161,10 @@ class AitoClient:
 
          Returns an error when make a request to an incorrect path:
 
-         >>> client.request(method="GET", endpoint="/api/v1/incorrect-path") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+         >>> client.request(method="GET", endpoint="api/v1/incorrect-path") # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
          Traceback (most recent call last):
             ...
-         aito.client.RequestError: failed to GET(/api/v1/incorrect-path): None: The path you requested [/incorrect-path] does not exist
+         ValueError: invalid endpoint 'api/v1/incorrect-path' for BaseRequest
          """
         if request_obj is None:
             if method is not None and endpoint is not None:
@@ -274,7 +276,7 @@ class AitoClient:
             self,
             requests: List[AitoRequest],
             max_concurrent_requests: int = 10
-    ) -> List[BaseResponse]:
+    ) -> List[Union[BaseResponse, RequestError]]:
         """execute a batch of requests asynchronously
 
         This method is useful when sending a batch of requests, for example, when sending a batch of predict requests.
@@ -284,10 +286,11 @@ class AitoClient:
         :param max_concurrent_requests: the number of queries to be sent per batch
         :type max_concurrent_requests: int
         :return: list of request response or exception if a request did not succeed
-        :rtype: List[Dict]
+        :rtype: List[Union[BaseResponse, RequestError]]
 
         Find products that multiple users would most likely buy
 
+        >>> from aito.client import MatchRequest
         >>> users = ['veronica', 'larry', 'alice']
         >>> responses = client.batch_requests([
         ...     MatchRequest(
@@ -319,117 +322,3 @@ class AitoClient:
         loop = asyncio.get_event_loop()
         responses = loop.run_until_complete(run())
         return responses
-
-    def search(self, query: Dict, raise_for_status: Optional[bool] = None) -> Union[SearchResponse, RequestError]:
-        """send a query to the `Search API <https://aito.ai/docs/api/#post-api-v1-search>`__
-
-        :param query: the search query
-        :type query: Dict
-        :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
-            If set to None, value from Client will be used. Defaults to None
-        :type raise_for_status: Optional[bool]
-        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
-        :rtype: Union[SearchResponse, RequestError]
-        """
-        req = SearchRequest(query)
-        return self.request(request_obj=req, raise_for_status=raise_for_status)
-
-    def predict(self, query: Dict, raise_for_status: Optional[bool] = None) -> Union[PredictResponse, RequestError]:
-        """send a query to the `Predict API <https://aito.ai/docs/api/#post-api-v1-predict>`__
-
-        :param query: the predict query
-        :type query: Dict
-        :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
-            If set to None, value from Client will be used. Defaults to None
-        :type raise_for_status: Optional[bool]
-        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
-        :rtype: Union[PredictResponse, RequestError]
-        """
-        req = PredictRequest(query)
-        return self.request(request_obj=req, raise_for_status=raise_for_status)
-
-    def recommend(self, query: Dict, raise_for_status: Optional[bool] = None) -> Union[RecommendResponse, RequestError]:
-        """send a query to the `Recommend API <https://aito.ai/docs/api/#post-api-v1-recommend>`__
-
-        :param query: the recommend query
-        :type query: Dict
-        :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
-            If set to None, value from Client will be used. Defaults to None
-        :type raise_for_status: Optional[bool]
-        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
-        :rtype: Union[RecommendResponse, RequestError]
-        """
-        req = RecommendRequest(query)
-        return self.request(request_obj=req, raise_for_status=raise_for_status)
-
-    def evaluate(self, query: Dict, raise_for_status: Optional[bool] = None) -> Union[EvaluateResponse, RequestError]:
-        """send a query to the `Evaluate API <https://aito.ai/docs/api/#post-api-v1-evaluate>`__
-
-        :param query: the evaluate query
-        :type query: Dict
-        :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
-            If set to None, value from Client will be used. Defaults to None
-        :type raise_for_status: Optional[bool]
-        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
-        :rtype: Union[EvaluateResponse, RequestError]
-        """
-        req = EvaluateRequest(query)
-        return self.request(request_obj=req, raise_for_status=raise_for_status)
-
-    def similarity(
-            self, query: Dict, raise_for_status: Optional[bool] = None
-    ) -> Union[SimilarityResponse, RequestError]:
-        """send a query to the `Similarity API <https://aito.ai/docs/api/#post-api-v1-similarity>`__
-
-        :param query: the similarity query
-        :type query: Dict
-        :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
-            If set to None, value from Client will be used. Defaults to None
-        :type raise_for_status: Optional[bool]
-        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
-        :rtype: Union[SimilarityResponse, RequestError]
-        """
-        req = SimilarityRequest(query)
-        return self.request(request_obj=req, raise_for_status=raise_for_status)
-
-    def match(self, query: Dict, raise_for_status: Optional[bool] = None) -> Union[MatchResponse, RequestError]:
-        """send a query to the `Match API <https://aito.ai/docs/api/#post-api-v1-match>`__
-
-        :param query: the match query
-        :type query: Dict
-        :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
-            If set to None, value from Client will be used. Defaults to None
-        :type raise_for_status: Optional[bool]
-        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
-        :rtype: Union[MatchResponse, RequestError]
-        """
-        req = MatchRequest(query)
-        return self.request(request_obj=req, raise_for_status=raise_for_status)
-
-    def relate(self, query: Dict, raise_for_status: Optional[bool] = None) -> Union[RelateResponse, RequestError]:
-        """send a query to the `Relate API <https://aito.ai/docs/api/#post-api-v1-relate>`__
-
-        :param query: the relate query
-        :type query: Dict
-        :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
-            If set to None, value from Client will be used. Defaults to None
-        :type raise_for_status: Optional[bool]
-        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
-        :rtype: Union[RelateResponse, RequestError]
-        """
-        req = RelateRequest(query)
-        return self.request(request_obj=req, raise_for_status=raise_for_status)
-
-    def query(self, query: Dict, raise_for_status: Optional[bool] = None) -> Union[HitsResponse, RequestError]:
-        """send a query to the `Generic Query API <https://aito.ai/docs/api/#post-api-v1-qyert>`__
-
-        :param query: the query
-        :type query: Dict
-        :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
-            If set to None, value from Client will be used. Defaults to None
-        :type raise_for_status: Optional[bool]
-        :return: request JSON content or :class:`.RequestError` if an error occurred and not raise_for_status
-        :rtype: Union[HitsResponse, RequestError]
-        """
-        req = GenericQueryRequest(query)
-        return self.request(request_obj=req, raise_for_status=raise_for_status)

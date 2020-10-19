@@ -1,4 +1,3 @@
-import configparser
 import json
 import logging.handlers
 import sys
@@ -10,10 +9,9 @@ from typing import Union, TextIO
 
 from aito.client import AitoClient
 from aito.exceptions import BaseError
+from aito.utils._credentials_file_utils import get_credentials_file_config
 
 DEFAULT_CONFIG_DIR = Path.home() / '.config' / 'aito'
-DEFAULT_LOG_DIR = DEFAULT_CONFIG_DIR / 'logs'
-DEFAULT_CREDENTIAL_FILE = DEFAULT_CONFIG_DIR / 'credentials'
 
 LOG = logging.getLogger('Parser')
 
@@ -207,38 +205,6 @@ def load_json_from_parsed_input_arg(parsed_input_arg: Union[Path, TextIO], parsi
 def pyodbc_is_installed() -> bool:
     import importlib
     return True if importlib.util.find_spec('pyodbc') else False
-
-
-def get_credentials_file_config(credentials_file_path=None):
-    if not credentials_file_path:
-        credentials_file_path = DEFAULT_CREDENTIAL_FILE
-    config = configparser.ConfigParser()
-    try:
-        config.read(str(credentials_file_path))
-    except Exception as e:
-        raise ParseError(f"failed to parse credentials file: {e}\n"
-                         f"Please edit or delete the credentials file then run `aito configure`")
-    return config
-
-
-def write_credentials_file_profile(
-        profile_name, instance_url, api_key, credentials_file_path=None
-):
-    if not credentials_file_path:
-        credentials_file_path = DEFAULT_CREDENTIAL_FILE
-
-    if not credentials_file_path.exists():
-        if not credentials_file_path.parent.exists():
-            credentials_file_path.parent.mkdir(parents=True)
-        existing_config = configparser.ConfigParser()
-    else:
-        existing_config = get_credentials_file_config(credentials_file_path)
-    if not existing_config.has_section(profile_name):
-         existing_config.add_section(profile_name)
-    existing_config.set(section=profile_name, option='instance_url', value=instance_url)
-    existing_config.set(section=profile_name, option='api_key', value=api_key)
-    with credentials_file_path.open('w') as f:
-        existing_config.write(f)
 
 
 def create_client_from_parsed_args(parsed_args, check_credentials=True) -> AitoClient:

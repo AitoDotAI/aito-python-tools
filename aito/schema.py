@@ -834,6 +834,7 @@ class AitoDataTypeSchema(AitoSchema, ABC):
 
 
 class AitoBooleanType(AitoDataTypeSchema):
+    """Aito `Boolean Type <https://aito.ai/docs/api/#schema-boolean-type>`__"""
     def __init__(self):
         super().__init__('Boolean')
 
@@ -842,6 +843,7 @@ class AitoBooleanType(AitoDataTypeSchema):
 
 
 class AitoIntType(AitoDataTypeSchema):
+    """Aito `Int Type <https://aito.ai/docs/api/#schema-int-type>`__"""
     def __init__(self):
         super().__init__('Int')
 
@@ -850,6 +852,7 @@ class AitoIntType(AitoDataTypeSchema):
 
 
 class AitoDecimalType(AitoDataTypeSchema):
+    """Aito `Decimal Type <https://aito.ai/docs/api/#schema-decimal-type>`__"""
     def __init__(self):
         super().__init__('Decimal')
 
@@ -858,6 +861,7 @@ class AitoDecimalType(AitoDataTypeSchema):
 
 
 class AitoStringType(AitoDataTypeSchema):
+    """Aito `String Type <https://aito.ai/docs/api/#schema-string-type>`__"""
     def __init__(self):
         super().__init__('String')
 
@@ -866,6 +870,7 @@ class AitoStringType(AitoDataTypeSchema):
 
 
 class AitoTextType(AitoDataTypeSchema):
+    """Aito `Text Type <https://aito.ai/docs/api/#schema-text-type>`__"""
     def __init__(self):
         super().__init__('Text')
 
@@ -927,7 +932,6 @@ class AitoColumnLinkSchema(AitoSchema):
 
 class AitoColumnTypeSchema(AitoSchema):
     """Aito `ColumnType <https://aito.ai/docs/api/#schema-column-type>`__ schema
-
     """
     def __init__(
             self,

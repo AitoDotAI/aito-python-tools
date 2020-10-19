@@ -1,20 +1,23 @@
 import json
+import os
 import shutil
+import unittest
 from pathlib import Path
 from uuid import uuid4
 
 import ndjson
 from parameterized import parameterized
 
-from aito.api import delete_table, check_table_exists, create_table, get_table_schema, upload_entries, query_entries, \
-    query_all_entries, job_request, optimize_table, download_table, copy_table, get_existing_tables, rename_table, \
-    quick_predict_and_evaluate, quick_add_table
+import aito.api as api
+from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema, AitoIntType
+import aito.client.requests as aito_requests
+import aito.client.responses as aito_responses
 from aito.utils._file_utils import read_ndjson_gz_file
 from tests.cases import CompareTestCase
-from tests.sdk.contexts import default_client, grocery_demo_client
+from tests.sdk.contexts import default_client, grocery_demo_client, endpoint_methods_test_context
 
 
-class TestAPI(CompareTestCase):
+class _TestAPIContext(CompareTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -22,23 +25,25 @@ class TestAPI(CompareTestCase):
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         with (cls.input_folder / 'invoice_aito_schema.json').open() as f:
-            cls.default_schema = json.load(f)
+            cls.default_table_schema = json.load(f)
 
-    def delete_table_step(self):
-        delete_table(self.client, self.default_table_name)
-        self.assertEqual(check_table_exists(self.client, self.default_table_name), False)
+    def delete_default_table_and_check(self):
+        api.delete_table(self.client, self.default_table_name)
+        self.assertFalse(api.check_table_exists(self.client, self.default_table_name))
 
-    def create_table_step(self):
-        create_table(self.client, self.default_table_name, self.default_schema)
-        self.assertEqual(check_table_exists(self.client, self.default_table_name), True)
+    def create_default_table_and_check(self):
+        api.create_table(self.client, self.default_table_name, self.default_table_schema)
+        self.assertTrue(api.check_table_exists(self.client, self.default_table_name))
 
-    def get_table_schema_step(self):
-        tbl_schema = get_table_schema(self.client, self.default_table_name)
-        self.assertDictEqual(tbl_schema.to_json_serializable(), self.default_schema)
+    def get_default_table_schema_and_check(self):
+        instance_tbl_schema = api.get_table_schema(self.client, self.default_table_name)
+        self.assertEqual(AitoTableSchema.from_deserialized_object(self.default_table_schema), instance_tbl_schema)
 
+
+class TestAPI(_TestAPIContext):
     def upload_by_batch_step(self, start, end):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)]
-        upload_entries(
+        api.upload_entries(
             self.client,
             table_name=self.default_table_name,
             entries=entries,
@@ -53,7 +58,7 @@ class TestAPI(CompareTestCase):
 
     def upload_by_batch_step_generator(self, start, end):
         entries = self.generator_for_test(start, end)
-        upload_entries(
+        api.upload_entries(
             self.client,
             table_name=self.default_table_name,
             entries=entries,
@@ -61,56 +66,58 @@ class TestAPI(CompareTestCase):
             optimize_on_finished=False)
 
     def query_table_entries_step(self):
-        entries = query_entries(self.client, self.default_table_name, 2, 2)
+        entries = api.query_entries(self.client, self.default_table_name, 2, 2)
         self.assertEqual(entries, [
             {'id': 2, 'name': 'some_name', 'amount': 2},
             {'id': 3, 'name': 'some_name', 'amount': 3}
         ])
 
     def query_table_all_entries_step(self, expected_result):
-        entries = query_entries(self.client, self.default_table_name)
+        entries = api.query_entries(self.client, self.default_table_name)
         self.assertEqual(len(entries), expected_result)
 
     def job_query_step(self):
-        resp = job_request(
+        resp = api.job_request(
             self.client,
             '/api/v1/jobs/_query',
             {'from': self.default_table_name, 'offset': 0, 'limit': 1}
         )
         self.assertEqual(
-            resp,
+            resp.json,
             {'offset': 0, 'total': 8, 'hits': [{'id': 0, 'name': 'some_name', 'amount': 0}]}
         )
 
     def upload_more_and_optimize_step(self, start, end):
         entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)]
-        upload_entries(
+        api.upload_entries(
             self.client,
             table_name=self.default_table_name,
             entries=entries,
             batch_size=1,
             optimize_on_finished=False)
-        optimize_table(self.client, self.default_table_name)
+        api.optimize_table(self.client, self.default_table_name)
 
     def get_all_table_entries_step(self, start, end):
-        entries = query_all_entries(self.client, self.default_table_name)
+        entries = api.query_all_entries(self.client, self.default_table_name)
         self.assertEqual(entries, [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)])
 
     def download_table_step(self, start, end):
-        download_table(self.client, self.default_table_name, self.output_folder)
+        api.download_table(self.client, self.default_table_name, self.output_folder)
         self.addCleanup((self.output_folder / f'{self.default_table_name}.ndjson').unlink)
         with (self.output_folder / f'{self.default_table_name}.ndjson').open() as f:
             entries = ndjson.load(f)
         self.assertEqual(entries,  [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)])
 
     def download_table_gzipped_step(self, start, end):
-        download_table(self.client, self.default_table_name, self.output_folder, file_name='invoices', gzip_output=True)
+        api.download_table(
+            self.client, self.default_table_name, self.output_folder, file_name='invoices', gzip_output=True
+        )
         self.addCleanup((self.output_folder / 'invoices.ndjson.gz').unlink)
         entries = read_ndjson_gz_file(self.output_folder / 'invoices.ndjson.gz')
         self.assertEqual(entries,  [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(start, end)])
 
     def test_functions(self):
-        self.create_table_step()
+        self.create_default_table_and_check()
         self.query_table_all_entries_step(expected_result=0)
         self.upload_by_batch_step(start=0, end=4)
         self.query_table_all_entries_step(expected_result=4)
@@ -122,28 +129,95 @@ class TestAPI(CompareTestCase):
         self.get_all_table_entries_step(start=0, end=12)
         self.download_table_step(start=0, end=12)
         self.download_table_gzipped_step(start=0, end=12)
-        self.addCleanup(self.delete_table_step)
+        self.addCleanup(self.delete_default_table_and_check)
+
+
+class TestAlterSchemaAPI(_TestAPIContext):
+    @unittest.skipUnless(
+        os.environ.get('RUN_ALTER_INSTANCE_DB_TESTS'),
+        "Avoid altering the instance DB when running other tests"
+    )
+    def test_create_and_delete_database(self):
+        self.addCleanup(self.delete_default_table_and_check)
+
+        api.delete_database(client=self.client)
+        self.assertEqual(len(api.get_existing_tables(client=self.client)), 0)
+
+        db_schema = {'schema': {self.default_table_name: self.default_table_schema}}
+        api.create_database(client=self.client, schema=db_schema)
+
+        instance_db_schema = api.get_database_schema(client=self.client)
+        self.assertEqual(AitoDatabaseSchema.from_deserialized_object(db_schema), instance_db_schema)
+        self.assertEqual(len(api.get_existing_tables(client=self.client)), 1)
+        self.assertTrue(api.check_table_exists(self.client, self.default_table_name))
+
+        api.delete_database(client=self.client)
+        self.assertEqual(len(api.get_existing_tables(client=self.client)), 0)
+
+    def test_create_and_delete_table(self):
+        self.addCleanup(self.delete_default_table_and_check)
+        self.create_default_table_and_check()
+        self.get_default_table_schema_and_check()
+        self.delete_default_table_and_check()
 
     def test_alter_table(self):
-        self.create_table_step()
+        self.create_default_table_and_check()
         copy_table_name = f'{self.default_table_name}_copy'
-        copy_table(self.client, self.default_table_name, copy_table_name)
-        db_tables = get_existing_tables(self.client)
+        api.copy_table(self.client, self.default_table_name, copy_table_name)
+        db_tables = api.get_existing_tables(self.client)
         self.assertIn(self.default_table_name, db_tables)
         self.assertIn(copy_table_name, db_tables)
         rename_table_name = f'{self.default_table_name}_rename'
-        rename_table(self.client, copy_table_name, rename_table_name)
-        db_tables = get_existing_tables(self.client)
+        api.rename_table(self.client, copy_table_name, rename_table_name)
+        db_tables = api.get_existing_tables(self.client)
         self.assertIn(self.default_table_name, db_tables)
         self.assertIn(rename_table_name, db_tables)
         self.assertNotIn(copy_table_name, db_tables)
 
         def clean_up():
-            delete_table(self.client, self.default_table_name)
-            delete_table(self.client, copy_table_name)
-            delete_table(self.client, rename_table_name)
+            api.delete_table(self.client, self.default_table_name)
+            api.delete_table(self.client, copy_table_name)
+            api.delete_table(self.client, rename_table_name)
 
         self.addCleanup(clean_up)
+
+    def test_create_and_delete_column(self):
+        self.addCleanup(self.delete_default_table_and_check)
+        self.create_default_table_and_check()
+        api.create_column(
+            client=self.client, table_name=self.default_table_name, column_name='new_col', schema={'type': 'Int'}
+        )
+
+        updated_tbl_schema = AitoTableSchema.from_deserialized_object(self.default_table_schema)
+        new_col_schema = AitoColumnTypeSchema(data_type=AitoIntType())
+        updated_tbl_schema['new_col'] = new_col_schema
+
+        instance_tbl_schema = api.get_table_schema(client=self.client, table_name=self.default_table_name)
+        self.assertEqual(updated_tbl_schema, instance_tbl_schema)
+
+        instance_col_schema = api.get_column_schema(
+            client=self.client, table_name=self.default_table_name, column_name='new_col'
+        )
+        self.assertEqual(new_col_schema, instance_col_schema)
+
+        api.delete_column(client=self.client, table_name=self.default_table_name, column_name='new_col')
+        self.get_default_table_schema_and_check()
+
+
+class TestAlterTableEntries(_TestAPIContext):
+    def test_upload_and_delete_entries(self):
+        self.addCleanup(self.delete_default_table_and_check)
+
+        self.create_default_table_and_check()
+        entries = [{'id': idx, 'name': 'some_name', 'amount': idx} for idx in range(10)]
+        api.upload_entries(client=self.client, table_name=self.default_table_name, entries=entries)
+
+        instance_entries = api.query_entries(self.client, self.default_table_name)
+        self.assertEqual(instance_entries, entries)
+
+        api.delete_entries(client=self.client, query={'from': self.default_table_name, 'where': {'id': {'$gte': 5}}})
+        instance_entries = api.query_entries(self.client, self.default_table_name)
+        self.assertEqual(instance_entries, entries[:5])
 
 
 class TestQuickAddTableAPI(CompareTestCase):
@@ -159,13 +233,13 @@ class TestQuickAddTableAPI(CompareTestCase):
 
         def _default_clean_up():
             try:
-                delete_table(self.client, self.default_table_name)
+                api.delete_table(self.client, self.default_table_name)
             except Exception as e:
                 self.logger.error(f"failed to delete table in cleanup: {e}")
         self.addCleanup(_default_clean_up)
 
     def compare_table_entries_to_file_content(self, table_name: str, exp_file_path: Path, compare_order: bool = False):
-        table_entries = query_entries(self.client, table_name)
+        table_entries = api.query_entries(self.client, table_name)
         with exp_file_path.open() as exp_f:
             file_content = json.load(exp_f)
         if compare_order:
@@ -177,7 +251,7 @@ class TestQuickAddTableAPI(CompareTestCase):
         input_file = self.input_folder / f'{self.default_table_name}.csv'
         self.addCleanup(input_file.unlink)
         shutil.copyfile(self.input_folder / 'invoice.csv', input_file)
-        quick_add_table(client=self.client, input_file=input_file)
+        api.quick_add_table(client=self.client, input_file=input_file)
 
         self.compare_table_entries_to_file_content(
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json')
@@ -187,8 +261,8 @@ class TestQuickAddTableAPI(CompareTestCase):
         self.addCleanup(input_file.unlink)
         shutil.copyfile(self.input_folder / 'invoice.json', input_file)
         with self.assertRaises(ValueError):
-            quick_add_table(client=self.client, input_file=input_file)
-        quick_add_table(
+            api.quick_add_table(client=self.client, input_file=input_file)
+        api.quick_add_table(
             client=self.client, input_file=input_file, table_name=self.default_table_name, input_format='json'
         )
         self.compare_table_entries_to_file_content(
@@ -214,7 +288,25 @@ class TestAPIGroceryCase(CompareTestCase):
     ):
         if error:
             with self.assertRaises(error):
-                quick_predict_and_evaluate(self.client, from_table, predicting_field)
+                api.quick_predict_and_evaluate(self.client, from_table, predicting_field)
         else:
-            predict_query, evaluate_query = quick_predict_and_evaluate(self.client, from_table, predicting_field)
+            predict_query, evaluate_query = api.quick_predict_and_evaluate(self.client, from_table, predicting_field)
             self.assertCountEqual(list(predict_query['where'].keys()), expected_hypothesis_fields)
+
+    @parameterized.expand(endpoint_methods_test_context)
+    def test_endpoint_method(self, endpoint, request_cls, query, response_cls):
+        method = getattr(api, endpoint)
+        resp = method(self.client, query)
+        self.assertTrue(isinstance(resp, response_cls))
+
+    @parameterized.expand(endpoint_methods_test_context)
+    def test_endpoint_method_with_job(self, endpoint, request_cls, query, response_cls):
+        method = getattr(api, endpoint)
+        resp = method(client=self.client, query=query, use_job=True)
+        self.assertTrue(isinstance(resp, response_cls))
+
+    @parameterized.expand(endpoint_methods_test_context)
+    def test_job_request_api(self, endpoint, request_cls, query, response_cls):
+        request_obj = request_cls(query)
+        resp = api.job_request(client=self.client, request_obj=request_obj)
+        self.assertTrue(isinstance(resp, response_cls))

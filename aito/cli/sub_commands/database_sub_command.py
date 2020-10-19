@@ -4,15 +4,14 @@ from abc import ABC, abstractmethod
 from os import unlink
 from typing import Dict
 
-from aito.api import get_database_schema, delete_database, create_table, get_table_schema, delete_table, \
-    get_existing_tables, rename_table, copy_table, upload_entries, upload_binary_file, quick_predict_and_evaluate, \
-    create_database, quick_add_table
+import aito.api as api
 from aito.cli.parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
-    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args, \
-    get_credentials_file_config, write_credentials_file_profile
+    load_json_from_parsed_input_arg, create_client_from_parsed_args, create_sql_connecting_from_parsed_args
 from aito.cli.sub_commands.sub_command import SubCommand
 from aito.client import AitoClient, Error
 from aito.schema import AitoTableSchema
+from aito.utils._credentials_file_utils import get_existing_credentials, write_credentials_file_profile, \
+    mask_instance_url, mask_api_key
 from aito.utils.data_frame_handler import DataFrameHandler
 
 
@@ -27,34 +26,26 @@ class ConfigureSubCommand(SubCommand):
         )
 
     def parse_and_execute(self, parsed_args: Dict):
-        def mask(string):
-            if string is None:
-                return None
-            if len(string) <= 4:
-                return '****'
-            return (len(string) - 4) * '*' + string[-4:]
+        profile = parsed_args['profile']
+        existing_instance_url, existing_api_key = get_existing_credentials(profile_name=profile)
+        if existing_instance_url is not None or existing_api_key is not None:
+            if not prompt_confirmation(f'Profile {profile} already exists. Do you want to replace?'):
+                return 0
 
-        def get_existing_credentials():
-            config = get_credentials_file_config()
-            profile = parsed_args['profile']
-            if profile not in config.sections():
-                return None, None
-            else:
-                return config.get(profile, 'instance_url', fallback=None), config.get(profile, 'api_key', fallback=None)
+        input_ret_val = input(
+            'instance url (i.e: https://instance_name.aito.app): ' if not existing_instance_url
+            else f'instance url [{mask_instance_url(existing_instance_url)}]'
+        )
+        new_instance_url = input_ret_val if input_ret_val else existing_instance_url
+        if not new_instance_url:
+            raise ParseError('instance url must not be empty')
 
-        def prompt(name, existing_value):
-            masked_existing_value = mask(existing_value)
-            new_value = input(f'{name} [{masked_existing_value}]: ')
-            if not new_value:
-                if not existing_value:
-                    raise ParseError(f'{name} must not be empty')
-                else:
-                    new_value = existing_value
-            return new_value
-
-        existing_instance_url, existing_api_key = get_existing_credentials()
-        new_instance_url = prompt('instance url', existing_instance_url)
-        new_api_key = prompt('api key', existing_api_key)
+        input_ret_val = input(
+            'api key [None]' if not existing_instance_url else f'api key [{mask_api_key(existing_api_key)}]'
+        )
+        new_api_key = input_ret_val if input_ret_val else existing_api_key
+        if not new_api_key:
+            raise ParseError('api_key must not be empty')
 
         try:
             AitoClient(instance_url=new_instance_url, api_key=new_api_key, check_credentials=True)
@@ -87,7 +78,7 @@ class QuickAddTableSubCommand(SubCommand):
         table_name = parsed_args.get('table_name')
         client = create_client_from_parsed_args(parsed_args)
 
-        quick_add_table(client=client, input_file=in_f_path, input_format=in_format, table_name=table_name)
+        api.quick_add_table(client=client, input_file=in_f_path, input_format=in_format, table_name=table_name)
         return 0
 
 
@@ -104,7 +95,7 @@ class CreateDatabaseSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         database_schema = load_json_from_parsed_input_arg(parsed_args['input'], 'database schema')
-        create_database(client=client, database_schema=database_schema)
+        api.create_database(client=client, schema=database_schema)
         return 0
 
 
@@ -123,7 +114,7 @@ class CreateTableSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         table_schema = load_json_from_parsed_input_arg(parsed_args['input'], 'table schema')
-        create_table(client, table_name, table_schema)
+        api.create_table(client=client, table_name=table_name, schema=table_schema)
         return 0
 
 
@@ -138,7 +129,7 @@ class GetTableSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
-        print(get_table_schema(client, table_name).to_json_string(indent=2))
+        print(api.get_table_schema(client, table_name).to_json_string(indent=2))
         return 0
 
 
@@ -154,7 +145,7 @@ class DeleteTableSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         if prompt_confirmation(f'Confirm delete table `{table_name}`? The action is irreversible', False):
-            delete_table(client, table_name)
+            api.delete_table(client, table_name)
         return 0
 
 
@@ -170,7 +161,7 @@ class CopyTableSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        copy_table(client, parsed_args['table-name'], parsed_args['copy-table-name'], parsed_args['replace'])
+        api.copy_table(client, parsed_args['table-name'], parsed_args['copy-table-name'], parsed_args['replace'])
         return 0
 
 
@@ -186,7 +177,7 @@ class RenameTableSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        rename_table(client, parsed_args['old-name'], parsed_args['new-name'], parsed_args['replace'])
+        api.rename_table(client, parsed_args['old-name'], parsed_args['new-name'], parsed_args['replace'])
         return 0
 
 
@@ -199,7 +190,7 @@ class ShowTablesSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        tables = get_existing_tables(client)
+        tables = api.get_existing_tables(client)
         print(*sorted(tables), sep='\n')
         pass
 
@@ -213,7 +204,7 @@ class GetDatabaseSubCommand(SubCommand):
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
-        print(get_database_schema(client).to_json_string(indent=2))
+        print(api.get_database_schema(client).to_json_string(indent=2))
         return 0
 
 
@@ -227,7 +218,7 @@ class DeleteDatabaseSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         if prompt_confirmation('Confirm delete the whole database? The action is irreversible', False):
-            delete_database(client)
+            api.delete_database(client)
 
 
 class UploadEntriesSubCommand(SubCommand):
@@ -246,7 +237,7 @@ class UploadEntriesSubCommand(SubCommand):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
         table_entries = load_json_from_parsed_input_arg(parsed_args['input'])
-        upload_entries(client, table_name=table_name, entries=table_entries)
+        api.upload_entries(client, table_name=table_name, entries=table_entries)
         return 0
 
 
@@ -289,14 +280,14 @@ class UploadFileSubCommand(SubCommand):
             'in_format': in_format,
             'out_format': 'ndjson',
             'convert_options': {'compression': 'gzip'},
-            'use_table_schema': get_table_schema(client, table_name)
+            'use_table_schema': api.get_table_schema(client, table_name)
         }
         df_handler = DataFrameHandler()
         df_handler.convert_file(**convert_options)
         converted_tmp_file.close()
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
+            api.upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
 
@@ -322,7 +313,7 @@ class UploadDataFromSQLSubCommand(SubCommand):
         converted_tmp_file.close()
 
         with open(converted_tmp_file.name, 'rb') as in_f:
-            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
+            api.upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0
@@ -352,9 +343,9 @@ class QuickAddTableFromSQLSubCommand(SubCommand):
         DataFrameHandler().df_to_format(result_df, 'ndjson', converted_tmp_file.name, {'compression': 'gzip'})
         converted_tmp_file.close()
 
-        create_table(client, table_name, inferred_schema)
+        api.create_table(client, table_name, inferred_schema)
         with open(converted_tmp_file.name, 'rb') as in_f:
-            upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
+            api.upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
         converted_tmp_file.close()
         unlink(converted_tmp_file.name)
         return 0
@@ -379,14 +370,14 @@ class QuickPredictSubCommand(SubCommand):
         predicting_field = parsed_args['predicting-field']
         client = create_client_from_parsed_args(parsed_args)
 
-        predict_query, evaluate_query = quick_predict_and_evaluate(
+        predict_query, evaluate_query = api.quick_predict_and_evaluate(
             client=client, from_table=from_table, predicting_field=predicting_field
         )
         print("[Predict Query Example]")
         print(json.dumps(predict_query, indent=2))
 
         if parsed_args['evaluate']:
-            evaluate_result = client.evaluate(evaluate_query)
+            evaluate_result = api.evaluate(client=client, query=evaluate_query)
             print("[Evaluation Result]")
             print(f"- Train samples count: {evaluate_result.train_sample_count}")
             print(f"- Test samples count: {evaluate_result.test_sample_count}")
@@ -398,34 +389,45 @@ class QuickPredictSubCommand(SubCommand):
 class QueryToEndpointSubCommand(SubCommand, ABC):
     @property
     @abstractmethod
-    def endpoint(self) -> str:
+    def api_method_name(self) -> str:
         pass
 
+    @property
+    def endpoint_name(self) -> str:
+        return self.api_method_name.replace('_', '-')
+
     def __init__(self):
-        super().__init__(self.endpoint, f'send a query to the {self.endpoint.upper()} API')
+        super().__init__(self.endpoint_name, f'send a query to the {self.api_method_name.upper()} API')
 
     def build_parser(self, parser):
         parser.add_aito_default_credentials_arguments()
         parser.add_argument('query', type=str, help='the query to be sent')
+        parser.add_argument(
+            '--use-job', action='store_true',
+            help='use job for query that takes longer than 30s (default: False)'
+        )
 
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
 
         query_str = parsed_args['query']
         query = json.loads(query_str)
+        use_job = parsed_args['use_job']
 
-        client_method = getattr(client, self.endpoint)
-        resp = client_method(query)
+        client_method = getattr(api, self.api_method_name)
+        resp = client_method(client=client, query=query, use_job=use_job)
 
         print(resp.to_json_string(indent=2))
         return 0
 
 
-SearchSubCommand = type('SearchSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'search'})
-PredictSubCommand = type('PredictSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'predict'})
-RecommendSubCommand = type('RecommendSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'recommend'})
-EvaluateSubCommand = type('EvaluateSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'evaluate'})
-SimilaritySubCommand = type('SimilaritySubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'similarity'})
-MatchSubCommand = type('MatchSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'match'})
-RelateSubCommand = type('RelateSubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'relate'})
-QuerySubCommand = type('QuerySubCommand', (QueryToEndpointSubCommand,), {'endpoint': 'query'})
+SearchSubCommand = type('SearchSubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'search'})
+PredictSubCommand = type('PredictSubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'predict'})
+RecommendSubCommand = type('RecommendSubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'recommend'})
+EvaluateSubCommand = type('EvaluateSubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'evaluate'})
+SimilaritySubCommand = type('SimilaritySubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'similarity'})
+MatchSubCommand = type('MatchSubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'match'})
+RelateSubCommand = type('RelateSubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'relate'})
+GenericQuerySubCommand = type(
+    'GenericQuerySubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'generic_query'}
+)

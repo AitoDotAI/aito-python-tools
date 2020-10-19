@@ -5,12 +5,10 @@ from aiohttp import ClientSession
 from parameterized import parameterized
 
 from aito.client import AitoClient, Error, RequestError
-from aito.client_request import BaseRequest, SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
-    SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest
-from aito.client_response import SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, \
-    SimilarityResponse, MatchResponse, RelateResponse, HitsResponse, BaseResponse
+from aito.client.requests import BaseRequest, GenericQueryRequest
+from aito.client.responses import BaseResponse, HitsResponse
 from tests.cases import CompareTestCase
-from tests.sdk.contexts import default_client, grocery_demo_client
+from tests.sdk.contexts import default_client, grocery_demo_client, endpoint_methods_test_context
 
 
 class TestAitoClient(CompareTestCase):
@@ -45,53 +43,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
         cls.client = grocery_demo_client()
         cls.loop = asyncio.new_event_loop()
 
-    @parameterized.expand([
-        ('search', SearchRequest, {"from": "users"}, SearchResponse),
-        (
-                'predict',
-                PredictRequest,
-                {"from": "products", "where": {"name": "Pirkka banana"}, "predict": "tags"},
-                PredictResponse
-        ),
-        (
-                'recommend',
-                RecommendRequest,
-                {"from": "impressions", "recommend": "product", "goal": {"session.user": "veronica"}},
-                RecommendResponse
-        ),
-        (
-                'evaluate',
-                EvaluateRequest,
-                {
-                    "test": {"$index": {"$mod": [10, 0]}},
-                    "evaluate": {
-                        "from": "products",
-                        "where": {"name": {"$get": "name"}},
-                        "match": "tags"
-                    }
-                },
-                EvaluateResponse
-        ),
-        (
-                'similarity',
-                SimilarityRequest,
-                {"from": "products", "similarity": {"name": "rye bread"}},
-                SimilarityResponse
-        ),
-        (
-                'match',
-                MatchRequest,
-                {"from": "impressions", "where": {"session.user": "veronica"}, "match": "product"},
-                MatchResponse
-        ),
-        ('relate', RelateRequest, {"from": "products", "where": {"$exists": "name"}, "relate": "tags"}, RelateResponse),
-        (
-                'query',
-                GenericQueryRequest,
-                {"from": "products", "where": {"name": "Pirkka banana"}, "get": "tags", "orderBy": "$p"},
-                HitsResponse
-        ),
-    ])
+    @parameterized.expand(endpoint_methods_test_context)
     def test_request(self, endpoint, request_cls, query, response_cls):
         async def test_async_request():
             async with ClientSession() as session:
@@ -101,11 +53,6 @@ class TestAitoClientGroceryCase(CompareTestCase):
         self.logger.debug('test request method')
         req = request_cls(query)
         resp = self.client.request(request_obj=req)
-        self.assertTrue(isinstance(resp, response_cls))
-
-        self.logger.debug('test endpoint method')
-        method = self.client.__getattribute__(endpoint)
-        resp = method(query)
         self.assertTrue(isinstance(resp, response_cls))
 
         self.logger.debug('test async request')

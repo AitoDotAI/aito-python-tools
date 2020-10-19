@@ -6,9 +6,9 @@ Changelog
 
 This version contains changes on how you make requests with the :py:class:`~aito.client.AitoClient`.
 In addition to specifying the request method and endpoint as before, you can now use different
-:py:mod:`Request objects <aito.client_request>` or use the endpoint methods of the client,
-i.e: :py:func:`aito.client.AitoClient.predict`. The client now returns the enriched
-:py:mod:`Response objects <aito.client_response>` instead of JSON as before.
+:py:mod:`Request objects <aito.client.requests>` or use the endpoint methods in the API,
+i.e: :py:func:`aito.api.predict`.
+The client now returns enriched :py:mod:`Response objects <aito.client.responses>` instead of JSON as before.
 
 Helper methods of the AitoClient, e.g: create_table, are moved to the :py:mod:`aito.api` module.
 
@@ -19,8 +19,20 @@ SDK
 ^^^
 
 - Schema objects validation in the :py:mod:`aito.schema` module is improved.
-- Added the :py:mod:`aito.client_request` module which contains the request objects for :py:class:`~aito.client.AitoClient`.
-- Added the :py:mod:`aito.client_response` module which contains the response objects returned by the :py:class:`~aito.client.AitoClient`.
+- Refactored the client into the **aito.client** subpacakge:
+  - Added the :py:mod:`aito.client.requests` subpackage which contains Request Classes for the **AitoClient**.
+  - Added the :py:mod:`aito.client.responses` subpackage which contains Response Classes returned by the **AitoClient**.
+  - You can import the **AitoClient** the same way as before:
+
+    .. code-block:: python
+
+      from aito.client import AitoClient
+
+    You can import the request and response classes directly from the subpackage:
+
+    .. code-block:: python
+
+      from aito.client import PredictRequest, PredictResponse
 
 AitoClient
 """"""""""
@@ -29,7 +41,6 @@ AitoClient
   - Both **AitoClient** and **AitoClient.request** now have a `raise_for_status` argument which controls whether the client should raise or return an **aito_client.RequestError** object when an error occurs during sending a request.
   - Added the **aito.AitoClient.async_request** method to execute a request asynchronously using `aiohttp ClientSession`_
   - The **async_requests** method is deprecated, use **AitoClient.batch_requests** instead.
-  - Added the following methods to send a query to Aito API Endpoint: **AitoClient.search**, **AitoClient.predict**, **AitoClient.recommend**, **AitoClient.evaluate**, **AitoClient.similarity**, **AitoClient.match**, **AitoClient.relate**, **AitoClient.query**
 
 
 API functions
@@ -44,11 +55,12 @@ API functions
     client = AitoClient(your_instance_url, your_instance_api_key)
     get_database_schema(client)
 
-- Added 3 new api functions: **quick_add_table**,  **quick_predict (BETA)** and **quick_predict_and_evaluate (BETA)**
+- Added the endpoint methods to send a query to Aito API Endpoint: **search**, **predict**, **recommend**, **evaluate**, **similarity**, **match**, **relate**, **generic_query**
+- Added the following new api functions: **create_column**, **get_column_schema**, **delete_column**,  **delete_entries**, **quick_add_table**,  **quick_predict (BETA)** and **quick_predict_and_evaluate (BETA)**
 
 CLI
 ^^^
-- Added the following commands to send a query to Aito API Endpoint: **search**, **predict**, **recommend**, **evaluate**, **similarity**, **match**, **relate**, **query**
+- Added the following commands to send a query to Aito API Endpoint: **search**, **predict**, **recommend**, **evaluate**, **similarity**, **match**, **relate**, **generic-query**
 - Added the **create-database** command to create database using the Database Schema
 - Removed the **--encoding** flag in the **convert** and the **infer-table-schema** command
 - **Beta**: Added the **quick-predict** command to generate an example predict query and evaluate its performance
