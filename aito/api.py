@@ -867,13 +867,14 @@ def quick_predict_and_evaluate(
         'select': ['$p', 'feature', '$why']
     }
 
-    pred_query_with_get_op = dict(predict_query)
-    for col in pred_query_with_get_op['where']:
-        pred_query_with_get_op['where'][col] = {'$get': col}
+    evaluating_pred_query = dict(predict_query)
+    for col in evaluating_pred_query['where']:
+        evaluating_pred_query['where'][col] = {'$get': col}
+    evaluating_pred_query.pop('select')
 
     evaluate_query = {
         'test': {'$index': {"$mod": [10, 0]}},
-        'evaluate': pred_query_with_get_op
+        'evaluate': evaluating_pred_query
     }
 
     return predict_query, evaluate_query
