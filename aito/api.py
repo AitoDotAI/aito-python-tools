@@ -282,7 +282,7 @@ def delete_entries(client: AitoClient, query: Dict):
     :param query: the query to describe the target table and filters for which entries to delete.
     :type query: Dict
     """
-    client.request(request_obj=aito_requests.DeleteEntries(query=query))
+    client.request(request_obj=aito_requests.DeleteEntriesRequest(query=query))
     LOG.info(f'entries deleted')
 
 
