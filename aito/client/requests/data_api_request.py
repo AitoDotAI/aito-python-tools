@@ -56,7 +56,7 @@ class UploadEntriesRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
         return cls(table_name=groups(1), entries=query)
 
 
-class DeleteEntries(_PostRequest, _FinalRequest, _DataAPIRequest):
+class DeleteEntriesRequest(_PostRequest, _FinalRequest, _DataAPIRequest):
     """Request to `Delete entries of a table <https://aito.ai/docs/api/#post-api-v1-data-delete>`__"""
     endpoint = f'{_DataAPIRequest.endpoint_prefix}/_delete'
     response_cls = aito_resp.BaseResponse
