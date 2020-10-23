@@ -533,3 +533,11 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.parse_and_execute(['create-database', str(database_schema_fp)], expected_args)
         self.assertEqual(len(get_existing_tables(self.client)), 1)
         self.assertTrue(check_table_exists(self.client, self.default_table_name))
+
+    def test_sylvi_command(self):
+        expected_args = {
+            'command': 'sylvi',
+            'activity': 'watching',
+            **self.default_parser_args
+        }
+        self.parse_and_execute(parsing_args=['sylvi', 'watching'], expected_args=expected_args)
