@@ -17,7 +17,7 @@ from .sub_commands.database_sub_command import ConfigureSubCommand, QuickAddTabl
     UploadEntriesSubCommand, UploadBatchSubCommand, UploadFileSubCommand, UploadDataFromSQLSubCommand, \
     QuickAddTableFromSQLSubCommand, GetDatabaseSubCommand, GetTableSubCommand, QuickPredictSubCommand, SearchSubCommand, \
     PredictSubCommand, RecommendSubCommand, EvaluateSubCommand, SimilaritySubCommand, MatchSubCommand, RelateSubCommand, \
-    GenericQuerySubCommand, CreateDatabaseSubCommand
+    GenericQuerySubCommand, CreateDatabaseSubCommand, DemoSylviSubCOmmand
 from .sub_commands.infer_table_schema_sub_command import InferTableSchemaSubCommand
 from .sub_commands.sub_command import SubCommand
 
@@ -50,7 +50,8 @@ class MainParser(ArgParser):
         SimilaritySubCommand(),
         MatchSubCommand(),
         RelateSubCommand(),
-        GenericQuerySubCommand()
+        GenericQuerySubCommand(),
+        DemoSylviSubCOmmand()
     ]
 
     def __init__(self, commands: List[SubCommand] = None):
