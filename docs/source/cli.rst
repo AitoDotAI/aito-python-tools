@@ -344,6 +344,19 @@ Example::
 
   $ aito convert ndjson -j < path/to/myNDJSONFile.ndjson > path/to/convertedFile.json
 
+
+Sylvi
+-----
+
+To see help::
+
+  $ aito sylvi
+
+Example::
+
+  $ aito sylvi walking
+
+
 Troubleshooting
 ~~~~~~~~~~~~~~~
 
