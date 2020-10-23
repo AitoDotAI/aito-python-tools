@@ -431,3 +431,36 @@ RelateSubCommand = type('RelateSubCommand', (QueryToEndpointSubCommand,), {'api_
 GenericQuerySubCommand = type(
     'GenericQuerySubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'generic_query'}
 )
+
+
+class DemoSylviSubCOmmand(SubCommand, ABC):
+    def __init__(self):
+        super().__init__(
+            'sylvi', 'print something cool'
+        )
+
+    def build_parser(self, parser):
+        parser.add_argument('activity', type=str, choices=['watching', 'running'], help='choose the activity')
+
+    def parse_and_execute(self, parsed_args: Dict):
+        activity = parsed_args['activity']
+        if activity == 'watching':
+            print(r'''
+ |/^-----^\
+ |V  o o  V
+ | |  Y  |
+ |  \ Q /
+ |  / - \
+ |  |    \
+ |  |     \    )
+ |  || (___\====
+            ''')
+        elif activity == 'running':
+            print(r"""
+              .--~~,__
+ :-....,-------`~~'._.'
+  `-,,,  ,_      ;'~U'
+   _,-' ,'`-__; '--.
+  (_/'~~      ''''(;
+            """)
+        return 0
