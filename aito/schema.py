@@ -190,7 +190,10 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
     def _infer_language(cls, samples: Iterable[str]) -> Optional[str]:
         """infer language from samples"""
         concatenated_sample_text = ' '.join(samples)
-        detected_langs_and_probs = detect_langs(concatenated_sample_text)
+        try:
+            detected_langs_and_probs = detect_langs(concatenated_sample_text)
+        except:
+            detected_langs_and_probs = None
         if detected_langs_and_probs:
             LOG.debug(f'inferred languages and probabilities: {detected_langs_and_probs}')
             most_probable_lang_and_prob = detected_langs_and_probs[0]
@@ -694,7 +697,8 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         'timedelta': 'String',
         'time': 'String',
         'period': 'String',
-        'mixed': 'Text'
+        'mixed': 'Text',
+        'empty': 'String'
     }
 
     def __init__(self, aito_dtype: str):
@@ -807,7 +811,11 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         """
         sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
         LOG.debug('inferring pandas dtype from sample values...')
-        inferred_dtype = pd.api.types.infer_dtype(sampled_values)
+
+        if len(series) == series.isna().sum(): # pandas will infer empty series as floating point as default
+            inferred_dtype = 'empty'
+        else:
+            inferred_dtype = pd.api.types.infer_dtype(sampled_values)
         LOG.debug(f'inferred pandas dtype: {inferred_dtype}')
         if inferred_dtype not in cls._pandas_dtypes_name_to_aito_type:
             LOG.debug(f'failed to convert pandas dtype {inferred_dtype} to aito dtype')

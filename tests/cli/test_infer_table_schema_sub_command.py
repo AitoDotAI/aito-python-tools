@@ -116,6 +116,21 @@ class TestInferTableSchema(ParserAndCLITestCase):
             )
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema.json')
 
+    def test_infer_schema_from_csv_empty_columns(self):
+        expected_args = {
+            'decimal': '.',
+            'delimiter': ',',
+            'input': self.input_folder / 'invoice_empty_columns.csv',
+            'input-format': 'csv',
+            **self.default_main_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(
+                ['infer-table-schema', 'csv',
+                 str((self.input_folder / 'invoice_empty_columns.csv'))],
+                expected_args, stub_stdout=out_f
+            )
+
     def test_infer_schema_from_excel_stdin(self):
         self.parse_and_execute(
             ['infer-table-schema', 'excel'],
