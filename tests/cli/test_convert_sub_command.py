@@ -240,6 +240,22 @@ class TestConvert(ParserAndCLITestCase):
                 self.out_file_path.open('w') as out_f:
             self.parse_and_execute(['convert', 'csv', '-j'], expected_args, in_f, out_f)
 
+    def test_csv_too_wide_rows(self):
+        expected_args = {
+            'input-format': 'csv',
+            'input': sys.stdin,
+            'json': True,
+            'delimiter': ',',
+            'decimal': '.',
+            'use_table_schema': None,
+            'create_table_schema': None,
+            **self.default_main_parser_args
+        }
+        with (self.input_folder / 'invoice_too_wide_rows.csv').open() as in_f, \
+                self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(['convert', 'csv', '-j'], expected_args, in_f, out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
+
     def test_excel_to_ndjson_stdin(self):
         expected_args = {
             'input-format': 'excel',

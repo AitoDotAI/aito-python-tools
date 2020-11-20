@@ -130,6 +130,7 @@ class TestInferTableSchema(ParserAndCLITestCase):
                  str((self.input_folder / 'invoice_empty_columns.csv'))],
                 expected_args, stub_stdout=out_f
             )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema_empty_columns.json')
 
     def test_infer_schema_from_excel_stdin(self):
         self.parse_and_execute(
