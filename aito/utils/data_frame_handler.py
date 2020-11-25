@@ -202,6 +202,7 @@ class DataFrameHandler:
             apply_functions = self.default_apply_functions
         df = self._apply_functions_on_df(df, apply_functions)
 
+        # if no schema is predefined, infer the schema and use the inferred schema
         used_table_schema = use_table_schema
         if used_table_schema is None:
             used_table_schema = AitoTableSchema.infer_from_pandas_data_frame(df)

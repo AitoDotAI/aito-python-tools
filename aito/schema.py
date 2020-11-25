@@ -674,7 +674,13 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
             token_separator=obj.get('tokenSeparator')
         )
 
-class DataSeriesProperties() :
+class DataSeriesProperties :
+    """DataSeriesProperties is an utility class that is used to inspect pandas data series
+       properties and infer the Aito data type based on it. It checks the maximum and
+       minimum value and it will convert integers into string, if Aito does support the
+       numeric range.
+    """
+
     _pandas_dtypes_name_to_aito_type = {
         'string': 'Text',
         'bytes': 'String',
@@ -705,19 +711,23 @@ class DataSeriesProperties() :
         self.min_value = min_value
         self.max_value = max_value
 
-        self.inferred_aito_dtype = DataSeriesProperties.pandas_dtype_to_aito_dtype(pandas_dtype)
-
         if pandas_dtype == 'integer' and (max_value > self.MAX_INT_VALUE or min_value < self.MIN_INT_VALUE):
             self.target_aito_dtype = 'String' # neither pandas (!) or Aito supports integers this large
         else:
-            self.target_aito_dtype = self.inferred_aito_dtype
+            self.target_aito_dtype = DataSeriesProperties.pandas_dtype_to_aito_dtype(pandas_dtype)
 
             
     @classmethod
-    def pandas_dtype_to_aito_dtype(cls, pandas_dtype):
+    def pandas_dtype_to_aito_dtype(cls, pandas_dtype) -> str:
+        """ Converts a pandas data type into Aito data type
+
+        :rtype: str
+        """
         return cls._pandas_dtypes_name_to_aito_type[pandas_dtype]
 
-    def to_datatype_schema(self) -> 'AitoDataTypeSchema' :
+    def to_data_type_schema(self) -> 'AitoDataTypeSchema':
+        """ Provides the AitoDataTypeSchema that is inferred for this data series
+        """
         return AitoDataTypeSchema.from_deserialized_object(self.target_aito_dtype)
 
     @classmethod
@@ -866,7 +876,7 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         :return: inferred Aito type
         :rtype: str
         """
-        return DataSeriesProperties._infer_from_pandas_series(series, max_sample_size).to_datatype_schema()
+        return DataSeriesProperties._infer_from_pandas_series(series, max_sample_size).to_data_type_schema()
 
     @classmethod
     def infer_from_samples(cls, samples: Iterable, max_sample_size: int = 100000) -> 'AitoDataTypeSchema':

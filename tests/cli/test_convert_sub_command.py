@@ -226,7 +226,7 @@ class TestConvert(ParserAndCLITestCase):
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
 
     def test_csv_with_huge_numbers_and_schema(self):
-        schema_path = self.input_folder / 'invoice_aito_schema_huge_numbers.json'
+        schema_path = self.input_folder / 'invoice_aito_schema.json'
         expected_args = {
             'input-format': 'csv',
             'input': sys.stdin,

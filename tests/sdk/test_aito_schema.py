@@ -200,7 +200,7 @@ class TestAitoColumnLink(BaseTestCase):
             AitoColumnLinkSchema.from_deserialized_object('tbl1.col'), AitoColumnLinkSchema('tbl', 'col')
         )
 
-class TestDataSerieProperties(BaseTestCase):
+class TestDataSeriesProperties(BaseTestCase):
     @parameterized.expand([
         (
                 'integer',
@@ -252,7 +252,7 @@ class TestDataSerieProperties(BaseTestCase):
             ds.max_value,
             expected.max_value)
         self.assertEqual(
-            ds.aito_dtype,
+            ds.target_aito_dtype,
             aito_dtype)
     
 

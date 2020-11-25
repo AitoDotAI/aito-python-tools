@@ -146,7 +146,7 @@ class TestInferTableSchema(ParserAndCLITestCase):
                  str((self.input_folder / 'invoice_with_huge_numbers.csv'))],
                 expected_args, stub_stdout=out_f
             )
-        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema_huge_numbers.json')
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema.json')
 
     def test_infer_schema_from_excel_stdin(self):
         self.parse_and_execute(
