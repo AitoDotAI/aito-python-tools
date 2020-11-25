@@ -7,7 +7,7 @@ from typing import List, Dict, Callable
 import pandas as pd
 
 from aito.utils._typing import *
-from aito.schema import AitoTableSchema, AitoDataTypeSchema
+from aito.schema import AitoTableSchema, DataSeriesProperties
 
 LOG = logging.getLogger('DataFrameHandler')
 
@@ -19,7 +19,7 @@ class DataFrameHandler:
 
     def __init__(self):
         self.default_options = {
-            'csv': {},
+            'csv': {'index_col':False, 'error_bad_lines':False, 'warn_bad_lines':True, 'engine':'python'},
             'excel': {},
             'json': {'orient': 'records'},
             'ndjson': {'orient': 'records', 'lines': True}
@@ -91,21 +91,20 @@ class DataFrameHandler:
         for col_name in (table_schema_columns - df_columns):
             LOG.warning(f"column `{col_name}` found in the input schema but not found in the input data")
 
-        cast_type_map = {}
+        conversion_map = {}
         for col_name in table_schema_columns.intersection(df_columns):
             col_schema = table_schema[col_name]
             col_df_nullable = df[col_name].isna().any()
             if col_df_nullable and not col_schema.nullable:
                 raise ValueError(f"column `{col_name}` is nullable but stated non-nullable in the input schema")
-            col_df_aito_type = AitoDataTypeSchema._infer_from_pandas_series(df[col_name])
-            LOG.debug(f"column `{col_name}` inferred aito type: {col_df_aito_type}")
-            col_schema_aito_type = col_schema.data_type
-            if col_df_aito_type != col_schema_aito_type and \
-                    col_df_aito_type.to_python_type() != col_schema_aito_type.to_python_type():
-                cast_type_map[col_name] = col_schema_aito_type.to_python_type()
+            conversion_map[col_name] = col_schema.to_conversion()
 
-        LOG.debug(f"casting dataframe columns: {cast_type_map}")
-        converted_df = df.astype(dtype=cast_type_map)
+        LOG.debug(f"casting dataframe columns: {conversion_map}")
+        converted_df = df
+        for col_name in conversion_map:
+            conversion = conversion_map[col_name]
+            converted_df[col_name] = converted_df[col_name].apply(conversion)
+
         LOG.debug(f"converted the dataframe according to the schema")
         return converted_df
 
@@ -203,10 +202,11 @@ class DataFrameHandler:
             apply_functions = self.default_apply_functions
         df = self._apply_functions_on_df(df, apply_functions)
 
-        if use_table_schema:
-            if not isinstance(use_table_schema, AitoTableSchema) and not isinstance(use_table_schema, dict):
-                raise ValueError("the input table schema must be either an AitoTableSchema object or a dict")
-            df = self.convert_df_using_aito_table_schema(df, use_table_schema)
+        used_table_schema = use_table_schema
+        if used_table_schema is None:
+            used_table_schema = AitoTableSchema.infer_from_pandas_data_frame(df)
+
+        df = self.convert_df_using_aito_table_schema(df, used_table_schema)
 
         if out_format != in_format or convert_options or use_table_schema:
             self.df_to_format(df, out_format, write_output, convert_options)

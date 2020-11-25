@@ -225,6 +225,23 @@ class TestConvert(ParserAndCLITestCase):
             self.parse_and_execute(['convert', 'csv', '-d', ';', '-p', ',', '-j'], expected_args, in_f, out_f)
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
 
+    def test_csv_with_huge_numbers_and_schema(self):
+        schema_path = self.input_folder / 'invoice_aito_schema_huge_numbers.json'
+        expected_args = {
+            'input-format': 'csv',
+            'input': sys.stdin,
+            'json': True,
+            'delimiter': ',',
+            'decimal': '.',
+            'use_table_schema': schema_path,
+            'create_table_schema': None,
+            **self.default_main_parser_args
+        }
+        with (self.input_folder / 'invoice_with_huge_numbers.csv').open() as in_f, \
+                self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(['convert', 'csv', '-s', str(schema_path), '-j'], expected_args, in_f, out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_with_huge_numbers.json')
+
     def test_csv_with_huge_numbers(self):
         expected_args = {
             'input-format': 'csv',
@@ -239,6 +256,7 @@ class TestConvert(ParserAndCLITestCase):
         with (self.input_folder / 'invoice_with_huge_numbers.csv').open() as in_f, \
                 self.out_file_path.open('w') as out_f:
             self.parse_and_execute(['convert', 'csv', '-j'], expected_args, in_f, out_f)
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_with_huge_numbers.json')
 
     def test_csv_too_wide_rows(self):
         expected_args = {

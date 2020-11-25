@@ -200,6 +200,61 @@ class TestAitoColumnLink(BaseTestCase):
             AitoColumnLinkSchema.from_deserialized_object('tbl1.col'), AitoColumnLinkSchema('tbl', 'col')
         )
 
+class TestDataSerieProperties(BaseTestCase):
+    @parameterized.expand([
+        (
+                'integer',
+                [1, 2, 3],
+                DataSeriesProperties('integer', 1, 3),
+                'Int',
+        ),
+        (
+                'within-bounds-integer',
+                [DataSeriesProperties.MIN_INT_VALUE, 2, DataSeriesProperties.MAX_INT_VALUE],
+                DataSeriesProperties('integer', DataSeriesProperties.MIN_INT_VALUE, DataSeriesProperties.MAX_INT_VALUE),
+                'Int',
+        ),
+        (
+                'big-integer',
+                [1, 2, DataSeriesProperties.MAX_INT_VALUE + 1],
+                DataSeriesProperties('integer', 1, DataSeriesProperties.MAX_INT_VALUE + 1),
+                'String',
+        ),
+        (
+                'big-negative-integer',
+                [DataSeriesProperties.MIN_INT_VALUE - 1, 2, 3],
+                DataSeriesProperties('integer', DataSeriesProperties.MIN_INT_VALUE - 1, 3),
+                'String',
+        ),
+        (
+                'empty',
+                [],
+                DataSeriesProperties('empty', None, None),
+                'String',
+        ),
+        (
+                'whitespace',
+                [" ", "", "  "],
+                DataSeriesProperties('string', None, None),
+                'Text',
+        )
+    ])
+
+    def test_from_series(self, _, serie, expected, aito_dtype):
+        ds = DataSeriesProperties._infer_from_pandas_series(pd.Series(serie))
+        self.assertEqual(
+            ds.pandas_dtype,
+            expected.pandas_dtype)
+        self.assertEqual(
+            ds.min_value,
+            expected.min_value)
+        self.assertEqual(
+            ds.max_value,
+            expected.max_value)
+        self.assertEqual(
+            ds.aito_dtype,
+            aito_dtype)
+    
 
 class TestAitoColumnTypeSchema(BaseTestCase):
     @parameterized.expand([
