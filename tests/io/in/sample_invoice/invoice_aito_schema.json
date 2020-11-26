@@ -1,23 +1,23 @@
 {
-     "columns": {
-         "Remark": {
+    "columns": {
+        "Remark": {
             "analyzer": "en",
             "nullable": true,
             "type": "Text"
-         },
-         "amount": {
+        },
+        "amount": {
             "nullable": false,
             "type": "Decimal"
-         },
-         "id": {
+        },
+        "id": {
             "nullable": false,
             "type": "Int"
-         },
-         "name": {
+        },
+        "name": {
             "analyzer": "en",
             "nullable": false,
             "type": "Text"
-         }
-     },
-     "type": "table"
+        }
+    },
+    "type": "table"
 }

@@ -930,7 +930,7 @@ class AitoStringType(AitoDataTypeSchema):
         super().__init__('String')
 
     def to_python_type(self):
-       return str
+        return str
 
 class AitoTextType(AitoDataTypeSchema):
     """Aito `Text Type <https://aito.ai/docs/api/#schema-text-type>`__"""
