@@ -190,7 +190,10 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
     def _infer_language(cls, samples: Iterable[str]) -> Optional[str]:
         """infer language from samples"""
         concatenated_sample_text = ' '.join(samples)
-        detected_langs_and_probs = detect_langs(concatenated_sample_text)
+        try:
+            detected_langs_and_probs = detect_langs(concatenated_sample_text)
+        except:
+            detected_langs_and_probs = None
         if detected_langs_and_probs:
             LOG.debug(f'inferred languages and probabilities: {detected_langs_and_probs}')
             most_probable_lang_and_prob = detected_langs_and_probs[0]
@@ -671,11 +674,13 @@ class AitoTokenNgramAnalyzerSchema(AitoAnalyzerSchema):
             token_separator=obj.get('tokenSeparator')
         )
 
+class DataSeriesProperties :
+    """DataSeriesProperties is an utility class that is used to inspect pandas data series
+       properties and infer the Aito data type based on it. It checks the maximum and
+       minimum value and it will convert integers into string, if Aito does support the
+       numeric range.
+    """
 
-class AitoDataTypeSchema(AitoSchema, ABC):
-    """The base class for Aito DataType"""
-
-    _supported_data_types = ["Boolean", "Decimal", "Int", "String", "Text"]
     _pandas_dtypes_name_to_aito_type = {
         'string': 'Text',
         'bytes': 'String',
@@ -694,8 +699,74 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         'timedelta': 'String',
         'time': 'String',
         'period': 'String',
-        'mixed': 'Text'
+        'mixed': 'Text',
+        'empty': 'String'
     }
+
+    MAX_INT_VALUE = 2147483647
+    MIN_INT_VALUE = -2147483648
+
+    def __init__(self, pandas_dtype: str, min_value, max_value):
+        self.pandas_dtype = pandas_dtype
+        self.min_value = min_value
+        self.max_value = max_value
+
+        if pandas_dtype == 'integer' and (max_value > self.MAX_INT_VALUE or min_value < self.MIN_INT_VALUE):
+            self.target_aito_dtype = 'String' # neither pandas (!) or Aito supports integers this large
+        else:
+            self.target_aito_dtype = DataSeriesProperties.pandas_dtype_to_aito_dtype(pandas_dtype)
+
+            
+    @classmethod
+    def pandas_dtype_to_aito_dtype(cls, pandas_dtype) -> str:
+        """ Converts a pandas data type into Aito data type
+
+        :rtype: str
+        """
+        return cls._pandas_dtypes_name_to_aito_type[pandas_dtype]
+
+    def to_data_type_schema(self) -> 'AitoDataTypeSchema':
+        """ Provides the AitoDataTypeSchema that is inferred for this data series
+        """
+        return AitoDataTypeSchema.from_deserialized_object(self.target_aito_dtype)
+
+    @classmethod
+    def _infer_from_pandas_series(cls, series: pd.Series, max_sample_size: int = 100000) -> 'DataSeriesProperties':
+        """Infer aito column type from a Pandas Series
+
+        :param series: input Pandas Series
+        :type series: pd.Series
+        :param max_sample_size: maximum sample size that will be used for type inference, defaults to 100000
+        :type max_sample_size: int, optional
+        :raises Exception: fail to infer type
+        :return: inferred Aito type
+        :rtype: str
+        """
+        sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
+
+        if len(series) == series.isna().sum(): # pandas will infer empty series as floating point as default
+            inferred_dtype = 'empty'
+        else:
+            inferred_dtype = pd.api.types.infer_dtype(sampled_values)
+
+        lower_bound = None
+        upper_bound = None
+        if inferred_dtype == 'integer':
+            lower_bound = sampled_values.min()
+            upper_bound = sampled_values.max()
+            # See integer MAX_VALUE and MIN_VALUE in https://docs.oracle.com/javase/8/docs/api/constant-values.html
+            LOG.debug(f'inferred pandas dtype: {inferred_dtype}')
+        if inferred_dtype not in cls._pandas_dtypes_name_to_aito_type:
+            LOG.debug(f'failed to convert pandas dtype {inferred_dtype} to aito dtype')
+            raise Exception(f'failed to infer aito data type')
+
+        return DataSeriesProperties(inferred_dtype, lower_bound, upper_bound)
+    
+        
+class AitoDataTypeSchema(AitoSchema, ABC):
+    """The base class for Aito DataType"""
+
+    _supported_data_types = ["Boolean", "Decimal", "Int", "String", "Text"]
 
     def __init__(self, aito_dtype: str):
         """
@@ -805,14 +876,7 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         :return: inferred Aito type
         :rtype: str
         """
-        sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
-        LOG.debug('inferring pandas dtype from sample values...')
-        inferred_dtype = pd.api.types.infer_dtype(sampled_values)
-        LOG.debug(f'inferred pandas dtype: {inferred_dtype}')
-        if inferred_dtype not in cls._pandas_dtypes_name_to_aito_type:
-            LOG.debug(f'failed to convert pandas dtype {inferred_dtype} to aito dtype')
-            raise Exception(f'failed to infer aito data type')
-        return cls.from_deserialized_object(cls._pandas_dtypes_name_to_aito_type[inferred_dtype])
+        return DataSeriesProperties._infer_from_pandas_series(series, max_sample_size).to_data_type_schema()
 
     @classmethod
     def infer_from_samples(cls, samples: Iterable, max_sample_size: int = 100000) -> 'AitoDataTypeSchema':
@@ -867,7 +931,6 @@ class AitoStringType(AitoDataTypeSchema):
 
     def to_python_type(self):
         return str
-
 
 class AitoTextType(AitoDataTypeSchema):
     """Aito `Text Type <https://aito.ai/docs/api/#schema-text-type>`__"""
@@ -993,6 +1056,13 @@ class AitoColumnTypeSchema(AitoSchema):
         else:
             self.json_schema_validate_with_schema(value, schema)
         self._nullable = value
+
+    def to_conversion(self):
+        if self._nullable:
+            tpt = self._data_type.to_python_type()
+            return lambda x: None if pd.isna(x) else tpt(x)
+        else:
+            return self._data_type.to_python_type()
 
     @property
     def link(self):
