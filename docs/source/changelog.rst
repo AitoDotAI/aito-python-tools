@@ -1,6 +1,29 @@
 Changelog
 =========
 
+0.4.1
+-----
+
+In this version the data conversions and especially CSV reading have been made more robust
+and lenient.
+
+Errors regarding large integers have been managed by converting integer fields
+with out-of-bounds values into string fields. Issues caused by extra commas in CSV are now
+treated by ignoring the additional commas and issuing a warning in the log.
+
+Schema inference has been improved by inferring String type for the empty columns instead of
+Decimal type. Schema inference no more fails in situations, where the column contains only
+whitespaces.
+
+SDK
+^^^
+
+aito.schema package now contains DataSeriesProperties, which is used to infer a column's
+Aito datatype. DataSeriesProperties now keeps track of the smallest and the largest
+value in the series in order to infer a type according to the number bounds:
+
+  - :py:class:`~aito.schema.DataSeriesProperties`
+
 0.4.0
 -----
 
