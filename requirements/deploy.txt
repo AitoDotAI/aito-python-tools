@@ -3,3 +3,6 @@ twine==3.0.0
 requests==2.22.0
 packaging==20.8
 
+## On top of these, you must install sphinx
+## apt-get install -y python3-sphinx
+sphinx_rtd_theme>=0.5.0
