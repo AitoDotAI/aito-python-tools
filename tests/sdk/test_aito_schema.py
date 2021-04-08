@@ -414,6 +414,45 @@ class TestAitoTableSchema(BaseTestCase):
             {'col1': AitoColumnLinkSchema('first', 'link'), 'col2': AitoColumnLinkSchema('second', 'link')}
         )
 
+    def test_disallow_column_names_with_whitespace(self):
+        self.assertRaises(
+            JsonValidationError,
+            AitoTableSchema.from_deserialized_object,
+            {
+                'type': 'table',
+                'columns': {'col with whitespace': {'type': 'Int'}}
+            }
+        )
+
+    def test_disallow_column_names_with_newlines(self):
+        self.assertRaises(
+            JsonValidationError,
+            AitoTableSchema.from_deserialized_object,
+            {
+                'type': 'table',
+                'columns': { 'col\nwith\nnewlines': {'type': 'Int'}}
+            }
+        )
+
+    def test_disallow_column_names_with_tabs(self):
+        self.assertRaises(
+            JsonValidationError,
+            AitoTableSchema.from_deserialized_object,
+            {
+                    'type': 'table',
+                    'columns': {'col\twith\ttabs': {'type': 'Int'}}
+            }
+        )
+
+    def test_disallow_column_names_with_dots(self):
+        self.assertRaises(
+            JsonValidationError,
+            AitoTableSchema.from_deserialized_object,
+            {
+                    'type': 'table',
+                    'columns': {'col...with.tabs': {'type': 'Int'}}
+            }
+        )
 
 class TestAitoDatabaseSchema(BaseTestCase):
     def test_from_deserialized_object(self):
