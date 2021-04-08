@@ -414,7 +414,7 @@ class TestAitoTableSchema(BaseTestCase):
             {'col1': AitoColumnLinkSchema('first', 'link'), 'col2': AitoColumnLinkSchema('second', 'link')}
         )
 
-    def test_disallow_column_names_with_whitespace(self):
+    def test_disallow_column_names_with_whitespace_in_json(self):
         self.assertRaises(
             JsonValidationError,
             AitoTableSchema.from_deserialized_object,
@@ -424,7 +424,7 @@ class TestAitoTableSchema(BaseTestCase):
             }
         )
 
-    def test_disallow_column_names_with_newlines(self):
+    def test_disallow_column_names_with_newlines_in_json(self):
         self.assertRaises(
             JsonValidationError,
             AitoTableSchema.from_deserialized_object,
@@ -434,7 +434,7 @@ class TestAitoTableSchema(BaseTestCase):
             }
         )
 
-    def test_disallow_column_names_with_tabs(self):
+    def test_disallow_column_names_with_tabs_in_json(self):
         self.assertRaises(
             JsonValidationError,
             AitoTableSchema.from_deserialized_object,
@@ -444,7 +444,7 @@ class TestAitoTableSchema(BaseTestCase):
             }
         )
 
-    def test_disallow_column_names_with_dots(self):
+    def test_disallow_column_names_with_dots_in_json(self):
         self.assertRaises(
             JsonValidationError,
             AitoTableSchema.from_deserialized_object,
@@ -452,6 +452,35 @@ class TestAitoTableSchema(BaseTestCase):
                     'type': 'table',
                     'columns': {'col...with.tabs': {'type': 'Int'}}
             }
+        )
+
+    def test_disallow_column_names_with_whitespace_when_creating_object(self):
+        self.assertRaises(
+            ValueError,
+            AitoTableSchema,
+            {'col with whitespace': AitoColumnTypeSchema(AitoIntType())}
+        )
+
+    def test_disallow_column_names_with_newlines_when_creating_object(self):
+        self.assertRaises(
+            ValueError,
+            AitoTableSchema,
+            {'col\nwith\nnewlines': AitoColumnTypeSchema(AitoIntType())}
+        )
+
+
+    def test_disallow_column_names_with_tabs_when_creating_object(self):
+        self.assertRaises(
+            ValueError,
+            AitoTableSchema,
+            {'col\twith\ttabs': AitoColumnTypeSchema(AitoIntType())}
+        )
+
+    def test_disallow_column_names_with_dots_when_creating_object(self):
+        self.assertRaises(
+            ValueError,
+            AitoTableSchema,
+            {'col...with.tabs': AitoColumnTypeSchema(AitoIntType())}
         )
 
 class TestAitoDatabaseSchema(BaseTestCase):
