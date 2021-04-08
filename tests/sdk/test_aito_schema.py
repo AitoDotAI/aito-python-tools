@@ -254,7 +254,7 @@ class TestDataSeriesProperties(BaseTestCase):
         self.assertEqual(
             ds.target_aito_dtype,
             aito_dtype)
-    
+
 
 class TestAitoColumnTypeSchema(BaseTestCase):
     @parameterized.expand([
@@ -414,13 +414,22 @@ class TestAitoTableSchema(BaseTestCase):
             {'col1': AitoColumnLinkSchema('first', 'link'), 'col2': AitoColumnLinkSchema('second', 'link')}
         )
 
+
+class TestAitoValidation(BaseTestCase):
+    newlines = 'col\nor\ntable\nwith\nnewlines'
+    tabs = 'col\tor\ttable\twith\tnewlines'
+    whitespace = 'col or table with newlines'
+    dots = 'col.or.table.with.newlines'
+
+    array_of_wrong = [whitespace, dots, tabs, newlines]
+
     def test_disallow_column_names_with_whitespace_in_json(self):
         self.assertRaises(
             JsonValidationError,
             AitoTableSchema.from_deserialized_object,
             {
                 'type': 'table',
-                'columns': {'col with whitespace': {'type': 'Int'}}
+                'columns': {TestAitoValidation.whitespace: {'type': 'Int'}}
             }
         )
 
@@ -430,7 +439,7 @@ class TestAitoTableSchema(BaseTestCase):
             AitoTableSchema.from_deserialized_object,
             {
                 'type': 'table',
-                'columns': { 'col\nwith\nnewlines': {'type': 'Int'}}
+                'columns': {TestAitoValidation.newlines: {'type': 'Int'}}
             }
         )
 
@@ -439,8 +448,8 @@ class TestAitoTableSchema(BaseTestCase):
             JsonValidationError,
             AitoTableSchema.from_deserialized_object,
             {
-                    'type': 'table',
-                    'columns': {'col\twith\ttabs': {'type': 'Int'}}
+                'type': 'table',
+                'columns': {TestAitoValidation.tabs: {'type': 'Int'}}
             }
         )
 
@@ -449,8 +458,8 @@ class TestAitoTableSchema(BaseTestCase):
             JsonValidationError,
             AitoTableSchema.from_deserialized_object,
             {
-                    'type': 'table',
-                    'columns': {'col...with.tabs': {'type': 'Int'}}
+                'type': 'table',
+                'columns': {TestAitoValidation.dots: {'type': 'Int'}}
             }
         )
 
@@ -458,14 +467,14 @@ class TestAitoTableSchema(BaseTestCase):
         self.assertRaises(
             ValueError,
             AitoTableSchema,
-            {'col with whitespace': AitoColumnTypeSchema(AitoIntType())}
+            {TestAitoValidation.whitespace: AitoColumnTypeSchema(AitoIntType())}
         )
 
     def test_disallow_column_names_with_newlines_when_creating_object(self):
         self.assertRaises(
             ValueError,
             AitoTableSchema,
-            {'col\nwith\nnewlines': AitoColumnTypeSchema(AitoIntType())}
+            {TestAitoValidation.newlines: AitoColumnTypeSchema(AitoIntType())}
         )
 
 
@@ -473,15 +482,39 @@ class TestAitoTableSchema(BaseTestCase):
         self.assertRaises(
             ValueError,
             AitoTableSchema,
-            {'col\twith\ttabs': AitoColumnTypeSchema(AitoIntType())}
+            {TestAitoValidation.tabs: AitoColumnTypeSchema(AitoIntType())}
         )
 
     def test_disallow_column_names_with_dots_when_creating_object(self):
         self.assertRaises(
             ValueError,
             AitoTableSchema,
-            {'col...with.tabs': AitoColumnTypeSchema(AitoIntType())}
+            {TestAitoValidation.dots: AitoColumnTypeSchema(AitoIntType())}
         )
+
+    def test_allow_links_without_invalid_chars(self):
+        AitoColumnLinkSchema('table_name', 'column_name')
+        AitoColumnLinkSchema('1', '2')
+        AitoColumnLinkSchema('one', 'two')
+
+    def test_disallow_links_with_invalid_chars(self):
+        for table_name in TestAitoValidation.array_of_wrong:
+            for column_name in TestAitoValidation.array_of_wrong:
+                self.assertRaises(
+                    ValueError,
+                    AitoColumnLinkSchema,
+                    table_name,
+                    column_name
+                )
+
+    def test_disallow_tables_with_invalid_chars(self):
+        for table_name in TestAitoValidation.array_of_wrong:
+            valid_table = AitoTableSchema(columns={'b': AitoColumnTypeSchema(AitoStringType())})
+            self.assertRaises(
+                ValueError,
+                AitoDatabaseSchema,
+                {table_name: valid_table}
+            )
 
 class TestAitoDatabaseSchema(BaseTestCase):
     def test_from_deserialized_object(self):
