@@ -9,6 +9,7 @@ from abc import abstractmethod, ABC
 from collections import Counter
 from csv import Sniffer, Error as csvError
 from typing import List, Iterable, Dict, Optional
+import re
 
 import pandas as pd
 from langdetect import detect_langs
@@ -716,7 +717,7 @@ class DataSeriesProperties :
         else:
             self.target_aito_dtype = DataSeriesProperties.pandas_dtype_to_aito_dtype(pandas_dtype)
 
-            
+
     @classmethod
     def pandas_dtype_to_aito_dtype(cls, pandas_dtype) -> str:
         """ Converts a pandas data type into Aito data type
@@ -761,8 +762,8 @@ class DataSeriesProperties :
             raise Exception(f'failed to infer aito data type')
 
         return DataSeriesProperties(inferred_dtype, lower_bound, upper_bound)
-    
-        
+
+
 class AitoDataTypeSchema(AitoSchema, ABC):
     """The base class for Aito DataType"""
 
@@ -944,6 +945,9 @@ class AitoTextType(AitoDataTypeSchema):
 class AitoColumnLinkSchema(AitoSchema):
     """Link to a column of another table"""
 
+    # Essentially a combination of the table- and column-regexes
+    _column_link_regex = r'^[^\/"\.$\r\n\s]+\.[^\/"\.$\r\n\s]+$'
+
     def __init__(self, table_name: str, column_name: str):
         """
 
@@ -952,6 +956,11 @@ class AitoColumnLinkSchema(AitoSchema):
         :param column_name: the name of the linked column
         :type column_name: str
         """
+        if not bool(re.match(AitoDatabaseSchema._table_name_regex, table_name)):
+            raise ValueError(f'Linked table name in "{table_name}.{column_name}" is not valid')
+        if not bool(re.match(AitoTableSchema._column_name_regex, column_name)):
+            raise ValueError(f'Linked column name in "{table_name}.{column_name}" is not valid')
+
         self._table_name = table_name
         self._column_name = column_name
 
@@ -980,7 +989,7 @@ class AitoColumnLinkSchema(AitoSchema):
 
     @classmethod
     def json_schema(cls):
-        return {'type': 'string', 'pattern': r'^[^/".$\r\n\s]+\.[^/".$\r\n\s]+$'}
+        return {'type': 'string', 'pattern': AitoColumnLinkSchema._column_link_regex}
 
     @classmethod
     def from_deserialized_object(cls, obj: str) -> "AitoColumnLinkSchema":
@@ -1247,12 +1256,22 @@ class AitoTableSchema(AitoSchema):
     ...     table_schema[col].nullable = False
     """
 
+    _column_name_regex = r'^[^\/".$\r\n\s]+$'
+
     def __init__(self, columns: Dict[str, AitoColumnTypeSchema]):
         """
 
         :param columns: a dictionary of the table's columns' name and schema
         :type columns: Dict[str, AitoColumnTypeSchema]
         """
+        invalid_columns = []
+        for key in columns.keys():
+            if not bool(re.match(AitoTableSchema._column_name_regex, key)):
+                invalid_columns.append(key)
+
+        if len(invalid_columns) > 0:
+            raise ValueError(f'Column names are not valid: {invalid_columns}')
+
         self._columns = columns
 
     @property
@@ -1301,6 +1320,10 @@ class AitoTableSchema(AitoSchema):
         """
         if not isinstance(column_name, str):
             raise TypeError('the name of the column must be of type string')
+
+        if not bool(re.match(AitoTableSchema._column_name_regex, column_name)):
+            raise ValueError(f'The column name {column_name} is not valid')
+
         if not isinstance(value, AitoColumnTypeSchema):
             raise TypeError('column schema must be of type AitoColumnTypeSchema')
         self._columns[column_name] = value
@@ -1330,6 +1353,7 @@ class AitoTableSchema(AitoSchema):
 
     @classmethod
     def json_schema(cls):
+        pattern = AitoTableSchema._column_name_regex
         return {
             'type': 'object',
             'properties': {
@@ -1337,7 +1361,7 @@ class AitoTableSchema(AitoSchema):
                 'columns': {
                     'type': 'object',
                     'minProperties': 1,
-                    'propertyNames': {'pattern': r'^[^/".$\r\n\s]+$'}
+                    'propertyNames': {'pattern': pattern}
                 }
             },
             'required': ['type', 'columns'],
@@ -1391,7 +1415,18 @@ class AitoDatabaseSchema(AitoSchema):
 
     Can be thought of as a dict-like container for :class:`.AitoTableSchema` objects
     """
+
+    _table_name_regex = r'^[^\/".$\r\n\s]+$'
+
     def __init__(self, tables: Dict[str, AitoTableSchema]):
+        invalid_tables = []
+        for key in tables.keys():
+            if not bool(re.match(AitoDatabaseSchema._table_name_regex, key)):
+                invalid_tables.append(key)
+
+        if len(invalid_tables) > 0:
+            raise ValueError(f'Column names are not valid: {invalid_tables}')
+
         self._tables = tables
 
     def _validate_links(self):
@@ -1453,7 +1488,11 @@ class AitoDatabaseSchema(AitoSchema):
         """update the schema of the specified table
         """
         if not isinstance(table_name, str):
-            raise TypeError('the name of the column must be of type string')
+            raise TypeError('the name of the table must be of type string')
+
+        if not bool(re.match(AitoDatabaseSchema._table_name_regex, table_name)):
+            raise ValueError(f'Table name {table_name} is not valid')
+
         if not isinstance(value, AitoTableSchema):
             raise TypeError('the table schema must be of type AitoTableSchema')
         self._tables[table_name] = value
@@ -1488,7 +1527,7 @@ class AitoDatabaseSchema(AitoSchema):
             'properties': {
                 'schema': {
                     'type': 'object',
-                    'propertyNames': {'pattern': r'^[^/".$\r\n\s]+$'}
+                    'propertyNames': {'pattern': AitoDatabaseSchema._table_name_regex}
                 }
             },
             'required': ['schema'],
