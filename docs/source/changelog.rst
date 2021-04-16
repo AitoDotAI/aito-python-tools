@@ -1,5 +1,13 @@
 Changelog
 =========
+0.4.2
+-----
+ This version fixes a validation discrepancy between Aito Core and the SDK. Previously the
+ SDK has allowed creating tables with names containing whitespaces. This is a validation bug,
+ since the validation was performed in a slightly different way, depending on the context.
+
+ Now the SDK does no longer allow whitespaces in the names and gives a validation error if
+ the user tries to create a table with an disallowed name.
 
 0.4.1
 -----
