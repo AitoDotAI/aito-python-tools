@@ -267,11 +267,13 @@ def optimize_table(client: AitoClient, table_name):
     :rtype:
     """
     try:
-        client.request(method='POST', endpoint=f'/api/v1/data/{table_name}/optimize', query={})
+        job_request(client,
+                    job_endpoint=f'/api/v1/data/{table_name}/optimize',
+                    query={},
+                    polling_time=5)
     except Exception as e:
         LOG.error(f'failed to optimize: {e}')
     LOG.info(f'table {table_name} optimized')
-
 
 def delete_entries(client: AitoClient, query: Dict):
     """`Delete the entries <https://aito.ai/docs/api/#post-api-v1-data-delete>`__ according to the criteria
