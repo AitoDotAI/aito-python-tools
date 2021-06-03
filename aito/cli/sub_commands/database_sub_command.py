@@ -228,7 +228,7 @@ class UploadEntriesSubCommand(SubCommand):
     def build_parser(self, parser):
         parser.add_aito_default_credentials_arguments()
         parser.epilog = 'With no input, or when input is -, read table content from standard input'
-        parser.add_argument('table-name', type=str, help='name of the table to be added data to')
+        parser.add_argument('table-name', type=str, help='name of the table where to add data')
         parser.add_argument(
             'input', default='-', type=InputArgType(), nargs='?',
             help="path to the entries file (when no file is given or when input is -, read from the standard input)")
@@ -238,6 +238,20 @@ class UploadEntriesSubCommand(SubCommand):
         table_name = parsed_args['table-name']
         table_entries = load_json_from_parsed_input_arg(parsed_args['input'])
         api.upload_entries(client, table_name=table_name, entries=table_entries)
+        return 0
+
+class OptimizeTableSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__('optimize-table', 'optimize an existing table')
+
+    def build_parser(self, parser):
+        parser.add_aito_default_credentials_arguments()
+        parser.add_argument('table-name', type=str, help='name of the table to optimize')
+
+    def parse_and_execute(self, parsed_args: Dict):
+        client = create_client_from_parsed_args(parsed_args)
+        table_name = parsed_args['table-name']
+        api.job_request(client, table_name=table_name)
         return 0
 
 
