@@ -2,7 +2,7 @@
 
 Data structure for the Aito Database Schema
 """
-
+import re
 import itertools
 import logging
 from abc import abstractmethod, ABC
@@ -956,7 +956,7 @@ class AitoColumnLinkSchema(AitoSchema):
         :param column_name: the name of the linked column
         :type column_name: str
         """
-        if not bool(re.match(AitoDatabaseSchema._table_name_regex, table_name)):
+        if not bool(re.match(AitoDatabaseSchema._full_table_name_regex, table_name)):
             raise ValueError(f'Linked table name in "{table_name}.{column_name}" is not valid')
         if not bool(re.match(AitoTableSchema._column_name_regex, column_name)):
             raise ValueError(f'Linked column name in "{table_name}.{column_name}" is not valid')
@@ -1416,12 +1416,13 @@ class AitoDatabaseSchema(AitoSchema):
     Can be thought of as a dict-like container for :class:`.AitoTableSchema` objects
     """
 
-    _table_name_regex = r'^[^\/".$\r\n\s]+$'
+    table_name_regex = r'[^\/".$\r\n\s]+'
+    _full_table_name_regex = re.compile(f"^{table_name_regex}$")
 
     def __init__(self, tables: Dict[str, AitoTableSchema]):
         invalid_tables = []
         for key in tables.keys():
-            if not bool(re.match(AitoDatabaseSchema._table_name_regex, key)):
+            if not bool(re.match(AitoDatabaseSchema._full_table_name_regex, key)):
                 invalid_tables.append(key)
 
         if len(invalid_tables) > 0:
@@ -1490,7 +1491,7 @@ class AitoDatabaseSchema(AitoSchema):
         if not isinstance(table_name, str):
             raise TypeError('the name of the table must be of type string')
 
-        if not bool(re.match(AitoDatabaseSchema._table_name_regex, table_name)):
+        if not bool(re.match(AitoDatabaseSchema._full_table_name_regex, table_name)):
             raise ValueError(f'Table name {table_name} is not valid')
 
         if not isinstance(value, AitoTableSchema):
@@ -1527,7 +1528,7 @@ class AitoDatabaseSchema(AitoSchema):
             'properties': {
                 'schema': {
                     'type': 'object',
-                    'propertyNames': {'pattern': AitoDatabaseSchema._table_name_regex}
+                    'propertyNames': {'pattern': AitoDatabaseSchema._full_table_name_regex}
                 }
             },
             'required': ['schema'],
