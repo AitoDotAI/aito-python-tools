@@ -8,7 +8,7 @@ from aito.client import responses as aito_resp
 from .aito_request import AitoRequest, _FinalRequest, _PatternEndpoint, _GetRequest, _PostRequest
 
 
-class _DataAPIRequest(AitoRequest, ABC):
+class DataAPIRequest(AitoRequest, ABC):
     """Request to manipulate the schema"""
     endpoint_prefix = f'{AitoRequest._api_version_endpoint_prefix}/data'
 
@@ -31,7 +31,7 @@ class _DataAPIRequest(AitoRequest, ABC):
         raise ValueError(f"invalid {cls.__name__} with '{method}({endpoint})'")
 
 
-class UploadEntriesRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
+class UploadEntriesRequest(_PostRequest, _PatternEndpoint, DataAPIRequest):
     """Request to `Insert entries to a table <https://aito.ai/docs/api/#post-api-v1-data-table>`__"""
     response_cls = aito_resp.BaseResponse
 
@@ -56,13 +56,13 @@ class UploadEntriesRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
         return cls(table_name=groups(1), entries=query)
 
 
-class DeleteEntriesRequest(_PostRequest, _FinalRequest, _DataAPIRequest):
+class DeleteEntriesRequest(_PostRequest, _FinalRequest, DataAPIRequest):
     """Request to `Delete entries of a table <https://aito.ai/docs/api/#post-api-v1-data-delete>`__"""
-    endpoint = f'{_DataAPIRequest.endpoint_prefix}/_delete'
+    endpoint = f'{DataAPIRequest.endpoint_prefix}/_delete'
     response_cls = aito_resp.BaseResponse
 
 
-class InitiateFileUploadRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
+class InitiateFileUploadRequest(_PostRequest, _PatternEndpoint, DataAPIRequest):
     """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
     response_cls = aito_resp.BaseResponse
 
@@ -85,7 +85,7 @@ class InitiateFileUploadRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest)
         return cls(table_name=groups(1))
 
 
-class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, _DataAPIRequest):
+class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, DataAPIRequest):
     """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
     response_cls = aito_resp.BaseResponse
 
@@ -110,5 +110,5 @@ class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, _DataAPIReque
         return cls(table_name=groups(1), session_id=groups(2))
 
 
-class GetFileProcessingRequest(_GetRequest, TriggerFileProcessingRequest, _DataAPIRequest):
+class GetFileProcessingRequest(_GetRequest, TriggerFileProcessingRequest, DataAPIRequest):
     """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
