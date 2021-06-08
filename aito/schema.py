@@ -55,7 +55,7 @@ class AitoSchema(JsonFormat, ABC):
     table_name_pattern = r'[^\/\".$\r\n\s]+'
     column_name_pattern = r'[^\/\".$\r\n\s]+'
     column_link_pattern = f'{table_name_pattern}\.{column_name_pattern}'
-    uuid_pattern = r'^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89AB][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$'
+    uuid_pattern = r'[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}'
 
 
 class AitoAnalyzerSchema(AitoSchema, ABC):
