@@ -251,7 +251,7 @@ class OptimizeTableSubCommand(SubCommand):
     def parse_and_execute(self, parsed_args: Dict):
         client = create_client_from_parsed_args(parsed_args)
         table_name = parsed_args['table-name']
-        api.job_request(client, table_name=table_name)
+        api.optimize_table(client, table_name=table_name)
         return 0
 
 
