@@ -590,7 +590,7 @@ def _create_job_request(
         if isinstance(request_obj, aito_requests.QueryAPIRequest):
             LOG.debug(f'Creating job from Query request {request_obj}')
             create_job_req = aito_requests.CreateJobRequest.from_query_api_request(request_obj=request_obj)
-        if isinstance(request_obj, aito_requests.DataAPIRequest):
+        elif isinstance(request_obj, aito_requests.DataAPIRequest):
             LOG.debug(f'Creating job from Data request {request_obj}')
             create_job_req = aito_requests.CreateJobRequest.from_data_api_request(request_obj=request_obj)
         else:
