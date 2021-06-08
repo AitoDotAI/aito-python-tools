@@ -37,7 +37,7 @@ class UploadEntriesRequest(_PostRequest, _PatternEndpoint, DataAPIRequest):
 
     @classmethod
     def _endpoint_pattern(cls):
-        return re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/batch$')
+        return re.compile(f'^{cls.endpoint_prefix}/({AitoSchema.table_name_pattern})/batch$')
 
     def __init__(self, table_name: str, entries: List[Dict]):
         """

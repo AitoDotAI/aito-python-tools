@@ -53,6 +53,9 @@ class AitoSchema(JsonFormat, ABC):
     def __eq__(self, other):
         return self._compare_type(other) and self._compare_properties(other)
 
+    table_name_pattern = r'[^\/".$\r\n\s]+'
+    column_name_pattern = r'[^\/".$\r\n\s]+'
+    column_link_pattern = f'{table_name_pattern}\.{column_name_pattern}'
 
 class AitoAnalyzerSchema(AitoSchema, ABC):
     """the base class for `Aito Analyzer <https://aito.ai/docs/api/#schema-analyzer>`__
@@ -946,7 +949,7 @@ class AitoColumnLinkSchema(AitoSchema):
     """Link to a column of another table"""
 
     # Essentially a combination of the table- and column-regexes
-    _column_link_regex = r'^[^\/"\.$\r\n\s]+\.[^\/"\.$\r\n\s]+$'
+    _column_link_regex = f'^{AitoSchema.column_link_pattern}$'
 
     def __init__(self, table_name: str, column_name: str):
         """
@@ -1256,7 +1259,7 @@ class AitoTableSchema(AitoSchema):
     ...     table_schema[col].nullable = False
     """
 
-    _column_name_regex = r'^[^\/".$\r\n\s]+$'
+    _column_name_regex = f'^{AitoSchema.column_name_pattern}$'
 
     def __init__(self, columns: Dict[str, AitoColumnTypeSchema]):
         """
@@ -1416,8 +1419,7 @@ class AitoDatabaseSchema(AitoSchema):
     Can be thought of as a dict-like container for :class:`.AitoTableSchema` objects
     """
 
-    table_name_regex = r'[^\/".$\r\n\s]+'
-    _full_table_name_regex = re.compile(f"^{table_name_regex}$")
+    _full_table_name_regex = f"^{AitoSchema.table_name_pattern}$"
 
     def __init__(self, tables: Dict[str, AitoTableSchema]):
         invalid_tables = []
