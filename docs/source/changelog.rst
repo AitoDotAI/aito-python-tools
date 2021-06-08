@@ -1,5 +1,15 @@
 Changelog
 =========
+0.4.3
+-----
+ This version adds better support for performing jobs on Aito.
+
+ - There's a new command `optimize-table` (`<https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`), which can
+ be used to improve query times at the expense of slower writes.
+ - Optimize, described above, now runs as a job by default (`<https://aito.ai/docs/api/#post-api-v1-jobs-query>`_). This is
+   to avoid timeouts during the operation on non-trivial tables.
+
+
 0.4.2
 -----
  This version fixes a validation discrepancy between Aito Core and the SDK. Previously the
