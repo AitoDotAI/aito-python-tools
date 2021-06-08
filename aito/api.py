@@ -8,6 +8,7 @@ import time
 from os import PathLike, unlink
 from pathlib import Path
 from typing import Dict, List, BinaryIO, Union, Tuple, Iterable, Optional
+import traceback
 
 import ndjson
 import requests as requestslib
@@ -20,7 +21,6 @@ from aito.utils._file_utils import gzip_file, check_file_is_gzipped
 from aito.utils.data_frame_handler import DataFrameHandler
 
 LOG = logging.getLogger('AitoAPI')
-
 
 def get_version(client: AitoClient) -> str:
     """get the aito instance version
@@ -268,12 +268,13 @@ def optimize_table(client: AitoClient, table_name):
     """
     try:
         job_request(client,
-                    job_endpoint=f'/api/v1/data/{table_name}/optimize',
+                    job_endpoint=f'/api/v1/jobs/data/{table_name}/optimize',
                     query={},
                     polling_time=5)
+        LOG.info(f'table {table_name} optimized')
     except Exception as e:
         LOG.error(f'failed to optimize: {e}')
-    LOG.info(f'table {table_name} optimized')
+        traceback.print_tb(e.__traceback__)
 
 def delete_entries(client: AitoClient, query: Dict):
     """`Delete the entries <https://aito.ai/docs/api/#post-api-v1-data-delete>`__ according to the criteria
@@ -587,7 +588,11 @@ def _create_job_request(
             raise TypeError("create_job() requires either 'request_obj' or 'job_endpoint' and 'query'")
     else:
         if isinstance(request_obj, aito_requests.QueryAPIRequest):
+            LOG.debug(f'Creating job from Query request {request_obj}')
             create_job_req = aito_requests.CreateJobRequest.from_query_api_request(request_obj=request_obj)
+        if isinstance(request_obj, aito_requests.DataAPIRequest):
+            LOG.debug(f'Creating job from Data request {request_obj}')
+            create_job_req = aito_requests.CreateJobRequest.from_data_api_request(request_obj=request_obj)
         else:
             create_job_req = request_obj
     return create_job_req

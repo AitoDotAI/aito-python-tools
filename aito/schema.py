@@ -18,7 +18,6 @@ from aito.utils._json_format import JsonFormat, JsonValidationError
 
 LOG = logging.getLogger('AitoSchema')
 
-
 class AitoSchema(JsonFormat, ABC):
     """The base class for Aito schema component
 
@@ -53,9 +52,11 @@ class AitoSchema(JsonFormat, ABC):
     def __eq__(self, other):
         return self._compare_type(other) and self._compare_properties(other)
 
-    table_name_pattern = r'[^\/".$\r\n\s]+'
-    column_name_pattern = r'[^\/".$\r\n\s]+'
+    table_name_pattern = r'[^\/\".$\r\n\s]+'
+    column_name_pattern = r'[^\/\".$\r\n\s]+'
     column_link_pattern = f'{table_name_pattern}\.{column_name_pattern}'
+    uuid_pattern = r'^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89AB][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$'
+
 
 class AitoAnalyzerSchema(AitoSchema, ABC):
     """the base class for `Aito Analyzer <https://aito.ai/docs/api/#schema-analyzer>`__

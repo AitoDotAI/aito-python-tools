@@ -6,11 +6,14 @@ from typing import Optional, Union, Dict, List
 
 from aito.client import responses as aito_resp
 from .aito_request import AitoRequest, _FinalRequest, _PatternEndpoint, _GetRequest, _PostRequest
+from aito.schema import AitoSchema
 
 
 class DataAPIRequest(AitoRequest, ABC):
     """Request to manipulate the schema"""
     endpoint_prefix = f'{AitoRequest._api_version_endpoint_prefix}/data'
+    # Partial list of available endpoints.
+    _data_api_jobs_methods = ['optimize', 'batch']
 
     @classmethod
     @abstractmethod
@@ -30,14 +33,19 @@ class DataAPIRequest(AitoRequest, ABC):
                 return sub_cls.make_request(method=method, endpoint=endpoint, query=query)
         raise ValueError(f"invalid {cls.__name__} with '{method}({endpoint})'")
 
+    @classmethod
+    @abstractmethod
+    def path_matches(cls, path_to_match):
+        return False
 
 class UploadEntriesRequest(_PostRequest, _PatternEndpoint, DataAPIRequest):
     """Request to `Insert entries to a table <https://aito.ai/docs/api/#post-api-v1-data-table>`__"""
+    _path_suffix = 'batch'
     response_cls = aito_resp.BaseResponse
 
     @classmethod
     def _endpoint_pattern(cls):
-        return re.compile(f'^{cls.endpoint_prefix}/({AitoSchema.table_name_pattern})/batch$')
+        return re.compile(f'^{cls.endpoint_prefix}/({AitoSchema.table_name_pattern})/{cls._path_suffix}$')
 
     def __init__(self, table_name: str, entries: List[Dict]):
         """
@@ -55,20 +63,64 @@ class UploadEntriesRequest(_PostRequest, _PatternEndpoint, DataAPIRequest):
         groups = cls._endpoint_to_captured_groups(endpoint=endpoint)
         return cls(table_name=groups(1), entries=query)
 
+    @classmethod
+    def path_matches(cls, path_to_match):
+        return path_to_match.endswith(f'/{cls._path_suffix}')
+
+
+class OptimizeTableRequest(_PostRequest, _FinalRequest, DataAPIRequest):
+    """Request to `Optimize a table <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__"""
+    _path_suffix = 'optimize'
+
+    def __init__(self, table_name: str, session_id: str):
+        """
+
+        :param table_name: the name of the table to be optimized
+        :type table_name: str
+        """
+        endpoint = f'{self.endpoint_prefix}/{table_name}/optimize'
+        super().__init__(method=self.method, endpoint=endpoint)
+
+    @classmethod
+    def _endpoint_pattern(cls):
+        return re.compile(f'^{cls.endpoint_prefix}/{AitoSchema.table_name_pattern}/{cls._path_suffix}$')
+
+    @classmethod
+    def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
+        groups = cls._endpoint_to_captured_groups(endpoint=endpoint)
+        return cls(table_name=groups(1), session_id=groups(2))
+
+    @classmethod
+    def path_matches(cls, path_to_match):
+        return path_to_match.endswith(f'/{cls._path_suffix}')
+
+    response_cls = aito_resp.BaseResponse
 
 class DeleteEntriesRequest(_PostRequest, _FinalRequest, DataAPIRequest):
     """Request to `Delete entries of a table <https://aito.ai/docs/api/#post-api-v1-data-delete>`__"""
-    endpoint = f'{DataAPIRequest.endpoint_prefix}/_delete'
+    _path_suffix = '_delete'
+
+    @classmethod
+    def _endpoint_pattern(cls):
+        return re.compile(f'^{cls.endpoint_prefix}/_delete$')
+
+    @classmethod
+    def path_matches(cls, path_to_match):
+        return path_to_match.endswith(f'/{cls._path_suffix}')
+
+
+    endpoint = f'{DataAPIRequest.endpoint_prefix}/{_path_suffix}'
     response_cls = aito_resp.BaseResponse
 
 
 class InitiateFileUploadRequest(_PostRequest, _PatternEndpoint, DataAPIRequest):
     """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
+    _path_suffix = 'file'
     response_cls = aito_resp.BaseResponse
 
     @classmethod
     def _endpoint_pattern(cls):
-        return re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/file$')
+        return re.compile(f'^{cls.endpoint_prefix}/({AitoSchema.table_name_pattern})/{cls._path_suffix}$')
 
     def __init__(self, table_name: str):
         """
@@ -76,8 +128,12 @@ class InitiateFileUploadRequest(_PostRequest, _PatternEndpoint, DataAPIRequest):
         :param table_name: the name of the table to be uploaded
         :type table_name: str
         """
-        endpoint = f'{self.endpoint_prefix}/{table_name}/file'
+        endpoint = f'{self.endpoint_prefix}/{table_name}/{self._path_suffix}'
         super().__init__(method=self.method, endpoint=endpoint)
+
+    @classmethod
+    def path_matches(cls, path_to_match):
+        return path_to_match.endswith(f'/{cls._path_suffix}')
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
@@ -91,7 +147,7 @@ class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, DataAPIReques
 
     @classmethod
     def _endpoint_pattern(cls):
-        return re.compile(f'^{cls.endpoint_prefix}/([^/".$\r\n\s]+)/file/(.+)$')
+        return re.compile(f'^{cls.endpoint_prefix}/({AitoSchema.table_name_pattern})/file/({AitoSchema.uuid_pattern})$')
 
     def __init__(self, table_name: str, session_id: str):
         """
@@ -108,6 +164,12 @@ class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, DataAPIReques
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
         groups = cls._endpoint_to_captured_groups(endpoint=endpoint)
         return cls(table_name=groups(1), session_id=groups(2))
+
+    @classmethod
+    def path_matches(cls, path_to_match):
+        matcher = re.compile(f'file/{AitoSchema.uuid_pattern}$')
+        return bool(matcher.match(path_to_match))
+
 
 
 class GetFileProcessingRequest(_GetRequest, TriggerFileProcessingRequest, DataAPIRequest):

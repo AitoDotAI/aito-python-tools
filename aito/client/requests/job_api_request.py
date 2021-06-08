@@ -3,11 +3,13 @@
 import re
 from abc import abstractmethod
 from typing import Optional, Union, Dict, List, Type
+import traceback
 
 from aito.client import responses as aito_resp
 from .aito_request import AitoRequest, _PatternEndpoint, _GetRequest, _PostRequest
 from .query_api_request import QueryAPIRequest
-
+from .data_api_request import DataAPIRequest
+from aito.schema import AitoDatabaseSchema, AitoSchema
 
 class _JobAPIRequest(AitoRequest):
     endpoint_prefix = f'{AitoRequest._api_version_endpoint_prefix}/jobs'
@@ -52,11 +54,27 @@ class CreateJobRequest(_PostRequest, _PatternEndpoint, _JobAPIRequest):
 
     @classmethod
     def _endpoint_pattern(cls):
-        return re.compile(f"^{cls.endpoint_prefix}/({'|'.join(QueryAPIRequest._query_api_paths)})$")
+        query_api_path_regex = '|'.join(QueryAPIRequest._query_api_paths)
+        # Include the table name in the regex
+        data_api_path_regex = f"data/(_delete|({AitoSchema.table_name_pattern}/({'|'.join(DataAPIRequest._data_api_jobs_methods)})))"
+        return re.compile(f"^{cls.endpoint_prefix}/({query_api_path_regex}|({data_api_path_regex}))$")
 
     @classmethod
     def make_request(cls, method: str, endpoint: str, query: Optional[Union[Dict, List]]) -> 'AitoRequest':
         return cls(endpoint=endpoint, query=query)
+
+    @classmethod
+    def from_data_api_request(cls, request_obj: DataAPIRequest) -> 'CreateJobRequest':
+        """Create a job from a DataAPI request
+
+        :param request_obj: a :class:`.DataAPIRequest` instance
+        :type request_obj: DataAPIRequest
+        :return: the corresponding create job request
+        :rtype: CreateJobRequest
+        """
+        endpoint = f'{cls.endpoint_prefix}/{request_obj.path}'
+        print(f"\nThe final endpoint for the data-api request is {endpoint}")
+        return cls(endpoint=endpoint, query=request_obj.query)
 
     @classmethod
     def from_query_api_request(cls, request_obj: QueryAPIRequest) -> 'CreateJobRequest':
@@ -75,6 +93,9 @@ class CreateJobRequest(_PostRequest, _PatternEndpoint, _JobAPIRequest):
         """returns the response class of the job request result"""
         for sub_cls in QueryAPIRequest.__subclasses__():
             if self.path == sub_cls.path:
+                return sub_cls.response_cls
+        for sub_cls in DataAPIRequest.__subclasses__():
+            if sub_cls.path_matches(self.path):
                 return sub_cls.response_cls
 
 
