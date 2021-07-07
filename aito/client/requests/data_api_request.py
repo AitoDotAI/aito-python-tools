@@ -102,7 +102,7 @@ class DeleteEntriesRequest(_PostRequest, _FinalRequest, DataAPIRequest):
 
     @classmethod
     def _endpoint_pattern(cls):
-        return re.compile(f'^{cls.endpoint_prefix}/_delete$')
+        return re.compile(f'^{cls.endpoint_prefix}/{cls._path_suffix}$')
 
     @classmethod
     def path_matches(cls, path_to_match):

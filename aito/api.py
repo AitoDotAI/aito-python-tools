@@ -255,28 +255,32 @@ def copy_table(client: AitoClient, table_name: str, copy_table_name: str, replac
     )
 
 
-def optimize_table(client: AitoClient, table_name):
+def optimize_table(client: AitoClient, table_name, use_job: bool = True):
     """`optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
-    the specified table after uploading the data
+    the specified table after uploading the data. By default uses a job for the operation
 
     :param client: the AitoClient instance
     :type client: AitoClient
     :param table_name: the name of the table
     :type table_name: str
-    :return:
-    :rtype:
+    :param use_job: use a job to run the optimize
+    :type use_job: bool
     """
     try:
-        job_request(client,
-                    job_endpoint=f'/api/v1/jobs/data/{table_name}/optimize',
-                    query={},
-                    polling_time=5)
+        if use_job:
+            job_request(client,
+                        job_endpoint=f'/api/v1/jobs/data/{table_name}/optimize',
+                        query={},
+                        polling_time=5)
+
+        else:
+            client.request(method='POST', endpoint=f'/api/v1/data/{table_name}/optimize', query={})
         LOG.info(f'table {table_name} optimized')
     except Exception as e:
         LOG.error(f'failed to optimize: {e}')
         traceback.print_tb(e.__traceback__)
 
-def delete_entries(client: AitoClient, query: Dict):
+def delete_entries(client: AitoClient, query: Dict, use_job: bool = True):
     """`Delete the entries <https://aito.ai/docs/api/#post-api-v1-data-delete>`__ according to the criteria
     given in the query
 
@@ -284,10 +288,22 @@ def delete_entries(client: AitoClient, query: Dict):
     :type client: AitoClient
     :param query: the query to describe the target table and filters for which entries to delete.
     :type query: Dict
+    :param use_job: use a job to run the optimize
+    :type use_job: bool
     """
-    client.request(request_obj=aito_requests.DeleteEntriesRequest(query=query))
-    LOG.info(f'entries deleted')
+    try:
+        if use_job:
+            job_request(client,
+                        job_endpoint=f'/api/v1/jobs/data/_delete',
+                        query=query,
+                        polling_time=5)
+        else:
+            client.request(request_obj=aito_requests.DeleteEntriesRequest(query=query))
 
+        LOG.info(f'entries deleted')
+    except Exception as e:
+        LOG.error(f'failed to delete: {e}')
+        traceback.print_tb(e.__traceback__)
 
 def upload_entries(
         client: AitoClient,
