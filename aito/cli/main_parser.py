@@ -14,7 +14,7 @@ from .parser import ArgParser, DEFAULT_CONFIG_DIR
 from .sub_commands.convert_sub_command import ConvertSubCommand
 from .sub_commands.database_sub_command import ConfigureSubCommand, QuickAddTableSubCommand, CreateTableSubCommand, \
     DeleteTableSubCommand, CopyTableSubCommand, RenameTableSubCommand, ShowTablesSubCommand, DeleteDatabaseSubCommand, \
-    UploadEntriesSubCommand, UploadBatchSubCommand, UploadFileSubCommand, UploadDataFromSQLSubCommand, \
+    UploadEntriesSubCommand, UploadBatchSubCommand, UploadFileSubCommand, UploadDataFromSQLSubCommand, OptimizeTableSubCommand, \
     QuickAddTableFromSQLSubCommand, GetDatabaseSubCommand, GetTableSubCommand, QuickPredictSubCommand, SearchSubCommand, \
     PredictSubCommand, RecommendSubCommand, EvaluateSubCommand, SimilaritySubCommand, MatchSubCommand, RelateSubCommand, \
     GenericQuerySubCommand, CreateDatabaseSubCommand
@@ -41,6 +41,7 @@ class MainParser(ArgParser):
         UploadBatchSubCommand(),
         UploadFileSubCommand(),
         UploadDataFromSQLSubCommand(),
+        OptimizeTableSubCommand(),
         QuickAddTableFromSQLSubCommand(),
         QuickPredictSubCommand(),
         SearchSubCommand(),

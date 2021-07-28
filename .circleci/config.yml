@@ -359,7 +359,7 @@ commonYAMLStructure:
 jobs:
   run_dependencies_security_check:
     docker:
-      - image: circleci/python:3.6.9
+      - image: circleci/python:3.6
     working_directory: ~/repo
     steps:
       - checkout
@@ -371,7 +371,7 @@ jobs:
 
   run_sdk_and_cli_tests_linux_py_36: &run_sdk_and_cli_tests_linux_template
     docker:
-      - image: circleci/python:3.6.9
+      - image: circleci/python:3.6
     working_directory: ~/repo
     steps:
       - checkout
@@ -385,16 +385,16 @@ jobs:
   run_sdk_and_cli_tests_linux_py_37:
     <<: *run_sdk_and_cli_tests_linux_template
     docker:
-      - image: circleci/python:3.7.5
+      - image: circleci/python:3.7
 
   run_sdk_and_cli_tests_linux_py_38:
     <<: *run_sdk_and_cli_tests_linux_template
     docker:
-      - image: circleci/python:3.8.0
+      - image: circleci/python:3.8
 
   run_postgres_tests_linux_py_36: &run_postgres_tests_linux_template
     docker:
-      - image: circleci/python:3.6.9
+      - image: circleci/python:3.6
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
@@ -427,7 +427,7 @@ jobs:
   run_postgres_tests_linux_py_37:
     <<: *run_postgres_tests_linux_template
     docker:
-      - image: circleci/python:3.7.5
+      - image: circleci/python:3.7
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
@@ -437,7 +437,7 @@ jobs:
   run_postgres_tests_linux_py_38:
     <<: *run_postgres_tests_linux_template
     docker:
-      - image: circleci/python:3.8.0
+      - image: circleci/python:3.8
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
@@ -478,7 +478,7 @@ jobs:
   run_mysql_tests_linux_37:
     <<: *run_mysql_tests_template
     docker:
-      - image: circleci/python:3.7.5-stretch
+      - image: circleci/python:3.7-stretch
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_DATABASE: circleci_test
@@ -488,7 +488,7 @@ jobs:
   run_mysql_tests_linux_38:
     <<: *run_mysql_tests_template
     docker:
-      - image: circleci/python:3.8.0a4-stretch
+      - image: circleci/python:3.8a4-stretch
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_DATABASE: circleci_test
@@ -612,7 +612,7 @@ jobs:
 
   run_sdk_and_cli_tests_built_package:
     docker:
-      - image: circleci/python:3.6.9
+      - image: circleci/python:3.6
     environment:
       TEST_BUILT_PACKAGE: True
     working_directory: ~/repo
@@ -628,7 +628,7 @@ jobs:
 
   run_postgres_tests_built_package:
     docker:
-      - image: circleci/python:3.6.9
+      - image: circleci/python:3.6
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_DB: circleci_test
@@ -662,7 +662,7 @@ jobs:
 
   run_mysql_tests_built_package:
     docker:
-      - image: circleci/python:3.6.9-stretch
+      - image: circleci/python:3.6-stretch
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_DATABASE: circleci_test
@@ -695,7 +695,7 @@ jobs:
 
   run_alter_instance_db_tests:
     docker:
-      - image: circleci/python:3.6.9
+      - image: circleci/python:3.6
     working_directory: ~/repo
     environment:
       RUN_ALTER_INSTANCE_DB_TESTS: True
@@ -710,7 +710,7 @@ jobs:
 
   build_docs:
     docker:
-      - image: circleci/python:3.6.9
+      - image: circleci/python:3.6
     working_directory: ~/repo
     steps:
       - checkout
@@ -742,7 +742,7 @@ jobs:
 
   build_and_deploy_to_test_pypi:
     docker:
-      - image: circleci/python:3.6.9
+      - image: circleci/python:3.6
     working_directory: ~/repo
     steps:
       - checkout

@@ -60,24 +60,24 @@ class TestClientRequest(CompareTestCase):
                 aito_requests.InitiateFileUploadRequest(table_name='table_name'), None
         ),
         (
-                'trigger_file_processing', 'POST', '/api/v1/data/table_name/file/1234-1234', {},
-                aito_requests.TriggerFileProcessingRequest(table_name='table_name', session_id='1234-1234'), None
+                'trigger_file_processing', 'POST', '/api/v1/data/table_name/file/00000000-0000-0000-0000-000000000000', {},
+                aito_requests.TriggerFileProcessingRequest(table_name='table_name', session_id='00000000-0000-0000-0000-000000000000'), None
         ),
         (
-                'get_file_processing_status', 'GET', '/api/v1/data/table_name/file/1234-1234', {},
-                aito_requests.GetFileProcessingRequest(table_name='table_name', session_id='1234-1234'), None
+                'get_file_processing_status', 'GET', '/api/v1/data/table_name/file/00000000-0000-0000-0000-000000000000', {},
+                aito_requests.GetFileProcessingRequest(table_name='table_name', session_id='00000000-0000-0000-0000-000000000000'), None
         ),
         (
                 'create_job', 'POST', '/api/v1/jobs/_search', {},
                 aito_requests.CreateJobRequest(endpoint='/api/v1/jobs/_search', query={}), None
         ),
         (
-                'get_job_status', 'GET', '/api/v1/jobs/1234-1234', {},
-                aito_requests.GetJobStatusRequest(job_id='1234-1234'), None
+                'get_job_status', 'GET', '/api/v1/jobs/00000000-0000-0000-0000-000000000000', {},
+                aito_requests.GetJobStatusRequest(job_id='00000000-0000-0000-0000-000000000000'), None
         ),
         (
-                'get_job_result', 'GET', '/api/v1/jobs/1234-1234/result', {},
-                aito_requests.GetJobResultRequest(job_id='1234-1234'), None
+                'get_job_result', 'GET', '/api/v1/jobs/00000000-0000-0000-0000-000000000000/result', {},
+                aito_requests.GetJobResultRequest(job_id='00000000-0000-0000-0000-000000000000'), None
         ),
         ('erroneous_method', 'PATCH', '/api/v1/schema', {}, None, ValueError),
         ('erroneous_endpoint', 'GET', 'api/v1/schema', {}, None, ValueError),

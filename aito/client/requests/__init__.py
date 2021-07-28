@@ -2,7 +2,7 @@
 
 """
 
-from .data_api_request import UploadEntriesRequest, DeleteEntriesRequest, InitiateFileUploadRequest, \
+from .data_api_request import DataAPIRequest, UploadEntriesRequest, DeleteEntriesRequest, InitiateFileUploadRequest, \
     TriggerFileProcessingRequest, GetFileProcessingRequest
 from .job_api_request import CreateJobRequest, GetJobResultRequest, GetJobStatusRequest
 from .query_api_request import QueryAPIRequest, SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
