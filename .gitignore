@@ -125,3 +125,7 @@ docs/source/api_stubs
 
 # Editor (Emacs) backup files
 *~
+
+# .env files except for the example ones
+.env.*
+!.env.example

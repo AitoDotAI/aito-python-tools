@@ -1,0 +1,21 @@
+# Use the official Python 3.11 (Debian-based) image
+FROM python:3.11-bullseye
+
+# Ensure Python doesn't buffer stdout (helpful for Docker logs)
+ENV PYTHONUNBUFFERED=1
+
+# Create a directory for your code
+WORKDIR /workspace
+
+# (Optional) Install any system packages you need
+RUN apt-get update && apt-get install -y less curl meld x11-apps
+
+# Declare /workspace as a volume so Docker "knows" it's an external mount point.
+# This is optional: you can also just use `-v` at runtime without a VOLUME line.
+
+# (Optional) Install Python dependencies if you have a requirements file
+COPY requirements requirements
+RUN pip install --no-cache-dir -r requirements/build.txt -r requirements/test.txt
+
+# Default command is a shell
+CMD ["bash"]

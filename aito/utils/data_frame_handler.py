@@ -8,6 +8,8 @@ import pandas as pd
 
 from aito.utils._typing import *
 from aito.schema import AitoTableSchema, DataSeriesProperties
+from packaging import version
+
 
 LOG = logging.getLogger('DataFrameHandler')
 
@@ -18,12 +20,35 @@ class DataFrameHandler:
     allowed_format = ['csv', 'json', 'excel', 'ndjson']
 
     def __init__(self):
-        self.default_options = {
-            'csv': {'index_col':False, 'error_bad_lines':False, 'warn_bad_lines':True, 'engine':'python'},
-            'excel': {},
-            'json': {'orient': 'records'},
-            'ndjson': {'orient': 'records', 'lines': True}
-        }
+
+        pandas_version = version.parse(pd.__version__)
+
+        if pandas_version < version.parse("1.4"):
+            # Use the older pandas parameters
+            self.default_options = {
+                'csv': {
+                    'index_col': False,
+                    'error_bad_lines': False,
+                    'warn_bad_lines': True,
+                    'engine': 'python'
+                },
+                'excel': {},
+                'json': {'orient': 'records'},
+                'ndjson': {'orient': 'records', 'lines': True}
+            }
+        else:
+            # Use on_bad_lines (introduced in Pandas 1.3, removed error_bad_lines in 1.4)
+            self.default_options = {
+                'csv': {
+                    'index_col': False,
+                    'on_bad_lines': 'warn',
+                    'engine': 'python'
+                },
+                'excel': {},
+                'json': {'orient': 'records'},
+                'ndjson': {'orient': 'records', 'lines': True}
+            }
+
         self.default_apply_functions = [self._datetime_to_string]
 
     def _validate_in_out_format(self, in_format: str, out_format: str):
