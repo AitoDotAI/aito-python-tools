@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /workspace
 
 # (Optional) Install any system packages you need
-RUN apt-get update && apt-get install -y less curl meld x11-apps
+RUN apt-get update && apt-get install -y less curl meld x11-apps unixodbc-dev
 
 # Declare /workspace as a volume so Docker "knows" it's an external mount point.
 # This is optional: you can also just use `-v` at runtime without a VOLUME line.

@@ -627,7 +627,7 @@ jobs:
   run_postgres_tests_built_package:
     docker:
       - image: cimg/python:3.11
-      - image: circleci/postgres:9.6
+      - image: cimg/postgres:13.20
         environment:
           POSTGRES_DB: circleci_test
           POSTGRES_USER: test
@@ -660,7 +660,7 @@ jobs:
   run_mysql_tests_built_package:
     docker:
       - image: cimg/python:3.11
-      - image: circleci/mysql:8.0.3
+      - image: cimg/mysql:8.0.33
         environment:
           MYSQL_DATABASE: circleci_test
           MYSQL_USER: test
