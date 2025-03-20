@@ -659,7 +659,7 @@ jobs:
 
   run_mysql_tests_built_package:
     docker:
-      - image: cimg/python:3.11-stretch
+      - image: cimg/python:3.11
       - image: circleci/mysql:8.0.3
         environment:
           MYSQL_DATABASE: circleci_test
