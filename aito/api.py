@@ -1,5 +1,5 @@
-"""Different APIs that takes an :class:`Aito Client object <aito.client.AitoClient>` as the first argument
-
+"""
+Different APIs that takes an :class:`Aito Client object <aito.client.AitoClient>` as the first argument
 """
 
 import logging
