@@ -17,7 +17,7 @@ LOG = logging.getLogger('DataFrameHandler')
 class DataFrameHandler:
     """A handler that supports read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema
     """
-    allowed_format = ['csv', 'json', 'excel', 'ndjson']
+    allowed_format = ['csv', 'json', 'excel', 'ndjson', 'parquet']
 
     def __init__(self):
 
@@ -34,7 +34,8 @@ class DataFrameHandler:
                 },
                 'excel': {},
                 'json': {'orient': 'records'},
-                'ndjson': {'orient': 'records', 'lines': True}
+                'ndjson': {'orient': 'records', 'lines': True},
+                'parquet': {}
             }
         else:
             # Use on_bad_lines (introduced in Pandas 1.3, removed error_bad_lines in 1.4)
@@ -46,7 +47,8 @@ class DataFrameHandler:
                 },
                 'excel': {},
                 'json': {'orient': 'records'},
-                'ndjson': {'orient': 'records', 'lines': True}
+                'ndjson': {'orient': 'records', 'lines': True},
+                'parquet': {}
             }
 
         self.default_apply_functions = [self._datetime_to_string]
@@ -146,7 +148,13 @@ class DataFrameHandler:
         :rtype: pd.DataFrame
         """
         LOG.debug(f'reading data from {read_input} to df...')
-        read_functions = {'csv': pd.read_csv, 'excel': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
+        read_functions = {
+            'csv': pd.read_csv,
+            'excel': pd.read_excel,
+            'json': pd.read_json,
+            'ndjson': pd.read_json,
+            'parquet': pd.read_parquet
+        }
 
         if not read_options:
             options = self.default_options[in_format]
@@ -174,7 +182,13 @@ class DataFrameHandler:
         :param convert_options: dictionary contains arguments for pandas write function, defaults to None
         :type convert_options: Dict, optional
         """
-        convert_functions = {'csv': df.to_csv, 'excel': df.to_excel, 'json': df.to_json, 'ndjson': df.to_json}
+        convert_functions = {
+            'csv': df.to_csv,
+            'excel': df.to_excel,
+            'json': df.to_json,
+            'ndjson': df.to_json,
+            'parquet': df.to_parquet
+        }
         if not convert_options:
             options = self.default_options[out_format]
         else:

@@ -11,6 +11,7 @@ from .query_api_request import QueryAPIRequest
 from .data_api_request import DataAPIRequest
 from aito.schema import AitoDatabaseSchema, AitoSchema
 
+
 class _JobAPIRequest(AitoRequest):
     endpoint_prefix = f'{AitoRequest._api_version_endpoint_prefix}/jobs'
 

@@ -174,7 +174,9 @@ commonYAMLStructure:
   - &install_odbc_driver_linux
     run:
       name: install odbc driver
-      command: sudo apt install unixodbc-dev
+      command: |
+        sudo apt update
+        sudo apt install unixodbc-dev
   - &install_odbc_driver_osx
     run:
       name: install odbc driver

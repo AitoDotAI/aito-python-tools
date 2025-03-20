@@ -222,6 +222,19 @@ class TestInferTableSchema(ParserAndCLITestCase):
             )
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema.json')
 
+    def test_infer_schema_from_parquet(self):
+        expected_args = {
+            'input': self.input_folder / 'invoice.parquet',
+            'input-format': 'parquet',
+            **self.default_main_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(
+                ['infer-table-schema', 'parquet', f'{self.input_folder}/invoice.parquet'],
+                expected_args, stub_stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_aito_schema.json')
+
     def test_incorrect_input_file_path(self):
         with self.assertRaises(SystemExit):
             self.parser.parse_args(['infer-table-schema', 'csv', str(self.input_folder / 'a_wild_file_appears.csv')])
