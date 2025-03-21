@@ -200,8 +200,8 @@ commonYAMLStructure:
         
         wget https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit.tar.gz
         tar zxvf mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit.tar.gz
-        sudo cp mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit/bin/* /usr/local/bin
-        sudo cp mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit/lib/* /usr/local/lib
+        sudo cp -r mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit/bin/* /usr/local/bin
+        sudo cp -r mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit/lib/* /usr/local/lib
         sudo chmod 777 /usr/local/lib/libmyodbc*
         sudo myodbc-installer -a -d -n "MySQL ODBC 9.1 Driver" -t "Driver=/usr/local/lib/libmyodbc9w.so"
 
