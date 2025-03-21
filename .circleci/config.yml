@@ -196,6 +196,8 @@ commonYAMLStructure:
     run:
       name: install msql odbc unicode driver
       command: |
+        sudo apt update
+        sudo apt install libssl1.1
         wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
         tar zxvf mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
         sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/bin/* /usr/local/bin
