@@ -214,7 +214,7 @@ commonYAMLStructure:
         sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/bin/* /usr/local/bin
         sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/lib/* /usr/local/lib
         sudo chmod 777 /usr/local/lib/libmyodbc*
-        sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
+          sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
   - &install_pyodbc
     run:
       name: install pyodbc library
