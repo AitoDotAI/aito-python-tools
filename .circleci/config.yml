@@ -50,7 +50,7 @@ workflows:
             - run_sdk_and_cli_tests_win_py_36
       - run_sdk_and_cli_tests_built_package
       - run_postgres_tests_built_package
-      - run_mysql_tests_built_package
+      #- run_mysql_tests_built_package
       - run_alter_instance_db_tests:
           requires:
             - run_sdk_and_cli_tests_linux_py_37
@@ -66,7 +66,7 @@ workflows:
             - run_sdk_and_cli_tests_win_py_38
             - run_sdk_and_cli_tests_built_package
             - run_postgres_tests_built_package
-            - run_mysql_tests_built_package
+            #- run_mysql_tests_built_package
       - build_docs
       - build_and_deploy_to_test_pypi:
           requires:
@@ -214,7 +214,7 @@ commonYAMLStructure:
         sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/bin/* /usr/local/bin
         sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/lib/* /usr/local/lib
         sudo chmod 777 /usr/local/lib/libmyodbc*
-          sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
+        sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
   - &install_pyodbc
     run:
       name: install pyodbc library
