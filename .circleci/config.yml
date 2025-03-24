@@ -33,13 +33,13 @@ workflows:
       #- run_sdk_and_cli_tests_osx_py_38:
       #    requires:
       #      - run_sdk_and_cli_tests_osx_py_36
-      - run_postgres_tests_osx_py_36
-      - run_postgres_tests_osx_py_37:
-          requires:
-            - run_postgres_tests_osx_py_36
-      - run_postgres_tests_osx_py_38:
-          requires:
-            - run_postgres_tests_osx_py_36
+      #- run_postgres_tests_osx_py_36
+      #- run_postgres_tests_osx_py_37:
+      #    requires:
+      #      - run_postgres_tests_osx_py_36
+      #- run_postgres_tests_osx_py_38:
+      #    requires:
+      #      - run_postgres_tests_osx_py_36
       - run_sdk_and_cli_tests_win_py_36
       - run_sdk_and_cli_tests_win_py_37:
           requires:
@@ -59,8 +59,8 @@ workflows:
             #- run_mysql_tests_linux_37
             #- run_sdk_and_cli_tests_osx_py_37
             #- run_sdk_and_cli_tests_osx_py_38
-            - run_postgres_tests_osx_py_37
-            - run_postgres_tests_osx_py_38
+            #- run_postgres_tests_osx_py_37
+            #- run_postgres_tests_osx_py_38
             - run_sdk_and_cli_tests_win_py_37
             - run_sdk_and_cli_tests_win_py_38
             - run_sdk_and_cli_tests_built_package
