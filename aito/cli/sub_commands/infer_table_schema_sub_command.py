@@ -84,6 +84,7 @@ class InferTableSchemaSubCommand(SubCommand):
         InferFromExcelSubCommand(),
         InferFromFormatSubCommand('json', 'infer a table schema from JSON data'),
         InferFromFormatSubCommand('ndjson', 'infer a table schema from NDJSON data'),
+        InferFromFormatSubCommand('parquet', 'infer a table schema from parquet data'),
         InferFromSQLSubCommand()
     ]
 

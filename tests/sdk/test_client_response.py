@@ -53,10 +53,10 @@ class TestBaseHitsResponse(CompareTestCase):
 @parameterized_class(("test_name", "request_obj", "score_field"), [
     ("predict", aito_requests.PredictRequest({"from": "products", "predict": "tags", "limit": 3}), "$p"),
     ("recommend", aito_requests.RecommendRequest(
-        {"from": "impressions", "recommend": "product", "goal": {"session.user": "veronica"}, "limit": 3}
+        {"from": "impressions", "recommend": "product", "goal": {"context.user": "veronica"}, "limit": 3}
     ), "$p" ),
     ("match", aito_requests.MatchRequest(
-        {"from": "impressions", "where": {"session.user": "veronica"}, "match": "product", "limit": 3}
+        {"from": "impressions", "where": {"context.user": "veronica"}, "match": "product", "limit": 3}
     ), "$p"),
     ("similarity", aito_requests.SimilarityRequest({"from": "products", "similarity": {"name": "rye bread"}}), "$score")
 ])

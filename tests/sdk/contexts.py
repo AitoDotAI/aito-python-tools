@@ -34,7 +34,7 @@ endpoint_methods_test_context = [
     (
             'recommend',
             RecommendRequest,
-            {"from": "impressions", "recommend": "product", "goal": {"session.user": "veronica"}},
+            {"from": "impressions", "recommend": "product", "goal": {"context.user": "veronica"}},
             RecommendResponse
     ),
     (
@@ -59,7 +59,7 @@ endpoint_methods_test_context = [
     (
             'match',
             MatchRequest,
-            {"from": "impressions", "where": {"session.user": "veronica"}, "match": "product"},
+            {"from": "impressions", "where": {"context.user": "veronica"}, "match": "product"},
             MatchResponse
     ),
     ('relate', RelateRequest, {"from": "products", "where": {"$exists": "name"}, "relate": "tags"}, RelateResponse),

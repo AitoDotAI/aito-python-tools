@@ -128,6 +128,11 @@ class AitoClient:
         >>> print(res.to_json_string(indent=2, sort_keys=True))
         {
           "columns": {
+            "context": {
+              "link": "contexts.id",
+              "nullable": false,
+              "type": "String"
+            },
             "product": {
               "link": "products.id",
               "nullable": false,
@@ -136,11 +141,6 @@ class AitoClient:
             "purchase": {
               "nullable": false,
               "type": "Boolean"
-            },
-            "session": {
-              "link": "sessions.id",
-              "nullable": false,
-              "type": "String"
             }
           },
           "type": "table"
@@ -152,7 +152,7 @@ class AitoClient:
          >>> res = client.request(request_obj=PredictRequest(
          ...    query={
          ...        "from": "impressions",
-         ...        "where": { "session": "veronica" },
+         ...        "where": { "context": "veronica" },
          ...        "predict": "product.name"
          ...    }
          ... )) # doctest: +NORMALIZE_WHITESPACE
@@ -296,7 +296,7 @@ class AitoClient:
         ...     MatchRequest(
         ...         query = {
         ...             'from': 'impressions',
-        ...             'where': { 'session.user': usr },
+        ...             'where': { 'context.user': usr },
         ...             'match': 'product'
         ...         }
         ...     )

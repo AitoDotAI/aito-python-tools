@@ -63,7 +63,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
         ('limited_max_concurrent', 1)
     ])
     def test_batch_queries(self, _, max_concurrent):
-        queries = [{'from': 'users', 'limit': 1}] * 3
+        queries = [{'from': 'users', 'limit': 1, 'select': ['id']}] * 3
         responses = self.client.batch_requests(
             [BaseRequest('POST', '/api/v1/_query', query) for query in queries],
             max_concurrent_requests=max_concurrent
@@ -71,11 +71,11 @@ class TestAitoClientGroceryCase(CompareTestCase):
         self.assertTrue(all([isinstance(res, BaseResponse) for res in responses]))
         self.assertEqual(
             [res.json for res in responses],
-            [{'offset': 0, 'total': 3, 'hits': [{'username': 'veronica'}]}] * 3
+            [{'offset': 0, 'total': 134, 'hits': [{'id': '0'}]}] * 3
         )
 
     def test_batch_queries_erroneous_query(self):
-        queries = [{'from': 'users', 'limit': 1}, {'from': 'bohemian'}]
+        queries = [{'from': 'users', 'limit': 1, 'select': ['id']}, {'from': 'bohemian'}]
         responses = self.client.batch_requests([
             GenericQueryRequest(query)
             for query in queries
@@ -83,6 +83,6 @@ class TestAitoClientGroceryCase(CompareTestCase):
         self.assertTrue(isinstance(responses[0], HitsResponse))
         self.assertEqual(
             responses[0].json,
-            {'offset': 0, 'total': 3, 'hits': [{'username': 'veronica'}]}
+            {'offset': 0, 'total': 134, 'hits': [{'id': '0'}]}
         )
         self.assertTrue(isinstance(responses[1], RequestError))

@@ -91,6 +91,7 @@ class ConvertSubCommand(SubCommand):
         ConvertFromExcelSubCommand(),
         ConvertFromFormatSubCommand('json', 'convert JSON data'),
         ConvertFromFormatSubCommand('ndjson', 'convert NDJSON data'),
+        ConvertFromFormatSubCommand('parquet', 'convert parquet data'),
     ]
 
     def __init__(self, sub_commands: List[SubCommand] = None):

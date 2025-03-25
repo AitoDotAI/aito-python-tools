@@ -8,6 +8,8 @@ import pandas as pd
 
 from aito.utils._typing import *
 from aito.schema import AitoTableSchema, DataSeriesProperties
+from packaging import version
+
 
 LOG = logging.getLogger('DataFrameHandler')
 
@@ -15,15 +17,40 @@ LOG = logging.getLogger('DataFrameHandler')
 class DataFrameHandler:
     """A handler that supports read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema
     """
-    allowed_format = ['csv', 'json', 'excel', 'ndjson']
+    allowed_format = ['csv', 'json', 'excel', 'ndjson', 'parquet']
 
     def __init__(self):
-        self.default_options = {
-            'csv': {'index_col':False, 'error_bad_lines':False, 'warn_bad_lines':True, 'engine':'python'},
-            'excel': {},
-            'json': {'orient': 'records'},
-            'ndjson': {'orient': 'records', 'lines': True}
-        }
+
+        pandas_version = version.parse(pd.__version__)
+
+        if pandas_version < version.parse("1.4"):
+            # Use the older pandas parameters
+            self.default_options = {
+                'csv': {
+                    'index_col': False,
+                    'error_bad_lines': False,
+                    'warn_bad_lines': True,
+                    'engine': 'python'
+                },
+                'excel': {},
+                'json': {'orient': 'records'},
+                'ndjson': {'orient': 'records', 'lines': True},
+                'parquet': {}
+            }
+        else:
+            # Use on_bad_lines (introduced in Pandas 1.3, removed error_bad_lines in 1.4)
+            self.default_options = {
+                'csv': {
+                    'index_col': False,
+                    'on_bad_lines': 'warn',
+                    'engine': 'python'
+                },
+                'excel': {},
+                'json': {'orient': 'records'},
+                'ndjson': {'orient': 'records', 'lines': True},
+                'parquet': {}
+            }
+
         self.default_apply_functions = [self._datetime_to_string]
 
     def _validate_in_out_format(self, in_format: str, out_format: str):
@@ -121,7 +148,13 @@ class DataFrameHandler:
         :rtype: pd.DataFrame
         """
         LOG.debug(f'reading data from {read_input} to df...')
-        read_functions = {'csv': pd.read_csv, 'excel': pd.read_excel, 'json': pd.read_json, 'ndjson': pd.read_json}
+        read_functions = {
+            'csv': pd.read_csv,
+            'excel': pd.read_excel,
+            'json': pd.read_json,
+            'ndjson': pd.read_json,
+            'parquet': pd.read_parquet
+        }
 
         if not read_options:
             options = self.default_options[in_format]
@@ -149,7 +182,13 @@ class DataFrameHandler:
         :param convert_options: dictionary contains arguments for pandas write function, defaults to None
         :type convert_options: Dict, optional
         """
-        convert_functions = {'csv': df.to_csv, 'excel': df.to_excel, 'json': df.to_json, 'ndjson': df.to_json}
+        convert_functions = {
+            'csv': df.to_csv,
+            'excel': df.to_excel,
+            'json': df.to_json,
+            'ndjson': df.to_json,
+            'parquet': df.to_parquet
+        }
         if not convert_options:
             options = self.default_options[out_format]
         else:

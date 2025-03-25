@@ -457,6 +457,26 @@ class TestConvert(ParserAndCLITestCase):
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
         self.compare_json_files(generated_schema_path, self.input_folder / 'invoice_aito_schema.json')
 
+    def test_generate_schema_from_parquet(self):
+        generated_schema_path = self.output_folder / f'{self.method_name}_schema_out.txt'
+        in_fp = self.input_folder / 'invoice.parquet'
+        expected_args = {
+            'input-format': 'parquet',
+            'input': in_fp,
+            'json': True,
+            'use_table_schema': None,
+            'create_table_schema': generated_schema_path,
+            **self.default_main_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute(
+                ['convert', 'parquet', '-j', '-c', str(generated_schema_path), str(in_fp)],
+                expected_args,
+                stub_stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice.json')
+        self.compare_json_files(generated_schema_path, self.input_folder / 'invoice_aito_schema.json')
+
     def test_generate_schema_erroneous_file_path(self):
         with self.assertRaises(SystemExit):
             self.parser.parse_args([
@@ -528,6 +548,23 @@ class TestConvert(ParserAndCLITestCase):
             self.parse_and_execute([
                 'convert', 'ndjson', '-j', '-s', str(self.input_folder / 'invoice_aito_schema_altered.json'),
                 str(self.input_folder / 'invoice.ndjson')],
+                expected_args, stub_stdout=out_f
+            )
+        self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_altered.json')
+
+    def test_use_schema_parquet(self):
+        expected_args = {
+            'input-format': 'parquet',
+            'input': self.input_folder / 'invoice.parquet',
+            'json': True,
+            'use_table_schema': self.input_folder / 'invoice_aito_schema_altered.json',
+            'create_table_schema': None,
+            **self.default_main_parser_args
+        }
+        with self.out_file_path.open('w') as out_f:
+            self.parse_and_execute([
+                'convert', 'parquet', '-j', '-s', str(self.input_folder / 'invoice_aito_schema_altered.json'),
+                str(self.input_folder / 'invoice.parquet')],
                 expected_args, stub_stdout=out_f
             )
         self.compare_json_files(self.out_file_path, self.input_folder / 'invoice_altered.json')
