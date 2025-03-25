@@ -171,7 +171,7 @@ You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFram
           "type": "language",
           "useDefaultStopWords": false
         },
-        "nullable": false,
+        "nullable": true,
         "type": "Text"
       },
       "created_utc": {
