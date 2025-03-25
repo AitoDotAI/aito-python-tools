@@ -22,24 +22,6 @@ workflows:
       - run_postgres_tests_linux_py_38:
           requires:
             - run_postgres_tests_linux_py_36
-      #- run_mysql_tests_linux_36
-      #- run_mysql_tests_linux_37:
-      #    requires:
-      #      - run_mysql_tests_linux_36
-      #- run_sdk_and_cli_tests_osx_py_36
-      #- run_sdk_and_cli_tests_osx_py_37:
-      #    requires:
-      #      - run_sdk_and_cli_tests_osx_py_36
-      #- run_sdk_and_cli_tests_osx_py_38:
-      #    requires:
-      #      - run_sdk_and_cli_tests_osx_py_36
-      #- run_postgres_tests_osx_py_36
-      #- run_postgres_tests_osx_py_37:
-      #    requires:
-      #      - run_postgres_tests_osx_py_36
-      #- run_postgres_tests_osx_py_38:
-      #    requires:
-      #      - run_postgres_tests_osx_py_36
       - run_sdk_and_cli_tests_win_py_36
       - run_sdk_and_cli_tests_win_py_37:
           requires:
@@ -49,23 +31,16 @@ workflows:
             - run_sdk_and_cli_tests_win_py_36
       - run_sdk_and_cli_tests_built_package
       - run_postgres_tests_built_package
-      #- run_mysql_tests_built_package
       - run_alter_instance_db_tests:
           requires:
             - run_sdk_and_cli_tests_linux_py_37
             - run_sdk_and_cli_tests_linux_py_38
             - run_postgres_tests_linux_py_37
             - run_postgres_tests_linux_py_38
-            #- run_mysql_tests_linux_37
-            #- run_sdk_and_cli_tests_osx_py_37
-            #- run_sdk_and_cli_tests_osx_py_38
-            #- run_postgres_tests_osx_py_37
-            #- run_postgres_tests_osx_py_38
             - run_sdk_and_cli_tests_win_py_37
             - run_sdk_and_cli_tests_win_py_38
             - run_sdk_and_cli_tests_built_package
             - run_postgres_tests_built_package
-            #- run_mysql_tests_built_package
       - build_docs
       - build_and_deploy_to_test_pypi:
           requires:
@@ -76,23 +51,6 @@ workflows:
               only: master
 
 commonYAMLStructure:
-  - &install_pyenv_osx
-    run:
-      name: install pyenv
-      command: brew install pyenv
-  - &restore_pyenv_cache
-    restore_cache:
-      key: pyenv-{{ .Environment.CIRCLE_JOB }}
-  - &save_pyenv_cache
-    save_cache:
-      paths:
-        - ~/.pyenv
-      key: pyenv-{{ .Environment.CIRCLE_JOB }}
-  - &install_python_pyenv
-    run:
-      name: install python with pyenv
-      command: |
-        pyenv install $PYTHON_VERSION -s
   - &restore_venv_cache_build_and_test
     restore_cache:
       key: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ .Environment.CIRCLE_JOB }}
@@ -105,18 +63,6 @@ commonYAMLStructure:
     run:
       name: create virtualenv and install dependencies
       command: |
-        python -m venv venv
-        . venv/bin/activate
-        pip install --upgrade pip
-        pip install -r requirements/build.txt
-        pip install -r requirements/test.txt
-  - &create_venv_and_install_build_and_test_dependencies_osx
-    run:
-      name: create virtualenv and install dependencies
-      command: |
-        eval "$(pyenv init -)"
-        pyenv local $PYTHON_VERSION
-        python --version
         python -m venv venv
         . venv/bin/activate
         pip install --upgrade pip
@@ -176,44 +122,10 @@ commonYAMLStructure:
       command: |
         sudo apt update
         sudo apt install unixodbc-dev
-  - &install_odbc_driver_osx
-    run:
-      name: install odbc driver
-      command: brew install unixodbc
   - &install_postgres_odbc_driver_linux
     run:
       name: install postgres odbc driver
       command: sudo apt-get install odbc-postgresql
-  - &install_postgres_odbc_driver_osx
-    run:
-      name: install postgres odbc driver
-      command: |
-        brew install psqlodbc
-        echo "[PostgreSQL Unicode]" >> /usr/local/etc/odbcinst.ini
-        echo "Driver=/usr/local/lib/psqlodbcw.so" >> /usr/local/etc/odbcinst.ini
-  - &install_mysql_odbc_driver_910_linux
-    run:
-      name: install msql odbc unicode driver
-      command: |
-        # https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit.tar.gz
-        
-        wget https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit.tar.gz
-        tar zxvf mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit.tar.gz
-        sudo cp -r mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit/bin/* /usr/local/bin
-        sudo cp -r mysql-connector-odbc-9.1.0-linux-glibc2.28-x86-64bit/lib/* /usr/local/lib
-        sudo chmod 777 /usr/local/lib/libmyodbc*
-        sudo myodbc-installer -a -d -n "MySQL ODBC 9.1 Driver" -t "Driver=/usr/local/lib/libmyodbc9w.so"
-
-  - &install_mysql_odbc_driver_linux
-    run:
-      name: install msql odbc unicode driver
-      command: |
-        wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
-        tar zxvf mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit.tar.gz
-        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/bin/* /usr/local/bin
-        sudo cp mysql-connector-odbc-8.0.18-linux-debian9-x86-64bit/lib/* /usr/local/lib
-        sudo chmod 777 /usr/local/lib/libmyodbc*
-        sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
   - &install_pyodbc
     run:
       name: install pyodbc library
@@ -226,17 +138,6 @@ commonYAMLStructure:
       command:          |
         sudo apt-get -qy update
         sudo apt-get install postgresql-client
-  - &install_mysql_cli_linux
-    run:
-      name: install mysql cli
-      command:          |
-        sudo apt-get -qy update
-        sudo apt-get install default-mysql-client
-  - &start_postgres
-    run:
-      name: start postgres
-      command: |
-        pg_ctl -D /usr/local/var/postgres start
   - &wait_postgres
     run:
       name: wait for postgres to be ready
@@ -248,24 +149,6 @@ commonYAMLStructure:
           sleep 1
         done
         echo Failed waiting for Postgres && exit 1
-  - &wait_mysql
-    run:
-      name: wait for mysql to be ready
-      command: |
-        for i in `seq 1 60`;
-        do
-          nc -z 127.0.0.1 3306 && echo Success && exit 0
-          echo -n .
-          sleep 1
-        done
-        echo Failed waiting for MySQL && exit 1
-  - &setup_credentials_postgres
-    run:
-      name: setup postgres db and user
-      command: |
-        psql postgres -c "CREATE ROLE test WITH LOGIN PASSWORD 'test_pw'"
-        psql postgres -c "CREATE DATABASE circleci_test"
-        psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE circleci_test TO test"
   - &prepare_data_postgres
     run:
       name: populate data to postgres
@@ -282,22 +165,6 @@ commonYAMLStructure:
           (E'Sam \"Mad Dog\" Smith', 993.44, NULL),
           ('Barney & Company', 0, E'Great to work with\nand always pays with cash.'),
           (E'Johnson\'s Automotive', 2344, NULL);"
-  - &prepare_data_mysql
-    run:
-      name: populate data to mysql
-      command: |
-        mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "DROP TABLE IF EXISTS invoice;"
-        mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "CREATE TABLE invoice(
-          id serial primary key,
-          name VARCHAR(355) not null,
-          amount double precision not null,
-          remark VARCHAR (355)
-        );"
-        mysql -h 127.0.0.1 -u test -ptest_pw -D circleci_test -e "INSERT INTO invoice(name, amount, remark) VALUES
-          ('Johnson, Smith, and Jones Co.', 345.33, 'Pays on time'),
-          ('Sam \"Mad Dog\" Smith', 993.44, NULL),
-          ('Barney & Company', 0, 'Great to work with\nand always pays with cash.'),
-          ('Johnson\'s Automotive', 2344, NULL);"
   - &run_sdk_and_cli_tests
     run:
       name: run all tests execluding sql functions tests
@@ -330,20 +197,6 @@ commonYAMLStructure:
         [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
         . venv/bin/activate
         python -m tests -v case sql_functions.test_cli_sql_functions.TestPostgresFunctions
-  - &run_mysql_connection_test
-    run:
-      name: run mysql connection test
-      command: |
-        [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
-        . venv/bin/activate
-        python -m tests -v case sql_functions.test_connection.TestMySQLConnection
-  - &run_mysql_cli_test
-    run:
-      name: run mysql cli test
-      command: |
-        [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
-        . venv/bin/activate
-        python -m tests -v case sql_functions.test_cli_sql_functions.TestMySQLFunctions
   - &run_alter_db_unittests
     run:
       name: run tests that alter the instance database
@@ -455,144 +308,6 @@ jobs:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test_pw
 
-  run_mysql_tests_linux_36: &run_mysql_tests_template
-    docker:
-      - image: circleci/python:3.6.9-stretch
-      - image: circleci/mysql:8.0.3
-        environment:
-          MYSQL_DATABASE: circleci_test
-          MYSQL_USER: test
-          MYSQL_PASSWORD: test_pw
-    environment:
-      SQL_DRIVER: MySQL ODBC 8.0 Driver
-      SQL_SERVER: 127.0.0.1
-      SQL_DATABASE: circleci_test
-      SQL_USERNAME: test
-      SQL_PASSWORD: test_pw
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - *restore_venv_cache_build_and_test
-      - *create_venv_and_install_build_and_test_dependencies_linux
-      - *save_venv_cache_build_and_test
-      - *install_odbc_driver_linux
-      - *install_mysql_odbc_driver_linux
-      - *install_pyodbc
-      - *wait_mysql
-      - *run_mysql_connection_test
-      - *install_mysql_cli_linux
-      - *prepare_data_mysql
-      - *run_mysql_cli_test
-      - *store_log_files
-
-  run_mysql_tests_linux_37:
-    <<: *run_mysql_tests_template
-    docker:
-      - image: circleci/python:3.7-stretch
-      - image: circleci/mysql:8.0.3
-        environment:
-          MYSQL_DATABASE: circleci_test
-          MYSQL_USER: test
-          MYSQL_PASSWORD: test_pw
-
-  run_mysql_tests_linux_38:
-    <<: *run_mysql_tests_template
-    docker:
-      - image: circleci/python:3.8a4-stretch
-      - image: circleci/mysql:8.0.3
-        environment:
-          MYSQL_DATABASE: circleci_test
-          MYSQL_USER: test
-          MYSQL_PASSWORD: test_pw
-
-  run_sdk_and_cli_tests_osx_py_36: &run_sdk_and_cli_tests_osx_template
-    macos:
-      xcode: 11.3.0
-    environment:
-      PYTHON_VERSION: 3.6.9
-      HOMEBREW_NO_AUTO_UPDATE: 1
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - *install_pyenv_osx
-      - *restore_pyenv_cache
-      - *install_python_pyenv
-      - *save_pyenv_cache
-      - *restore_venv_cache_build_and_test
-      - *create_venv_and_install_build_and_test_dependencies_osx
-      - *save_venv_cache_build_and_test
-      - *run_sdk_and_cli_tests
-      - *store_log_files
-
-  run_sdk_and_cli_tests_osx_py_37:
-    <<: *run_sdk_and_cli_tests_osx_template
-    environment:
-      PYTHON_VERSION: 3.7.5
-      HOMEBREW_NO_AUTO_UPDATE: 1
-
-  run_sdk_and_cli_tests_osx_py_38:
-    <<: *run_sdk_and_cli_tests_osx_template
-    environment:
-      PYTHON_VERSION: 3.8.0
-      HOMEBREW_NO_AUTO_UPDATE: 1
-
-  run_postgres_tests_osx_py_36: &run_postgres_tests_osx_template
-    macos:
-      xcode: 11.3.0
-    environment:
-      SQL_DRIVER: PostgreSQL Unicode
-      SQL_SERVER: localhost
-      SQL_DATABASE: circleci_test
-      SQL_USERNAME: test
-      SQL_PASSWORD: test_pw
-      CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
-      PYTHON_VERSION: 3.6.9
-      HOMEBREW_NO_AUTO_UPDATE: 1
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - *install_odbc_driver_osx
-      - *install_postgres_odbc_driver_osx
-      - *install_pyenv_osx
-      - *restore_pyenv_cache
-      - *install_python_pyenv
-      - *save_pyenv_cache
-      - *restore_venv_cache_build_and_test
-      - *create_venv_and_install_build_and_test_dependencies_osx
-      - *install_pyodbc
-      - *save_venv_cache_build_and_test
-      - *start_postgres
-      - *wait_postgres
-      - *setup_credentials_postgres
-      - *run_postgres_connection_test
-      - *prepare_data_postgres
-      - *run_postgres_cli_test
-      - *store_log_files
-
-  run_postgres_tests_osx_py_37:
-    <<: *run_postgres_tests_osx_template
-    environment:
-      SQL_DRIVER: PostgreSQL Unicode
-      SQL_SERVER: localhost
-      SQL_DATABASE: circleci_test
-      SQL_USERNAME: test
-      SQL_PASSWORD: test_pw
-      CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
-      PYTHON_VERSION: 3.7.5
-      HOMEBREW_NO_AUTO_UPDATE: 1
-
-  run_postgres_tests_osx_py_38:
-    <<: *run_postgres_tests_osx_template
-    environment:
-      SQL_DRIVER: PostgreSQL Unicode
-      SQL_SERVER: localhost
-      SQL_DATABASE: circleci_test
-      SQL_USERNAME: test
-      SQL_PASSWORD: test_pw
-      CONNECTION_STRING: postgresql://test:test_pw@localhost/circleci_test
-      PYTHON_VERSION: 3.8.0
-      HOMEBREW_NO_AUTO_UPDATE: 1
-
   run_sdk_and_cli_tests_win_py_36: &run_sdk_and_cli_tests_win_template
     executor:
       name: win/default
@@ -664,38 +379,6 @@ jobs:
       - *install_postgres_cli_linux
       - *prepare_data_postgres
       - *run_postgres_cli_test
-      - *store_log_files
-
-  run_mysql_tests_built_package:
-    docker:
-      - image: cimg/python:3.11
-      - image: cimg/mysql:8.0.33
-        environment:
-          MYSQL_DATABASE: circleci_test
-          MYSQL_USER: test
-          MYSQL_PASSWORD: test_pw
-    environment:
-      SQL_DRIVER: MySQL ODBC 9.1 Driver
-      SQL_SERVER: 127.0.0.1
-      SQL_DATABASE: circleci_test
-      SQL_USERNAME: test
-      SQL_PASSWORD: test_pw
-      TEST_BUILT_PACKAGE: True
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - *restore_venv_cache_deploy_and_test
-      - *create_venv_and_install_deploy_and_test_dependencies
-      - *save_venv_cache_deploy_and_test
-      - *build_and_install_package
-      - *install_odbc_driver_linux
-      - *install_mysql_odbc_driver_910_linux
-      - *install_pyodbc
-      - *wait_mysql
-      - *run_mysql_connection_test
-      - *install_mysql_cli_linux
-      - *prepare_data_mysql
-      - *run_mysql_cli_test
       - *store_log_files
 
   run_alter_instance_db_tests:
