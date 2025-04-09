@@ -1,5 +1,13 @@
 Changelog
 =========
+
+0.5.0
+-----
+
+Parquet file format support added.
+
+Library dependencies updated to more modern versions. E.g. Pandas 2 is now supported.
+
 0.4.3
 -----
  This version adds better support for performing jobs on Aito.
