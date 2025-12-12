@@ -61,6 +61,19 @@ class AitoClient:
     # Pattern to detect multitenant URLs: /db/{database_name}
     _MULTITENANT_PATH_PREFIX = '/db/'
 
+    @property
+    def is_multitenant(self) -> bool:
+        """Check if the client is connected to a multitenant instance.
+
+        Multitenant URLs have the format: https://shared.aito.ai/db/{database_name}
+
+        :return: True if connected to a multitenant instance
+        :rtype: bool
+        """
+        from urllib.parse import urlparse
+        parsed = urlparse(self.instance_url)
+        return self._MULTITENANT_PATH_PREFIX in parsed.path
+
     def __init__(
             self,
             instance_url: str,

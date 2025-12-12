@@ -17,7 +17,7 @@ import aito.client.requests as aito_requests
 import aito.client.responses as aito_responses
 from aito.client import AitoClient, RequestError
 from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema
-from aito.utils._file_utils import gzip_file, check_file_is_gzipped
+from aito.utils._file_utils import gzip_file, check_file_is_gzipped, read_ndjson_gz_file
 from aito.utils.data_frame_handler import DataFrameHandler
 
 LOG = logging.getLogger('AitoAPI')
@@ -470,14 +470,38 @@ def poll_file_processing_status(client: AitoClient, table_name: str, session_id:
         time.sleep(polling_time)
 
 
+def _stream_entries_from_gzip(binary_file: BinaryIO) -> Iterable[Dict]:
+    """Stream entries from a gzipped ndjson file.
+
+    This is a generator that yields entries one by one from a gzipped ndjson file,
+    which is memory-efficient for large files.
+
+    :param binary_file: binary file object of a gzipped ndjson file
+    :type binary_file: BinaryIO
+    :yield: entries from the file
+    :rtype: Iterable[Dict]
+    """
+    import gzip
+    import json
+    with gzip.open(binary_file, 'rt', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                yield json.loads(line)
+
+
 def upload_binary_file(
         client: AitoClient,
         table_name: str,
         binary_file: BinaryIO,
         polling_time: int = 10,
-        optimize_on_finished: bool = True
+        optimize_on_finished: bool = True,
+        batch_size: int = 1000
 ):
     """`upload a binary file object to a table <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
+
+    For multitenant instances, this function uses streaming batch uploads instead of S3 file upload,
+    as S3 file upload is not supported in multitenant environments.
 
     .. note::
 
@@ -489,23 +513,39 @@ def upload_binary_file(
     :type table_name: str
     :param binary_file: binary file object
     :type binary_file: BinaryIO
-    :param polling_time: polling wait time
+    :param polling_time: polling wait time (only used for non-multitenant S3 upload)
     :type polling_time: int
     :param optimize_on_finished: :func:`optimize_table` when finished uploading, defaults to True
     :type optimize_on_finished: bool
+    :param batch_size: batch size for streaming upload (only used for multitenant), defaults to 1000
+    :type batch_size: int
     """
     LOG.debug(f'uploading file object to table `{table_name}`...')
-    init_upload_resp = initiate_upload_file(client=client, table_name=table_name)
-    upload_binary_file_to_s3(initiate_upload_file_response=init_upload_resp, binary_file=binary_file)
-    upload_session_id = init_upload_resp['id']
-    trigger_file_processing(client=client, table_name=table_name, session_id=upload_session_id)
-    poll_file_processing_status(
-        client=client, table_name=table_name, session_id=upload_session_id, polling_time=polling_time
-    )
 
-    LOG.info(f'uploaded file object to table `{table_name}`')
-    if optimize_on_finished:
-        optimize_table(client, table_name)
+    if client.is_multitenant:
+        # For multitenant instances, use streaming batch upload
+        LOG.info(f'using streaming upload for multitenant instance')
+        entries = _stream_entries_from_gzip(binary_file)
+        upload_entries(
+            client=client,
+            table_name=table_name,
+            entries=entries,
+            batch_size=batch_size,
+            optimize_on_finished=optimize_on_finished
+        )
+    else:
+        # For non-multitenant instances, use S3 file upload
+        init_upload_resp = initiate_upload_file(client=client, table_name=table_name)
+        upload_binary_file_to_s3(initiate_upload_file_response=init_upload_resp, binary_file=binary_file)
+        upload_session_id = init_upload_resp['id']
+        trigger_file_processing(client=client, table_name=table_name, session_id=upload_session_id)
+        poll_file_processing_status(
+            client=client, table_name=table_name, session_id=upload_session_id, polling_time=polling_time
+        )
+
+        LOG.info(f'uploaded file object to table `{table_name}`')
+        if optimize_on_finished:
+            optimize_table(client, table_name)
 
 
 def upload_file(
@@ -513,9 +553,13 @@ def upload_file(
         table_name: str,
         file_path: PathLike,
         polling_time: int = 10,
-        optimize_on_finished: bool = True
+        optimize_on_finished: bool = True,
+        batch_size: int = 1000
 ):
     """`upload a file <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__ to the specfied table
+
+    For multitenant instances, this function uses streaming batch uploads instead of S3 file upload,
+    as S3 file upload is not supported in multitenant environments.
 
     .. note::
 
@@ -527,10 +571,12 @@ def upload_file(
     :type table_name: str
     :param file_path: path to the file to be uploaded
     :type file_path: PathLike
-    :param polling_time: polling wait time
+    :param polling_time: polling wait time (only used for non-multitenant S3 upload)
     :type polling_time: int
     :param optimize_on_finished: :func:`optimize_table` when finished uploading, defaults to True
     :type optimize_on_finished: bool
+    :param batch_size: batch size for streaming upload (only used for multitenant), defaults to 1000
+    :type batch_size: int
     :raises ValueError: incorrect file extension, should be .ndjson.gz
     """
     if not check_file_is_gzipped(file_path):
@@ -541,14 +587,22 @@ def upload_file(
             table_name=table_name,
             binary_file=f,
             polling_time=polling_time,
-            optimize_on_finished=optimize_on_finished
+            optimize_on_finished=optimize_on_finished,
+            batch_size=batch_size
         )
 
 
 def quick_add_table(
-        client: AitoClient, input_file: Union[Path, PathLike], table_name: str = None, input_format: str = None
+        client: AitoClient,
+        input_file: Union[Path, PathLike],
+        table_name: str = None,
+        input_format: str = None,
+        batch_size: int = 1000
 ):
     """Create a table and upload a file to the table, using the default inferred schema
+
+    For multitenant instances, this function uses streaming batch uploads instead of S3 file upload,
+    as S3 file upload is not supported in multitenant environments.
 
     :param client: the AitoClient instance
     :type client: AitoClient
@@ -558,6 +612,8 @@ def quick_add_table(
     :type table_name: Optional[str]
     :param input_format: specify the format of the input file, defaults to the input file extension
     :type input_format: Optional[str]
+    :param batch_size: batch size for streaming upload (only used for multitenant), defaults to 1000
+    :type batch_size: int
     """
     df_handler = DataFrameHandler()
 
@@ -586,7 +642,7 @@ def quick_add_table(
     create_table(client, table_name, inferred_schema)
 
     with open(converted_tmp_file.name, 'rb') as in_f:
-        upload_binary_file(client=client, table_name=table_name, binary_file=in_f)
+        upload_binary_file(client=client, table_name=table_name, binary_file=in_f, batch_size=batch_size)
     converted_tmp_file.close()
     unlink(converted_tmp_file.name)
 
