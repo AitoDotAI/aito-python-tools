@@ -53,6 +53,10 @@ class AitoClient:
     """A versatile client that connects to the Aito Database Instance
 
     """
+
+    # Pattern to detect multitenant URLs: /db/{database_name}
+    _MULTITENANT_PATH_PREFIX = '/db/'
+
     def __init__(
             self,
             instance_url: str,
@@ -82,10 +86,47 @@ class AitoClient:
         self.instance_version = None
         if check_credentials:
             try:
-                version_resp = self.request(request_obj=GetVersionRequest(), raise_for_status=True)
+                version_resp = self._request_version()
                 self.instance_version = version_resp.version
             except Exception:
                 raise Error('failed to instantiate Aito Client, please check your credentials')
+
+    @property
+    def _base_url(self) -> str:
+        """Extract the base URL for endpoints that don't include the database path.
+
+        For multitenant URLs like 'https://shared.aito.ai/db/my-database',
+        returns 'https://shared.aito.ai'.
+        For regular URLs, returns the instance_url unchanged.
+        """
+        from urllib.parse import urlparse, urlunparse
+        parsed = urlparse(self.instance_url)
+        path = parsed.path
+        if self._MULTITENANT_PATH_PREFIX in path:
+            # Strip /db/{database_name} from the path
+            db_index = path.find(self._MULTITENANT_PATH_PREFIX)
+            base_path = path[:db_index]
+            return urlunparse(parsed._replace(path=base_path))
+        return self.instance_url
+
+    def _request_version(self):
+        """Request the Aito instance version.
+
+        For multitenant deployments, the /version endpoint is at the base URL,
+        not under the database path.
+        """
+        version_url = self._base_url + GetVersionRequest.endpoint
+        try:
+            resp = requestslib.request(
+                method=GetVersionRequest.method,
+                url=version_url,
+                headers=self.headers,
+                json=None
+            )
+            resp.raise_for_status()
+            return GetVersionRequest.response_cls(resp.json())
+        except Exception as e:
+            raise RequestError(GetVersionRequest(), e)
 
     @property
     def headers(self):
