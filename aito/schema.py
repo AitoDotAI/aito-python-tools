@@ -771,7 +771,10 @@ class DataSeriesProperties :
 class AitoDataTypeSchema(AitoSchema, ABC):
     """The base class for Aito DataType"""
 
-    _supported_data_types = ["Boolean", "Decimal", "Int", "String", "Text"]
+    _supported_data_types = [
+        "Boolean", "Decimal", "Int", "String", "Text",
+        "Boolean[]", "Decimal[]", "Int[]", "String[]", "Text[]"
+    ]
 
     def __init__(self, aito_dtype: str):
         """
@@ -838,6 +841,24 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         """
         return self._aito_dtype == 'Decimal'
 
+    @property
+    def is_array(self) -> bool:
+        """returns True if the data type is an array type
+
+        :rtype: bool
+        """
+        return self._aito_dtype.endswith('[]')
+
+    @property
+    def element_type(self) -> str:
+        """returns the element type for array types, or the type itself for non-array types
+
+        :rtype: str
+        """
+        if self.is_array:
+            return self._aito_dtype[:-2]  # Remove '[]' suffix
+        return self._aito_dtype
+
     def to_json_serializable(self) -> str:
         return self._aito_dtype
 
@@ -864,6 +885,17 @@ class AitoDataTypeSchema(AitoSchema, ABC):
             return AitoStringType()
         if obj == 'Text':
             return AitoTextType()
+        # Array types
+        if obj == 'Boolean[]':
+            return AitoBooleanArrayType()
+        if obj == 'Int[]':
+            return AitoIntArrayType()
+        if obj == 'Decimal[]':
+            return AitoDecimalArrayType()
+        if obj == 'String[]':
+            return AitoStringArrayType()
+        if obj == 'Text[]':
+            return AitoTextArrayType()
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -944,6 +976,53 @@ class AitoTextType(AitoDataTypeSchema):
 
     def to_python_type(self):
         return str
+
+
+# Array types
+
+class AitoBooleanArrayType(AitoDataTypeSchema):
+    """Aito Boolean Array Type"""
+    def __init__(self):
+        super().__init__('Boolean[]')
+
+    def to_python_type(self):
+        return list
+
+
+class AitoIntArrayType(AitoDataTypeSchema):
+    """Aito Int Array Type"""
+    def __init__(self):
+        super().__init__('Int[]')
+
+    def to_python_type(self):
+        return list
+
+
+class AitoDecimalArrayType(AitoDataTypeSchema):
+    """Aito Decimal Array Type"""
+    def __init__(self):
+        super().__init__('Decimal[]')
+
+    def to_python_type(self):
+        return list
+
+
+class AitoStringArrayType(AitoDataTypeSchema):
+    """Aito String Array Type"""
+    def __init__(self):
+        super().__init__('String[]')
+
+    def to_python_type(self):
+        return list
+
+
+class AitoTextArrayType(AitoDataTypeSchema):
+    """Aito Text Array Type"""
+    def __init__(self):
+        super().__init__('Text[]')
+
+    def to_python_type(self):
+        return list
 
 
 class AitoColumnLinkSchema(AitoSchema):
