@@ -232,7 +232,7 @@ class AitoClient:
          ...    }
          ... )) # doctest: +NORMALIZE_WHITESPACE
          >>> print(res.top_prediction) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-         {"$p": ..., "field": ..., "feature": ...}
+         {"$p": ..., "$value": ...}
 
          Returns an error when make a request to an incorrect path:
 
