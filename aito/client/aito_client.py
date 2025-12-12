@@ -40,8 +40,12 @@ class RequestError(Error):
         self.request_obj = request_obj
         self.error = error
         if isinstance(error, requestslib.HTTPError):
-            resp = error.response.json()
-            error_msg = resp['message'] if 'message' in resp else resp
+            try:
+                resp = error.response.json()
+                error_msg = resp['message'] if 'message' in resp else resp
+            except (ValueError, KeyError):
+                # Response is not valid JSON or doesn't have expected structure
+                error_msg = error.response.text or str(error)
         elif isinstance(error, ClientResponseError):
             error_msg = error.message
         else:
@@ -53,6 +57,23 @@ class AitoClient:
     """A versatile client that connects to the Aito Database Instance
 
     """
+
+    # Pattern to detect multitenant URLs: /db/{database_name}
+    _MULTITENANT_PATH_PREFIX = '/db/'
+
+    @property
+    def is_multitenant(self) -> bool:
+        """Check if the client is connected to a multitenant instance.
+
+        Multitenant URLs have the format: https://shared.aito.ai/db/{database_name}
+
+        :return: True if connected to a multitenant instance
+        :rtype: bool
+        """
+        from urllib.parse import urlparse
+        parsed = urlparse(self.instance_url)
+        return self._MULTITENANT_PATH_PREFIX in parsed.path
+
     def __init__(
             self,
             instance_url: str,
@@ -82,10 +103,64 @@ class AitoClient:
         self.instance_version = None
         if check_credentials:
             try:
-                version_resp = self.request(request_obj=GetVersionRequest(), raise_for_status=True)
+                version_resp = self._request_version()
                 self.instance_version = version_resp.version
+                # Also verify API key is valid by making an authenticated request
+                self._verify_api_key()
             except Exception:
                 raise Error('failed to instantiate Aito Client, please check your credentials')
+
+    @property
+    def _base_url(self) -> str:
+        """Extract the base URL for endpoints that don't include the database path.
+
+        For multitenant URLs like 'https://shared.aito.ai/db/my-database',
+        returns 'https://shared.aito.ai'.
+        For regular URLs, returns the instance_url unchanged.
+        """
+        from urllib.parse import urlparse, urlunparse
+        parsed = urlparse(self.instance_url)
+        path = parsed.path
+        if self._MULTITENANT_PATH_PREFIX in path:
+            # Strip /db/{database_name} from the path
+            db_index = path.find(self._MULTITENANT_PATH_PREFIX)
+            base_path = path[:db_index]
+            return urlunparse(parsed._replace(path=base_path))
+        return self.instance_url
+
+    def _request_version(self):
+        """Request the Aito instance version.
+
+        For multitenant deployments, the /version endpoint is at the base URL,
+        not under the database path.
+        """
+        version_url = self._base_url + GetVersionRequest.endpoint
+        try:
+            resp = requestslib.request(
+                method=GetVersionRequest.method,
+                url=version_url,
+                headers=self.headers,
+                json=None
+            )
+            resp.raise_for_status()
+            return GetVersionRequest.response_cls(resp.json())
+        except Exception as e:
+            raise RequestError(GetVersionRequest(), e)
+
+    def _verify_api_key(self):
+        """Verify the API key is valid by making an authenticated request.
+
+        The /version endpoint doesn't require authentication, so we need to
+        make a separate request to an authenticated endpoint to verify credentials.
+        """
+        schema_url = self.instance_url + '/api/v1/schema'
+        resp = requestslib.request(
+            method='GET',
+            url=schema_url,
+            headers=self.headers,
+            json=None
+        )
+        resp.raise_for_status()
 
     @property
     def headers(self):
@@ -157,7 +232,7 @@ class AitoClient:
          ...    }
          ... )) # doctest: +NORMALIZE_WHITESPACE
          >>> print(res.top_prediction) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-         {"$p": ..., "field": ..., "feature": ...}
+         {"$p": ..., "$value": ...}
 
          Returns an error when make a request to an incorrect path:
 

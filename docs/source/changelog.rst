@@ -1,6 +1,20 @@
 Changelog
 =========
 
+0.5.1
+-----
+
+This version adds support for multitenant Aito instances and array datatypes.
+
+SDK
+^^^
+
+- Added support for multitenant instance URLs (e.g., ``https://shared.aito.ai/db/my-database``)
+- Added ``is_multitenant`` property to :py:class:`~aito.client.AitoClient` to detect multitenant instances
+- File upload operations now automatically use streaming batch uploads for multitenant instances,
+  as S3 file upload is not available in multitenant environments
+- Added support for array datatypes: ``Boolean[]``, ``Int[]``, ``Decimal[]``, ``String[]``, ``Text[]``
+
 0.5.0
 -----
 

@@ -277,7 +277,7 @@ class TestAPIGroceryCase(CompareTestCase):
         cls.client = grocery_demo_client()
 
     @parameterized.expand([
-        ('same_table', 'products', 'tags', ['category', 'id', 'name', 'price'], None),
+        ('same_table', 'products', 'tags', ['category', 'cost', 'googleClicks', 'googleImpressions', 'id', 'name', 'price'], None),
         ('linked_table', 'impressions', 'product.tags', ['context', 'purchase'], None),
         ('invalid_predicting_field', 'products', 'description', None, ValueError),
         ('invalid_linked_column', 'impressions', 'products.tags', None, ValueError),
