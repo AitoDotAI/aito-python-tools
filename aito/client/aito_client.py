@@ -40,8 +40,12 @@ class RequestError(Error):
         self.request_obj = request_obj
         self.error = error
         if isinstance(error, requestslib.HTTPError):
-            resp = error.response.json()
-            error_msg = resp['message'] if 'message' in resp else resp
+            try:
+                resp = error.response.json()
+                error_msg = resp['message'] if 'message' in resp else resp
+            except (ValueError, KeyError):
+                # Response is not valid JSON or doesn't have expected structure
+                error_msg = error.response.text or str(error)
         elif isinstance(error, ClientResponseError):
             error_msg = error.message
         else:
@@ -88,6 +92,8 @@ class AitoClient:
             try:
                 version_resp = self._request_version()
                 self.instance_version = version_resp.version
+                # Also verify API key is valid by making an authenticated request
+                self._verify_api_key()
             except Exception:
                 raise Error('failed to instantiate Aito Client, please check your credentials')
 
@@ -127,6 +133,21 @@ class AitoClient:
             return GetVersionRequest.response_cls(resp.json())
         except Exception as e:
             raise RequestError(GetVersionRequest(), e)
+
+    def _verify_api_key(self):
+        """Verify the API key is valid by making an authenticated request.
+
+        The /version endpoint doesn't require authentication, so we need to
+        make a separate request to an authenticated endpoint to verify credentials.
+        """
+        schema_url = self.instance_url + '/api/v1/schema'
+        resp = requestslib.request(
+            method='GET',
+            url=schema_url,
+            headers=self.headers,
+            json=None
+        )
+        resp.raise_for_status()
 
     @property
     def headers(self):
