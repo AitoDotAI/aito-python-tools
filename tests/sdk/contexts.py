@@ -2,9 +2,9 @@ from os import getenv
 
 from aito.client import AitoClient
 from aito.client.requests import SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
-    SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest
+    SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest, EstimateRequest
 from aito.client.responses import HitsResponse, SearchResponse, PredictResponse, RecommendResponse, \
-    SimilarityResponse, MatchResponse, RelateResponse, EvaluateResponse
+    SimilarityResponse, MatchResponse, RelateResponse, EvaluateResponse, EstimateResponse
 
 
 def get_env_var(var_name):
@@ -69,4 +69,12 @@ endpoint_methods_test_context = [
             {"from": "products", "where": {"name": "Pirkka banana"}, "get": "tags", "orderBy": "$p"},
             HitsResponse
     ),
+    (
+            'estimate',
+            EstimateRequest,
+            {"from": "products", "where": {"name": "Pirkka banana"}, "estimate": "price"},
+            EstimateResponse
+    ),
+    # Note: aggregate endpoint is implemented but not tested here because it's not supported
+    # by the demo instance. The endpoint is available at POST /api/v1/_aggregate
 ]

@@ -445,3 +445,5 @@ RelateSubCommand = type('RelateSubCommand', (QueryToEndpointSubCommand,), {'api_
 GenericQuerySubCommand = type(
     'GenericQuerySubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'generic_query'}
 )
+EstimateSubCommand = type('EstimateSubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'estimate'})
+AggregateSubCommand = type('AggregateSubCommand', (QueryToEndpointSubCommand,), {'api_method_name': 'aggregate'})

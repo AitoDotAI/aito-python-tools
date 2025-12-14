@@ -117,6 +117,9 @@ aito-python-tools.iml
 # vscode
 .vscode/
 
+# AI assistant files
+.ai/
+
 # test ouput file
 *_out.*
 

@@ -167,7 +167,7 @@ commonYAMLStructure:
           (E'Johnson\'s Automotive', 2344, NULL);"
   - &run_sdk_and_cli_tests
     run:
-      name: run all tests execluding sql functions tests
+      name: run all tests excluding sql functions tests
       command: |
         [ "$CIRCLE_BRANCH" != master ] && git diff --quiet HEAD origin/master -- . ":!docs" && echo "NO CHANGE - SKIP" && exit 0
         . venv/bin/activate
@@ -175,7 +175,7 @@ commonYAMLStructure:
         python -m tests -v suite cli
   - &run_sdk_and_cli_tests_windows
     run:
-      name: run all tests execluding sql functions tests
+      name: run all tests excluding sql functions tests
       command: |
         if ($Env:CIRCLE_BRANCH -ne "master") {
           (git diff --quiet HEAD origin/master -- . ":!docs") -and (echo "NO CHANGE - SKIP") -and (exit 0)

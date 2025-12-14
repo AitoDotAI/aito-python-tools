@@ -7,6 +7,7 @@ from typing import Optional, Union, Dict, List
 from aito.client import responses as aito_resp
 from .aito_request import AitoRequest, _FinalRequest, _PatternEndpoint, _GetRequest, _PostRequest
 from aito.schema import AitoSchema
+from ..responses.query_api_response import ModifyResponse
 
 
 class DataAPIRequest(AitoRequest, ABC):
@@ -174,3 +175,28 @@ class TriggerFileProcessingRequest(_PostRequest, _PatternEndpoint, DataAPIReques
 
 class GetFileProcessingRequest(_GetRequest, TriggerFileProcessingRequest, DataAPIRequest):
     """Request to `Initiate File Upload <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__"""
+
+
+class ModifyRequest(_PostRequest, _FinalRequest, DataAPIRequest):
+    """Request to `Modify data atomically <https://aito.ai/docs/api/#post-api-v1-data-modify>`__
+
+    Allows individual modifications or a sequence of modifications in one atomic operation.
+    """
+    _path_suffix = '_modify'
+    endpoint = f'{DataAPIRequest.endpoint_prefix}/{_path_suffix}'
+    response_cls = ModifyResponse
+
+    def __init__(self, query: Dict):
+        """
+        :param query: The modify query with operations
+        :type query: Dict
+        """
+        super().__init__(query=query)
+
+    @classmethod
+    def _endpoint_pattern(cls):
+        return re.compile(f'^{cls.endpoint}$')
+
+    @classmethod
+    def path_matches(cls, path_to_match):
+        return path_to_match.endswith(f'/{cls._path_suffix}')

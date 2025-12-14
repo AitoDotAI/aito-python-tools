@@ -1,6 +1,21 @@
 Changelog
 =========
 
+0.5.2
+-----
+
+This version adds support for additional Aito API endpoints and helper classes for data modifications.
+
+SDK
+^^^
+
+- Added :py:func:`~aito.api.estimate` function for the `Estimate API <https://aito.ai/docs/api/#post-api-v1-estimate>`__
+- Added :py:func:`~aito.api.aggregate` function for the `Aggregate API <https://aito.ai/docs/api/#post-api-v1-aggregate>`__
+- Added :py:func:`~aito.api.modify` function for the `Modify API <https://aito.ai/docs/api/#post-api-v1-data-modify>`__
+- Added :py:func:`~aito.api.batch` function for the `Batch API <https://aito.ai/docs/api/#post-api-v1-batch>`__
+- Added helper classes for modify operations: :py:class:`~aito.client.requests.Insert`, :py:class:`~aito.client.requests.Update`, :py:class:`~aito.client.requests.Delete`
+- Added corresponding request and response classes: ``EstimateRequest``, ``EstimateResponse``, ``AggregateRequest``, ``AggregateResponse``, ``ModifyRequest``, ``ModifyResponse``, ``BatchRequest``, ``BatchResponse``
+
 0.5.1
 -----
 
