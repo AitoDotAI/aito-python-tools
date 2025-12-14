@@ -1,6 +1,6 @@
 """Helper classes for Aito Modify API operations.
 
-These classes provide a fluent interface for building modify queries:
+These classes provide a fluent interface for building modify queries::
 
     from aito.client.requests import Insert, Update, Delete
     import aito.api as api
@@ -9,10 +9,8 @@ These classes provide a fluent interface for building modify queries:
     api.modify(client, Insert("products", {"id": "1", "name": "Apple"}))
 
     # Insert multiple entries
-    api.modify(client, Insert("products", [
-        {"id": "1", "name": "Apple"},
-        {"id": "2", "name": "Banana"}
-    ]))
+    entries = [{"id": "1", "name": "Apple"}, {"id": "2", "name": "Banana"}]
+    api.modify(client, Insert("products", entries))
 
     # Update entries matching a condition
     api.modify(client, Update("products").where({"id": "1"}).set({"name": "New Name"}))
@@ -24,11 +22,10 @@ These classes provide a fluent interface for building modify queries:
     api.modify(client, Delete("products", {"id": "1"}))
 
     # Multiple operations atomically
-    api.modify(client, [
-        Insert("products", {"id": "1", "name": "Apple"}),
-        Update("products").where({"id": "2"}).set({"name": "Banana"}),
-        Delete("products", {"id": "3"})
-    ])
+    ops = [Insert("products", {"id": "1", "name": "Apple"}),
+           Update("products").where({"id": "2"}).set({"name": "Banana"}),
+           Delete("products", {"id": "3"})]
+    api.modify(client, ops)
 """
 
 from abc import ABC, abstractmethod
