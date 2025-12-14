@@ -342,3 +342,115 @@ class EvaluateResponse(BaseResponse):
         :rtype: int
         """
         return self.__getitem__('trainSamples')
+
+
+class EstimateResponse(BaseResponse):
+    """Response of the `Estimate query <https://aito.ai/docs/api/#post-api-v1-estimate>`__
+
+    Contains the estimated numeric value and explanation of how it was computed.
+    """
+    @property
+    def estimate(self) -> float:
+        """return the estimated numeric value
+
+        :rtype: float
+        """
+        return self.__getitem__('estimate')
+
+    @property
+    def why(self) -> Dict:
+        """return the explanation of how the estimate was computed
+
+        :rtype: Dict
+        """
+        return self._json.get('why')
+
+
+class AggregateResponse(BaseResponse):
+    """Response of the `Aggregate query <https://aito.ai/docs/api/#post-api-v1-aggregate>`__
+
+    Returns aggregated values like averages, sums, counts, etc.
+    """
+    @property
+    def value(self) -> Any:
+        """return the aggregated value
+
+        :rtype: Any
+        """
+        return self.__getitem__('value')
+
+    @property
+    def count(self) -> int:
+        """return the count of items aggregated
+
+        :rtype: int
+        """
+        return self.__getitem__('count')
+
+
+class ModifyResponse(BaseResponse):
+    """Response of the `Modify operation <https://aito.ai/docs/api/#post-api-v1-data-modify>`__
+
+    Contains counts of modified, inserted, and deleted entries.
+    """
+    @property
+    def modified_count(self) -> int:
+        """return the number of entries modified
+
+        :rtype: int
+        """
+        return self._json.get('modifiedCount', 0)
+
+    @property
+    def inserted_count(self) -> int:
+        """return the number of entries inserted
+
+        :rtype: int
+        """
+        return self._json.get('insertedCount', 0)
+
+    @property
+    def deleted_count(self) -> int:
+        """return the number of entries deleted
+
+        :rtype: int
+        """
+        return self._json.get('deletedCount', 0)
+
+
+class BatchResponse(BaseResponse):
+    """Response of the `Batch query <https://aito.ai/docs/api/#post-api-v1-batch>`__
+
+    Contains a list of responses from multiple queries executed in a single request.
+    """
+    def __init__(self, json: List):
+        """
+        :param json: the list of response objects
+        :type json: List
+        """
+        self._json = json
+        self._responses = json
+
+    @classmethod
+    def json_schema(cls):
+        return {'type': 'array'}
+
+    @property
+    def responses(self) -> List[Dict]:
+        """return the list of query responses
+
+        :rtype: List[Dict]
+        """
+        return self._responses
+
+    def __len__(self) -> int:
+        """return the number of responses"""
+        return len(self._responses)
+
+    def __getitem__(self, index: int) -> Dict:
+        """get response at index"""
+        return self._responses[index]
+
+    def __iter__(self):
+        """iterate over responses"""
+        return iter(self._responses)

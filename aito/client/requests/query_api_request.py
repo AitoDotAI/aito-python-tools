@@ -4,9 +4,9 @@ import re
 from abc import ABC
 from typing import Dict, Optional, Union, List
 
-from .aito_request import AitoRequest, _PatternEndpoint, _PostRequest
+from .aito_request import AitoRequest, _PatternEndpoint, _PostRequest, _FinalRequest
 from ..responses import SearchResponse, PredictResponse, RecommendResponse, EvaluateResponse, SimilarityResponse, \
-    MatchResponse, RelateResponse, HitsResponse
+    MatchResponse, RelateResponse, HitsResponse, EstimateResponse, AggregateResponse, BatchResponse
 
 
 class QueryAPIRequest(_PostRequest, _PatternEndpoint, AitoRequest, ABC):
@@ -14,7 +14,7 @@ class QueryAPIRequest(_PostRequest, _PatternEndpoint, AitoRequest, ABC):
     """
     #: the Query API path
     path: str = None  # get around of not having abstract class attribute
-    _query_api_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query']
+    _query_api_paths = ['_search', '_predict', '_recommend', '_evaluate', '_similarity', '_match', '_relate', '_query', '_estimate', '_aggregate']
 
     def __init__(self, query: Dict):
         """
@@ -101,3 +101,45 @@ class GenericQueryRequest(QueryAPIRequest):
     """Request to the `Generic Query API <https://aito.ai/docs/api/#post-api-v1-query>`__"""
     path: str = '_query'
     response_cls = HitsResponse
+
+
+class EstimateRequest(QueryAPIRequest):
+    """Request to the `Estimate API <https://aito.ai/docs/api/#post-api-v1-estimate>`__"""
+    #: the Query API path
+    path: str = '_estimate'
+    #: the class of the response for this request class
+    response_cls = EstimateResponse
+
+
+class AggregateRequest(QueryAPIRequest):
+    """Request to the `Aggregate API <https://aito.ai/docs/api/#post-api-v1-aggregate>`__"""
+    #: the Query API path
+    path: str = '_aggregate'
+    #: the class of the response for this request class
+    response_cls = AggregateResponse
+
+
+class BatchRequest(_PostRequest, _FinalRequest, AitoRequest):
+    """Request to the `Batch API <https://aito.ai/docs/api/#post-api-v1-batch>`__
+
+    Allows executing multiple queries (predict, similarity, search, etc.) in a single request.
+
+    Example::
+
+        from aito.client.requests import BatchRequest
+
+        # Execute multiple queries in one request
+        request = BatchRequest([
+            {"from": "products", "where": {"name": "rye bread"}, "predict": "category"},
+            {"from": "products", "similarity": {"name": "rye bread"}}
+        ])
+    """
+    endpoint = f'{AitoRequest._api_version_endpoint_prefix}/_batch'
+    response_cls = BatchResponse
+
+    def __init__(self, queries: List[Dict]):
+        """
+        :param queries: A list of query dictionaries to execute in batch
+        :type queries: List[Dict]
+        """
+        super().__init__(query=queries)

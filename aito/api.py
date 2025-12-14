@@ -1167,3 +1167,153 @@ def generic_query(
     if use_job:
         return job_request(client=client, request_obj=req)
     return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def estimate(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.EstimateResponse, RequestError]:
+    """send a query to the `Estimate API <https://aito.ai/docs/api/#post-api-v1-estimate>`__
+
+    The Estimate operation predicts numeric values using K-NN with transformation pipelines.
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the estimate query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`.EstimateResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[EstimateResponse, RequestError]
+    """
+    req = aito_requests.EstimateRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def aggregate(
+        client: AitoClient, query: Dict, raise_for_status: Optional[bool] = None, use_job: bool = False
+) -> Union[aito_responses.AggregateResponse, RequestError]:
+    """send a query to the `Aggregate API <https://aito.ai/docs/api/#post-api-v1-aggregate>`__
+
+    Returns aggregated values like averages, sums, counts, etc.
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the aggregate query
+    :type query: Dict
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`.AggregateResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[AggregateResponse, RequestError]
+    """
+    req = aito_requests.AggregateRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def modify(
+        client: AitoClient,
+        query: Union[Dict, 'aito_requests.ModifyOperation', List['aito_requests.ModifyOperation']],
+        raise_for_status: Optional[bool] = None,
+        use_job: bool = False
+) -> Union[aito_responses.ModifyResponse, RequestError]:
+    """perform atomic modifications on table data using the
+    `Modify API <https://aito.ai/docs/api/#post-api-v1-data-modify>`__
+
+    The modify endpoint allows individual modifications or a sequence
+    of modifications in one atomic operation.
+
+    Can accept a raw query dict, a single ModifyOperation, or a list of ModifyOperations::
+
+        from aito.client.requests import Insert, Update, Delete
+
+        # Insert a single entry
+        api.modify(client, Insert("products", {"id": "1", "name": "Apple"}))
+
+        # Update entries matching a condition
+        api.modify(client, Update("products").where({"id": "1"}).set({"name": "New Name"}))
+
+        # Delete entries matching a condition
+        api.modify(client, Delete("products", {"id": "1"}))
+
+        # Multiple operations atomically
+        api.modify(client, [
+            Insert("products", {"id": "1", "name": "Apple"}),
+            Update("products").where({"id": "2"}).set({"name": "Banana"}),
+            Delete("products", {"id": "3"})
+        ])
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param query: the modify query - can be a Dict, a ModifyOperation (Insert/Update/Delete),
+        or a list of ModifyOperations
+    :type query: Union[Dict, ModifyOperation, List[ModifyOperation]]
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :param use_job: use job fo request that takes longer than 30 seconds, defaults to False
+    :type use_job: bool
+    :return: :class:`.ModifyResponse` or :class:`.RequestError` if an error occurred and not raise_for_status
+    :rtype: Union[ModifyResponse, RequestError]
+    """
+    # Convert ModifyOperation(s) to query dict
+    if isinstance(query, aito_requests.ModifyOperation):
+        query = query.to_query()
+    elif isinstance(query, list) and len(query) > 0 and isinstance(query[0], aito_requests.ModifyOperation):
+        # Multiple operations must be wrapped in {"operations": [...]}
+        query = {"operations": [op.to_query() for op in query]}
+    elif isinstance(query, list):
+        # Raw list of dicts also needs wrapping
+        query = {"operations": query}
+
+    req = aito_requests.ModifyRequest(query)
+    if use_job:
+        return job_request(client=client, request_obj=req)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
+
+
+def batch(
+        client: AitoClient,
+        queries: List[Dict],
+        raise_for_status: Optional[bool] = None
+) -> Union[aito_responses.BatchResponse, RequestError]:
+    """execute multiple queries in a single request using the
+    `Batch API <https://aito.ai/docs/api/#post-api-v1-batch>`__
+
+    The batch endpoint allows executing multiple queries (predict, similarity,
+    search, etc.) in a single HTTP request for improved performance.
+
+    Example::
+
+        import aito.api as api
+
+        # Execute multiple queries in one request
+        results = api.batch(client, [
+            {"from": "products", "where": {"name": "rye bread"}, "predict": "category"},
+            {"from": "products", "similarity": {"name": "rye bread"}, "limit": 5}
+        ])
+
+        # Access individual results
+        predict_result = results[0]  # First query result
+        similarity_result = results[1]  # Second query result
+
+    :param client: the AitoClient instance
+    :type client: AitoClient
+    :param queries: a list of query dictionaries to execute in batch
+    :type queries: List[Dict]
+    :param raise_for_status: raise :class:`.RequestError` if the request fails instead of returning the error
+        If set to None, value from Client will be used. Defaults to None
+    :type raise_for_status: Optional[bool]
+    :return: :class:`.BatchResponse` containing results for each query, or :class:`.RequestError` if an error occurred
+    :rtype: Union[BatchResponse, RequestError]
+    """
+    req = aito_requests.BatchRequest(queries)
+    return client.request(request_obj=req, raise_for_status=raise_for_status)
