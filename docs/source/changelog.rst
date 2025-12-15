@@ -1,6 +1,19 @@
 Changelog
 =========
 
+0.5.3
+-----
+
+This version updates Python version support and modernizes the project infrastructure.
+
+General
+^^^^^^^
+
+- Dropped support for Python 3.6, 3.7, and 3.8 (all end-of-life). Minimum supported version is now Python 3.9.
+- Updated CI/CD to test only on Python 3.11.
+- Migrated documentation hosting from ReadTheDocs to GitHub Pages.
+- Added ``./do deploy-docs`` command for manual documentation deployment.
+
 0.5.2
 -----
 
