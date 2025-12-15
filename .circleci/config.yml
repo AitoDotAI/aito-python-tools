@@ -32,12 +32,12 @@ workflows:
 commonYAMLStructure:
   - &restore_venv_cache_build_and_test
     restore_cache:
-      key: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ .Environment.CIRCLE_JOB }}
+      key: v3-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ .Environment.CIRCLE_JOB }}
   - &save_venv_cache_build_and_test
     save_cache:
       paths:
         - ./venv
-      key: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ .Environment.CIRCLE_JOB }}
+      key: v3-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ .Environment.CIRCLE_JOB }}
   - &create_venv_and_install_build_and_test_dependencies_linux
     run:
       name: create virtualenv and install dependencies
@@ -49,12 +49,12 @@ commonYAMLStructure:
         pip install -r requirements/test.txt
   - &restore_venv_cache_deploy_and_test
     restore_cache:
-      key: v2-dependencies-{{ checksum "requirements/deploy.txt" }}-{{ checksum "requirements/test.txt" }}
+      key: v3-dependencies-{{ checksum "requirements/deploy.txt" }}-{{ checksum "requirements/test.txt" }}
   - &save_venv_cache_deploy_and_test
     save_cache:
       paths:
         - ./venv
-      key: v2-dependencies-{{ checksum "requirements/deploy.txt" }}-{{ checksum "requirements/test.txt" }}
+      key: v3-dependencies-{{ checksum "requirements/deploy.txt" }}-{{ checksum "requirements/test.txt" }}
   - &create_venv_and_install_deploy_and_test_dependencies
     run:
       name: create virtualenv and install dependencies
@@ -66,12 +66,12 @@ commonYAMLStructure:
         pip install -r requirements/test.txt
   - &restore_build_doc_venv_cache
     restore_cache:
-      key: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ checksum "requirements/docs.txt" }}
+      key: v3-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ checksum "requirements/docs.txt" }}
   - &save_build_doc_venv_cache
     save_cache:
       paths:
         - ./venv
-      key: v2-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ checksum "requirements/docs.txt" }}
+      key: v3-dependencies-{{ checksum "requirements/build.txt" }}-{{ checksum "requirements/test.txt" }}-{{ checksum "requirements/docs.txt" }}
   - &create_build_doc_venv
     run:
       name: create doc virtualenv and install dependencies
