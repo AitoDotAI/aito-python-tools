@@ -2,3 +2,12 @@ div.sphinxsidebar {
   max-height: 100%;
   overflow-y: auto;
 }
+
+/* Logo background color */
+.wy-side-nav-search {
+  background-color: #0c0f41;
+}
+
+.wy-side-nav-search a.icon-home {
+  background-color: #0c0f41;
+}
