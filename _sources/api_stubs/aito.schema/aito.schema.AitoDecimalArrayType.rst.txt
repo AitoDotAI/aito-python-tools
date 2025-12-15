@@ -1,0 +1,48 @@
+aito.schema.AitoDecimalArrayType
+================================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoDecimalArrayType
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoDecimalArrayType.from_deserialized_object
+        ~AitoDecimalArrayType.from_json_string
+        ~AitoDecimalArrayType.infer_from_samples
+        ~AitoDecimalArrayType.json_schema
+        ~AitoDecimalArrayType.json_schema_validate
+        ~AitoDecimalArrayType.json_schema_validate_with_schema
+        ~AitoDecimalArrayType.to_json_serializable
+        ~AitoDecimalArrayType.to_json_string
+        ~AitoDecimalArrayType.to_python_type
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoDecimalArrayType.aito_dtype
+          ~AitoDecimalArrayType.column_link_pattern
+          ~AitoDecimalArrayType.column_name_pattern
+          ~AitoDecimalArrayType.comparison_properties
+          ~AitoDecimalArrayType.element_type
+          ~AitoDecimalArrayType.is_array
+          ~AitoDecimalArrayType.is_bool
+          ~AitoDecimalArrayType.is_decimal
+          ~AitoDecimalArrayType.is_int
+          ~AitoDecimalArrayType.is_string
+          ~AitoDecimalArrayType.is_text
+          ~AitoDecimalArrayType.table_name_pattern
+          ~AitoDecimalArrayType.type
+          ~AitoDecimalArrayType.uuid_pattern
+  
+  

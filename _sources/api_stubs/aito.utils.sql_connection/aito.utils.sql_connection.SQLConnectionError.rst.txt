@@ -1,0 +1,6 @@
+aito.utils.sql\_connection.SQLConnectionError
+=============================================
+
+.. currentmodule:: aito.utils.sql_connection
+
+.. autoexception:: SQLConnectionError

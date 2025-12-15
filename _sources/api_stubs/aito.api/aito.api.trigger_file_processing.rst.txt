@@ -1,0 +1,6 @@
+aito.api.trigger\_file\_processing
+==================================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: trigger_file_processing

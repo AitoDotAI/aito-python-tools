@@ -1,0 +1,36 @@
+aito.client.responses.query\_api\_response.ScoredHit
+====================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: ScoredHit
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~ScoredHit.from_deserialized_object
+        ~ScoredHit.from_json_string
+        ~ScoredHit.json_schema
+        ~ScoredHit.json_schema_validate
+        ~ScoredHit.json_schema_validate_with_schema
+        ~ScoredHit.score_aliases
+        ~ScoredHit.to_json_serializable
+        ~ScoredHit.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~ScoredHit.explanation
+          ~ScoredHit.json
+          ~ScoredHit.score
+  
+  

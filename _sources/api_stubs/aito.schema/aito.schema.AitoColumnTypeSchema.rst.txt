@@ -1,0 +1,45 @@
+aito.schema.AitoColumnTypeSchema
+================================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoColumnTypeSchema
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoColumnTypeSchema.from_deserialized_object
+        ~AitoColumnTypeSchema.from_json_string
+        ~AitoColumnTypeSchema.infer_from_samples
+        ~AitoColumnTypeSchema.json_schema
+        ~AitoColumnTypeSchema.json_schema_validate
+        ~AitoColumnTypeSchema.json_schema_validate_with_schema
+        ~AitoColumnTypeSchema.to_conversion
+        ~AitoColumnTypeSchema.to_json_serializable
+        ~AitoColumnTypeSchema.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoColumnTypeSchema.analyzer
+          ~AitoColumnTypeSchema.column_link_pattern
+          ~AitoColumnTypeSchema.column_name_pattern
+          ~AitoColumnTypeSchema.comparison_properties
+          ~AitoColumnTypeSchema.data_type
+          ~AitoColumnTypeSchema.has_link
+          ~AitoColumnTypeSchema.link
+          ~AitoColumnTypeSchema.nullable
+          ~AitoColumnTypeSchema.table_name_pattern
+          ~AitoColumnTypeSchema.type
+          ~AitoColumnTypeSchema.uuid_pattern
+  
+  

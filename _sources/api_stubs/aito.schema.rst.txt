@@ -1,0 +1,52 @@
+﻿aito.schema
+===========
+
+.. automodule:: aito.schema
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.schema
+    
+      AitoAliasAnalyzerSchema
+      AitoAnalyzerSchema
+      AitoBooleanArrayType
+      AitoBooleanType
+      AitoCharNGramAnalyzerSchema
+      AitoColumnLinkSchema
+      AitoColumnTypeSchema
+      AitoDataTypeSchema
+      AitoDatabaseSchema
+      AitoDecimalArrayType
+      AitoDecimalType
+      AitoDelimiterAnalyzerSchema
+      AitoIntArrayType
+      AitoIntType
+      AitoLanguageAnalyzerSchema
+      AitoSchema
+      AitoStringArrayType
+      AitoStringType
+      AitoTableSchema
+      AitoTextArrayType
+      AitoTextType
+      AitoTokenNgramAnalyzerSchema
+      DataSeriesProperties
+  
+  
+
+  
+  
+  
+
+
+

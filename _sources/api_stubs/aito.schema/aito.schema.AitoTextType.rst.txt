@@ -1,0 +1,48 @@
+aito.schema.AitoTextType
+========================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoTextType
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoTextType.from_deserialized_object
+        ~AitoTextType.from_json_string
+        ~AitoTextType.infer_from_samples
+        ~AitoTextType.json_schema
+        ~AitoTextType.json_schema_validate
+        ~AitoTextType.json_schema_validate_with_schema
+        ~AitoTextType.to_json_serializable
+        ~AitoTextType.to_json_string
+        ~AitoTextType.to_python_type
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoTextType.aito_dtype
+          ~AitoTextType.column_link_pattern
+          ~AitoTextType.column_name_pattern
+          ~AitoTextType.comparison_properties
+          ~AitoTextType.element_type
+          ~AitoTextType.is_array
+          ~AitoTextType.is_bool
+          ~AitoTextType.is_decimal
+          ~AitoTextType.is_int
+          ~AitoTextType.is_string
+          ~AitoTextType.is_text
+          ~AitoTextType.table_name_pattern
+          ~AitoTextType.type
+          ~AitoTextType.uuid_pattern
+  
+  

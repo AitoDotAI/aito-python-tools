@@ -1,0 +1,34 @@
+aito.client.responses
+=====================
+
+.. automodule:: aito.client.responses
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+  
+     aito_response
+     job_api_response
+     query_api_response
+     schema_api_response
+

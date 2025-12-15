@@ -1,0 +1,40 @@
+aito.client.responses.query\_api\_response.MatchResponse
+========================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: MatchResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~MatchResponse.from_deserialized_object
+        ~MatchResponse.from_json_string
+        ~MatchResponse.json_schema
+        ~MatchResponse.json_schema_validate
+        ~MatchResponse.json_schema_validate_with_schema
+        ~MatchResponse.to_json_serializable
+        ~MatchResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~MatchResponse.first_hit
+          ~MatchResponse.hit_cls
+          ~MatchResponse.hits
+          ~MatchResponse.json
+          ~MatchResponse.matches
+          ~MatchResponse.offset
+          ~MatchResponse.top_match
+          ~MatchResponse.total
+  
+  

@@ -1,0 +1,22 @@
+aito.client.requests.modify\_operations.Insert
+==============================================
+
+.. currentmodule:: aito.client.requests.modify_operations
+
+.. autoclass:: Insert
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~Insert.to_query
+    
+    
+
+  
+  
+  

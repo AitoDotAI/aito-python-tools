@@ -1,0 +1,6 @@
+aito.api.generic\_query
+=======================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: generic_query

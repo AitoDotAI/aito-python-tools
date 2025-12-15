@@ -1,0 +1,41 @@
+aito.client.requests.query\_api\_request
+========================================
+
+.. automodule:: aito.client.requests.query_api_request
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.client.requests.query_api_request
+    
+      AggregateRequest
+      BatchRequest
+      EstimateRequest
+      EvaluateRequest
+      GenericQueryRequest
+      MatchRequest
+      PredictRequest
+      QueryAPIRequest
+      RecommendRequest
+      RelateRequest
+      SearchRequest
+      SimilarityRequest
+  
+  
+
+  
+  
+  
+
+
+

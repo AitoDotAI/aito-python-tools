@@ -1,0 +1,44 @@
+aito.schema.AitoTokenNgramAnalyzerSchema
+========================================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoTokenNgramAnalyzerSchema
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoTokenNgramAnalyzerSchema.from_deserialized_object
+        ~AitoTokenNgramAnalyzerSchema.from_json_string
+        ~AitoTokenNgramAnalyzerSchema.infer_from_samples
+        ~AitoTokenNgramAnalyzerSchema.json_schema
+        ~AitoTokenNgramAnalyzerSchema.json_schema_validate
+        ~AitoTokenNgramAnalyzerSchema.json_schema_validate_with_schema
+        ~AitoTokenNgramAnalyzerSchema.to_json_serializable
+        ~AitoTokenNgramAnalyzerSchema.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoTokenNgramAnalyzerSchema.analyzer_type
+          ~AitoTokenNgramAnalyzerSchema.column_link_pattern
+          ~AitoTokenNgramAnalyzerSchema.column_name_pattern
+          ~AitoTokenNgramAnalyzerSchema.comparison_properties
+          ~AitoTokenNgramAnalyzerSchema.max_gram
+          ~AitoTokenNgramAnalyzerSchema.min_gram
+          ~AitoTokenNgramAnalyzerSchema.source
+          ~AitoTokenNgramAnalyzerSchema.table_name_pattern
+          ~AitoTokenNgramAnalyzerSchema.token_separator
+          ~AitoTokenNgramAnalyzerSchema.type
+          ~AitoTokenNgramAnalyzerSchema.uuid_pattern
+  
+  

@@ -1,0 +1,32 @@
+aito.client.responses.schema\_api\_response
+===========================================
+
+.. automodule:: aito.client.responses.schema_api_response
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.client.responses.schema_api_response
+    
+      ColumnSchemaResponse
+      DatabaseSchemaResponse
+      TableSchemaResponse
+  
+  
+
+  
+  
+  
+
+
+

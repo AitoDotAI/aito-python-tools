@@ -1,0 +1,6 @@
+aito.api.poll\_file\_processing\_status
+=======================================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: poll_file_processing_status

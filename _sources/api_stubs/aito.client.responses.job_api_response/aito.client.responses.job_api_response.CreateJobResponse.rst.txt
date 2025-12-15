@@ -1,0 +1,35 @@
+aito.client.responses.job\_api\_response.CreateJobResponse
+==========================================================
+
+.. currentmodule:: aito.client.responses.job_api_response
+
+.. autoclass:: CreateJobResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~CreateJobResponse.from_deserialized_object
+        ~CreateJobResponse.from_json_string
+        ~CreateJobResponse.json_schema
+        ~CreateJobResponse.json_schema_validate
+        ~CreateJobResponse.json_schema_validate_with_schema
+        ~CreateJobResponse.to_json_serializable
+        ~CreateJobResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~CreateJobResponse.id
+          ~CreateJobResponse.json
+          ~CreateJobResponse.started_at
+  
+  

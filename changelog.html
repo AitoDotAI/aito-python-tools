@@ -1,0 +1,560 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changelog &mdash; aito-python-sdk 0.5.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Useful Links" href="community.html" />
+    <link rel="prev" title="aito.utils.sql_connection.SQLConnectionError" href="api_stubs/aito.utils.sql_connection/aito.utils.sql_connection.SQLConnectionError.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            aito-python-sdk
+              <img src="_static/aito.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Aito CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sdk.html">Aito SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql.html">SQL Database Integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.client.html">aito.client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.schema.html">aito.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.api.html">aito.api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">0.5.2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sdk">SDK</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">0.5.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">SDK</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">0.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">0.4.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">0.4.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">0.4.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">SDK</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">0.4.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">SDK</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#aitoclient">AitoClient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#api-functions">API functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cli">CLI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">0.3.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id12">0.3.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id13">SDK</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#refactoring">Refactoring</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#new-features">New features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#deprecation">Deprecation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id14">CLI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id15">0.2.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id16">0.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id17">0.2.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id18">CLI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id19">SDK</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id20">0.1.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id21">0.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id22">0.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id23">0.0.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id24">0.0.3</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Useful Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html#stay-informed">Stay Informed</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">aito-python-sdk</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Changelog</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/changelog.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading"></a></h1>
+<section id="id1">
+<h2>0.5.2<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>This version adds support for additional Aito API endpoints and helper classes for data modifications.</p>
+<section id="sdk">
+<h3>SDK<a class="headerlink" href="#sdk" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Added <a class="reference internal" href="api_stubs/aito.api/aito.api.estimate.html#aito.api.estimate" title="aito.api.estimate"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate()</span></code></a> function for the <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-estimate">Estimate API</a></p></li>
+<li><p>Added <a class="reference internal" href="api_stubs/aito.api/aito.api.aggregate.html#aito.api.aggregate" title="aito.api.aggregate"><code class="xref py py-func docutils literal notranslate"><span class="pre">aggregate()</span></code></a> function for the <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-aggregate">Aggregate API</a></p></li>
+<li><p>Added <a class="reference internal" href="api_stubs/aito.api/aito.api.modify.html#aito.api.modify" title="aito.api.modify"><code class="xref py py-func docutils literal notranslate"><span class="pre">modify()</span></code></a> function for the <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-modify">Modify API</a></p></li>
+<li><p>Added <a class="reference internal" href="api_stubs/aito.api/aito.api.batch.html#aito.api.batch" title="aito.api.batch"><code class="xref py py-func docutils literal notranslate"><span class="pre">batch()</span></code></a> function for the <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-batch">Batch API</a></p></li>
+<li><p>Added helper classes for modify operations: <code class="xref py py-class docutils literal notranslate"><span class="pre">Insert</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Update</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Delete</span></code></p></li>
+<li><p>Added corresponding request and response classes: <code class="docutils literal notranslate"><span class="pre">EstimateRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">EstimateResponse</span></code>, <code class="docutils literal notranslate"><span class="pre">AggregateRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">AggregateResponse</span></code>, <code class="docutils literal notranslate"><span class="pre">ModifyRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">ModifyResponse</span></code>, <code class="docutils literal notranslate"><span class="pre">BatchRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">BatchResponse</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="id2">
+<h2>0.5.1<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>This version adds support for multitenant Aito instances and array datatypes.</p>
+<section id="id3">
+<h3>SDK<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Added support for multitenant instance URLs (e.g., <code class="docutils literal notranslate"><span class="pre">https://shared.aito.ai/db/my-database</span></code>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">is_multitenant</span></code> property to <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> to detect multitenant instances</p></li>
+<li><p>File upload operations now automatically use streaming batch uploads for multitenant instances,
+as S3 file upload is not available in multitenant environments</p></li>
+<li><p>Added support for array datatypes: <code class="docutils literal notranslate"><span class="pre">Boolean[]</span></code>, <code class="docutils literal notranslate"><span class="pre">Int[]</span></code>, <code class="docutils literal notranslate"><span class="pre">Decimal[]</span></code>, <code class="docutils literal notranslate"><span class="pre">String[]</span></code>, <code class="docutils literal notranslate"><span class="pre">Text[]</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="id4">
+<h2>0.5.0<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p>Parquet file format support added.</p>
+<p>Library dependencies updated to more modern versions. E.g. Pandas 2 is now supported.</p>
+</section>
+<section id="id5">
+<h2>0.4.3<a class="headerlink" href="#id5" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>This version adds better support for performing jobs on Aito.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>There’s a new command <cite>optimize-table</cite> (<cite>&lt;https://aito.ai/docs/api/#post-api-v1-data-table-optimize&gt;</cite>), which can</dt><dd><p>be used to improve query times at the expense of slower writes.</p>
+</dd>
+</dl>
+</li>
+<li><p>Optimize, described above, now runs as a job by default (<a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-jobs-query">https://aito.ai/docs/api/#post-api-v1-jobs-query</a>). This is
+to avoid timeouts during the operation on non-trivial tables.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="id6">
+<h2>0.4.2<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p>This version fixes a validation discrepancy between Aito Core and the SDK. Previously the
+SDK has allowed creating tables with names containing whitespaces. This is a validation bug,
+since the validation was performed in a slightly different way, depending on the context.</p>
+<p>Now the SDK does no longer allow whitespaces in the names and gives a validation error if
+the user tries to create a table with an disallowed name.</p>
+</div></blockquote>
+</section>
+<section id="id7">
+<h2>0.4.1<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<p>In this version the data conversions and especially CSV reading have been made more robust
+and lenient.</p>
+<p>Errors regarding large integers have been managed by converting integer fields
+with out-of-bounds values into string fields. Issues caused by extra commas in CSV are now
+treated by ignoring the additional commas and issuing a warning in the log.</p>
+<p>Schema inference has been improved by inferring String type for the empty columns instead of
+Decimal type. Schema inference no more fails in situations, where the column contains only
+whitespaces.</p>
+<section id="id8">
+<h3>SDK<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<p>aito.schema package now contains DataSeriesProperties, which is used to infer a column’s
+Aito datatype. DataSeriesProperties now keeps track of the smallest and the largest
+value in the series in order to infer a type according to the number bounds:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="api_stubs/aito.schema/aito.schema.DataSeriesProperties.html#aito.schema.DataSeriesProperties" title="aito.schema.DataSeriesProperties"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSeriesProperties</span></code></a></p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+<section id="id9">
+<h2>0.4.0<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
+<p>This version contains changes on how you make requests with the <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code>.
+In addition to specifying the request method and endpoint as before, you can now use different
+<a class="reference internal" href="api_stubs/aito.client.requests.html#module-aito.client.requests" title="aito.client.requests"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Request</span> <span class="pre">objects</span></code></a> or use the endpoint methods in the API,
+i.e: <a class="reference internal" href="api_stubs/aito.api/aito.api.predict.html#aito.api.predict" title="aito.api.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.api.predict()</span></code></a>.
+The client now returns enriched <a class="reference internal" href="api_stubs/aito.client.responses.html#module-aito.client.responses" title="aito.client.responses"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Response</span> <span class="pre">objects</span></code></a> instead of JSON as before.</p>
+<p>Helper methods of the AitoClient, e.g: create_table, are moved to the <a class="reference internal" href="api_stubs/aito.api.html#module-aito.api" title="aito.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.api</span></code></a> module.</p>
+<p>You can now execute requests from the CLI.</p>
+<section id="id10">
+<h3>SDK<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<ul>
+<li><p>Schema objects validation in the <a class="reference internal" href="api_stubs/aito.schema.html#module-aito.schema" title="aito.schema"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.schema</span></code></a> module is improved.</p></li>
+<li><p>Refactored the client into the <strong>aito.client</strong> subpacakge:
+- Added the <a class="reference internal" href="api_stubs/aito.client.requests.html#module-aito.client.requests" title="aito.client.requests"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.client.requests</span></code></a> subpackage which contains Request Classes for the <strong>AitoClient</strong>.
+- Added the <a class="reference internal" href="api_stubs/aito.client.responses.html#module-aito.client.responses" title="aito.client.responses"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.client.responses</span></code></a> subpackage which contains Response Classes returned by the <strong>AitoClient</strong>.
+- You can import the <strong>AitoClient</strong> the same way as before:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
+</pre></div>
+</div>
+<p>You can import the request and response classes directly from the subpackage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">PredictRequest</span><span class="p">,</span> <span class="n">PredictResponse</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+<section id="aitoclient">
+<h4>AitoClient<a class="headerlink" href="#aitoclient" title="Link to this heading"></a></h4>
+<blockquote>
+<div><ul class="simple">
+<li><p>The <strong>AitoClient.request</strong> method no longer takes positional arguments. You now have to specify either <cite>request_obj</cite> or <cite>method</cite> and <cite>endpoint</cite>.</p></li>
+<li><p>Both <strong>AitoClient</strong> and <strong>AitoClient.request</strong> now have a <cite>raise_for_status</cite> argument which controls whether the client should raise or return an <strong>aito_client.RequestError</strong> object when an error occurs during sending a request.</p></li>
+<li><p>Added the <strong>aito.AitoClient.async_request</strong> method to execute a request asynchronously using <a class="reference external" href="https://docs.aiohttp.org/en/stable/client_reference.html#client-session">aiohttp ClientSession</a></p></li>
+<li><p>The <strong>async_requests</strong> method is deprecated, use <strong>AitoClient.batch_requests</strong> instead.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="api-functions">
+<h4>API functions<a class="headerlink" href="#api-functions" title="Link to this heading"></a></h4>
+<ul>
+<li><p>Helper methods of the AitoClient are moved to the <a class="reference internal" href="api_stubs/aito.api.html#module-aito.api" title="aito.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.api</span></code></a> module. The functions in the api module takes an <strong>AitoClient</strong> object as the first argument</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_database_schema</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">your_instance_url</span><span class="p">,</span> <span class="n">your_instance_api_key</span><span class="p">)</span>
+<span class="n">get_database_schema</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Added the endpoint methods to send a query to Aito API Endpoint: <strong>search</strong>, <strong>predict</strong>, <strong>recommend</strong>, <strong>evaluate</strong>, <strong>similarity</strong>, <strong>match</strong>, <strong>relate</strong>, <strong>generic_query</strong></p></li>
+<li><p>Added the following new api functions: <strong>create_column</strong>, <strong>get_column_schema</strong>, <strong>delete_column</strong>,  <strong>delete_entries</strong>, <strong>quick_add_table</strong>,  <strong>quick_predict (BETA)</strong> and <strong>quick_predict_and_evaluate (BETA)</strong></p></li>
+</ul>
+</section>
+</section>
+<section id="cli">
+<h3>CLI<a class="headerlink" href="#cli" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Added the following commands to send a query to Aito API Endpoint: <strong>search</strong>, <strong>predict</strong>, <strong>recommend</strong>, <strong>evaluate</strong>, <strong>similarity</strong>, <strong>match</strong>, <strong>relate</strong>, <strong>generic-query</strong></p></li>
+<li><p>Added the <strong>create-database</strong> command to create database using the Database Schema</p></li>
+<li><p>Removed the <strong>–encoding</strong> flag in the <strong>convert</strong> and the <strong>infer-table-schema</strong> command</p></li>
+<li><p><strong>Beta</strong>: Added the <strong>quick-predict</strong> command to generate an example predict query and evaluate its performance</p></li>
+</ul>
+</section>
+</section>
+<section id="id11">
+<h2>0.3.1<a class="headerlink" href="#id11" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Improved and fixed error codes in documentation</p></li>
+<li><p>Added the <a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoColumnTypeSchema.html#aito.schema.AitoColumnTypeSchema.infer_from_samples" title="aito.schema.AitoColumnTypeSchema.infer_from_samples"><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.schema.AitoColumnTypeSchema.infer_from_samples()</span></code></a> function that infers the Column Type from samples.</p></li>
+</ul>
+</section>
+<section id="id12">
+<h2>0.3.0<a class="headerlink" href="#id12" title="Link to this heading"></a></h2>
+<section id="id13">
+<h3>SDK<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<section id="refactoring">
+<h4>Refactoring<a class="headerlink" href="#refactoring" title="Link to this heading"></a></h4>
+<ul>
+<li><div class="line-block">
+<div class="line">The <a class="reference internal" href="api_stubs/aito.client.html#module-aito.client" title="aito.client"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.client</span></code></a> module is moved from the <strong>sdk</strong> subpackage to the main <strong>aito</strong> package.</div>
+<div class="line">You can now import the <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> by:</div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
+<span class="c1"># previously: from aito.sdk.aito_client import AitoClient</span>
+</pre></div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line">The <a class="reference internal" href="api_stubs/aito.utils.data_frame_handler.html#module-aito.utils.data_frame_handler" title="aito.utils.data_frame_handler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">data_frame_handler</span></code></a> and <a class="reference internal" href="api_stubs/aito.utils.sql_connection.html#module-aito.utils.sql_connection" title="aito.utils.sql_connection"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sql_connection</span></code></a> module is moved from the <strong>sdk</strong> subpackage to the <strong>utils</strong> subpackage.</div>
+<div class="line">You can now import the <a class="reference internal" href="api_stubs/aito.utils.data_frame_handler/aito.utils.data_frame_handler.DataFrameHandler.html#aito.utils.data_frame_handler.DataFrameHandler" title="aito.utils.data_frame_handler.DataFrameHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrameHandler</span></code></a> and <a class="reference internal" href="api_stubs/aito.utils.sql_connection/aito.utils.sql_connection.SQLConnection.html#aito.utils.sql_connection.SQLConnection" title="aito.utils.sql_connection.SQLConnection"><code class="xref py py-class docutils literal notranslate"><span class="pre">SQLConnection</span></code></a> by:</div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.utils.data_frame_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrameHandler</span>
+<span class="c1"># previously: from aito.sdk.data_frame_handler import DataFrameHandler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.utils.sql_connection</span><span class="w"> </span><span class="kn">import</span> <span class="n">SQLConnection</span>
+<span class="c1"># previously: from aito.sdk.sql_connection import SQLConnection</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="new-features">
+<h4>New features<a class="headerlink" href="#new-features" title="Link to this heading"></a></h4>
+<ul>
+<li><p>Added the <a class="reference internal" href="api_stubs/aito.schema.html#module-aito.schema" title="aito.schema"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.schema</span></code></a> module which contains the component object of the Aito Schema including:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoAnalyzerSchema.html#aito.schema.AitoAnalyzerSchema" title="aito.schema.AitoAnalyzerSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoAnalyzerSchema</span></code></a></p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoDataTypeSchema.html#aito.schema.AitoDataTypeSchema" title="aito.schema.AitoDataTypeSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoDataTypeSchema</span></code></a></p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoColumnTypeSchema.html#aito.schema.AitoColumnTypeSchema" title="aito.schema.AitoColumnTypeSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoColumnTypeSchema</span></code></a></p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoTableSchema.html#aito.schema.AitoTableSchema" title="aito.schema.AitoTableSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoTableSchema</span></code></a></p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoDatabaseSchema.html#aito.schema.AitoDatabaseSchema" title="aito.schema.AitoDatabaseSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoDatabaseSchema</span></code></a></p></li>
+</ul>
+<p>Please go to the <a class="reference internal" href="api_stubs/aito.schema.html#module-aito.schema" title="aito.schema"><code class="xref py py-mod docutils literal notranslate"><span class="pre">module</span> <span class="pre">page</span></code></a> for a full list of the supported components</p>
+</li>
+<li><p>Minor changes:</p>
+<ul class="simple">
+<li><p>Improved <a class="reference external" href="https://aito.ai/docs/api/#schema-analyzer">Analyzer</a> inference that can now detect <a class="reference external" href="https://aito.ai/docs/api/#schema-delimiter-analyzer">Delimiter Analyzer</a> and is exposed at <a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoAnalyzerSchema.html#aito.schema.AitoAnalyzerSchema.infer_from_samples" title="aito.schema.AitoAnalyzerSchema.infer_from_samples"><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.schema.AitoAnalyzerSchema.infer_from_samples()</span></code></a></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.client.AitoClient.get_table_schema()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">aito.client.AitoClient.get_database_schema()</span></code> now return the schema object instead of the JSON response</p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.client.AitoClient.create_table()</span></code>, <a class="reference internal" href="api_stubs/aito.utils.data_frame_handler/aito.utils.data_frame_handler.DataFrameHandler.html#aito.utils.data_frame_handler.DataFrameHandler.convert_df_using_aito_table_schema" title="aito.utils.data_frame_handler.DataFrameHandler.convert_df_using_aito_table_schema"><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.utils.data_frame_handler.DataFrameHandler.convert_df_using_aito_table_schema()</span></code></a> and <a class="reference internal" href="api_stubs/aito.utils.data_frame_handler/aito.utils.data_frame_handler.DataFrameHandler.html#aito.utils.data_frame_handler.DataFrameHandler.convert_file" title="aito.utils.data_frame_handler.DataFrameHandler.convert_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.utils.data_frame_handler.DataFrameHandler.convert_file()</span></code></a> now also support input of AitoTableSchema object</p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.client.AitoClient.query_entries()</span></code> now returns a list of table entries instead of the JSON response</p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.client.AitoClient.query_entries()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">aito.client.AitoClient.query_all_entries()</span></code> now supports the <code class="docutils literal notranslate"><span class="pre">select</span></code> keyword to select the fields of an entry</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="deprecation">
+<h4>Deprecation<a class="headerlink" href="#deprecation" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>The <strong>SchemaHandler</strong> is deprecated and will be removed in an upcoming release. To migrate:</p>
+<ul>
+<li><p><strong>SchemaHandler.infer_aito_types_from_pandas_series</strong> -&gt; <a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoDataTypeSchema.html#aito.schema.AitoDataTypeSchema.infer_from_samples" title="aito.schema.AitoDataTypeSchema.infer_from_samples"><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.schema.AitoDataTypeSchema.infer_from_samples()</span></code></a></p></li>
+<li><p><strong>SchemaHandler.infer_table_schema_from_pandas_data_frame</strong> -&gt; <code class="xref py py-func docutils literal notranslate"><span class="pre">aito.schema.AitoTableSchema.infer_from_pandas_dataframe()</span></code></p></li>
+<li><p><strong>SchemaHandler.validate_table_schema</strong> -&gt; <a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoTableSchema.html#aito.schema.AitoTableSchema.from_deserialized_object" title="aito.schema.AitoTableSchema.from_deserialized_object"><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.schema.AitoTableSchema.from_deserialized_object()</span></code></a></p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="id14">
+<h3>CLI<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Removed the <code class="docutils literal notranslate"><span class="pre">database</span></code> command. All the database operations are now exposed as follows:</p>
+<ul>
+<li><p><strong>aito database quick-add-table</strong> -&gt; <strong>aito quick-add-table</strong></p></li>
+<li><p><strong>aito database create-table</strong> -&gt; <strong>aito create-table</strong></p></li>
+<li><p><strong>aito database delete-table</strong> -&gt; <strong>aito delete-table</strong></p></li>
+<li><p><strong>aito database delete-database</strong> -&gt; <strong>aito delete-database</strong></p></li>
+<li><p><strong>aito database upload-entries</strong> -&gt; <strong>aito upload-entries</strong></p></li>
+<li><p><strong>aito database upload-file</strong> -&gt; <strong>aito upload-file</strong></p></li>
+<li><p><strong>aito database upload-data-from-sql</strong> -&gt; <strong>aito upload-data-from-sql</strong></p></li>
+<li><p><strong>aito database quick-add-table-from-sql</strong> -&gt; <strong>aito quick-add-table-from-sql</strong></p></li>
+</ul>
+</li>
+<li><p>Added the following commands:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">configure</span></code>: configure your Aito instance</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get-table</span></code>: return the schema of the specified table</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show-tables</span></code>: show the existing tables in the Aito instance</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">copy-table</span></code>: copy a table</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rename-table</span></code>: rename a table</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get-database</span></code>: return the schema of the database</p></li>
+</ul>
+</li>
+<li><p>Removed dotenv file support (<strong>-e</strong> flag).</p></li>
+</ul>
+</section>
+</section>
+<section id="id15">
+<h2>0.2.2<a class="headerlink" href="#id15" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Added missing import warnings to Aito client.</p></li>
+<li><p>Updated AitoClient API documentation.</p></li>
+</ul>
+</section>
+<section id="id16">
+<h2>0.2.1<a class="headerlink" href="#id16" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> <code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code> now accepts <a class="reference external" href="https://aito-python-sdk.readthedocs.io/en/latest/sdk.html#sdkuploaddata">generators</a> as well as lists.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> <strong>upload_entries_by_batches</strong> is deprecated and will be removed in an upcoming release, use <code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code> instead.</p></li>
+</ul>
+</section>
+<section id="id17">
+<h2>0.2.0<a class="headerlink" href="#id17" title="Link to this heading"></a></h2>
+<section id="id18">
+<h3>CLI<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<ul>
+<li><p>Added a version flag (<code class="docutils literal notranslate"><span class="pre">--version</span></code>) and verbosity level flags (<code class="docutils literal notranslate"><span class="pre">--verbose</span></code> and <code class="docutils literal notranslate"><span class="pre">--quiet</span></code>) to the CLI.</p></li>
+<li><p>The CLI now returns more concise error messages. Use <code class="docutils literal notranslate"><span class="pre">--verbose</span></code> mode if you want to see the comprehensive error message with stack info.</p></li>
+<li><p>The ODBC driver name for SQL functions is now specified by an environment variable (<code class="docutils literal notranslate"><span class="pre">SQL_DRIVER</span></code>) or a flag (<code class="docutils literal notranslate"><span class="pre">--driver</span></code>) instead of a required argument as before. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql --driver &quot;PostgreSQL Unicode&quot; &quot;SELECT * FROM tableName&quot;....
+</pre></div>
+</div>
+<p>instead of:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql PostgreSQL Unicode&quot; &quot;SELECT * FROM tableName&quot;....
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="id19">
+<h3>SDK<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<ul>
+<li><p>Renamed the <code class="docutils literal notranslate"><span class="pre">utils</span></code> package to <code class="docutils literal notranslate"><span class="pre">sdk</span></code>. Please change the import statement accordingly. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.sdk.aito_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
+</pre></div>
+</div>
+</li>
+<li><p>Changes in AitoClient:</p>
+<ul class="simple">
+<li><p>The class now requires the instance URL (the <code class="docutils literal notranslate"><span class="pre">instance_url</span></code> argument) instead of  the instance name (the <code class="docutils literal notranslate"><span class="pre">`instance_name`</span></code> argument).</p></li>
+<li><p>Improve error handling to use Aito response error message.</p></li>
+<li><p>Remove the <code class="docutils literal notranslate"><span class="pre">async_same_requests</span></code> function.</p></li>
+<li><p>Rename the arguments of the <code class="docutils literal notranslate"><span class="pre">async_request</span></code> function:</p>
+<ul>
+<li><p>request_methods -&gt; methods</p></li>
+<li><p>request_paths -&gt; endpoints</p></li>
+<li><p>request_data -&gt; queries</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">async_request</span></code> now returns errors if some requests failed.</p></li>
+<li><p>Rename the arguments of the <code class="docutils literal notranslate"><span class="pre">request</span></code> function:</p>
+<ul>
+<li><p>req_method -&gt; method</p></li>
+<li><p>path -&gt; endpoint</p></li>
+<li><p>data -&gt; query</p></li>
+</ul>
+</li>
+<li><p>Rename the following functions:</p>
+<ul>
+<li><p>put_table schema -&gt; create_table</p></li>
+<li><p>put_database_schema -&gt; create_database</p></li>
+<li><p>check_table_existed -&gt; check_table_exists</p></li>
+<li><p>populate_table_entries -&gt; upload_entries</p></li>
+<li><p>populate_table_entries_by_batches -&gt; upload_entries_by_batches</p></li>
+<li><p>populate_table_by_file_upload -&gt; upload_binary_file</p></li>
+<li><p>query_table_entries -&gt; query_entries</p></li>
+</ul>
+</li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">upload_file</span></code> function to upload a file using the its path instead of its file object</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">optimize_table</span></code> function and add optimize option after data upload</p></li>
+<li><p>Add <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-jobs-query">Job</a> related functions: <code class="docutils literal notranslate"><span class="pre">create_job</span></code>, <code class="docutils literal notranslate"><span class="pre">get_job_status</span></code>, <code class="docutils literal notranslate"><span class="pre">get_job_result</span></code>, and <code class="docutils literal notranslate"><span class="pre">job_request</span></code></p></li>
+<li><p>Add <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-query">Query</a> related functions: <code class="docutils literal notranslate"><span class="pre">get_table_size</span></code>, <code class="docutils literal notranslate"><span class="pre">query_entries</span></code>, <code class="docutils literal notranslate"><span class="pre">query_all_entries</span></code>, and <code class="docutils literal notranslate"><span class="pre">download_table</span></code></p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="id20">
+<h2>0.1.2<a class="headerlink" href="#id20" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fix a bug when converting or uploading a file in Windows due to tempfile permission</p></li>
+<li><p>Fix a bug that requires conversion between String and Text column</p></li>
+<li><p>Add compatibility with Python 3.7 and 3.8</p></li>
+</ul>
+</section>
+<section id="id21">
+<h2>0.1.1<a class="headerlink" href="#id21" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fix a bug that requires database name for sql_function</p></li>
+<li><dl class="simple">
+<dt>No longer requires both read-only and read-write key for setting up the credentials.</dt><dd><p>(Use <code class="docutils literal notranslate"><span class="pre">AITO_API_KEY</span></code> instead of <code class="docutils literal notranslate"><span class="pre">AITO_RW_KEY</span></code> and <code class="docutils literal notranslate"><span class="pre">AITO_RO_KEY</span></code>)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="id22">
+<h2>0.1.0<a class="headerlink" href="#id22" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Integration with SQL. You can now infer table schema, upload data,</dt><dd><p>quick add table from the result of a SQL query.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Supported database:</p>
+<ul class="simple">
+<li><p>Postgres</p></li>
+<li><p>MySQL</p></li>
+</ul>
+</section>
+<section id="id23">
+<h2>0.0.4<a class="headerlink" href="#id23" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">client</span></code> task to <code class="docutils literal notranslate"><span class="pre">database</span></code> task</p></li>
+<li><p>Requires Aito instance name instead of full URL (use <code class="docutils literal notranslate"><span class="pre">-i</span></code> flag instead of <code class="docutils literal notranslate"><span class="pre">-u</span></code> flag)</p></li>
+<li><p>Support tab completion with arg complete</p></li>
+</ul>
+</section>
+<section id="id24">
+<h2>0.0.3<a class="headerlink" href="#id24" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">quick-add-table,</span> <span class="pre">create-table,</span> <span class="pre">delete-table,</span> <span class="pre">delete-databse,</span> <span class="pre">list</span></code> database operation</p></li>
+<li><p>Remove the option to create and use table schema from file-upload</p></li>
+<li><p>Convert always use standard out</p></li>
+<li><p>Improved documentation</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api_stubs/aito.utils.sql_connection/aito.utils.sql_connection.SQLConnectionError.html" class="btn btn-neutral float-left" title="aito.utils.sql_connection.SQLConnectionError" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="community.html" class="btn btn-neutral float-right" title="Useful Links" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, aito.ai.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

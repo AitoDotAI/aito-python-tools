@@ -1,0 +1,30 @@
+aito.client.requests.data\_api\_request.ModifyRequest
+=====================================================
+
+.. currentmodule:: aito.client.requests.data_api_request
+
+.. autoclass:: ModifyRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~ModifyRequest.make_request
+        ~ModifyRequest.path_matches
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~ModifyRequest.endpoint
+          ~ModifyRequest.endpoint_prefix
+          ~ModifyRequest.method
+  
+  

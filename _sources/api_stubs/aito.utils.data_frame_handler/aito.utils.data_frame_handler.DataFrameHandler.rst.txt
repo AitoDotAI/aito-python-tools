@@ -1,0 +1,30 @@
+aito.utils.data\_frame\_handler.DataFrameHandler
+================================================
+
+.. currentmodule:: aito.utils.data_frame_handler
+
+.. autoclass:: DataFrameHandler
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~DataFrameHandler.convert_df_using_aito_table_schema
+        ~DataFrameHandler.convert_file
+        ~DataFrameHandler.df_to_format
+        ~DataFrameHandler.read_file_to_df
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~DataFrameHandler.allowed_format
+  
+  

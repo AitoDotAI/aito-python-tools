@@ -1,0 +1,410 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aito.client.responses.query_api_response.RecommendResponse &mdash; aito-python-sdk 0.5.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="aito.client.responses.query_api_response.RelateHit" href="aito.client.responses.query_api_response.RelateHit.html" />
+    <link rel="prev" title="aito.client.responses.query_api_response.ProbabilityHit" href="aito.client.responses.query_api_response.ProbabilityHit.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            aito-python-sdk
+              <img src="../../_static/aito.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Aito CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sdk.html">Aito SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sql.html">SQL Database Integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../aito.client.html">aito.client</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../aito.client.aito_client.html">aito.client.aito_client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../aito.client.requests.html">aito.client.requests</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../aito.client.responses.html">aito.client.responses</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../aito.client.responses.aito_response.html">aito.client.responses.aito_response</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../aito.client.responses.job_api_response.html">aito.client.responses.job_api_response</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../aito.client.responses.query_api_response.html">aito.client.responses.query_api_response</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.AggregateResponse.html">aito.client.responses.query_api_response.AggregateResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.BaseHit.html">aito.client.responses.query_api_response.BaseHit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.BatchResponse.html">aito.client.responses.query_api_response.BatchResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.EstimateResponse.html">aito.client.responses.query_api_response.EstimateResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.EvaluateResponse.html">aito.client.responses.query_api_response.EvaluateResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.HitsResponse.html">aito.client.responses.query_api_response.HitsResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.MatchResponse.html">aito.client.responses.query_api_response.MatchResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.ModifyResponse.html">aito.client.responses.query_api_response.ModifyResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.PredictResponse.html">aito.client.responses.query_api_response.PredictResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.ProbabilityHit.html">aito.client.responses.query_api_response.ProbabilityHit</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">aito.client.responses.query_api_response.RecommendResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.RelateHit.html">aito.client.responses.query_api_response.RelateHit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.RelateResponse.html">aito.client.responses.query_api_response.RelateResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.ScoredHit.html">aito.client.responses.query_api_response.ScoredHit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.SearchResponse.html">aito.client.responses.query_api_response.SearchResponse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="aito.client.responses.query_api_response.SimilarityResponse.html">aito.client.responses.query_api_response.SimilarityResponse</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../aito.client.responses.schema_api_response.html">aito.client.responses.schema_api_response</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.schema.html">aito.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.api.html">aito.api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Useful Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html#stay-informed">Stay Informed</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">aito-python-sdk</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../aito.client.html">aito.client</a></li>
+          <li class="breadcrumb-item"><a href="../aito.client.responses.html">aito.client.responses</a></li>
+          <li class="breadcrumb-item"><a href="../aito.client.responses.query_api_response.html">aito.client.responses.query_api_response</a></li>
+      <li class="breadcrumb-item active">aito.client.responses.query_api_response.RecommendResponse</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_stubs/aito.client.responses.query_api_response/aito.client.responses.query_api_response.RecommendResponse.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="aito-client-responses-query-api-response-recommendresponse">
+<h1>aito.client.responses.query_api_response.RecommendResponse<a class="headerlink" href="#aito-client-responses-query-api-response-recommendresponse" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aito.client.responses.query_api_response.</span></span><span class="sig-name descname"><span class="pre">RecommendResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_GenericHitsResponse</span></code>[<a class="reference internal" href="aito.client.responses.query_api_response.ProbabilityHit.html#aito.client.responses.query_api_response.ProbabilityHit" title="aito.client.responses.query_api_response.ProbabilityHit"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProbabilityHit</span></code></a>]</p>
+<p>Response of the <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-recommend">Recommend query</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>json</strong> (<em>Dict</em>) – the original JSON response</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.from_deserialized_object" title="aito.client.responses.query_api_response.RecommendResponse.from_deserialized_object"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_deserialized_object</span></code></a>(obj)</p></td>
+<td><p>create a class object from a JSON deserialized object</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.from_json_string" title="aito.client.responses.query_api_response.RecommendResponse.from_json_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_json_string</span></code></a>(json_string, **kwargs)</p></td>
+<td><p>create an class object from a JSON string</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.json_schema" title="aito.client.responses.query_api_response.RecommendResponse.json_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">json_schema</span></code></a>()</p></td>
+<td><p>the JSON schema of the class</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.json_schema_validate" title="aito.client.responses.query_api_response.RecommendResponse.json_schema_validate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">json_schema_validate</span></code></a>(obj)</p></td>
+<td><p>Validate an object with the class json_schema Returns the object if validation success, else raise <code class="xref py py-class docutils literal notranslate"><span class="pre">JsonValidationError</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.json_schema_validate_with_schema" title="aito.client.responses.query_api_response.RecommendResponse.json_schema_validate_with_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">json_schema_validate_with_schema</span></code></a>(obj, schema)</p></td>
+<td><p>Validate an object with the given schema</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.to_json_serializable" title="aito.client.responses.query_api_response.RecommendResponse.to_json_serializable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_json_serializable</span></code></a>()</p></td>
+<td><p>convert the object to an object that can be serialized to a JSON formatted string</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.to_json_string" title="aito.client.responses.query_api_response.RecommendResponse.to_json_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_json_string</span></code></a>(**kwargs)</p></td>
+<td><p>convert the object to a JSON string</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.first_hit" title="aito.client.responses.query_api_response.RecommendResponse.first_hit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">first_hit</span></code></a></p></td>
+<td><p>return the first hit</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.hit_cls" title="aito.client.responses.query_api_response.RecommendResponse.hit_cls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hit_cls</span></code></a></p></td>
+<td><p>the class of the hit</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.hits" title="aito.client.responses.query_api_response.RecommendResponse.hits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hits</span></code></a></p></td>
+<td><p>the returned hits</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.json" title="aito.client.responses.query_api_response.RecommendResponse.json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">json</span></code></a></p></td>
+<td><p>the original JSON response of the request</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.offset" title="aito.client.responses.query_api_response.RecommendResponse.offset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">offset</span></code></a></p></td>
+<td><p>the number of hits that is skipped</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.recommendations" title="aito.client.responses.query_api_response.RecommendResponse.recommendations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recommendations</span></code></a></p></td>
+<td><p>return a list of recommendations in descending order of the estimated probability of the specified goal</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.top_recommendation" title="aito.client.responses.query_api_response.RecommendResponse.top_recommendation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">top_recommendation</span></code></a></p></td>
+<td><p>return the recommendation with the highest probability of the goal</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.responses.query_api_response.RecommendResponse.total" title="aito.client.responses.query_api_response.RecommendResponse.total"><code class="xref py py-obj docutils literal notranslate"><span class="pre">total</span></code></a></p></td>
+<td><p>the total number of hits</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.first_hit">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">first_hit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">HitType</span></em><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.first_hit" title="Link to this definition"></a></dt>
+<dd><p>return the first hit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>HitType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.from_deserialized_object">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_deserialized_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.from_deserialized_object" title="Link to this definition"></a></dt>
+<dd><p>create a class object from a JSON deserialized object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.from_json_string">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.from_json_string" title="Link to this definition"></a></dt>
+<dd><p>create an class object from a JSON string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>json_string</strong> (<em>str</em>) – the JSON string</p></li>
+<li><p><strong>kwargs</strong> – the keyword arguments for json.loads method</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.hit_cls">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hit_cls</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">HitType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.hit_cls" title="Link to this definition"></a></dt>
+<dd><p>the class of the hit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Type[HitType]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.hits">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">HitType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.hits" title="Link to this definition"></a></dt>
+<dd><p>the returned hits</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[HitType]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.json">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">json</span></span><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.json" title="Link to this definition"></a></dt>
+<dd><p>the original JSON response of the request</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.json_schema">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">json_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.json_schema" title="Link to this definition"></a></dt>
+<dd><p>the JSON schema of the class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.json_schema_validate">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">json_schema_validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.json_schema_validate" title="Link to this definition"></a></dt>
+<dd><p>Validate an object with the class json_schema
+Returns the object if validation success, else raise <code class="xref py py-class docutils literal notranslate"><span class="pre">JsonValidationError</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>Any</em>) – the object to be validated</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the object if validation succeed</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.json_schema_validate_with_schema">
+<span class="sig-name descname"><span class="pre">json_schema_validate_with_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.json_schema_validate_with_schema" title="Link to this definition"></a></dt>
+<dd><p>Validate an object with the given schema</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>Any</em>) – the object to be validated</p></li>
+<li><p><strong>schema</strong> (<em>Dict</em>) – the schema to be validate against</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the object if validation succeed</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.offset">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.offset" title="Link to this definition"></a></dt>
+<dd><p>the number of hits that is skipped</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.recommendations">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">recommendations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="aito.client.responses.query_api_response.ProbabilityHit.html#aito.client.responses.query_api_response.ProbabilityHit" title="aito.client.responses.query_api_response.ProbabilityHit"><span class="pre">ProbabilityHit</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.recommendations" title="Link to this definition"></a></dt>
+<dd><p>return a list of recommendations in descending order of the estimated probability of the specified goal</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.to_json_serializable">
+<span class="sig-name descname"><span class="pre">to_json_serializable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.to_json_serializable" title="Link to this definition"></a></dt>
+<dd><p>convert the object to an object that can be serialized to a JSON formatted string</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.to_json_string">
+<span class="sig-name descname"><span class="pre">to_json_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.to_json_string" title="Link to this definition"></a></dt>
+<dd><p>convert the object to a JSON string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – the keyword arguments for json.dumps method</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.top_recommendation">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">top_recommendation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="aito.client.responses.query_api_response.ProbabilityHit.html#aito.client.responses.query_api_response.ProbabilityHit" title="aito.client.responses.query_api_response.ProbabilityHit"><span class="pre">ProbabilityHit</span></a></em><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.top_recommendation" title="Link to this definition"></a></dt>
+<dd><p>return the recommendation with the highest probability of the goal</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.responses.query_api_response.RecommendResponse.total">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#aito.client.responses.query_api_response.RecommendResponse.total" title="Link to this definition"></a></dt>
+<dd><p>the total number of hits</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="aito.client.responses.query_api_response.ProbabilityHit.html" class="btn btn-neutral float-left" title="aito.client.responses.query_api_response.ProbabilityHit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="aito.client.responses.query_api_response.RelateHit.html" class="btn btn-neutral float-right" title="aito.client.responses.query_api_response.RelateHit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, aito.ai.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

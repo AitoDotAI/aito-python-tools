@@ -1,0 +1,31 @@
+aito.client.responses.job\_api\_response
+========================================
+
+.. automodule:: aito.client.responses.job_api_response
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.client.responses.job_api_response
+    
+      CreateJobResponse
+      GetJobStatusResponse
+  
+  
+
+  
+  
+  
+
+
+

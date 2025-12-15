@@ -1,0 +1,28 @@
+aito.client.requests.schema\_api\_request.DeleteColumnSchemaRequest
+===================================================================
+
+.. currentmodule:: aito.client.requests.schema_api_request
+
+.. autoclass:: DeleteColumnSchemaRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~DeleteColumnSchemaRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~DeleteColumnSchemaRequest.endpoint_prefix
+          ~DeleteColumnSchemaRequest.method
+  
+  

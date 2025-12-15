@@ -1,0 +1,37 @@
+aito.client.responses.query\_api\_response.ProbabilityHit
+=========================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: ProbabilityHit
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~ProbabilityHit.from_deserialized_object
+        ~ProbabilityHit.from_json_string
+        ~ProbabilityHit.json_schema
+        ~ProbabilityHit.json_schema_validate
+        ~ProbabilityHit.json_schema_validate_with_schema
+        ~ProbabilityHit.score_aliases
+        ~ProbabilityHit.to_json_serializable
+        ~ProbabilityHit.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~ProbabilityHit.explanation
+          ~ProbabilityHit.json
+          ~ProbabilityHit.predicted_probability
+          ~ProbabilityHit.score
+  
+  

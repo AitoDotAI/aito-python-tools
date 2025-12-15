@@ -1,0 +1,40 @@
+aito.client.responses.query\_api\_response.PredictResponse
+==========================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: PredictResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~PredictResponse.from_deserialized_object
+        ~PredictResponse.from_json_string
+        ~PredictResponse.json_schema
+        ~PredictResponse.json_schema_validate
+        ~PredictResponse.json_schema_validate_with_schema
+        ~PredictResponse.to_json_serializable
+        ~PredictResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~PredictResponse.first_hit
+          ~PredictResponse.hit_cls
+          ~PredictResponse.hits
+          ~PredictResponse.json
+          ~PredictResponse.offset
+          ~PredictResponse.predictions
+          ~PredictResponse.top_prediction
+          ~PredictResponse.total
+  
+  

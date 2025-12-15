@@ -1,0 +1,48 @@
+aito.schema.AitoBooleanArrayType
+================================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoBooleanArrayType
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoBooleanArrayType.from_deserialized_object
+        ~AitoBooleanArrayType.from_json_string
+        ~AitoBooleanArrayType.infer_from_samples
+        ~AitoBooleanArrayType.json_schema
+        ~AitoBooleanArrayType.json_schema_validate
+        ~AitoBooleanArrayType.json_schema_validate_with_schema
+        ~AitoBooleanArrayType.to_json_serializable
+        ~AitoBooleanArrayType.to_json_string
+        ~AitoBooleanArrayType.to_python_type
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoBooleanArrayType.aito_dtype
+          ~AitoBooleanArrayType.column_link_pattern
+          ~AitoBooleanArrayType.column_name_pattern
+          ~AitoBooleanArrayType.comparison_properties
+          ~AitoBooleanArrayType.element_type
+          ~AitoBooleanArrayType.is_array
+          ~AitoBooleanArrayType.is_bool
+          ~AitoBooleanArrayType.is_decimal
+          ~AitoBooleanArrayType.is_int
+          ~AitoBooleanArrayType.is_string
+          ~AitoBooleanArrayType.is_text
+          ~AitoBooleanArrayType.table_name_pattern
+          ~AitoBooleanArrayType.type
+          ~AitoBooleanArrayType.uuid_pattern
+  
+  

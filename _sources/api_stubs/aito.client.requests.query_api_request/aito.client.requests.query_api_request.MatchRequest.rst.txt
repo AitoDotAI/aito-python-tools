@@ -1,0 +1,28 @@
+aito.client.requests.query\_api\_request.MatchRequest
+=====================================================
+
+.. currentmodule:: aito.client.requests.query_api_request
+
+.. autoclass:: MatchRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~MatchRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~MatchRequest.method
+          ~MatchRequest.path
+  
+  

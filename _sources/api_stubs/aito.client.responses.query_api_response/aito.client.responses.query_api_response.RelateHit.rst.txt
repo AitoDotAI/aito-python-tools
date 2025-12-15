@@ -1,0 +1,35 @@
+aito.client.responses.query\_api\_response.RelateHit
+====================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: RelateHit
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~RelateHit.from_deserialized_object
+        ~RelateHit.from_json_string
+        ~RelateHit.json_schema
+        ~RelateHit.json_schema_validate
+        ~RelateHit.json_schema_validate_with_schema
+        ~RelateHit.to_json_serializable
+        ~RelateHit.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~RelateHit.frequencies
+          ~RelateHit.json
+          ~RelateHit.probabilities
+  
+  

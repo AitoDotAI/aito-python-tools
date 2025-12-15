@@ -1,0 +1,6 @@
+aito.api.create\_table
+======================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: create_table

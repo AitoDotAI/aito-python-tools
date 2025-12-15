@@ -1,0 +1,44 @@
+aito.schema.AitoLanguageAnalyzerSchema
+======================================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoLanguageAnalyzerSchema
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoLanguageAnalyzerSchema.from_deserialized_object
+        ~AitoLanguageAnalyzerSchema.from_json_string
+        ~AitoLanguageAnalyzerSchema.infer_from_samples
+        ~AitoLanguageAnalyzerSchema.json_schema
+        ~AitoLanguageAnalyzerSchema.json_schema_validate
+        ~AitoLanguageAnalyzerSchema.json_schema_validate_with_schema
+        ~AitoLanguageAnalyzerSchema.to_json_serializable
+        ~AitoLanguageAnalyzerSchema.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoLanguageAnalyzerSchema.analyzer_type
+          ~AitoLanguageAnalyzerSchema.column_link_pattern
+          ~AitoLanguageAnalyzerSchema.column_name_pattern
+          ~AitoLanguageAnalyzerSchema.comparison_properties
+          ~AitoLanguageAnalyzerSchema.custom_key_words
+          ~AitoLanguageAnalyzerSchema.custom_stop_words
+          ~AitoLanguageAnalyzerSchema.language
+          ~AitoLanguageAnalyzerSchema.table_name_pattern
+          ~AitoLanguageAnalyzerSchema.type
+          ~AitoLanguageAnalyzerSchema.use_default_stop_words
+          ~AitoLanguageAnalyzerSchema.uuid_pattern
+  
+  

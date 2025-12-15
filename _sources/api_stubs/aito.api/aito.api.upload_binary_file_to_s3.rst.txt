@@ -1,0 +1,6 @@
+aito.api.upload\_binary\_file\_to\_s3
+=====================================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: upload_binary_file_to_s3

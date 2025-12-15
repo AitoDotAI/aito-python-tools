@@ -1,0 +1,396 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aito.client.aito_client.AitoClient &mdash; aito-python-sdk 0.5.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="aito.client.aito_client.Error" href="aito.client.aito_client.Error.html" />
+    <link rel="prev" title="aito.client.aito_client" href="../aito.client.aito_client.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            aito-python-sdk
+              <img src="../../_static/aito.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Aito CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sdk.html">Aito SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sql.html">SQL Database Integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../aito.client.html">aito.client</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../aito.client.aito_client.html">aito.client.aito_client</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">aito.client.aito_client.AitoClient</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#aito.client.aito_client.AitoClient"><code class="docutils literal notranslate"><span class="pre">AitoClient</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="aito.client.aito_client.Error.html">aito.client.aito_client.Error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="aito.client.aito_client.RequestError.html">aito.client.aito_client.RequestError</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../aito.client.requests.html">aito.client.requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../aito.client.responses.html">aito.client.responses</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.schema.html">aito.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.api.html">aito.api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Useful Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html#stay-informed">Stay Informed</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">aito-python-sdk</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../aito.client.html">aito.client</a></li>
+          <li class="breadcrumb-item"><a href="../aito.client.aito_client.html">aito.client.aito_client</a></li>
+      <li class="breadcrumb-item active">aito.client.aito_client.AitoClient</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_stubs/aito.client.aito_client/aito.client.aito_client.AitoClient.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="aito-client-aito-client-aitoclient">
+<h1>aito.client.aito_client.AitoClient<a class="headerlink" href="#aito-client-aito-client-aitoclient" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="aito.client.aito_client.AitoClient">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aito.client.aito_client.</span></span><span class="sig-name descname"><span class="pre">AitoClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_credentials</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raise_for_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.aito_client.AitoClient" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A versatile client that connects to the Aito Database Instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instance_url</strong> (<em>str</em>) – Aito instance url</p></li>
+<li><p><strong>api_key</strong> (<em>str</em>) – Aito instance API key</p></li>
+<li><p><strong>check_credentials</strong> (<em>bool</em>) – check the given credentials by requesting the Aito instance version, defaults to True</p></li>
+<li><p><strong>raise_for_status</strong> (<em>bool</em>) – automatically raise RequestError for each failed response, defaults to True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>BaseError</strong> – an error occurred during the creation of AitoClient</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">your_instance_url</span><span class="p">,</span> <span class="n">your_api_key</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Change the API key to READ-WRITE or READ-ONLY</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aito_client</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">new_api_key</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.aito_client.AitoClient.async_request" title="aito.client.aito_client.AitoClient.async_request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">async_request</span></code></a>(session, *[, method, ...])</p></td>
+<td><p>execute a request asynchronously using aiohttp ClientSession</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.aito_client.AitoClient.async_requests" title="aito.client.aito_client.AitoClient.async_requests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">async_requests</span></code></a>(methods, endpoints, queries)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.aito_client.AitoClient.batch_requests" title="aito.client.aito_client.AitoClient.batch_requests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">batch_requests</span></code></a>(requests[, ...])</p></td>
+<td><p>execute a batch of requests asynchronously</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.aito_client.AitoClient.bounded_async_request" title="aito.client.aito_client.AitoClient.bounded_async_request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bounded_async_request</span></code></a>(semaphore, *args, **kwargs)</p></td>
+<td><p>bounded concurrent requests with asyncio semaphore</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.aito_client.AitoClient.request" title="aito.client.aito_client.AitoClient.request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code></a>(*[, method, endpoint, query, ...])</p></td>
+<td><p>make a request to an Aito API endpoint The client returns a JSON response if the request succeed and a <a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestError</span></code></a> if the request fails</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.aito_client.AitoClient.headers" title="aito.client.aito_client.AitoClient.headers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">headers</span></code></a></p></td>
+<td><p>the headers that will be used to send a request to the Aito instance</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.aito_client.AitoClient.is_multitenant" title="aito.client.aito_client.AitoClient.is_multitenant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_multitenant</span></code></a></p></td>
+<td><p>Check if the client is connected to a multitenant instance.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.aito_client.AitoClient.async_request">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">async_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">aiohttp.ClientSession</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><span class="pre">AitoRequest</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raise_for_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../aito.client.responses.aito_response/aito.client.responses.aito_response.BaseResponse.html#aito.client.responses.aito_response.BaseResponse" title="aito.client.responses.aito_response.BaseResponse"><span class="pre">BaseResponse</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><span class="pre">RequestError</span></a></span></span><a class="headerlink" href="#aito.client.aito_client.AitoClient.async_request" title="Link to this definition"></a></dt>
+<dd><p>execute a request asynchronously using aiohttp ClientSession</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session</strong> (<em>ClientSession</em>) – aiohttp ClientSession for making request</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – method for the new <a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoRequest</span></code></a> object</p></li>
+<li><p><strong>endpoint</strong> (<em>str</em>) – endpoint for the new <a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoRequest</span></code></a> object</p></li>
+<li><p><strong>query</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>Dict</em><em>, </em><em>List</em><em>]</em><em>]</em>) – an Aito query if applicable, defaults to None</p></li>
+<li><p><strong>request_obj</strong> (<a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><em>AitoRequest</em></a>) – use an <a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoRequest</span></code></a> object</p></li>
+<li><p><strong>raise_for_status</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – raise <a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestError</span></code></a> if the request fails instead of returning the error
+If set to None, value from Client will be used. Defaults to True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><strong>RequestError</strong></a> – an error occurred during the execution of the request and raise_for_status</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.aito_client.AitoClient.async_requests">
+<span class="sig-name descname"><span class="pre">async_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methods</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../aito.client.responses.aito_response/aito.client.responses.aito_response.BaseResponse.html#aito.client.responses.aito_response.BaseResponse" title="aito.client.responses.aito_response.BaseResponse"><span class="pre">BaseResponse</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#aito.client.aito_client.AitoClient.async_requests" title="Link to this definition"></a></dt>
+<dd><div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 0.4.0.</span></p>
+</div>
+<p>Use <a class="reference internal" href="#aito.client.aito_client.AitoClient.batch_requests" title="aito.client.aito_client.AitoClient.batch_requests"><code class="xref py py-func docutils literal notranslate"><span class="pre">batch_requests()</span></code></a> instead</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.aito_client.AitoClient.batch_requests">
+<span class="sig-name descname"><span class="pre">batch_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requests</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><span class="pre">AitoRequest</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrent_requests</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../aito.client.responses.aito_response/aito.client.responses.aito_response.BaseResponse.html#aito.client.responses.aito_response.BaseResponse" title="aito.client.responses.aito_response.BaseResponse"><span class="pre">BaseResponse</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><span class="pre">RequestError</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#aito.client.aito_client.AitoClient.batch_requests" title="Link to this definition"></a></dt>
+<dd><p>execute a batch of requests asynchronously</p>
+<p>This method is useful when sending a batch of requests, for example, when sending a batch of predict requests.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>requests</strong> (<em>List</em><em>[</em><a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><em>AitoRequest</em></a><em>]</em>) – list of request objects</p></li>
+<li><p><strong>max_concurrent_requests</strong> (<em>int</em>) – the number of queries to be sent per batch</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of request response or exception if a request did not succeed</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Union[<a class="reference internal" href="../aito.client.responses.aito_response/aito.client.responses.aito_response.BaseResponse.html#aito.client.responses.aito_response.BaseResponse" title="aito.client.responses.aito_response.BaseResponse">BaseResponse</a>, <a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError">RequestError</a>]]</p>
+</dd>
+</dl>
+<p>Find products that multiple users would most likely buy</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatchRequest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">users</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;veronica&#39;</span><span class="p">,</span> <span class="s1">&#39;larry&#39;</span><span class="p">,</span> <span class="s1">&#39;alice&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">responses</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">batch_requests</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="n">MatchRequest</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>            <span class="s1">&#39;from&#39;</span><span class="p">:</span> <span class="s1">&#39;impressions&#39;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s1">&#39;where&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;context.user&#39;</span><span class="p">:</span> <span class="n">usr</span> <span class="p">},</span>
+<span class="gp">... </span>            <span class="s1">&#39;match&#39;</span><span class="p">:</span> <span class="s1">&#39;product&#39;</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">usr</span> <span class="ow">in</span> <span class="n">users</span>
+<span class="gp">... </span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Print top product for each customer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">usr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">users</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">usr</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">responses</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">top_match</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">veronica: {&quot;$p&quot;: ..., &quot;category&quot;: ..., &quot;id&quot;: ..., &quot;name&quot;: ..., &quot;price&quot;: ..., &quot;tags&quot;: ...}</span>
+<span class="go">larry: {&quot;$p&quot;: ..., &quot;category&quot;: ..., &quot;id&quot;: ..., &quot;name&quot;: ..., &quot;price&quot;: ..., &quot;tags&quot;: ...}</span>
+<span class="go">alice: {&quot;$p&quot;: ..., &quot;category&quot;: ..., &quot;id&quot;: ..., &quot;name&quot;: ..., &quot;price&quot;: ..., &quot;tags&quot;: ...}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.aito_client.AitoClient.bounded_async_request">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bounded_async_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">semaphore</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Semaphore</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../aito.client.responses.aito_response/aito.client.responses.aito_response.BaseResponse.html#aito.client.responses.aito_response.BaseResponse" title="aito.client.responses.aito_response.BaseResponse"><span class="pre">BaseResponse</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><span class="pre">RequestError</span></a></span></span><a class="headerlink" href="#aito.client.aito_client.AitoClient.bounded_async_request" title="Link to this definition"></a></dt>
+<dd><p>bounded concurrent requests with asyncio semaphore</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>semaphore</strong> (<em>asyncio.Semaphore</em>) – asyncio Semaphore</p></li>
+<li><p><strong>args</strong> – <code class="xref py py-func docutils literal notranslate"><span class="pre">async_request()</span></code> positional arguments</p></li>
+<li><p><strong>kwargs</strong> – <code class="xref py py-func docutils literal notranslate"><span class="pre">async_request()</span></code> keyword arguments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple of request status code and request json content</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[int, Union[Dict, List]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.aito_client.AitoClient.headers">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">headers</span></span><a class="headerlink" href="#aito.client.aito_client.AitoClient.headers" title="Link to this definition"></a></dt>
+<dd><p>the headers that will be used to send a request to the Aito instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.client.aito_client.AitoClient.is_multitenant">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_multitenant</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#aito.client.aito_client.AitoClient.is_multitenant" title="Link to this definition"></a></dt>
+<dd><p>Check if the client is connected to a multitenant instance.</p>
+<p>Multitenant URLs have the format: <a class="reference external" href="https://shared.aito.ai/db">https://shared.aito.ai/db</a>/{database_name}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if connected to a multitenant instance</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.aito_client.AitoClient.request">
+<span class="sig-name descname"><span class="pre">request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><span class="pre">AitoRequest</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raise_for_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../aito.client.responses.aito_response/aito.client.responses.aito_response.BaseResponse.html#aito.client.responses.aito_response.BaseResponse" title="aito.client.responses.aito_response.BaseResponse"><span class="pre">BaseResponse</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><span class="pre">RequestError</span></a></span></span><a class="headerlink" href="#aito.client.aito_client.AitoClient.request" title="Link to this definition"></a></dt>
+<dd><p>make a request to an Aito API endpoint
+The client returns a JSON response if the request succeed and a <a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestError</span></code></a> if the request fails</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<em>str</em>) – method for the new <a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoRequest</span></code></a> object</p></li>
+<li><p><strong>endpoint</strong> (<em>str</em>) – endpoint for the new <a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoRequest</span></code></a> object</p></li>
+<li><p><strong>query</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>Dict</em><em>, </em><em>List</em><em>]</em><em>]</em>) – an Aito query if applicable, defaults to None</p></li>
+<li><p><strong>request_obj</strong> (<a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><em>AitoRequest</em></a>) – use an <a class="reference internal" href="../aito.client.requests.aito_request/aito.client.requests.aito_request.AitoRequest.html#aito.client.requests.aito_request.AitoRequest" title="aito.client.requests.aito_request.AitoRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoRequest</span></code></a> object</p></li>
+<li><p><strong>raise_for_status</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – raise <a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestError</span></code></a> if the request fails instead of returning the error
+If set to None, value from Client will be used. Defaults to True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><strong>RequestError</strong></a> – an error occurred during the execution of the request and raise_for_status</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a response object or <a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestError</span></code></a> if an error occurred and not raise_for_status</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[<a class="reference internal" href="../aito.client.responses.aito_response/aito.client.responses.aito_response.BaseResponse.html#aito.client.responses.aito_response.BaseResponse" title="aito.client.responses.aito_response.BaseResponse">BaseResponse</a>, <a class="reference internal" href="aito.client.aito_client.RequestError.html#aito.client.aito_client.RequestError" title="aito.client.aito_client.RequestError">RequestError</a>]</p>
+</dd>
+</dl>
+<p>Simple request to get the schema of a table:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="s2">&quot;/api/v1/schema/impressions&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">to_json_string</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="go">{</span>
+<span class="go">  &quot;columns&quot;: {</span>
+<span class="go">    &quot;context&quot;: {</span>
+<span class="go">      &quot;link&quot;: &quot;contexts.id&quot;,</span>
+<span class="go">      &quot;nullable&quot;: false,</span>
+<span class="go">      &quot;type&quot;: &quot;String&quot;</span>
+<span class="go">    },</span>
+<span class="go">    &quot;product&quot;: {</span>
+<span class="go">      &quot;link&quot;: &quot;products.id&quot;,</span>
+<span class="go">      &quot;nullable&quot;: false,</span>
+<span class="go">      &quot;type&quot;: &quot;String&quot;</span>
+<span class="go">    },</span>
+<span class="go">    &quot;purchase&quot;: {</span>
+<span class="go">      &quot;nullable&quot;: false,</span>
+<span class="go">      &quot;type&quot;: &quot;Boolean&quot;</span>
+<span class="go">    }</span>
+<span class="go">  },</span>
+<span class="go">  &quot;type&quot;: &quot;table&quot;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Sends a <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-predict">PREDICT</a> query:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">PredictRequest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">request_obj</span><span class="o">=</span><span class="n">PredictRequest</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">query</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>       <span class="s2">&quot;from&quot;</span><span class="p">:</span> <span class="s2">&quot;impressions&quot;</span><span class="p">,</span>
+<span class="gp">... </span>       <span class="s2">&quot;where&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="s2">&quot;veronica&quot;</span> <span class="p">},</span>
+<span class="gp">... </span>       <span class="s2">&quot;predict&quot;</span><span class="p">:</span> <span class="s2">&quot;product.name&quot;</span>
+<span class="gp">... </span>   <span class="p">}</span>
+<span class="gp">... </span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">top_prediction</span><span class="p">)</span>
+<span class="go">{&quot;$p&quot;: ..., &quot;$value&quot;: ...}</span>
+</pre></div>
+</div>
+<p>Returns an error when make a request to an incorrect path:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="s2">&quot;api/v1/incorrect-path&quot;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">   </span><span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">invalid endpoint &#39;api/v1/incorrect-path&#39; for BaseRequest</span>
+</pre></div>
+</div>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../aito.client.aito_client.html" class="btn btn-neutral float-left" title="aito.client.aito_client" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="aito.client.aito_client.Error.html" class="btn btn-neutral float-right" title="aito.client.aito_client.Error" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, aito.ai.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

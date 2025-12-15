@@ -1,0 +1,6 @@
+aito.api.download\_table
+========================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: download_table

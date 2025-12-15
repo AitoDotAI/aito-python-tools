@@ -1,0 +1,6 @@
+aito.api.upload\_binary\_file
+=============================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: upload_binary_file

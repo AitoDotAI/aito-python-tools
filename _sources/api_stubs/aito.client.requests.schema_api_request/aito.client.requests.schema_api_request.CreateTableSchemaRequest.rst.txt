@@ -1,0 +1,28 @@
+aito.client.requests.schema\_api\_request.CreateTableSchemaRequest
+==================================================================
+
+.. currentmodule:: aito.client.requests.schema_api_request
+
+.. autoclass:: CreateTableSchemaRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~CreateTableSchemaRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~CreateTableSchemaRequest.endpoint_prefix
+          ~CreateTableSchemaRequest.method
+  
+  

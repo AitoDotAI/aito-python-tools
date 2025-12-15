@@ -1,0 +1,6 @@
+aito.api.delete\_database
+=========================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: delete_database

@@ -1,0 +1,29 @@
+aito.schema.DataSeriesProperties
+================================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: DataSeriesProperties
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~DataSeriesProperties.pandas_dtype_to_aito_dtype
+        ~DataSeriesProperties.to_data_type_schema
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~DataSeriesProperties.MAX_INT_VALUE
+          ~DataSeriesProperties.MIN_INT_VALUE
+  
+  

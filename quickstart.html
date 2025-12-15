@@ -1,0 +1,487 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quickstart &mdash; aito-python-sdk 0.5.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Aito CLI" href="cli.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            aito-python-sdk
+              <img src="_static/aito.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#upload-data-and-send-your-first-query-with-the-cli">Upload data and send your first query with the CLI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setup-aito-credentials"><span class="xref std std-ref">Setup Aito credentials</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infer-a-table-schema"><span class="xref std std-ref">Infer a Table Schema</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#change-the-schema">Change the Schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#create-a-table"><span class="xref std std-ref">Create a Table</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-the-data"><span class="xref std std-ref">Convert the Data</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#upload-the-data">Upload the Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#send-your-first-query">Send your first query</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#upload-data-and-send-your-first-query-with-the-sdk">Upload data and send your first query with the SDK</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sdkquickstartinfertableschema">Infer a table schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sdkquickstartchangeschema">Change the Schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sdkquickstartcreatetable">Create a table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sdkquickstartconvertdata">Convert the Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sdkquickstartuploaddata">Upload the Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sdkquickstartsendquery">Send your first query</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Aito CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sdk.html">Aito SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql.html">SQL Database Integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.client.html">aito.client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.schema.html">aito.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.api.html">aito.api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Useful Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html#stay-informed">Stay Informed</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">aito-python-sdk</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quickstart</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
+<p>This section explains how to upload data to Aito and send your first query with either <a class="reference internal" href="cli.html"><span class="doc">CLI</span></a> or <a class="reference internal" href="sdk.html"><span class="doc">Python SDK</span></a>.</p>
+<p>Essentially, uploading data into Aito can be broken down into the following steps:</p>
+<ol class="arabic simple">
+<li><p>Infer a Table Schema <a class="reference internal" href="#cliquickstartinfertableschema"><span class="std std-ref">cli</span></a> | <a class="reference internal" href="#sdkquickstartinfertableschema"><span class="std std-ref">sdk</span></a></p></li>
+<li><p>Change the inferred schema if needed <a class="reference internal" href="#cliquickstartchangeschema"><span class="std std-ref">cli</span></a> | <a class="reference internal" href="#sdkquickstartchangeschema"><span class="std std-ref">sdk</span></a></p></li>
+<li><p>Create a table <a class="reference internal" href="#cliquickstartcreatetable"><span class="std std-ref">cli</span></a> | <a class="reference internal" href="#sdkquickstartcreatetable"><span class="std std-ref">sdk</span></a></p></li>
+<li><p>Convert the data <a class="reference internal" href="#cliquickstartconvertdata"><span class="std std-ref">cli</span></a> | <a class="reference internal" href="#sdkquickstartconvertdata"><span class="std std-ref">sdk</span></a></p></li>
+<li><p>Upload the data <a class="reference internal" href="#cliquickstartuploaddata"><span class="std std-ref">cli</span></a> | <a class="reference internal" href="#sdkquickstartuploaddata"><span class="std std-ref">sdk</span></a></p></li>
+<li><p>Send a query to an Aito Endpoint <a class="reference internal" href="#cliquickstartsendquery"><span class="std std-ref">cli</span></a> | <a class="reference internal" href="#sdkquickstartsendquery"><span class="std std-ref">sdk</span></a></p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Skip steps 1, 2, and 3 if you upload data to an existing table
+Skip step 4 if you already have the data in the appropriate format for uploading or the data matches the table schema</p>
+</div>
+<p>If you don’t have a data file, you can download our <a class="reference external" href="https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv">example file</a> and follow the guide.</p>
+<section id="upload-data-and-send-your-first-query-with-the-cli">
+<h2>Upload data and send your first query with the CLI<a class="headerlink" href="#upload-data-and-send-your-first-query-with-the-cli" title="Link to this heading"></a></h2>
+<section id="setup-aito-credentials">
+<h3><a class="reference internal" href="cli.html#clisetupaitocredentials"><span class="std std-ref">Setup Aito credentials</span></a><a class="headerlink" href="#setup-aito-credentials" title="Link to this heading"></a></h3>
+<blockquote>
+<div><p>The easiest way to set-up the credentials is by <cite>configure</cite> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito configure
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can use the <a class="reference internal" href="cli.html#cliquickaddtable"><span class="std std-ref">Quick Add Table Operation</span></a> instead of doing upload step-by-step if
+you want to upload to a new table and don’t think you need to adjust the inferred schema.</p>
+</div>
+<p>The CLI supports all steps needed to upload data:</p>
+</section>
+<section id="infer-a-table-schema">
+<span id="cliquickstartinfertableschema"></span><h3><a class="reference internal" href="cli.html#cliinfertableschema"><span class="std std-ref">Infer a Table Schema</span></a><a class="headerlink" href="#infer-a-table-schema" title="Link to this heading"></a></h3>
+<p>For examples, infer a table schema from a csv file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema csv &lt; path/to/myCSVFile.csv &gt; path/to/inferredSchema.json
+</pre></div>
+</div>
+</section>
+<section id="change-the-schema">
+<span id="cliquickstartchangeschema"></span><h3>Change the Schema<a class="headerlink" href="#change-the-schema" title="Link to this heading"></a></h3>
+<p>You might want to change the <a class="reference external" href="https://aito.ai/docs/api/#schema-column-type">ColumnType</a>, e.g: The <code class="docutils literal notranslate"><span class="pre">id</span></code> column should be of type <code class="docutils literal notranslate"><span class="pre">String</span></code> instead of <code class="docutils literal notranslate"><span class="pre">Int</span></code>,
+or add an <a class="reference external" href="https://aito.ai/docs/api/#schema-analyzer">Analyzer</a> to a <code class="docutils literal notranslate"><span class="pre">Text</span></code> column. In that case, just make changes to the inferred schema JSON file.</p>
+<p>The example below use <a class="reference external" href="https://stedolan.github.io/jq/">jq</a> to change the <code class="docutils literal notranslate"><span class="pre">id</span></code> column type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ jq &#39;.columns.id.type = &quot;String&quot;&#39; &lt; path/to/schemaFile.json &gt; path/to/updatedSchemaFile.json
+</pre></div>
+</div>
+</section>
+<section id="create-a-table">
+<span id="cliquickstartcreatetable"></span><h3><a class="reference internal" href="cli.html#clicreatetable"><span class="std std-ref">Create a Table</span></a><a class="headerlink" href="#create-a-table" title="Link to this heading"></a></h3>
+<p>You need a table name and a table schema to create a table:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito database create-table tableName path/to/tableSchema.json
+</pre></div>
+</div>
+</section>
+<section id="convert-the-data">
+<span id="cliquickstartconvertdata"></span><h3><a class="reference internal" href="cli.html#cliconvert"><span class="std std-ref">Convert the Data</span></a><a class="headerlink" href="#convert-the-data" title="Link to this heading"></a></h3>
+<p>If you made changes to the inferred schema or have an existing schema, use the schema when with the <code class="docutils literal notranslate"><span class="pre">-s</span></code> flag to make sure that the converted data matches the schema:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert csv -s path/to/updatedSchema.json path/to/myCSVFile.csv &gt; path/to/myConvertedFile.ndjson
+</pre></div>
+</div>
+<p>You can either convert the data to:</p>
+<blockquote>
+<div><ul>
+<li><p>A list of entries in JSON format for <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-table-batch">Batch Upload</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert csv --json path/to/myCSVFile.csv &gt; path/to/myConvertedFile.json
+</pre></div>
+</div>
+</li>
+<li><p>A NDJSON file for <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-table-file">File Upload</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert csv &lt; path/to/myFile.csv &gt; path/to/myConvertedFile.ndjson
+</pre></div>
+</div>
+<p>Remember to gzip the NDJSON file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ gzip path/to/myConvertedFile.ndjson
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</section>
+<section id="upload-the-data">
+<span id="cliquickstartuploaddata"></span><h3>Upload the Data<a class="headerlink" href="#upload-the-data" title="Link to this heading"></a></h3>
+<p>You can upload the data by either:</p>
+<blockquote>
+<div><ul>
+<li><p><a class="reference internal" href="cli.html#clibatchupload"><span class="std std-ref">Delete a Table</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito upload-entries tableName &lt; tableEntries.json
+</pre></div>
+</div>
+</li>
+<li><p><a class="reference internal" href="cli.html#clifileupload"><span class="std std-ref">Upload a File to a Table</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito upload-file tableName tableEntries.ndjson.gz
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</section>
+<section id="send-your-first-query">
+<span id="cliquickstartsendquery"></span><h3>Send your first query<a class="headerlink" href="#send-your-first-query" title="Link to this heading"></a></h3>
+<p>You can send a query to an Aito endpoint by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito &lt;endpoint&gt; &lt;query&gt;
+</pre></div>
+</div>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito search &#39;{&quot;from&quot;: &quot;products&quot;}&#39;
+$ aito predict &#39;{&quot;from&quot;: &quot;products&quot;, &quot;where&quot;: {&quot;name&quot;: {&quot;$match&quot;: &quot;rye bread&quot;}}, &quot;predict&quot;: &quot;tags&quot;}&#39;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="upload-data-and-send-your-first-query-with-the-sdk">
+<span id="sdkquickstartupload"></span><h2>Upload data and send your first query with the SDK<a class="headerlink" href="#upload-data-and-send-your-first-query-with-the-sdk" title="Link to this heading"></a></h2>
+<p>The Aito Python SDK uses <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/frame.html">Pandas DataFrame</a> for multiple operations.</p>
+<p>The example below shows how you can load a csv file into a DataFrame, please read the <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html">official pandas guide</a> for further instructions.
+You can download an example csv file <code class="docutils literal notranslate"><span class="pre">reddit_sample.csv</span></code> <a class="reference external" href="https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv">here</a> and run the code below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span>
+<span class="n">reddit_df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;reddit_sample.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="sdkquickstartinfertableschema">
+<span id="id1"></span><h3>Infer a table schema<a class="headerlink" href="#sdkquickstartinfertableschema" title="Link to this heading"></a></h3>
+<p>You can infer a <a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoTableSchema.html#aito.schema.AitoTableSchema" title="aito.schema.AitoTableSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoTableSchema</span></code></a> from a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/frame.html">Pandas DataFrame</a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoTableSchema</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pprint</span>
+<span class="n">reddit_schema</span> <span class="o">=</span> <span class="n">AitoTableSchema</span><span class="o">.</span><span class="n">infer_from_pandas_data_frame</span><span class="p">(</span><span class="n">reddit_df</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">reddit_schema</span><span class="o">.</span><span class="n">to_json_string</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{
+  &quot;columns&quot;: {
+    &quot;author&quot;: {
+      &quot;nullable&quot;: false,
+      &quot;type&quot;: &quot;String&quot;
+    },
+    &quot;comment&quot;: {
+      &quot;analyzer&quot;: {
+        &quot;customKeyWords&quot;: [],
+        &quot;customStopWords&quot;: [],
+        &quot;language&quot;: &quot;english&quot;,
+        &quot;type&quot;: &quot;language&quot;,
+        &quot;useDefaultStopWords&quot;: false
+      },
+      &quot;nullable&quot;: true,
+      &quot;type&quot;: &quot;Text&quot;
+    },
+    &quot;created_utc&quot;: {
+      &quot;analyzer&quot;: {
+        &quot;delimiter&quot;: &quot;:&quot;,
+        &quot;trimWhitespace&quot;: true,
+        &quot;type&quot;: &quot;delimiter&quot;
+      },
+      &quot;nullable&quot;: false,
+      &quot;type&quot;: &quot;Text&quot;
+    },
+    &quot;date&quot;: {
+      &quot;analyzer&quot;: {
+        &quot;delimiter&quot;: &quot;-&quot;,
+        &quot;trimWhitespace&quot;: true,
+        &quot;type&quot;: &quot;delimiter&quot;
+      },
+      &quot;nullable&quot;: false,
+      &quot;type&quot;: &quot;Text&quot;
+    },
+    &quot;downs&quot;: {
+      &quot;nullable&quot;: false,
+      &quot;type&quot;: &quot;Int&quot;
+    },
+    &quot;label&quot;: {
+      &quot;nullable&quot;: false,
+      &quot;type&quot;: &quot;Int&quot;
+    },
+    &quot;parent_comment&quot;: {
+      &quot;analyzer&quot;: {
+        &quot;customKeyWords&quot;: [],
+        &quot;customStopWords&quot;: [],
+        &quot;language&quot;: &quot;english&quot;,
+        &quot;type&quot;: &quot;language&quot;,
+        &quot;useDefaultStopWords&quot;: false
+      },
+      &quot;nullable&quot;: false,
+      &quot;type&quot;: &quot;Text&quot;
+    },
+    &quot;score&quot;: {
+      &quot;nullable&quot;: false,
+      &quot;type&quot;: &quot;Int&quot;
+    },
+    &quot;subreddit&quot;: {
+      &quot;nullable&quot;: false,
+      &quot;type&quot;: &quot;String&quot;
+    },
+    &quot;ups&quot;: {
+      &quot;nullable&quot;: false,
+      &quot;type&quot;: &quot;Int&quot;
+    }
+  },
+  &quot;type&quot;: &quot;table&quot;
+}
+</pre></div>
+</div>
+</section>
+<section id="sdkquickstartchangeschema">
+<span id="id2"></span><h3>Change the Schema<a class="headerlink" href="#sdkquickstartchangeschema" title="Link to this heading"></a></h3>
+<p>You might want to change the <a class="reference external" href="https://aito.ai/docs/api/#schema-column-type">ColumnType</a>, e.g: The <code class="docutils literal notranslate"><span class="pre">id</span></code> column should be of type <code class="docutils literal notranslate"><span class="pre">String</span></code> instead of <code class="docutils literal notranslate"><span class="pre">Int</span></code>,
+or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-analyzer">Analyzer</a> to a <code class="docutils literal notranslate"><span class="pre">Text</span></code> column.</p>
+<p>You can access and update the column schema by using the column name as the key:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoStringType</span><span class="p">,</span> <span class="n">AitoTokenNgramAnalyzerSchema</span><span class="p">,</span> <span class="n">AitoAliasAnalyzerSchema</span>
+
+<span class="c1"># Change the label type to String instead of Int</span>
+<span class="n">reddit_schema</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="n">AitoStringType</span><span class="p">()</span>
+
+<span class="c1"># Change the analyzer of the `comments` column</span>
+<span class="n">reddit_schema</span><span class="p">[</span><span class="s1">&#39;comment&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">AitoTokenNgramAnalyzerSchema</span><span class="p">(</span>
+  <span class="n">source</span><span class="o">=</span><span class="n">AitoAliasAnalyzerSchema</span><span class="p">(</span><span class="s1">&#39;en&#39;</span><span class="p">),</span>
+  <span class="n">min_gram</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+  <span class="n">max_gram</span><span class="o">=</span><span class="mi">3</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="sdkquickstartcreatetable">
+<span id="id3"></span><h3>Create a table<a class="headerlink" href="#sdkquickstartcreatetable" title="Link to this heading"></a></h3>
+<p>You can <a class="reference internal" href="api_stubs/aito.api/aito.api.create_table.html#aito.api.create_table" title="aito.api.create_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_table()</span></code></a> using an <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> and specifying the table name and the table schema</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The example is not direclty copy-pastable. Please use your own Aito environment credentials</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_table</span>
+<span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">instance_url</span><span class="o">=</span><span class="n">YOUR_AITO_INSTANCE_URL</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">YOUR_AITO_INSTANCE_API_KEY</span><span class="p">)</span>
+<span class="n">create_table</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;reddit&#39;</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">reddit_schema</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="sdkquickstartconvertdata">
+<span id="id4"></span><h3>Convert the Data<a class="headerlink" href="#sdkquickstartconvertdata" title="Link to this heading"></a></h3>
+<p>The <a class="reference internal" href="api_stubs/aito.utils.data_frame_handler/aito.utils.data_frame_handler.DataFrameHandler.html#aito.utils.data_frame_handler.DataFrameHandler" title="aito.utils.data_frame_handler.DataFrameHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrameHandler</span></code></a> can convert a DataFrame to match an existing schema:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.utils.data_frame_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrameHandler</span>
+<span class="n">data_frame_handler</span> <span class="o">=</span> <span class="n">DataFrameHandler</span><span class="p">()</span>
+<span class="n">converted_reddit_df</span> <span class="o">=</span> <span class="n">data_frame_handler</span><span class="o">.</span><span class="n">convert_df_using_aito_table_schema</span><span class="p">(</span>
+  <span class="n">df</span><span class="o">=</span><span class="n">reddit_df</span><span class="p">,</span>
+  <span class="n">table_schema</span><span class="o">=</span><span class="n">reddit_schema</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>A DataFrame can be converted to:</p>
+<blockquote>
+<div><ul>
+<li><p>A list of entries in JSON format for <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-table-batch">Batch Upload</a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">reddit_entries</span> <span class="o">=</span> <span class="n">converted_reddit_df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>A gzipped NDJSON file for <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-table-file">File Upload</a> using the <a class="reference internal" href="api_stubs/aito.utils.data_frame_handler/aito.utils.data_frame_handler.DataFrameHandler.html#aito.utils.data_frame_handler.DataFrameHandler" title="aito.utils.data_frame_handler.DataFrameHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrameHandler</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data_frame_handler</span><span class="o">.</span><span class="n">df_to_format</span><span class="p">(</span>
+  <span class="n">df</span><span class="o">=</span><span class="n">converted_reddit_df</span><span class="p">,</span>
+  <span class="n">out_format</span><span class="o">=</span><span class="s1">&#39;ndjson&#39;</span><span class="p">,</span>
+  <span class="n">write_output</span><span class="o">=</span><span class="s1">&#39;reddit_sample.ndjson.gz&#39;</span><span class="p">,</span>
+  <span class="n">convert_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;compression&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip&#39;</span><span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</section>
+<section id="sdkquickstartuploaddata">
+<span id="id5"></span><h3>Upload the Data<a class="headerlink" href="#sdkquickstartuploaddata" title="Link to this heading"></a></h3>
+<p>You can <a class="reference internal" href="api_stubs/aito.api/aito.api.upload_entries.html#aito.api.upload_entries" title="aito.api.upload_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code></a> using an <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code></p>
+<blockquote>
+<div><ul>
+<li><p>Batch Upload:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_entries</span>
+<span class="n">upload_entries</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;reddit&#39;</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="n">reddit_entries</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>File Upload:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_file</span><span class="p">,</span> <span class="n">get_table_size</span>
+
+<span class="n">upload_file</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;reddit&#39;</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;reddit_sample.ndjson.gz&#39;</span><span class="p">))</span>
+
+<span class="c1"># Check that the data has been uploaded</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">get_table_size</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="s1">&#39;reddit&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>10000
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+<p>The <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-table-batch">Batch Upload</a> can also be done using a generator:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">entries_generator</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+  <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">idx</span><span class="p">}</span>
+    <span class="k">yield</span> <span class="n">entry</span>
+
+<span class="n">upload_entries</span><span class="p">(</span>
+  <span class="n">aito_client</span><span class="p">,</span>
+  <span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;table_name&quot;</span><span class="p">,</span>
+  <span class="n">entries</span><span class="o">=</span><span class="n">entries_generator</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+  <span class="n">batch_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+  <span class="n">optimize_on_finished</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="sdkquickstartsendquery">
+<span id="id6"></span><h3>Send your first query<a class="headerlink" href="#sdkquickstartsendquery" title="Link to this heading"></a></h3>
+<p>You can send a query to an Aito endpoint by using the AitoClient method:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span><span class="p">,</span> <span class="n">predict</span>
+<span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">instance_url</span><span class="o">=</span><span class="n">INSTANCE_URL</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">INSTANCE_API_KEY</span><span class="p">)</span>
+<span class="n">search</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="p">{</span>
+  <span class="s2">&quot;from&quot;</span><span class="p">:</span> <span class="s2">&quot;products&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;where&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$match&quot;</span><span class="p">:</span> <span class="s2">&quot;rye bread&quot;</span><span class="p">}}</span>
+<span class="p">})</span>
+
+<span class="n">predict</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="p">{</span>
+  <span class="s2">&quot;from&quot;</span><span class="p">:</span> <span class="s2">&quot;products&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;where&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;rye bread&quot;</span><span class="p">},</span>
+  <span class="s2">&quot;predict&quot;</span><span class="p">:</span> <span class="s2">&quot;tags&quot;</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cli.html" class="btn btn-neutral float-right" title="Aito CLI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, aito.ai.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+aito.schema.AitoDelimiterAnalyzerSchema
+=======================================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoDelimiterAnalyzerSchema
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoDelimiterAnalyzerSchema.from_deserialized_object
+        ~AitoDelimiterAnalyzerSchema.from_json_string
+        ~AitoDelimiterAnalyzerSchema.infer_from_samples
+        ~AitoDelimiterAnalyzerSchema.json_schema
+        ~AitoDelimiterAnalyzerSchema.json_schema_validate
+        ~AitoDelimiterAnalyzerSchema.json_schema_validate_with_schema
+        ~AitoDelimiterAnalyzerSchema.to_json_serializable
+        ~AitoDelimiterAnalyzerSchema.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoDelimiterAnalyzerSchema.analyzer_type
+          ~AitoDelimiterAnalyzerSchema.column_link_pattern
+          ~AitoDelimiterAnalyzerSchema.column_name_pattern
+          ~AitoDelimiterAnalyzerSchema.comparison_properties
+          ~AitoDelimiterAnalyzerSchema.delimiter
+          ~AitoDelimiterAnalyzerSchema.table_name_pattern
+          ~AitoDelimiterAnalyzerSchema.trim_white_space
+          ~AitoDelimiterAnalyzerSchema.type
+          ~AitoDelimiterAnalyzerSchema.uuid_pattern
+  
+  

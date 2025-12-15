@@ -1,0 +1,6 @@
+aito.api.quick\_predict
+=======================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: quick_predict

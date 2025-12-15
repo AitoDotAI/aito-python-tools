@@ -1,0 +1,36 @@
+aito.client.responses.query\_api\_response.EvaluateResponse
+===========================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: EvaluateResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~EvaluateResponse.from_deserialized_object
+        ~EvaluateResponse.from_json_string
+        ~EvaluateResponse.json_schema
+        ~EvaluateResponse.json_schema_validate
+        ~EvaluateResponse.json_schema_validate_with_schema
+        ~EvaluateResponse.to_json_serializable
+        ~EvaluateResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~EvaluateResponse.accuracy
+          ~EvaluateResponse.json
+          ~EvaluateResponse.test_sample_count
+          ~EvaluateResponse.train_sample_count
+  
+  

@@ -1,0 +1,36 @@
+aito.client.responses.query\_api\_response.ModifyResponse
+=========================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: ModifyResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~ModifyResponse.from_deserialized_object
+        ~ModifyResponse.from_json_string
+        ~ModifyResponse.json_schema
+        ~ModifyResponse.json_schema_validate
+        ~ModifyResponse.json_schema_validate_with_schema
+        ~ModifyResponse.to_json_serializable
+        ~ModifyResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~ModifyResponse.deleted_count
+          ~ModifyResponse.inserted_count
+          ~ModifyResponse.json
+          ~ModifyResponse.modified_count
+  
+  

@@ -1,0 +1,532 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aito CLI &mdash; aito-python-sdk 0.5.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Aito SDK" href="sdk.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            aito-python-sdk
+              <img src="_static/aito.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Aito CLI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#set-up-aito-credentials">Set Up Aito Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-add-a-table">Quick Add a Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-a-table">Create a Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#delete-a-table">Delete a Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#delete-the-whole-database">Delete the Whole Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upload-entries-to-a-table">Upload Entries to a Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upload-a-file-to-a-table">Upload a File to a Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#infer-table-schema-command">infer-table-schema command</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#infer-table-schema-usage">Infer table schema usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infer-table-schema-redirection">Infer table schema redirection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infer-table-schema-from-csv">Infer Table Schema From Csv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infer-table-schema-from-excel">Infer Table Schema From Excel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infer-table-schema-from-json">Infer Table Schema From JSON</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#infer-table-schema-from-ndjson">Infer Table Schema From NDJSON</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#convert-command">convert command</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#convert-usage">Convert usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-redirection">Convert redirection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-to-json">Convert to JSON</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-and-infer-schema">Convert and Infer Schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-using-a-table-schema">Convert Using A Table Schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-csv">Convert CSV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-excel">Convert Excel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-json">Convert JSON</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-ndjson">Convert NDJSON</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tab-completion">Tab Completion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#integration-with-sql-database">Integration with SQL Database</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sdk.html">Aito SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql.html">SQL Database Integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.client.html">aito.client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.schema.html">aito.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.api.html">aito.api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Useful Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html#stay-informed">Stay Informed</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">aito-python-sdk</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Aito CLI</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cli.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="aito-cli">
+<h1>Aito CLI<a class="headerlink" href="#aito-cli" title="Link to this heading"></a></h1>
+<p>The Aito Command Line Interface (Aito CLI) is an open source tool that enables you to interact with
+your Aito instance using commands in your command-line shell with minimum setup.</p>
+<p>To get started:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>aito<span class="w"> </span>-h
+<span class="go">usage: aito [-h] [-V] [-v] [-q]</span>
+
+<span class="go">optional arguments:</span>
+<span class="go">  -h, --help     show this help message and exit</span>
+<span class="go">  -V, --version  display the version of this tool</span>
+<span class="go">  -v, --verbose  display verbose messages</span>
+<span class="go">  -q, --quiet    display only error messages</span>
+
+<span class="go">To see all available commands, you can run:</span>
+<span class="go">  aito list</span>
+
+<span class="go">To see the help text, you can run:</span>
+<span class="go">  aito -h</span>
+<span class="go">  aito &lt;command&gt; -h</span>
+<span class="go">  aito &lt;command&gt; &lt;subcommand&gt; -h</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p><a class="reference internal" href="quickstart.html#cliquickstartuploaddata"><span class="std std-ref">Quickstart guide to upload data</span></a></p>
+<section id="set-up-aito-credentials">
+<span id="clisetupaitocredentials"></span><h2>Set Up Aito Credentials<a class="headerlink" href="#set-up-aito-credentials" title="Link to this heading"></a></h2>
+<p>Performing operations with your Aito database instance always requires credentials.</p>
+<p>There are 3 ways to set up the credentials:</p>
+<ol class="arabic">
+<li><p>The most convenient way is to use the <code class="docutils literal notranslate"><span class="pre">configure</span></code> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito configure
+</pre></div>
+</div>
+</li>
+</ol>
+<blockquote>
+<div><p>When you enter this command, the CLI prompts you for two pieces of information:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Your Aito instance URL</p></li>
+<li><p>Your Aito API key</p></li>
+</ul>
+</div></blockquote>
+<p>The CLI stores this information in a profile named <cite>default</cite> in the credentials file. By default, the information in this profile is used when you run a command that requires credentials.</p>
+<p>The credentials file is stored in <cite>$HOME/.config/aito/credentials</cite> (<cite>%UserProfile%</cite> in Windows). You can manually edit this credentials file.</p>
+<p>You can also specify the named profile with the <code class="docutils literal notranslate"><span class="pre">--profile</span></code> flag and use the named profile for commands that require credentials.</p>
+</div></blockquote>
+<ol class="arabic" start="2">
+<li><p>Set up the following environment variables:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ export AITO_INSTANCE_URL=your-instance-url
+$ export AITO_API_KEY=your-api-key
+</pre></div>
+</div>
+</li>
+</ol>
+<blockquote>
+<div><p>You can now perform commands:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito &lt;command&gt; ...
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>Using flags:</p></li>
+</ol>
+<blockquote>
+<div><p>You can set up the credentials using <code class="docutils literal notranslate"><span class="pre">-i</span></code> flag for the instance url and <code class="docutils literal notranslate"><span class="pre">-k</span></code> flag for the api key:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito -i MY_AITO_INSTANCE_URL -k MY_API_KEY &lt;command&gt; ...
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="quick-add-a-table">
+<span id="cliquickaddtable"></span><h2>Quick Add a Table<a class="headerlink" href="#quick-add-a-table" title="Link to this heading"></a></h2>
+<p>Infer a table schema based on the given file, create a table using the file name and upload the file content to the created table:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito quick-add-table path/to/tableEntries.json
+</pre></div>
+</div>
+</section>
+<section id="create-a-table">
+<span id="clicreatetable"></span><h2>Create a Table<a class="headerlink" href="#create-a-table" title="Link to this heading"></a></h2>
+<p>Create a table using the given Aito table schema:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito create-table tableName path/to/tableSchema.json
+</pre></div>
+</div>
+</section>
+<section id="delete-a-table">
+<span id="clibatchupload"></span><h2>Delete a Table<a class="headerlink" href="#delete-a-table" title="Link to this heading"></a></h2>
+<p>Delete a table schema and all the data inside it:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>aito<span class="w"> </span>delete-table<span class="w"> </span>tableName
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This operation is irreversible</p>
+</div>
+</div></blockquote>
+</section>
+<section id="delete-the-whole-database">
+<h2>Delete the Whole Database<a class="headerlink" href="#delete-the-whole-database" title="Link to this heading"></a></h2>
+<p>Delete the database’s schema and all data in the instance:</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>aito<span class="w"> </span>delete-database
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This operation is irreversible</p>
+</div>
+</div></blockquote>
+</section>
+<section id="upload-entries-to-a-table">
+<h2>Upload Entries to a Table<a class="headerlink" href="#upload-entries-to-a-table" title="Link to this heading"></a></h2>
+<p>Upload entries to an <em>existing</em> table (a table of which <a class="reference external" href="https://aito.ai/docs/api/#put-api-v1-schema">schema has been created</a>) in your Aito instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito upload-entries tableName &lt; tableEntries.json
+</pre></div>
+</div>
+</section>
+<section id="upload-a-file-to-a-table">
+<span id="clifileupload"></span><h2>Upload a File to a Table<a class="headerlink" href="#upload-a-file-to-a-table" title="Link to this heading"></a></h2>
+<p>Upload a file to an <em>existing</em> table in your Aito instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito upload-file tableName tableEntries.ndjson.gz
+</pre></div>
+</div>
+</section>
+<section id="infer-table-schema-command">
+<span id="cliinfertableschema"></span><h2>infer-table-schema command<a class="headerlink" href="#infer-table-schema-command" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">infer-table-schema</span></code> command helps you to infer a table schema from the input data</p>
+<p>Supported input formats:</p>
+<ul class="simple">
+<li><p>csv</p></li>
+<li><p>excel (both xls and xlsx)</p></li>
+<li><p><a class="reference external" href="https://www.json.org/">JSON</a></p></li>
+<li><p><a class="reference external" href="http://ndjson.org/">NDJSON</a></p></li>
+</ul>
+<section id="infer-table-schema-usage">
+<h3>Infer table schema usage<a class="headerlink" href="#infer-table-schema-usage" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema -h
+</pre></div>
+</div>
+<p>The command supports different object for each input format, for instance, specifying the delimiter for csv format.
+To see help for a specific input format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema &lt;input-format&gt; -h
+</pre></div>
+</div>
+</section>
+<section id="infer-table-schema-redirection">
+<h3>Infer table schema redirection<a class="headerlink" href="#infer-table-schema-redirection" title="Link to this heading"></a></h3>
+<p>By default, the command takes standard input and standard output. To redirect:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema csv &lt; path/to/myFile.csv &gt; path/to/schemaFile.json
+</pre></div>
+</div>
+</section>
+<section id="infer-table-schema-from-csv">
+<h3>Infer Table Schema From Csv<a class="headerlink" href="#infer-table-schema-from-csv" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema csv -h
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema csv &lt; path/to/myCSVFile.csv
+</pre></div>
+</div>
+<p>Infer a table schema from a semicolon delimited csv file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema csv -d &#39;;&#39; &lt; path/to/myCSVFile.csv
+</pre></div>
+</div>
+<p>Infer a table schema from a semicolon delimited comma decimal point csv file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema csv -d &#39;;&#39; -p &#39;,&#39; &lt; path/to/myCSVFile.csv
+</pre></div>
+</div>
+</section>
+<section id="infer-table-schema-from-excel">
+<h3>Infer Table Schema From Excel<a class="headerlink" href="#infer-table-schema-from-excel" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema excel -h
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema excel path/to/myExcelFile.xlsx
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Infer table schema from Excel only take file path instead of stdin</p>
+</div>
+<p>Infer a table schema from a single sheet of an excel file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema excel -o sheetName path/to/myExcelFile.xls
+</pre></div>
+</div>
+</section>
+<section id="infer-table-schema-from-json">
+<h3>Infer Table Schema From <a class="reference external" href="https://www.json.org/">JSON</a><a class="headerlink" href="#infer-table-schema-from-json" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema json -h
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema json path/to/myJSONFile.json
+</pre></div>
+</div>
+</section>
+<section id="infer-table-schema-from-ndjson">
+<h3>Infer Table Schema From <a class="reference external" href="http://ndjson.org/">NDJSON</a><a class="headerlink" href="#infer-table-schema-from-ndjson" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema ndjson -h
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema ndjson path/to/myNDJSONFile.ndjson
+</pre></div>
+</div>
+</section>
+</section>
+<section id="convert-command">
+<span id="cliconvert"></span><h2>convert command<a class="headerlink" href="#convert-command" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">convert</span></code> command helps you to convert the input data into <a class="reference external" href="https://www.json.org/">JSON</a> or <a class="reference external" href="http://ndjson.org/">NDJSON</a> for upload or convert the data
+according to a table schema.</p>
+<p>Aito takes JSON array of objects for <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-table-batch">Inserting multiple
+entries</a> and
+a gzip compressed <a class="reference external" href="http://ndjson.org/">NDJSON</a> file for
+<a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-table-file">File upload</a>.</p>
+<p>Supported input formats:</p>
+<ul class="simple">
+<li><p>csv</p></li>
+<li><p>excel (both xls and xlsx)</p></li>
+<li><p><a class="reference external" href="https://www.json.org/">JSON</a></p></li>
+<li><p><a class="reference external" href="http://ndjson.org/">NDJSON</a></p></li>
+</ul>
+<section id="convert-usage">
+<h3>Convert usage<a class="headerlink" href="#convert-usage" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert -h
+</pre></div>
+</div>
+<p>The command supports different object for each input format, for instance, specifying the delimiter for csv format.
+To see help for a specific input format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert &lt;input-format&gt; -h
+</pre></div>
+</div>
+</section>
+<section id="convert-redirection">
+<h3>Convert redirection<a class="headerlink" href="#convert-redirection" title="Link to this heading"></a></h3>
+<p>By default, the command takes standard input and standard output. To redirect:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert csv &lt; path/to/myFile.csv &gt; path/to/myConvertedFile.ndjson
+</pre></div>
+</div>
+</section>
+<section id="convert-to-json">
+<h3>Convert to JSON<a class="headerlink" href="#convert-to-json" title="Link to this heading"></a></h3>
+<p>By default, the command converts the input to the <a class="reference external" href="http://ndjson.org/">NDJSON</a> format. If you want to convert to the <a class="reference external" href="https://www.json.org/">JSON</a> format, use the <code class="docutils literal notranslate"><span class="pre">-j</span></code> or <code class="docutils literal notranslate"><span class="pre">--json</span></code> flag:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert &lt;input-format&gt; --json ...
+</pre></div>
+</div>
+</section>
+<section id="convert-and-infer-schema">
+<h3>Convert and Infer Schema<a class="headerlink" href="#convert-and-infer-schema" title="Link to this heading"></a></h3>
+<p>You can convert the data and infer a table schema at the same time by using the <code class="docutils literal notranslate"><span class="pre">-c</span></code> or <code class="docutils literal notranslate"><span class="pre">--create-table-schema</span></code> flag:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert &lt;input-format&gt; -c path/to/inferredTableSchema.json ...
+</pre></div>
+</div>
+</section>
+<section id="convert-using-a-table-schema">
+<h3>Convert Using A Table Schema<a class="headerlink" href="#convert-using-a-table-schema" title="Link to this heading"></a></h3>
+<p>You can convert the data to match an existing table schema by using the <code class="docutils literal notranslate"><span class="pre">-s</span></code> or <code class="docutils literal notranslate"><span class="pre">--use-table-schema</span></code> flag:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert &lt;input-format&gt; -s path/to/tableSchema.json ...
+</pre></div>
+</div>
+</section>
+<section id="convert-csv">
+<h3>Convert CSV<a class="headerlink" href="#convert-csv" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert csv -h
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert csv path/to/myCsvFile.csv &gt; path/to/convertedFile.ndjson
+</pre></div>
+</div>
+<p>Convert a semicolon delimited csv file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert csv -d &#39;;&#39; &lt; path/to/myCsvFile.csv
+</pre></div>
+</div>
+<p>Convert a semicolon delimited comma decimal point csv file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert csv -d &#39;;&#39; -p &#39;,&#39; &lt; path/to/myCsvFile.csv
+</pre></div>
+</div>
+</section>
+<section id="convert-excel">
+<h3>Convert Excel<a class="headerlink" href="#convert-excel" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert excel -h
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert excel path/to/myExcelFile.xlsx &gt; path/to/convertedFile.ndjson
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Convert from Excel only takes a file path instead of stdin</p>
+</div>
+<p>Convert a single sheet of an excel file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert excel -o sheetName path/to/myExcelFile.xls
+</pre></div>
+</div>
+</section>
+<section id="convert-json">
+<h3>Convert JSON<a class="headerlink" href="#convert-json" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert json -h
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert json &lt; path/to/myJSONFile.json &gt; path/to/convertedFile.ndjson
+</pre></div>
+</div>
+</section>
+<section id="convert-ndjson">
+<h3>Convert NDJSON<a class="headerlink" href="#convert-ndjson" title="Link to this heading"></a></h3>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert ndjson -h
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito convert ndjson -j &lt; path/to/myNDJSONFile.ndjson &gt; path/to/convertedFile.json
+</pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<p>You can troubleshoot the Aito CLI by either:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Enabling the verbose mode by adding the <cite>-v</cite> or <cite>–verbose</cite> flag before running any command</p></li>
+<li><p>Take a look at the log file at <cite>$HOME/.config/aito/aito.log</cite> (<cite>%UserProfile%</cite> in Windows)</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="tab-completion">
+<h2>Tab Completion<a class="headerlink" href="#tab-completion" title="Link to this heading"></a></h2>
+<p>The CLI supports tab completion using <a class="reference external" href="https://argcomplete.readthedocs.io/en/latest/">argcomplete</a></p>
+<ul>
+<li><p>Activate global completion:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ activate-global-python-argcomplete
+</pre></div>
+</div>
+</li>
+<li><p>If you don’t want to use global completion:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ eval &quot;$(register-python-argcomplete aito)&quot;
+</pre></div>
+</div>
+</li>
+<li><p>You might have to install <code class="docutils literal notranslate"><span class="pre">python3-argcomplete</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo apt install python3-argcomplete
+</pre></div>
+</div>
+</li>
+<li><p>Please refer to the <a class="reference external" href="https://argcomplete.readthedocs.io/en/latest/#activating-global-completion">argcomplete documentation</a></p></li>
+</ul>
+</section>
+<section id="integration-with-sql-database">
+<h2>Integration with SQL Database<a class="headerlink" href="#integration-with-sql-database" title="Link to this heading"></a></h2>
+<p>Aito supports integration with your SQL database. To enable this feature, please follow the instructions
+<a class="reference internal" href="sql.html"><span class="doc">here</span></a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sdk.html" class="btn btn-neutral float-right" title="Aito SDK" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, aito.ai.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

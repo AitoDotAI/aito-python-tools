@@ -1,0 +1,32 @@
+aito.client.requests.aito\_request
+==================================
+
+.. automodule:: aito.client.requests.aito_request
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.client.requests.aito_request
+    
+      AitoRequest
+      BaseRequest
+      GetVersionRequest
+  
+  
+
+  
+  
+  
+
+
+

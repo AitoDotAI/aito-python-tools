@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aito.schema.AitoColumnLinkSchema &mdash; aito-python-sdk 0.5.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="aito.schema.AitoColumnTypeSchema" href="aito.schema.AitoColumnTypeSchema.html" />
+    <link rel="prev" title="aito.schema.AitoCharNGramAnalyzerSchema" href="aito.schema.AitoCharNGramAnalyzerSchema.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            aito-python-sdk
+              <img src="../../_static/aito.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Aito CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sdk.html">Aito SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sql.html">SQL Database Integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../aito.client.html">aito.client</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../aito.schema.html">aito.schema</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoAliasAnalyzerSchema.html">aito.schema.AitoAliasAnalyzerSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoAnalyzerSchema.html">aito.schema.AitoAnalyzerSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoBooleanArrayType.html">aito.schema.AitoBooleanArrayType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoBooleanType.html">aito.schema.AitoBooleanType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoCharNGramAnalyzerSchema.html">aito.schema.AitoCharNGramAnalyzerSchema</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">aito.schema.AitoColumnLinkSchema</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.column_name"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.column_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.comparison_properties"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.comparison_properties</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.from_deserialized_object"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.from_deserialized_object()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.from_json_string"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.from_json_string()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.json_schema"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.json_schema()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.json_schema_validate"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.json_schema_validate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.json_schema_validate_with_schema"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.json_schema_validate_with_schema()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.table_name"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.table_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.to_json_serializable"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.to_json_serializable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.to_json_string"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.to_json_string()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.type"><code class="docutils literal notranslate"><span class="pre">AitoColumnLinkSchema.type</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoColumnTypeSchema.html">aito.schema.AitoColumnTypeSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoDataTypeSchema.html">aito.schema.AitoDataTypeSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoDatabaseSchema.html">aito.schema.AitoDatabaseSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoDecimalArrayType.html">aito.schema.AitoDecimalArrayType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoDecimalType.html">aito.schema.AitoDecimalType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoDelimiterAnalyzerSchema.html">aito.schema.AitoDelimiterAnalyzerSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoIntArrayType.html">aito.schema.AitoIntArrayType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoIntType.html">aito.schema.AitoIntType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoLanguageAnalyzerSchema.html">aito.schema.AitoLanguageAnalyzerSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoSchema.html">aito.schema.AitoSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoStringArrayType.html">aito.schema.AitoStringArrayType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoStringType.html">aito.schema.AitoStringType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTableSchema.html">aito.schema.AitoTableSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTextArrayType.html">aito.schema.AitoTextArrayType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTextType.html">aito.schema.AitoTextType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTokenNgramAnalyzerSchema.html">aito.schema.AitoTokenNgramAnalyzerSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.DataSeriesProperties.html">aito.schema.DataSeriesProperties</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.api.html">aito.api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Useful Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html#stay-informed">Stay Informed</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">aito-python-sdk</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../aito.schema.html">aito.schema</a></li>
+      <li class="breadcrumb-item active">aito.schema.AitoColumnLinkSchema</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_stubs/aito.schema/aito.schema.AitoColumnLinkSchema.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="aito-schema-aitocolumnlinkschema">
+<h1>aito.schema.AitoColumnLinkSchema<a class="headerlink" href="#aito-schema-aitocolumnlinkschema" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aito.schema.</span></span><span class="sig-name descname"><span class="pre">AitoColumnLinkSchema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="aito.schema.AitoSchema.html#aito.schema.AitoSchema" title="aito.schema.AitoSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoSchema</span></code></a></p>
+<p>Link to a column of another table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table_name</strong> (<em>str</em>) – the name of the linked table</p></li>
+<li><p><strong>column_name</strong> (<em>str</em>) – the name of the linked column</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.from_deserialized_object" title="aito.schema.AitoColumnLinkSchema.from_deserialized_object"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_deserialized_object</span></code></a>(obj)</p></td>
+<td><p>create a class object from a JSON deserialized object</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.from_json_string" title="aito.schema.AitoColumnLinkSchema.from_json_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_json_string</span></code></a>(json_string, **kwargs)</p></td>
+<td><p>create an class object from a JSON string</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.json_schema" title="aito.schema.AitoColumnLinkSchema.json_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">json_schema</span></code></a>()</p></td>
+<td><p>the JSON schema of the class</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.json_schema_validate" title="aito.schema.AitoColumnLinkSchema.json_schema_validate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">json_schema_validate</span></code></a>(obj)</p></td>
+<td><p>Validate an object with the class json_schema Returns the object if validation success, else raise <code class="xref py py-class docutils literal notranslate"><span class="pre">JsonValidationError</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.json_schema_validate_with_schema" title="aito.schema.AitoColumnLinkSchema.json_schema_validate_with_schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">json_schema_validate_with_schema</span></code></a>(obj, schema)</p></td>
+<td><p>Validate an object with the given schema</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.to_json_serializable" title="aito.schema.AitoColumnLinkSchema.to_json_serializable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_json_serializable</span></code></a>()</p></td>
+<td><p>convert the object to an object that can be serialized to a JSON formatted string</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.to_json_string" title="aito.schema.AitoColumnLinkSchema.to_json_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_json_string</span></code></a>(**kwargs)</p></td>
+<td><p>convert the object to a JSON string</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">column_link_pattern</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.column_name" title="aito.schema.AitoColumnLinkSchema.column_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">column_name</span></code></a></p></td>
+<td><p>the name of the linked column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">column_name_pattern</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.comparison_properties" title="aito.schema.AitoColumnLinkSchema.comparison_properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">comparison_properties</span></code></a></p></td>
+<td><p>properties of the schema object that will be used for comparison operation</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.table_name" title="aito.schema.AitoColumnLinkSchema.table_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">table_name</span></code></a></p></td>
+<td><p>the name of the linked table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">table_name_pattern</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema.type" title="aito.schema.AitoColumnLinkSchema.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
+<td><p>the type of the schema component</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">uuid_pattern</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.column_name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">column_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.column_name" title="Link to this definition"></a></dt>
+<dd><p>the name of the linked column</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.comparison_properties">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">comparison_properties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.comparison_properties" title="Link to this definition"></a></dt>
+<dd><p>properties of the schema object that will be used for comparison operation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Iterable[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.from_deserialized_object">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_deserialized_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#aito.schema.AitoColumnLinkSchema" title="aito.schema.AitoColumnLinkSchema"><span class="pre">AitoColumnLinkSchema</span></a></span></span><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.from_deserialized_object" title="Link to this definition"></a></dt>
+<dd><p>create a class object from a JSON deserialized object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.from_json_string">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.from_json_string" title="Link to this definition"></a></dt>
+<dd><p>create an class object from a JSON string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>json_string</strong> (<em>str</em>) – the JSON string</p></li>
+<li><p><strong>kwargs</strong> – the keyword arguments for json.loads method</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.json_schema">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">json_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.json_schema" title="Link to this definition"></a></dt>
+<dd><p>the JSON schema of the class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.json_schema_validate">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">json_schema_validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.json_schema_validate" title="Link to this definition"></a></dt>
+<dd><p>Validate an object with the class json_schema
+Returns the object if validation success, else raise <code class="xref py py-class docutils literal notranslate"><span class="pre">JsonValidationError</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>Any</em>) – the object to be validated</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the object if validation succeed</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.json_schema_validate_with_schema">
+<span class="sig-name descname"><span class="pre">json_schema_validate_with_schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.json_schema_validate_with_schema" title="Link to this definition"></a></dt>
+<dd><p>Validate an object with the given schema</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>Any</em>) – the object to be validated</p></li>
+<li><p><strong>schema</strong> (<em>Dict</em>) – the schema to be validate against</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the object if validation succeed</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.table_name">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">table_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.table_name" title="Link to this definition"></a></dt>
+<dd><p>the name of the linked table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.to_json_serializable">
+<span class="sig-name descname"><span class="pre">to_json_serializable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.to_json_serializable" title="Link to this definition"></a></dt>
+<dd><p>convert the object to an object that can be serialized to a JSON formatted string</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.to_json_string">
+<span class="sig-name descname"><span class="pre">to_json_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.to_json_string" title="Link to this definition"></a></dt>
+<dd><p>convert the object to a JSON string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – the keyword arguments for json.dumps method</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.schema.AitoColumnLinkSchema.type">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#aito.schema.AitoColumnLinkSchema.type" title="Link to this definition"></a></dt>
+<dd><p>the type of the schema component</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="aito.schema.AitoCharNGramAnalyzerSchema.html" class="btn btn-neutral float-left" title="aito.schema.AitoCharNGramAnalyzerSchema" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="aito.schema.AitoColumnTypeSchema.html" class="btn btn-neutral float-right" title="aito.schema.AitoColumnTypeSchema" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, aito.ai.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+﻿aito.client.requests
+====================
+
+.. automodule:: aito.client.requests
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+  
+     aito_request
+     data_api_request
+     job_api_request
+     modify_operations
+     query_api_request
+     schema_api_request
+

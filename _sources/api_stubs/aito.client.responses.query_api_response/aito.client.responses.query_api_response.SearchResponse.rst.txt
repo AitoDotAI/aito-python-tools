@@ -1,0 +1,38 @@
+aito.client.responses.query\_api\_response.SearchResponse
+=========================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: SearchResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~SearchResponse.from_deserialized_object
+        ~SearchResponse.from_json_string
+        ~SearchResponse.json_schema
+        ~SearchResponse.json_schema_validate
+        ~SearchResponse.json_schema_validate_with_schema
+        ~SearchResponse.to_json_serializable
+        ~SearchResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~SearchResponse.first_hit
+          ~SearchResponse.hit_cls
+          ~SearchResponse.hits
+          ~SearchResponse.json
+          ~SearchResponse.offset
+          ~SearchResponse.total
+  
+  

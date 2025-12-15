@@ -1,0 +1,22 @@
+aito.client.requests.aito\_request.BaseRequest
+==============================================
+
+.. currentmodule:: aito.client.requests.aito_request
+
+.. autoclass:: BaseRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~BaseRequest.make_request
+    
+    
+
+  
+  
+  

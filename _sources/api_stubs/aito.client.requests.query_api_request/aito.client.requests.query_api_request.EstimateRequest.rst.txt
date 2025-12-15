@@ -1,0 +1,28 @@
+aito.client.requests.query\_api\_request.EstimateRequest
+========================================================
+
+.. currentmodule:: aito.client.requests.query_api_request
+
+.. autoclass:: EstimateRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~EstimateRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~EstimateRequest.method
+          ~EstimateRequest.path
+  
+  

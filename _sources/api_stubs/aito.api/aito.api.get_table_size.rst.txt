@@ -1,0 +1,6 @@
+aito.api.get\_table\_size
+=========================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: get_table_size

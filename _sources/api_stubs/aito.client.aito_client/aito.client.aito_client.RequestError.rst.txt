@@ -1,0 +1,6 @@
+aito.client.aito\_client.RequestError
+=====================================
+
+.. currentmodule:: aito.client.aito_client
+
+.. autoexception:: RequestError

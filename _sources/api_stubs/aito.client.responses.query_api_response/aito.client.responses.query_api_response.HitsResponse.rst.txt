@@ -1,0 +1,38 @@
+aito.client.responses.query\_api\_response.HitsResponse
+=======================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: HitsResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~HitsResponse.from_deserialized_object
+        ~HitsResponse.from_json_string
+        ~HitsResponse.json_schema
+        ~HitsResponse.json_schema_validate
+        ~HitsResponse.json_schema_validate_with_schema
+        ~HitsResponse.to_json_serializable
+        ~HitsResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~HitsResponse.first_hit
+          ~HitsResponse.hit_cls
+          ~HitsResponse.hits
+          ~HitsResponse.json
+          ~HitsResponse.offset
+          ~HitsResponse.total
+  
+  

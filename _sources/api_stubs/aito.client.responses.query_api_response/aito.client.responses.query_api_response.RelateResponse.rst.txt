@@ -1,0 +1,39 @@
+aito.client.responses.query\_api\_response.RelateResponse
+=========================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: RelateResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~RelateResponse.from_deserialized_object
+        ~RelateResponse.from_json_string
+        ~RelateResponse.json_schema
+        ~RelateResponse.json_schema_validate
+        ~RelateResponse.json_schema_validate_with_schema
+        ~RelateResponse.to_json_serializable
+        ~RelateResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~RelateResponse.first_hit
+          ~RelateResponse.hit_cls
+          ~RelateResponse.hits
+          ~RelateResponse.json
+          ~RelateResponse.offset
+          ~RelateResponse.relations
+          ~RelateResponse.total
+  
+  

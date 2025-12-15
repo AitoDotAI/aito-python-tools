@@ -1,0 +1,28 @@
+aito.client.requests.aito\_request.GetVersionRequest
+====================================================
+
+.. currentmodule:: aito.client.requests.aito_request
+
+.. autoclass:: GetVersionRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~GetVersionRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~GetVersionRequest.endpoint
+          ~GetVersionRequest.method
+  
+  

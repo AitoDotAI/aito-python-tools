@@ -1,0 +1,6 @@
+aito.api.delete\_table
+======================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: delete_table

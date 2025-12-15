@@ -1,1 +1,208 @@
-<meta http-equiv="refresh" content="0; url=https://aito-python-sdk.readthedocs.io/en/stable/">
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aito Python SDK &mdash; aito-python-sdk 0.5.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            aito-python-sdk
+              <img src="_static/aito.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Aito CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sdk.html">Aito SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql.html">SQL Database Integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.client.html">aito.client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.schema.html">aito.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.api.html">aito.api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Useful Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html#stay-informed">Stay Informed</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">aito-python-sdk</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Aito Python SDK</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="aito-python-sdk">
+<h1>Aito Python SDK<a class="headerlink" href="#aito-python-sdk" title="Link to this heading"></a></h1>
+<p>Version 0.5.3</p>
+<p>The Aito Python SDK is an open-source library that helps you to integrate your Python application
+to <a class="reference external" href="https://aito.ai/">Aito</a> quicker and more efficiently.</p>
+<p>The SDK also includes the <a class="reference internal" href="cli.html"><span class="doc">Aito Command Line Interface (CLI)</span></a> that enables you to interact with Aito
+using commands in your command-line shell, e.g: infer a table schema from a file or upload a file to Aito.</p>
+<section id="quick-installation">
+<h2>Quick Installation<a class="headerlink" href="#quick-installation" title="Link to this heading"></a></h2>
+<p>To install the latest stable version with pip, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">aitoai</span>
+</pre></div>
+</div>
+<p>To install this version with pip, run:</p>
+<pre class="literal-block">pip install aitoai==0.5.3</pre>
+<p>For more installation options, please check <a class="reference internal" href="install.html"><span class="doc">Installation</span></a></p>
+</section>
+<section id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h2>
+<section id="aito-command-line-interface">
+<h3>Aito Command Line Interface<a class="headerlink" href="#aito-command-line-interface" title="Link to this heading"></a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>aito<span class="w"> </span>-h
+<span class="go">  usage: aito [-h] [-V] [-v] [-q]</span>
+
+<span class="go">  optional arguments:</span>
+<span class="go">    -h, --help     show this help message and exit</span>
+<span class="go">    -V, --version  display the version of this tool</span>
+<span class="go">    -v, --verbose  display verbose messages</span>
+<span class="go">    -q, --quiet    display only error messages</span>
+
+<span class="go">  To see all available commands, you can run:</span>
+<span class="go">    aito list</span>
+
+<span class="go">  To see the help text, you can run:</span>
+<span class="go">    aito -h</span>
+<span class="go">    aito &lt;command&gt; -h</span>
+<span class="go">    aito &lt;command&gt; &lt;subcommand&gt; -h</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For the database action, remember to <a class="reference internal" href="cli.html#clisetupaitocredentials"><span class="std std-ref">set up your Aito instance credentials</span></a>.</p>
+</div>
+<p>For an additional guide of the CLI tool, see the <a class="reference internal" href="cli.html"><span class="doc">CLI documentations</span></a>.</p>
+<div class="toctree-wrapper compound" id="sec-getting-started">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="aito-sdk-overview">
+<h3>Aito SDK Overview<a class="headerlink" href="#aito-sdk-overview" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api_stubs/aito.client.html#module-aito.client" title="aito.client"><code class="xref py py-obj docutils literal notranslate"><span class="pre">client</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api_stubs/aito.schema.html#module-aito.schema" title="aito.schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">schema</span></code></a></p></td>
+<td><p>Data structure for the Aito Database Schema</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api_stubs/aito.api.html#module-aito.api" title="aito.api"><code class="xref py py-obj docutils literal notranslate"><span class="pre">api</span></code></a></p></td>
+<td><p>Different APIs that takes an <code class="xref py py-class docutils literal notranslate"><span class="pre">Aito</span> <span class="pre">Client</span> <span class="pre">object</span></code> as the first argument</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api_stubs/aito.utils.data_frame_handler.html#module-aito.utils.data_frame_handler" title="aito.utils.data_frame_handler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utils.data_frame_handler</span></code></a></p></td>
+<td><p>A utility to read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api_stubs/aito.utils.sql_connection.html#module-aito.utils.sql_connection" title="aito.utils.sql_connection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utils.sql_connection</span></code></a></p></td>
+<td><p>A utility to connect to a SQL Database</p></td>
+</tr>
+</tbody>
+</table>
+<div class="toctree-wrapper compound">
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Aito Python SDK is in the beta phase and we are already using it ourselves.
+This project is under constant development and is subject to change.
+Feel free to use the Aito SDK, and share any feedback with us via our <a class="reference external" href="https://aito.ai/join-slack">Slack channel</a> or
+our <a class="reference external" href="https://github.com/AitoDotAI/aito-python-tools/issues">Issue tracker</a></p>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, aito.ai.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

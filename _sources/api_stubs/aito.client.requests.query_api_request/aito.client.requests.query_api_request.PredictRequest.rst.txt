@@ -1,0 +1,28 @@
+aito.client.requests.query\_api\_request.PredictRequest
+=======================================================
+
+.. currentmodule:: aito.client.requests.query_api_request
+
+.. autoclass:: PredictRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~PredictRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~PredictRequest.method
+          ~PredictRequest.path
+  
+  

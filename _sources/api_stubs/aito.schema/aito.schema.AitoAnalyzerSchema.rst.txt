@@ -1,0 +1,40 @@
+aito.schema.AitoAnalyzerSchema
+==============================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoAnalyzerSchema
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoAnalyzerSchema.from_deserialized_object
+        ~AitoAnalyzerSchema.from_json_string
+        ~AitoAnalyzerSchema.infer_from_samples
+        ~AitoAnalyzerSchema.json_schema
+        ~AitoAnalyzerSchema.json_schema_validate
+        ~AitoAnalyzerSchema.json_schema_validate_with_schema
+        ~AitoAnalyzerSchema.to_json_serializable
+        ~AitoAnalyzerSchema.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoAnalyzerSchema.analyzer_type
+          ~AitoAnalyzerSchema.column_link_pattern
+          ~AitoAnalyzerSchema.column_name_pattern
+          ~AitoAnalyzerSchema.comparison_properties
+          ~AitoAnalyzerSchema.table_name_pattern
+          ~AitoAnalyzerSchema.type
+          ~AitoAnalyzerSchema.uuid_pattern
+  
+  

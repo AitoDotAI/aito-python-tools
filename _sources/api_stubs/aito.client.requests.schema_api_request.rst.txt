@@ -1,0 +1,38 @@
+aito.client.requests.schema\_api\_request
+=========================================
+
+.. automodule:: aito.client.requests.schema_api_request
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.client.requests.schema_api_request
+    
+      CreateColumnSchemaRequest
+      CreateDatabaseSchemaRequest
+      CreateTableSchemaRequest
+      DeleteColumnSchemaRequest
+      DeleteDatabaseSchemaRequest
+      DeleteTableSchemaRequest
+      GetColumnSchemaRequest
+      GetDatabaseSchemaRequest
+      GetTableSchemaRequest
+  
+  
+
+  
+  
+  
+
+
+

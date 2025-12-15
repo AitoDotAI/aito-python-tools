@@ -1,0 +1,6 @@
+aito.api.query\_all\_entries
+============================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: query_all_entries

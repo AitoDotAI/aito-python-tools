@@ -1,0 +1,37 @@
+aito.client.requests.data\_api\_request
+=======================================
+
+.. automodule:: aito.client.requests.data_api_request
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.client.requests.data_api_request
+    
+      DataAPIRequest
+      DeleteEntriesRequest
+      GetFileProcessingRequest
+      InitiateFileUploadRequest
+      ModifyRequest
+      OptimizeTableRequest
+      TriggerFileProcessingRequest
+      UploadEntriesRequest
+  
+  
+
+  
+  
+  
+
+
+

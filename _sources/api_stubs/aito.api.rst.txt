@@ -1,0 +1,75 @@
+﻿aito.api
+========
+
+.. automodule:: aito.api
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Functions
+
+  .. autosummary::
+    :toctree: ./aito.api
+    
+      aggregate
+      batch
+      check_table_exists
+      copy_table
+      create_column
+      create_database
+      create_job
+      create_table
+      delete_column
+      delete_database
+      delete_entries
+      delete_table
+      download_table
+      estimate
+      evaluate
+      generic_query
+      get_column_schema
+      get_database_schema
+      get_existing_tables
+      get_job_result
+      get_job_status
+      get_table_schema
+      get_table_size
+      get_version
+      initiate_upload_file
+      job_request
+      match
+      modify
+      optimize_table
+      poll_file_processing_status
+      predict
+      query_all_entries
+      query_entries
+      quick_add_table
+      quick_predict
+      quick_predict_and_evaluate
+      recommend
+      relate
+      rename_table
+      search
+      similarity
+      trigger_file_processing
+      upload_binary_file
+      upload_binary_file_to_s3
+      upload_entries
+      upload_file
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+
+

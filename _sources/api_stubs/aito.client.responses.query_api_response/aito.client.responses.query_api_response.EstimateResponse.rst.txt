@@ -1,0 +1,35 @@
+aito.client.responses.query\_api\_response.EstimateResponse
+===========================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: EstimateResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~EstimateResponse.from_deserialized_object
+        ~EstimateResponse.from_json_string
+        ~EstimateResponse.json_schema
+        ~EstimateResponse.json_schema_validate
+        ~EstimateResponse.json_schema_validate_with_schema
+        ~EstimateResponse.to_json_serializable
+        ~EstimateResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~EstimateResponse.estimate
+          ~EstimateResponse.json
+          ~EstimateResponse.why
+  
+  

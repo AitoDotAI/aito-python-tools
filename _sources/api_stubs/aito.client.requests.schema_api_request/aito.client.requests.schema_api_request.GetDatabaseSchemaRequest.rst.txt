@@ -1,0 +1,29 @@
+aito.client.requests.schema\_api\_request.GetDatabaseSchemaRequest
+==================================================================
+
+.. currentmodule:: aito.client.requests.schema_api_request
+
+.. autoclass:: GetDatabaseSchemaRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~GetDatabaseSchemaRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~GetDatabaseSchemaRequest.endpoint
+          ~GetDatabaseSchemaRequest.endpoint_prefix
+          ~GetDatabaseSchemaRequest.method
+  
+  

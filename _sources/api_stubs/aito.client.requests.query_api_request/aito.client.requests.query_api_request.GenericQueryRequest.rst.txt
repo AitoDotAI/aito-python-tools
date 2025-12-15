@@ -1,0 +1,28 @@
+aito.client.requests.query\_api\_request.GenericQueryRequest
+============================================================
+
+.. currentmodule:: aito.client.requests.query_api_request
+
+.. autoclass:: GenericQueryRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~GenericQueryRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~GenericQueryRequest.method
+          ~GenericQueryRequest.path
+  
+  

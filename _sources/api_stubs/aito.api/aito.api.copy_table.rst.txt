@@ -1,0 +1,6 @@
+aito.api.copy\_table
+====================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: copy_table

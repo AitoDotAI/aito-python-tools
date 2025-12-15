@@ -1,0 +1,37 @@
+﻿aito.utils.sql\_connection
+==========================
+
+.. automodule:: aito.utils.sql_connection
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.utils.sql_connection
+    
+      SQLConnection
+  
+  
+
+  
+  
+  .. rubric:: Exceptions
+
+  .. autosummary::
+    :toctree: ./aito.utils.sql_connection
+    
+      SQLConnectionError
+  
+  
+
+
+

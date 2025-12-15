@@ -1,0 +1,6 @@
+aito.api.get\_version
+=====================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: get_version

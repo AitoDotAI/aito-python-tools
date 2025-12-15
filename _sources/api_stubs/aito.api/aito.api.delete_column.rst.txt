@@ -1,0 +1,6 @@
+aito.api.delete\_column
+=======================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: delete_column

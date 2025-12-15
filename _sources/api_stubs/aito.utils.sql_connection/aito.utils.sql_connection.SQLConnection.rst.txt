@@ -1,0 +1,25 @@
+aito.utils.sql\_connection.SQLConnection
+========================================
+
+.. currentmodule:: aito.utils.sql_connection
+
+.. autoclass:: SQLConnection
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~SQLConnection.close
+        ~SQLConnection.execute_query
+        ~SQLConnection.execute_query_and_save_result
+        ~SQLConnection.save_cursor_result_to_df
+    
+    
+
+  
+  
+  

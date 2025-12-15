@@ -1,0 +1,42 @@
+aito.schema.AitoCharNGramAnalyzerSchema
+=======================================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoCharNGramAnalyzerSchema
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoCharNGramAnalyzerSchema.from_deserialized_object
+        ~AitoCharNGramAnalyzerSchema.from_json_string
+        ~AitoCharNGramAnalyzerSchema.infer_from_samples
+        ~AitoCharNGramAnalyzerSchema.json_schema
+        ~AitoCharNGramAnalyzerSchema.json_schema_validate
+        ~AitoCharNGramAnalyzerSchema.json_schema_validate_with_schema
+        ~AitoCharNGramAnalyzerSchema.to_json_serializable
+        ~AitoCharNGramAnalyzerSchema.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoCharNGramAnalyzerSchema.analyzer_type
+          ~AitoCharNGramAnalyzerSchema.column_link_pattern
+          ~AitoCharNGramAnalyzerSchema.column_name_pattern
+          ~AitoCharNGramAnalyzerSchema.comparison_properties
+          ~AitoCharNGramAnalyzerSchema.max_gram
+          ~AitoCharNGramAnalyzerSchema.min_gram
+          ~AitoCharNGramAnalyzerSchema.table_name_pattern
+          ~AitoCharNGramAnalyzerSchema.type
+          ~AitoCharNGramAnalyzerSchema.uuid_pattern
+  
+  

@@ -1,0 +1,28 @@
+aito.client.requests.query\_api\_request.RecommendRequest
+=========================================================
+
+.. currentmodule:: aito.client.requests.query_api_request
+
+.. autoclass:: RecommendRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~RecommendRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~RecommendRequest.method
+          ~RecommendRequest.path
+  
+  

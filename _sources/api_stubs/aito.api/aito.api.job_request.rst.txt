@@ -1,0 +1,6 @@
+aito.api.job\_request
+=====================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: job_request

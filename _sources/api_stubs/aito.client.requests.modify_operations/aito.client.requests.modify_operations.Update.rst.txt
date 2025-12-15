@@ -1,0 +1,25 @@
+aito.client.requests.modify\_operations.Update
+==============================================
+
+.. currentmodule:: aito.client.requests.modify_operations
+
+.. autoclass:: Update
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~Update.set
+        ~Update.to_query
+        ~Update.upsert
+        ~Update.where
+    
+    
+
+  
+  
+  

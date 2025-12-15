@@ -1,0 +1,43 @@
+aito.schema.AitoTableSchema
+===========================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoTableSchema
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoTableSchema.from_deserialized_object
+        ~AitoTableSchema.from_json_string
+        ~AitoTableSchema.has_column
+        ~AitoTableSchema.infer_from_pandas_data_frame
+        ~AitoTableSchema.json_schema
+        ~AitoTableSchema.json_schema_validate
+        ~AitoTableSchema.json_schema_validate_with_schema
+        ~AitoTableSchema.to_json_serializable
+        ~AitoTableSchema.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoTableSchema.column_link_pattern
+          ~AitoTableSchema.column_name_pattern
+          ~AitoTableSchema.columns
+          ~AitoTableSchema.columns_schemas
+          ~AitoTableSchema.comparison_properties
+          ~AitoTableSchema.links
+          ~AitoTableSchema.table_name_pattern
+          ~AitoTableSchema.type
+          ~AitoTableSchema.uuid_pattern
+  
+  

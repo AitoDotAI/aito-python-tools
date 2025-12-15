@@ -1,0 +1,40 @@
+aito.client.responses.query\_api\_response.SimilarityResponse
+=============================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: SimilarityResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~SimilarityResponse.from_deserialized_object
+        ~SimilarityResponse.from_json_string
+        ~SimilarityResponse.json_schema
+        ~SimilarityResponse.json_schema_validate
+        ~SimilarityResponse.json_schema_validate_with_schema
+        ~SimilarityResponse.to_json_serializable
+        ~SimilarityResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~SimilarityResponse.first_hit
+          ~SimilarityResponse.hit_cls
+          ~SimilarityResponse.hits
+          ~SimilarityResponse.json
+          ~SimilarityResponse.most_similar_entry
+          ~SimilarityResponse.offset
+          ~SimilarityResponse.similar_entries
+          ~SimilarityResponse.total
+  
+  

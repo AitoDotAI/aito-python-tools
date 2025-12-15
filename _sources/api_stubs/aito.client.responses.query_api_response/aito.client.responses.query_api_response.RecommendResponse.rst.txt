@@ -1,0 +1,40 @@
+aito.client.responses.query\_api\_response.RecommendResponse
+============================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: RecommendResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~RecommendResponse.from_deserialized_object
+        ~RecommendResponse.from_json_string
+        ~RecommendResponse.json_schema
+        ~RecommendResponse.json_schema_validate
+        ~RecommendResponse.json_schema_validate_with_schema
+        ~RecommendResponse.to_json_serializable
+        ~RecommendResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~RecommendResponse.first_hit
+          ~RecommendResponse.hit_cls
+          ~RecommendResponse.hits
+          ~RecommendResponse.json
+          ~RecommendResponse.offset
+          ~RecommendResponse.recommendations
+          ~RecommendResponse.top_recommendation
+          ~RecommendResponse.total
+  
+  

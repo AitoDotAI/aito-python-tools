@@ -1,0 +1,33 @@
+aito.client.responses.aito\_response.BaseResponse
+=================================================
+
+.. currentmodule:: aito.client.responses.aito_response
+
+.. autoclass:: BaseResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~BaseResponse.from_deserialized_object
+        ~BaseResponse.from_json_string
+        ~BaseResponse.json_schema
+        ~BaseResponse.json_schema_validate
+        ~BaseResponse.json_schema_validate_with_schema
+        ~BaseResponse.to_json_serializable
+        ~BaseResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~BaseResponse.json
+  
+  

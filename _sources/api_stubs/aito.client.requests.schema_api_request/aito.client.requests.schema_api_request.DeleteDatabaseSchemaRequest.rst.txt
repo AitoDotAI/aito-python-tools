@@ -1,0 +1,29 @@
+aito.client.requests.schema\_api\_request.DeleteDatabaseSchemaRequest
+=====================================================================
+
+.. currentmodule:: aito.client.requests.schema_api_request
+
+.. autoclass:: DeleteDatabaseSchemaRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~DeleteDatabaseSchemaRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~DeleteDatabaseSchemaRequest.endpoint
+          ~DeleteDatabaseSchemaRequest.endpoint_prefix
+          ~DeleteDatabaseSchemaRequest.method
+  
+  

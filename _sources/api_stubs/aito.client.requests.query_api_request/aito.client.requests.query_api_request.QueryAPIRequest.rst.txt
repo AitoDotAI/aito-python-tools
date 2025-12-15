@@ -1,0 +1,29 @@
+aito.client.requests.query\_api\_request.QueryAPIRequest
+========================================================
+
+.. currentmodule:: aito.client.requests.query_api_request
+
+.. autoclass:: QueryAPIRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~QueryAPIRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~QueryAPIRequest.method
+          ~QueryAPIRequest.path
+          ~QueryAPIRequest.response_cls
+  
+  

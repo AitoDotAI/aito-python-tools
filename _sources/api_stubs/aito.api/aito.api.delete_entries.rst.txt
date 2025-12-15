@@ -1,0 +1,6 @@
+aito.api.delete\_entries
+========================
+
+.. currentmodule:: aito.api
+
+.. autofunction:: delete_entries

@@ -1,0 +1,28 @@
+aito.client.requests.query\_api\_request.AggregateRequest
+=========================================================
+
+.. currentmodule:: aito.client.requests.query_api_request
+
+.. autoclass:: AggregateRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AggregateRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AggregateRequest.method
+          ~AggregateRequest.path
+  
+  

@@ -1,0 +1,28 @@
+aito.client.requests.job\_api\_request.GetJobStatusRequest
+==========================================================
+
+.. currentmodule:: aito.client.requests.job_api_request
+
+.. autoclass:: GetJobStatusRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~GetJobStatusRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~GetJobStatusRequest.endpoint_prefix
+          ~GetJobStatusRequest.method
+  
+  

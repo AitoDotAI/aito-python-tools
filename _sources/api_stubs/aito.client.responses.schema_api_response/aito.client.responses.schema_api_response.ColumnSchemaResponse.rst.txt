@@ -1,0 +1,35 @@
+aito.client.responses.schema\_api\_response.ColumnSchemaResponse
+================================================================
+
+.. currentmodule:: aito.client.responses.schema_api_response
+
+.. autoclass:: ColumnSchemaResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~ColumnSchemaResponse.from_deserialized_object
+        ~ColumnSchemaResponse.from_json_string
+        ~ColumnSchemaResponse.json_schema
+        ~ColumnSchemaResponse.json_schema_validate
+        ~ColumnSchemaResponse.json_schema_validate_with_schema
+        ~ColumnSchemaResponse.to_json_serializable
+        ~ColumnSchemaResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~ColumnSchemaResponse.json
+          ~ColumnSchemaResponse.schema
+          ~ColumnSchemaResponse.schema_cls
+  
+  

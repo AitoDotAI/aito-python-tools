@@ -1,0 +1,29 @@
+aito.client.requests.data\_api\_request.InitiateFileUploadRequest
+=================================================================
+
+.. currentmodule:: aito.client.requests.data_api_request
+
+.. autoclass:: InitiateFileUploadRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~InitiateFileUploadRequest.make_request
+        ~InitiateFileUploadRequest.path_matches
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~InitiateFileUploadRequest.endpoint_prefix
+          ~InitiateFileUploadRequest.method
+  
+  

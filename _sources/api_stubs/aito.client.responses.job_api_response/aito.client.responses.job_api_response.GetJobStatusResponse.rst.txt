@@ -1,0 +1,37 @@
+aito.client.responses.job\_api\_response.GetJobStatusResponse
+=============================================================
+
+.. currentmodule:: aito.client.responses.job_api_response
+
+.. autoclass:: GetJobStatusResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~GetJobStatusResponse.from_deserialized_object
+        ~GetJobStatusResponse.from_json_string
+        ~GetJobStatusResponse.json_schema
+        ~GetJobStatusResponse.json_schema_validate
+        ~GetJobStatusResponse.json_schema_validate_with_schema
+        ~GetJobStatusResponse.to_json_serializable
+        ~GetJobStatusResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~GetJobStatusResponse.expires_at
+          ~GetJobStatusResponse.finished
+          ~GetJobStatusResponse.id
+          ~GetJobStatusResponse.json
+          ~GetJobStatusResponse.started_at
+  
+  

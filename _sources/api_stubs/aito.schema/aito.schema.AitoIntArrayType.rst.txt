@@ -1,0 +1,48 @@
+aito.schema.AitoIntArrayType
+============================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoIntArrayType
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoIntArrayType.from_deserialized_object
+        ~AitoIntArrayType.from_json_string
+        ~AitoIntArrayType.infer_from_samples
+        ~AitoIntArrayType.json_schema
+        ~AitoIntArrayType.json_schema_validate
+        ~AitoIntArrayType.json_schema_validate_with_schema
+        ~AitoIntArrayType.to_json_serializable
+        ~AitoIntArrayType.to_json_string
+        ~AitoIntArrayType.to_python_type
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoIntArrayType.aito_dtype
+          ~AitoIntArrayType.column_link_pattern
+          ~AitoIntArrayType.column_name_pattern
+          ~AitoIntArrayType.comparison_properties
+          ~AitoIntArrayType.element_type
+          ~AitoIntArrayType.is_array
+          ~AitoIntArrayType.is_bool
+          ~AitoIntArrayType.is_decimal
+          ~AitoIntArrayType.is_int
+          ~AitoIntArrayType.is_string
+          ~AitoIntArrayType.is_text
+          ~AitoIntArrayType.table_name_pattern
+          ~AitoIntArrayType.type
+          ~AitoIntArrayType.uuid_pattern
+  
+  

@@ -1,0 +1,32 @@
+aito.client.requests.job\_api\_request.CreateJobRequest
+=======================================================
+
+.. currentmodule:: aito.client.requests.job_api_request
+
+.. autoclass:: CreateJobRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~CreateJobRequest.from_data_api_request
+        ~CreateJobRequest.from_query_api_request
+        ~CreateJobRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~CreateJobRequest.endpoint_prefix
+          ~CreateJobRequest.method
+          ~CreateJobRequest.path
+          ~CreateJobRequest.result_response_cls
+  
+  

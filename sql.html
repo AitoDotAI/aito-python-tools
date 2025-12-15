@@ -1,0 +1,396 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL Database Integration &mdash; aito-python-sdk 0.5.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="aito.client" href="api_stubs/aito.client.html" />
+    <link rel="prev" title="Aito SDK" href="sdk.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            aito-python-sdk
+              <img src="_static/aito.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Aito CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sdk.html">Aito SDK</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SQL Database Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#additional-installation">Additional Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#install-odbc-driver-manager">Install ODBC Driver Manager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-database-odbc-driver">Install Database ODBC driver</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#install-postgresql-odbc-driver">Install PostgreSQL ODBC Driver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#install-mysql-odbc-driver">Install MySQL ODBC Driver</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cli-integration">CLI Integration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#set-up-sql-database-credentials">Set Up SQL Database Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#supported-functions">Supported Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sdk-integration">SDK Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#database-odbc-driver-not-found-after-installation">Database ODBC Driver not found after installation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.client.html">aito.client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.schema.html">aito.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.api.html">aito.api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Useful Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html#stay-informed">Stay Informed</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">aito-python-sdk</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SQL Database Integration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/sql.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sql-database-integration">
+<h1>SQL Database Integration<a class="headerlink" href="#sql-database-integration" title="Link to this heading"></a></h1>
+<p>The Aito Python SDK supports integration with your SQL database so that you can upload the result of your SQL query to Aito.</p>
+<section id="additional-installation">
+<span id="sqlinstallation"></span><h2>Additional Installation<a class="headerlink" href="#additional-installation" title="Link to this heading"></a></h2>
+<p>We use <a class="reference external" href="https://github.com/mkleehammer/pyodbc">pyodbc</a> module to gain access to <a class="reference external" href="https://docs.microsoft.com/en-us/sql/odbc/reference/what-is-odbc?view=sql-server-ver15">ODBC</a> supported databases.</p>
+<p>To enable the SQL integration, you need to do the following extra installation:</p>
+<ul>
+<li><p><a class="reference internal" href="#install-odbc-driver-manager">Install ODBC Driver Manager</a></p></li>
+<li><p>Install the <a class="reference external" href="https://github.com/mkleehammer/pyodbc">pyodbc</a> package on top of the original aitoai package:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install aitoai
+$ pip install pyodbc
+</pre></div>
+</div>
+</li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="#install-database-odbc-driver">Install Database ODBC driver</a></dt><dd><ul class="simple">
+<li><p><a class="reference internal" href="#installpostgresdriver"><span class="std std-ref">Install PostgreSQL ODBC Driver</span></a></p></li>
+<li><p><a class="reference internal" href="#installmysqldriver"><span class="std std-ref">Install MySQL ODBC Driver</span></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>More instructions regarding the <a class="reference external" href="https://github.com/mkleehammer/pyodbc">pyodbc</a> library and connecting to different databases can
+be found <a class="reference external" href="https://github.com/mkleehammer/pyodbc/wiki">here</a>.</p>
+<section id="install-odbc-driver-manager">
+<h3>Install ODBC Driver Manager<a class="headerlink" href="#install-odbc-driver-manager" title="Link to this heading"></a></h3>
+<ul>
+<li><p>On Ubuntu:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo apt update
+$ sudo apt install unixodbc
+$ sudo apt install unixodbc-dev
+</pre></div>
+</div>
+</li>
+<li><p>On OSX:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ brew update
+$ brew install unixodbc
+</pre></div>
+</div>
+</li>
+<li><p>On Generic Linux:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo yum check-update
+$ sudo yum install unixODBC.x86_64
+$ sudo yum install unixODBC-devel.x86_64
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="install-database-odbc-driver">
+<h3>Install Database ODBC driver<a class="headerlink" href="#install-database-odbc-driver" title="Link to this heading"></a></h3>
+<section id="install-postgresql-odbc-driver">
+<span id="installpostgresdriver"></span><h4>Install PostgreSQL ODBC Driver<a class="headerlink" href="#install-postgresql-odbc-driver" title="Link to this heading"></a></h4>
+<p><a class="reference external" href="https://odbc.postgresql.org/">psqlODBC</a> is the official PostgreSQL ODBC driver. To install:</p>
+<ul>
+<li><p>On Ubuntu:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo apt install odbc-postgresql
+</pre></div>
+</div>
+</li>
+<li><p>On OSX:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ brew install psqlodbc
+</pre></div>
+</div>
+</li>
+<li><p>On Generic Linux:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo yum install postgresql-odbc.x86_64
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="install-mysql-odbc-driver">
+<span id="installmysqldriver"></span><h4>Install MySQL ODBC Driver<a class="headerlink" href="#install-mysql-odbc-driver" title="Link to this heading"></a></h4>
+<p>The official instructions can be found <a class="reference external" href="https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-installation.html">here</a>. To install:</p>
+<ul>
+<li><p>Download and install the appropriate binary installer for your OS <a class="reference external" href="https://dev.mysql.com/downloads/connector/odbc/">here</a>. The example below is for Ubuntu 18.04:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ wget https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz
+$ tar zxvf mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz
+$ sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz/bin/* /usr/local/bin
+$ sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz/lib/* /usr/local/lib
+$ sudo chmod 777 /usr/local/lib/libmyodbc*
+$ sudo myodbc-installer -a -d -n &quot;MySQL ODBC 8.0 Driver&quot; -t &quot;Driver=/usr/local/lib/libmyodbc8w.so&quot;``
+</pre></div>
+</div>
+</li>
+<li><p>Verify that the driver is installed and registered:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ myodbc-installer -d -l
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+</section>
+<section id="cli-integration">
+<h2>CLI Integration<a class="headerlink" href="#cli-integration" title="Link to this heading"></a></h2>
+<section id="set-up-sql-database-credentials">
+<h3>Set Up SQL Database Credentials<a class="headerlink" href="#set-up-sql-database-credentials" title="Link to this heading"></a></h3>
+<p>Similar to setting up the Aito credentials, there are 3 ways to set up the SQL Database credentials:</p>
+<ol class="arabic">
+<li><p>The most convenient way is to set up the following environment variables:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ export SQL_DRIVER=the name of the database ODBC driver
+$ export SQL_SERVER=the server to connect to
+$ export SQL_PORT=the port to connect to
+$ export SQL_DATABASE=the database to connect to
+$ export SQL_USER=the username for authentication
+$ export SQL_PASSWORD=the password for authentication
+</pre></div>
+</div>
+</li>
+</ol>
+<blockquote>
+<div><p>You can now perform the sql operations. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql &quot;PostgreSQL Unicode&quot; &quot;SELECT * FROM table
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Using a dotenv (<code class="docutils literal notranslate"><span class="pre">.env</span></code>) file</p></li>
+</ol>
+<blockquote>
+<div><p>Your .env file should contain environment variables as described above</p>
+<p>You can set up the credentials using a dotenv file with the <code class="docutils literal notranslate"><span class="pre">-e</span></code> flag. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql -e path/to/dotEnvFile.env &quot;PostgreSQL Unicode&quot; &quot;SELECT * FROM table&quot;
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For database operation with SQL integration, the dotenv file must also contain the Aito instance credentials.</p>
+</div>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>Using flags:</p></li>
+</ol>
+<blockquote>
+<div><p>You can set up the credentials using:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-D</span></code> flag for the name of the driver</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-s</span></code> flag for the server</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-P</span></code> flag for the port</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-d</span></code> flag for the database</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-u</span></code> flag for the username</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-p</span></code> for the password</p></li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="supported-functions">
+<h3>Supported Functions<a class="headerlink" href="#supported-functions" title="Link to this heading"></a></h3>
+<ul>
+<li><p>Infer a table schema from the result of a SQL query:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql &quot;SELECT * FROM tableName&quot; &gt; inferredSchema.json
+</pre></div>
+</div>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql -h
+</pre></div>
+</div>
+</li>
+<li><p>Upload the result of a SQL to an existing table:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito tableName &quot;SELECT * FROM tableName&quot;
+</pre></div>
+</div>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito upload-data-from-sql -h
+</pre></div>
+</div>
+</li>
+<li><p>Infer schema, create table, and upload the result of a SQL to the database:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito quick-add-table-from-sql -D &quot;PostgreSQL Unicode&quot; -s localhost -u root -d testDB -tableName &quot;SELECT * FROM tableName&quot;
+</pre></div>
+</div>
+<p>To see help:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito quick-add-table-from-sql -h
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+<section id="sdk-integration">
+<h2>SDK Integration<a class="headerlink" href="#sdk-integration" title="Link to this heading"></a></h2>
+<p>You can connect to your SQL Database using the <a class="reference internal" href="api_stubs/aito.utils.sql_connection/aito.utils.sql_connection.SQLConnection.html#aito.utils.sql_connection.SQLConnection" title="aito.utils.sql_connection.SQLConnection"><code class="xref py py-class docutils literal notranslate"><span class="pre">SQLConnection</span></code></a>. The example below shows how you can upload a SQL query results to an Aito table:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.utils.sql_connection</span><span class="w"> </span><span class="kn">import</span> <span class="n">SQLConnection</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_entries</span>
+
+<span class="n">connection</span> <span class="o">=</span> <span class="n">SQLConnection</span><span class="p">(</span>
+  <span class="n">sql_driver</span><span class="o">=</span><span class="s1">&#39;PostgreSQL Unicode&#39;</span><span class="p">,</span>
+  <span class="n">sql_server</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+  <span class="n">sql_database</span><span class="o">=</span><span class="s1">&#39;database_name&#39;</span><span class="p">,</span>
+  <span class="n">sql_usersname</span><span class="o">=</span><span class="s1">&#39;username&#39;</span><span class="p">,</span>
+  <span class="n">sql_password</span><span class="o">=</span><span class="s1">&#39;password&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># save query results to pandas DataFrame</span>
+<span class="n">query_results_df</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">execute_query_and_save_result</span><span class="p">(</span><span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;from table select *&#39;</span><span class="p">)</span>
+<span class="c1"># convert DataFrame to list of entries</span>
+<span class="n">query_results_entries</span> <span class="o">=</span> <span class="n">query_results_df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+
+<span class="c1"># create aito client</span>
+<span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">instance_url</span><span class="o">=</span><span class="s2">&quot;your_aito_instance_url&quot;</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your_rw_api_key&quot;</span><span class="p">)</span>
+<span class="c1"># upload entries to table</span>
+<span class="n">upload_entries</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;table&#39;</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="n">query_results_entries</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<section id="database-odbc-driver-not-found-after-installation">
+<h3>Database ODBC Driver not found after installation<a class="headerlink" href="#database-odbc-driver-not-found-after-installation" title="Link to this heading"></a></h3>
+<p>It is possible that the database driver is not registered to the ODBC Driver Manager automatically.
+In this case, you have to do it manually by following these steps:</p>
+<ul>
+<li><p>After installing the ODBC Driver Manager, you should be able to run the following command to check the location of ODBC ini files on your system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ odbcinst -j
+</pre></div>
+</div>
+<p>The response should look similar to this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> unixODBC 2.3.7
+ DRIVERS............: /usr/local/etc/odbcinst.ini
+ SYSTEM DATA SOURCES: /usr/local/etc/odbc.ini
+ FILE DATA SOURCES..: /usr/local/etc/ODBCDataSources
+ USER DATA SOURCES..: /User/distiller/.odbc.ini
+ SQLULEN Size.......: 8
+ SQLLEN Size........: 8
+ SQLSETPOSIROW Size.: 8
+
+You only need to care about the location of the driver ini file, which is ``/usr/local/etc/odbcinst.ini`` in this case.
+</pre></div>
+</div>
+</li>
+<li><p>Find the location of the database driver and add it to the driver ini file. For example, the postgres unicode odbc driver is at <code class="docutils literal notranslate"><span class="pre">/usr/local/lib/psqlodbcw.so</span></code>. Simply append the following text to the driver ini file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">PostgreSQL</span> <span class="n">Unicode</span><span class="p">]</span>
+  <span class="n">Driver</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">psqlodbcw</span><span class="o">.</span><span class="n">so</span>
+</pre></div>
+</div>
+</li>
+<li><p>You should now be able to connect to your database using the Aito CLI.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sdk.html" class="btn btn-neutral float-left" title="Aito SDK" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_stubs/aito.client.html" class="btn btn-neutral float-right" title="aito.client" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, aito.ai.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

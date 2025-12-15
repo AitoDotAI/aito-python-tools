@@ -1,0 +1,35 @@
+aito.client.responses.query\_api\_response.AggregateResponse
+============================================================
+
+.. currentmodule:: aito.client.responses.query_api_response
+
+.. autoclass:: AggregateResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AggregateResponse.from_deserialized_object
+        ~AggregateResponse.from_json_string
+        ~AggregateResponse.json_schema
+        ~AggregateResponse.json_schema_validate
+        ~AggregateResponse.json_schema_validate_with_schema
+        ~AggregateResponse.to_json_serializable
+        ~AggregateResponse.to_json_string
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AggregateResponse.count
+          ~AggregateResponse.json
+          ~AggregateResponse.value
+  
+  

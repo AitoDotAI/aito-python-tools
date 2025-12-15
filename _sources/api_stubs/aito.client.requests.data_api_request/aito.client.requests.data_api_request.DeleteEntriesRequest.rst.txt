@@ -1,0 +1,30 @@
+aito.client.requests.data\_api\_request.DeleteEntriesRequest
+============================================================
+
+.. currentmodule:: aito.client.requests.data_api_request
+
+.. autoclass:: DeleteEntriesRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~DeleteEntriesRequest.make_request
+        ~DeleteEntriesRequest.path_matches
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~DeleteEntriesRequest.endpoint
+          ~DeleteEntriesRequest.endpoint_prefix
+          ~DeleteEntriesRequest.method
+  
+  

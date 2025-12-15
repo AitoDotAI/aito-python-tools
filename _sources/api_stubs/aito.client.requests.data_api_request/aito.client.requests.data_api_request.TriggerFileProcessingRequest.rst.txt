@@ -1,0 +1,29 @@
+aito.client.requests.data\_api\_request.TriggerFileProcessingRequest
+====================================================================
+
+.. currentmodule:: aito.client.requests.data_api_request
+
+.. autoclass:: TriggerFileProcessingRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~TriggerFileProcessingRequest.make_request
+        ~TriggerFileProcessingRequest.path_matches
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~TriggerFileProcessingRequest.endpoint_prefix
+          ~TriggerFileProcessingRequest.method
+  
+  
