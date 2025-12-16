@@ -78,8 +78,108 @@ case "$COMMAND" in
     echo "View at: https://aitodotai.github.io/aito-python-tools/"
     ;;
 
+  release)
+    echo "Release aitoai package to PyPI"
+    set -e
+
+    # Check we're at project root
+    if [[ ! -f aito/__init__.py ]]; then
+      echo "Error: must be run from project root directory"
+      exit 1
+    fi
+
+    # Activate virtualenv if present
+    if [[ -f venv/bin/activate ]]; then
+      echo "Activating virtual environment..."
+      source venv/bin/activate
+    fi
+
+    # Check required tools
+    for cmd in twine python3; do
+      if ! command -v $cmd &> /dev/null; then
+        echo "Error: $cmd not found. Install with: pip install -r requirements/deploy.txt"
+        exit 1
+      fi
+    done
+
+    # Get version info
+    VERSION=$(python3 -c "import aito; print(aito.__version__)")
+    echo "Current version in code: $VERSION"
+
+    # Check PyPI for existing versions
+    LATEST_PYPI=$(python3 -c "import requests; versions=list(requests.get('https://pypi.org/pypi/aitoai/json').json()['releases'].keys()); print(sorted(versions)[-1])")
+    echo "Latest version on PyPI: $LATEST_PYPI"
+
+    if [[ "$VERSION" == "$LATEST_PYPI" ]]; then
+      echo "Error: Version $VERSION already exists on PyPI"
+      exit 1
+    fi
+
+    # Check git status
+    if [[ -n $(git status --porcelain) ]]; then
+      echo "Error: Working tree is dirty. Commit changes before release."
+      exit 1
+    fi
+
+    # Check we're on master
+    BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    if [[ "$BRANCH" != "master" ]]; then
+      echo "Warning: Not on master branch (currently on $BRANCH)"
+      read -p "Continue anyway? [y/N] " -n 1 -r
+      echo
+      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+      fi
+    fi
+
+    # Check changelog exists for this version
+    if ! grep -q "^$VERSION" docs/source/changelog.rst; then
+      echo "Error: Changelog entry for $VERSION not found in docs/source/changelog.rst"
+      exit 1
+    fi
+
+    echo ""
+    echo "=== Release Checklist ==="
+    echo "  Version: $VERSION"
+    echo "  Branch: $BRANCH"
+    echo "  Changelog: OK"
+    echo ""
+
+    read -p "Proceed with release to PyPI? [y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Aborted."
+      exit 1
+    fi
+
+    # Build package
+    echo "Building package..."
+    rm -rf dist/
+    python3 setup.py sdist bdist_wheel
+    twine check dist/*
+
+    # Upload to PyPI
+    echo "Uploading to PyPI..."
+    twine upload dist/*
+
+    # Deploy docs
+    echo "Deploying documentation..."
+    ./do deploy-docs
+
+    # Tag release
+    echo "Creating git tag..."
+    git tag "$VERSION"
+    git push origin "$VERSION"
+
+    echo ""
+    echo "=== Release Complete ==="
+    echo "  PyPI: https://pypi.org/project/aitoai/$VERSION/"
+    echo "  Docs: https://aitodotai.github.io/aito-python-tools/"
+    echo "  Tag: $VERSION"
+    ;;
+
   *)
-    echo "Usage: $0 {build-dev-docker|run-dev-docker|deploy-docs}"
+    echo "Usage: $0 {build-dev-docker|run-dev-docker|deploy-docs|release}"
     exit 1
     ;;
 esac
