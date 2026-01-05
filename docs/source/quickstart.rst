@@ -118,7 +118,7 @@ You can send a query to an Aito endpoint by::
 For example::
 
   $ aito search '{"from": "products"}'
-  $ aito predict '{"from": "products", "where": {"name": {"$match": "rye bread"}}, "predict": "tags"}'
+  $ aito predict '{"from": "products", "where": {"name": {"$match": "rye bread"}}, "predict": "tags.$feature"}'
 
 .. _sdkQuickstartUpload:
 
@@ -175,13 +175,8 @@ You can infer a :py:class:`~aito.schema.AitoTableSchema` from a `Pandas DataFram
         "type": "Text"
       },
       "created_utc": {
-        "analyzer": {
-          "delimiter": ":",
-          "trimWhitespace": true,
-          "type": "delimiter"
-        },
         "nullable": false,
-        "type": "Text"
+        "type": "String"
       },
       "date": {
         "analyzer": {
@@ -393,7 +388,7 @@ You can send a query to an Aito endpoint by using the AitoClient method:
     predict(client=aito_client, query={
       "from": "products",
       "where": {"name": "rye bread"},
-      "predict": "tags"
+      "predict": "tags.$feature"
     })
 
 .. _Analyzer: https://aito.ai/docs/api/#schema-analyzer

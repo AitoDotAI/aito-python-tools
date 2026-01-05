@@ -51,7 +51,7 @@ class TestBaseHitsResponse(CompareTestCase):
 
 
 @parameterized_class(("test_name", "request_obj", "score_field"), [
-    ("predict", aito_requests.PredictRequest({"from": "products", "predict": "tags", "limit": 3}), "$p"),
+    ("predict", aito_requests.PredictRequest({"from": "products", "predict": "tags.$feature", "limit": 3}), "$p"),
     ("recommend", aito_requests.RecommendRequest(
         {"from": "impressions", "recommend": "product", "goal": {"context.user": "veronica"}, "limit": 3}
     ), "$p" ),

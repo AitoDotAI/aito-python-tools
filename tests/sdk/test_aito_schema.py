@@ -127,6 +127,33 @@ class TestAitoAnalyzerSchema(BaseTestCase):
             AitoAliasAnalyzerSchema('whitespace')
         )
 
+    @parameterized.expand([
+        # Natural language text with commas should use language analyzer, not comma delimiter
+        ('english_with_commas', [
+            'To place an order, simply browse our products, add the items you want to your cart.',
+            'If you need help, please contact our support team, and we will assist you.',
+        ]),
+        # Natural language with sentence structure
+        ('english_sentences', [
+            'The quick brown fox jumps over the lazy dog. It was a sunny day.',
+            'Hello world! This is a test. How are you doing today?',
+        ]),
+    ])
+    def test_natural_language_prefers_language_over_delimiter(self, _, samples):
+        """Natural language text should use language analyzer even if delimiters are present."""
+        result = AitoAnalyzerSchema.infer_from_samples(samples)
+        # Should be language analyzer, not delimiter
+        self.assertNotIsInstance(result, AitoDelimiterAnalyzerSchema)
+
+    @parameterized.expand([
+        # True delimited data (short tokens, no sentence structure)
+        ('comma_list', ['apple,banana,cherry', 'dog,cat,bird'], ','),
+        ('pipe_list', ['red|green|blue', 'one|two|three'], '|'),
+    ])
+    def test_true_delimited_data_uses_delimiter(self, _, samples, delimiter):
+        """Actual delimited data should still use delimiter analyzer."""
+        self.assertEqual(AitoAnalyzerSchema.infer_from_samples(samples), AitoDelimiterAnalyzerSchema(delimiter))
+
 
 class TestAitoDataType(BaseTestCase):
     @parameterized.expand([
@@ -164,8 +191,10 @@ class TestAitoDataType(BaseTestCase):
 
     @parameterized.expand([
         ('int', [1, 2, 3], AitoIntType()),
-        ('float', [1.0, 2.0, 3.0], AitoDecimalType()),
-        ('mixed', [1, 2, 3.0], AitoDecimalType()),
+        ('float_whole_numbers', [1.0, 2.0, 3.0], AitoIntType()),  # Whole numbers as floats → Int
+        ('mixed_whole_numbers', [1, 2, 3.0], AitoIntType()),  # Mixed int/float whole numbers → Int
+        ('actual_decimals', [1.5, 2.5, 3.5], AitoDecimalType()),  # Actual fractional values → Decimal
+        ('mixed_with_fraction', [1, 2, 3.5], AitoDecimalType()),  # Mixed with fraction → Decimal
     ])
     def test_infer_from_numeric_type(self, _, samples, expected):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
@@ -182,6 +211,18 @@ class TestAitoDataType(BaseTestCase):
     ])
     def test_infer_from_mixed_type(self, _, samples, expected):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
+
+    @parameterized.expand([
+        ('iso_date', ['2024-01-15', '2024-02-20', '2023-12-31']),
+        ('iso_datetime', ['2024-01-15T10:30:00', '2024-02-20T14:45:30']),
+        ('iso_datetime_ms', ['2024-01-15T10:30:00.123', '2024-02-20T14:45:30.456']),
+        ('iso_datetime_tz', ['2024-01-15T10:30:00Z', '2024-02-20T14:45:30+03:00']),
+        ('us_date', ['01/15/2024', '02/20/2024', '12/31/2023']),
+        ('eu_date', ['15.01.2024', '20.02.2024', '31.12.2023']),
+    ])
+    def test_date_strings_infer_as_string(self, _, samples):
+        """Date-like strings should be inferred as String type (not Text with delimiter)."""
+        self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), AitoStringType())
 
     # Tests for Json type
     def test_json_type_serialization(self):
