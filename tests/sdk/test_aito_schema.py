@@ -183,6 +183,65 @@ class TestAitoDataType(BaseTestCase):
     def test_infer_from_mixed_type(self, _, samples, expected):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
 
+    # Tests for Json type
+    def test_json_type_serialization(self):
+        json_type = AitoJsonType()
+        self.assertEqual(json_type.to_json_serializable(), 'Json')
+        self.assertEqual(AitoDataTypeSchema.from_deserialized_object('Json'), json_type)
+        self.assertTrue(json_type.is_json)
+        self.assertFalse(json_type.is_array)
+
+    # Tests for array types
+    @parameterized.expand([
+        ('Boolean[]', AitoBooleanArrayType()),
+        ('Int[]', AitoIntArrayType()),
+        ('Decimal[]', AitoDecimalArrayType()),
+        ('String[]', AitoStringArrayType()),
+    ])
+    def test_array_type_serialization(self, deserialized_obj, aito_type):
+        self.assertEqual(AitoDataTypeSchema.from_deserialized_object(deserialized_obj), aito_type)
+        self.assertEqual(aito_type.to_json_serializable(), deserialized_obj)
+        self.assertTrue(aito_type.is_array)
+        self.assertFalse(aito_type.is_json)
+
+    @parameterized.expand([
+        ('int_array', [AitoIntArrayType(), 'Int']),
+        ('string_array', [AitoStringArrayType(), 'String']),
+        ('boolean_array', [AitoBooleanArrayType(), 'Boolean']),
+        ('decimal_array', [AitoDecimalArrayType(), 'Decimal']),
+    ])
+    def test_array_element_type(self, _, args):
+        aito_type, expected_element = args
+        self.assertEqual(aito_type.element_type, expected_element)
+
+    # Tests for array type inference
+    @parameterized.expand([
+        ('string_array', [['a', 'b'], ['c', 'd', 'e']], AitoStringArrayType()),
+        ('int_array', [[1, 2, 3], [4, 5]], AitoIntArrayType()),
+        ('decimal_array', [[1.0, 2.5], [3.14]], AitoDecimalArrayType()),
+        ('boolean_array', [[True, False], [True]], AitoBooleanArrayType()),
+        ('empty_arrays', [[], []], AitoStringArrayType()),  # Empty arrays default to String[]
+    ])
+    def test_infer_array_type(self, _, samples, expected):
+        self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
+
+    # Tests for Json type inference
+    # Json is used for: nested objects, nested arrays, arrays containing dicts
+    # Mixed scalar arrays (like [1, 'a', True]) become String[] since Text maps to String for arrays
+    @parameterized.expand([
+        ('dict_values', [{'a': 1}, {'b': 2}], AitoJsonType()),
+        ('nested_dict', [{'a': {'nested': 1}}, {'b': 2}], AitoJsonType()),
+        ('nested_arrays', [[[1, 2], [3]], [[4]]], AitoJsonType()),
+        ('array_with_dicts', [[{'a': 1}], [{'b': 2}]], AitoJsonType()),
+    ])
+    def test_infer_json_type(self, _, samples, expected):
+        self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
+
+    def test_mixed_scalar_array_becomes_string(self):
+        # Mixed scalar arrays use String[] since pandas 'mixed' -> Text -> String for arrays
+        samples = [[1, 'a', True], [2, 'b']]
+        self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), AitoStringArrayType())
+
 
 class TestAitoColumnLink(BaseTestCase):
     def test_from_deserialized_object(self):
@@ -254,6 +313,40 @@ class TestDataSeriesProperties(BaseTestCase):
         self.assertEqual(
             ds.target_aito_dtype,
             aito_dtype)
+
+    # Tests for array type inference from pandas series
+    @parameterized.expand([
+        ('string_array', [['a', 'b'], ['c']], 'array', 'String[]'),
+        ('int_array', [[1, 2], [3, 4, 5]], 'array', 'Int[]'),
+        ('decimal_array', [[1.5, 2.5], [3.0]], 'array', 'Decimal[]'),
+        ('boolean_array', [[True], [False, True]], 'array', 'Boolean[]'),
+        ('empty_arrays', [[], [], []], 'array', 'String[]'),
+        ('nullable_array', [['a', 'b'], None, ['c']], 'array', 'String[]'),
+    ])
+    def test_array_inference_from_series(self, _, serie, expected_pandas_dtype, expected_aito_dtype):
+        ds = DataSeriesProperties._infer_from_pandas_series(pd.Series(serie))
+        self.assertEqual(ds.pandas_dtype, expected_pandas_dtype)
+        self.assertEqual(ds.target_aito_dtype, expected_aito_dtype)
+
+    # Tests for Json type inference from pandas series
+    # Json is used for: nested objects, nested arrays, arrays containing dicts
+    @parameterized.expand([
+        ('dict_values', [{'a': 1}, {'b': 2}], 'json', 'Json'),
+        ('nested_array', [[[1, 2]], [[3, 4]]], 'json', 'Json'),
+        ('array_of_dicts', [[{'x': 1}], [{'y': 2}]], 'json', 'Json'),
+        ('nullable_dict', [{'a': 1}, None, {'b': 2}], 'json', 'Json'),
+    ])
+    def test_json_inference_from_series(self, _, serie, expected_pandas_dtype, expected_aito_dtype):
+        ds = DataSeriesProperties._infer_from_pandas_series(pd.Series(serie))
+        self.assertEqual(ds.pandas_dtype, expected_pandas_dtype)
+        self.assertEqual(ds.target_aito_dtype, expected_aito_dtype)
+
+    def test_mixed_elements_array_becomes_string_array(self):
+        # Mixed scalar elements within arrays become String[] (pandas 'mixed' -> Text -> String for arrays)
+        serie = [[1, 'a'], [2, 'b']]
+        ds = DataSeriesProperties._infer_from_pandas_series(pd.Series(serie))
+        self.assertEqual(ds.pandas_dtype, 'array')
+        self.assertEqual(ds.target_aito_dtype, 'String[]')
 
 
 class TestAitoColumnTypeSchema(BaseTestCase):

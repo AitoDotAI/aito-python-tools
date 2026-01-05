@@ -684,6 +684,9 @@ class DataSeriesProperties :
        properties and infer the Aito data type based on it. It checks the maximum and
        minimum value and it will convert integers into string, if Aito does support the
        numeric range.
+
+       Also handles array types (columns containing lists) and Json type (columns containing
+       dicts or complex nested structures).
     """
 
     _pandas_dtypes_name_to_aito_type = {
@@ -708,15 +711,30 @@ class DataSeriesProperties :
         'empty': 'String'
     }
 
+    # Element types that can form arrays (Text maps to String for arrays)
+    _array_element_types = ['Boolean', 'Int', 'Decimal', 'String']
+
+    # Map element types that don't have array variants to ones that do
+    _array_element_type_mapping = {
+        'Text': 'String',  # Text[] is not supported, use String[] instead
+    }
+
     MAX_INT_VALUE = 2147483647
     MIN_INT_VALUE = -2147483648
 
-    def __init__(self, pandas_dtype: str, min_value, max_value):
+    def __init__(self, pandas_dtype: str, min_value, max_value, element_type: str = None):
         self.pandas_dtype = pandas_dtype
         self.min_value = min_value
         self.max_value = max_value
+        self.element_type = element_type
 
-        if pandas_dtype == 'integer' and (max_value > self.MAX_INT_VALUE or min_value < self.MIN_INT_VALUE):
+        if pandas_dtype == 'array' and element_type:
+            # Array type - construct Type[] format
+            self.target_aito_dtype = f'{element_type}[]'
+        elif pandas_dtype == 'json':
+            # Json type for dicts or complex structures
+            self.target_aito_dtype = 'Json'
+        elif pandas_dtype == 'integer' and (max_value > self.MAX_INT_VALUE or min_value < self.MIN_INT_VALUE):
             self.target_aito_dtype = 'String' # neither pandas (!) or Aito supports integers this large
         else:
             self.target_aito_dtype = DataSeriesProperties.pandas_dtype_to_aito_dtype(pandas_dtype)
@@ -736,6 +754,53 @@ class DataSeriesProperties :
         return AitoDataTypeSchema.from_deserialized_object(self.target_aito_dtype)
 
     @classmethod
+    def _infer_array_element_type(cls, non_null_values, max_sample_size: int = 100000) -> str:
+        """Infer the element type for array values.
+
+        :param non_null_values: numpy array of non-null list values
+        :param max_sample_size: maximum sample size for element inference
+        :return: element type string (e.g., 'String', 'Int') or None if should use Json
+        """
+        # Flatten all array elements
+        all_elements = []
+        for arr in non_null_values:
+            if not isinstance(arr, list):
+                return None  # Not a list, can't determine element type
+            for elem in arr:
+                if elem is not None:  # Skip None elements within arrays
+                    all_elements.append(elem)
+
+        if not all_elements:
+            return 'String'  # Empty arrays default to String[]
+
+        # Check if any elements are complex types (dicts or nested lists)
+        for elem in all_elements[:max_sample_size]:
+            if isinstance(elem, (dict, list)):
+                return None  # Complex nested structure, use Json instead
+
+        # Create a series from elements and infer type
+        try:
+            element_series = pd.Series(all_elements[:max_sample_size])
+            inferred_dtype = pd.api.types.infer_dtype(element_series.values)
+
+            if inferred_dtype not in cls._pandas_dtypes_name_to_aito_type:
+                return None  # Can't map to known type, use Json
+
+            element_aito_type = cls._pandas_dtypes_name_to_aito_type[inferred_dtype]
+
+            # Map types that don't have array variants to ones that do
+            if element_aito_type in cls._array_element_type_mapping:
+                element_aito_type = cls._array_element_type_mapping[element_aito_type]
+
+            # Only allow scalar types that have array variants
+            if element_aito_type in cls._array_element_types:
+                return element_aito_type
+            else:
+                return None  # Type doesn't have array variant, use Json
+        except Exception:
+            return None  # Inference failed, use Json
+
+    @classmethod
     def _infer_from_pandas_series(cls, series: pd.Series, max_sample_size: int = 100000) -> 'DataSeriesProperties':
         """Infer aito column type from a Pandas Series
 
@@ -749,10 +814,34 @@ class DataSeriesProperties :
         """
         sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
 
-        if len(series) == series.isna().sum(): # pandas will infer empty series as floating point as default
-            inferred_dtype = 'empty'
-        else:
-            inferred_dtype = pd.api.types.infer_dtype(sampled_values)
+        # Handle empty series
+        if len(series) == series.isna().sum():
+            return DataSeriesProperties('empty', None, None)
+
+        # Get non-null values for type detection
+        non_null_mask = pd.notna(series)
+        non_null_values = series[non_null_mask].values
+        if len(non_null_values) > max_sample_size:
+            non_null_values = non_null_values[:max_sample_size]
+
+        # Check if all non-null values are lists (array type)
+        if len(non_null_values) > 0 and all(isinstance(v, list) for v in non_null_values):
+            element_type = cls._infer_array_element_type(non_null_values, max_sample_size)
+            if element_type is not None:
+                LOG.debug(f'inferred array type with element type: {element_type}')
+                return DataSeriesProperties('array', None, None, element_type=element_type)
+            else:
+                # Complex array content, fall back to Json
+                LOG.debug('array contains complex elements, using Json type')
+                return DataSeriesProperties('json', None, None)
+
+        # Check if all non-null values are dicts (Json type)
+        if len(non_null_values) > 0 and all(isinstance(v, dict) for v in non_null_values):
+            LOG.debug('column contains dict values, using Json type')
+            return DataSeriesProperties('json', None, None)
+
+        # Standard inference for scalar types
+        inferred_dtype = pd.api.types.infer_dtype(sampled_values)
 
         lower_bound = None
         upper_bound = None
@@ -772,8 +861,8 @@ class AitoDataTypeSchema(AitoSchema, ABC):
     """The base class for Aito DataType"""
 
     _supported_data_types = [
-        "Boolean", "Decimal", "Int", "String", "Text",
-        "Boolean[]", "Decimal[]", "Int[]", "String[]", "Text[]"
+        "Boolean", "Decimal", "Int", "String", "Text", "Json",
+        "Boolean[]", "Decimal[]", "Int[]", "String[]"
     ]
 
     def __init__(self, aito_dtype: str):
@@ -842,6 +931,14 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         return self._aito_dtype == 'Decimal'
 
     @property
+    def is_json(self) -> bool:
+        """returns True if the data type is Json
+
+        :rtype: bool
+        """
+        return self._aito_dtype == 'Json'
+
+    @property
     def is_array(self) -> bool:
         """returns True if the data type is an array type
 
@@ -894,8 +991,9 @@ class AitoDataTypeSchema(AitoSchema, ABC):
             return AitoDecimalArrayType()
         if obj == 'String[]':
             return AitoStringArrayType()
-        if obj == 'Text[]':
-            return AitoTextArrayType()
+        # Json type
+        if obj == 'Json':
+            return AitoJsonType()
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -1016,13 +1114,23 @@ class AitoStringArrayType(AitoDataTypeSchema):
         return list
 
 
-class AitoTextArrayType(AitoDataTypeSchema):
-    """Aito Text Array Type"""
+def _identity(x):
+    """Identity function - returns input unchanged. Used for Json type conversion."""
+    return x
+
+
+class AitoJsonType(AitoDataTypeSchema):
+    """Aito `Json Type <https://aito.ai/docs/api/#schema-json-type>`__
+
+    The Json type is a flexible type that can store any valid JSON structure,
+    including nested objects, arrays with mixed types, or any complex data
+    that doesn't fit into the more specific types.
+    """
     def __init__(self):
-        super().__init__('Text[]')
+        super().__init__('Json')
 
     def to_python_type(self):
-        return list
+        return _identity
 
 
 class AitoColumnLinkSchema(AitoSchema):
