@@ -1,6 +1,28 @@
 Changelog
 =========
 
+0.5.4
+-----
+
+This version adds support for new Aito schema types and improves schema inference accuracy.
+
+SDK
+^^^
+
+Schema Type Support
+"""""""""""""""""""
+
+- Added support for **Json** type (:py:class:`~aito.schema.AitoJsonType`) for columns containing dictionaries or complex nested structures
+- Added support for **Array types** (``Boolean[]``, ``Int[]``, ``Decimal[]``, ``String[]``) with automatic element type inference
+- Array columns are automatically detected when all non-null values are lists
+
+Improved Schema Inference
+"""""""""""""""""""""""""
+
+- **Natural language detection**: Text fields containing natural language (sentences with punctuation, common words) now correctly use language analyzers instead of delimiter analyzers, even when delimiters like commas are present
+- **Integer preference**: Floating-point values that are whole numbers (e.g., ``1.0``, ``2.0``) are now inferred as ``Int`` instead of ``Decimal``
+- **Date pattern detection**: Date strings in common formats (ISO, US, EU) are now inferred as ``String`` type without analyzer, enabling exact matching
+
 0.5.3
 -----
 

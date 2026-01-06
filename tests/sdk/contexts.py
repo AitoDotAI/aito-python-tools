@@ -28,7 +28,7 @@ endpoint_methods_test_context = [
     (
             'predict',
             PredictRequest,
-            {"from": "products", "where": {"name": "Pirkka banana"}, "predict": "tags"},
+            {"from": "products", "where": {"name": "Pirkka banana"}, "predict": "tags.$feature"},
             PredictResponse
     ),
     (

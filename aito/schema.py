@@ -211,6 +211,59 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
         return None
 
     @classmethod
+    def _looks_like_natural_language(cls, samples: List[str]) -> bool:
+        """Check if samples appear to be natural language text rather than delimited data.
+
+        Heuristics:
+        - Contains sentence-ending punctuation (. ? !)
+        - Average word count > 3 words per sample
+        - Contains common English words
+        """
+        if not samples:
+            return False
+
+        common_words = {'the', 'a', 'an', 'and', 'or', 'to', 'of', 'in', 'for', 'is', 'are',
+                        'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do',
+                        'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might',
+                        'can', 'this', 'that', 'these', 'those', 'it', 'its', 'you', 'your',
+                        'we', 'our', 'they', 'their', 'with', 'at', 'by', 'from', 'on', 'as'}
+
+        sentence_endings = 0
+        total_words = 0
+        common_word_count = 0
+
+        for sample in samples[:100]:  # Check first 100 samples
+            # Count sentence endings
+            sentence_endings += sample.count('.') + sample.count('?') + sample.count('!')
+
+            # Count words
+            words = sample.lower().split()
+            total_words += len(words)
+
+            # Count common words
+            for word in words:
+                # Strip punctuation from word
+                clean_word = word.strip('.,!?;:\'"()[]{}')
+                if clean_word in common_words:
+                    common_word_count += 1
+
+        num_samples = min(len(samples), 100)
+        avg_words_per_sample = total_words / num_samples if num_samples > 0 else 0
+
+        # Heuristics: looks like natural language if:
+        # - Has sentence endings, OR
+        # - Average words per sample > 5 AND has common words
+        has_sentence_structure = sentence_endings > num_samples * 0.3  # 30% of samples have endings
+        has_enough_words = avg_words_per_sample > 5
+        has_common_words = common_word_count > total_words * 0.1  # 10% are common words
+
+        is_natural = has_sentence_structure or (has_enough_words and has_common_words)
+        LOG.debug(f'natural language check: sentence_endings={sentence_endings}, '
+                  f'avg_words={avg_words_per_sample:.1f}, common_words={common_word_count}, '
+                  f'result={is_natural}')
+        return is_natural
+
+    @classmethod
     def infer_from_samples(cls, samples: Iterable[str], max_sample_size: int = 10000):
         """Infer an analyzer from the given samples
 
@@ -229,6 +282,18 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
             detected_language = cls._infer_language(sliced_samples)
             return AitoLanguageAnalyzerSchema(language=detected_language) if detected_language \
                 else AitoAliasAnalyzerSchema(alias='whitespace')
+
+        # Non-space delimiter detected - check if this looks like natural language
+        # Natural language often contains commas, but should use language/standard analyzer
+        if cls._looks_like_natural_language(sliced_samples):
+            detected_language = cls._infer_language(sliced_samples)
+            if detected_language:
+                LOG.debug(f'text looks like natural language, using language analyzer: {detected_language}')
+                return AitoLanguageAnalyzerSchema(language=detected_language)
+            else:
+                LOG.debug('text looks like natural language but language unclear, using standard analyzer')
+                return AitoAliasAnalyzerSchema(alias='standard')
+
         return AitoDelimiterAnalyzerSchema(delimiter=detected_delimiter)
 
 
@@ -684,6 +749,9 @@ class DataSeriesProperties :
        properties and infer the Aito data type based on it. It checks the maximum and
        minimum value and it will convert integers into string, if Aito does support the
        numeric range.
+
+       Also handles array types (columns containing lists) and Json type (columns containing
+       dicts or complex nested structures).
     """
 
     _pandas_dtypes_name_to_aito_type = {
@@ -705,18 +773,45 @@ class DataSeriesProperties :
         'time': 'String',
         'period': 'String',
         'mixed': 'Text',
-        'empty': 'String'
+        'empty': 'String',
+        'date_string': 'String'  # Date strings detected from text
+    }
+
+    # Common date/datetime patterns for detection
+    _date_patterns = [
+        r'^\d{4}-\d{2}-\d{2}$',  # ISO date: 2024-01-15
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',  # ISO datetime: 2024-01-15T10:30:00
+        r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',  # Datetime with space: 2024-01-15 10:30:00
+        r'^\d{2}/\d{2}/\d{4}$',  # US date: 01/15/2024 or 15/01/2024
+        r'^\d{2}-\d{2}-\d{4}$',  # Alt date: 15-01-2024
+        r'^\d{4}/\d{2}/\d{2}$',  # ISO with slash: 2024/01/15
+        r'^\d{2}\.\d{2}\.\d{4}$',  # EU date with dots: 15.01.2024
+    ]
+
+    # Element types that can form arrays (Text maps to String for arrays)
+    _array_element_types = ['Boolean', 'Int', 'Decimal', 'String']
+
+    # Map element types that don't have array variants to ones that do
+    _array_element_type_mapping = {
+        'Text': 'String',  # Text[] is not supported, use String[] instead
     }
 
     MAX_INT_VALUE = 2147483647
     MIN_INT_VALUE = -2147483648
 
-    def __init__(self, pandas_dtype: str, min_value, max_value):
+    def __init__(self, pandas_dtype: str, min_value, max_value, element_type: str = None):
         self.pandas_dtype = pandas_dtype
         self.min_value = min_value
         self.max_value = max_value
+        self.element_type = element_type
 
-        if pandas_dtype == 'integer' and (max_value > self.MAX_INT_VALUE or min_value < self.MIN_INT_VALUE):
+        if pandas_dtype == 'array' and element_type:
+            # Array type - construct Type[] format
+            self.target_aito_dtype = f'{element_type}[]'
+        elif pandas_dtype == 'json':
+            # Json type for dicts or complex structures
+            self.target_aito_dtype = 'Json'
+        elif pandas_dtype == 'integer' and (max_value > self.MAX_INT_VALUE or min_value < self.MIN_INT_VALUE):
             self.target_aito_dtype = 'String' # neither pandas (!) or Aito supports integers this large
         else:
             self.target_aito_dtype = DataSeriesProperties.pandas_dtype_to_aito_dtype(pandas_dtype)
@@ -736,6 +831,80 @@ class DataSeriesProperties :
         return AitoDataTypeSchema.from_deserialized_object(self.target_aito_dtype)
 
     @classmethod
+    def _looks_like_date(cls, samples) -> bool:
+        """Check if samples appear to be date/datetime strings.
+
+        :param samples: array-like of string values to check
+        :return: True if samples appear to be date strings
+        """
+        if len(samples) == 0:
+            return False
+
+        # Check a sample of values
+        check_samples = list(samples[:50])
+        matches = 0
+
+        for sample in check_samples:
+            if not isinstance(sample, str):
+                continue
+            sample = sample.strip()
+            for pattern in cls._date_patterns:
+                if re.match(pattern, sample):
+                    matches += 1
+                    break
+
+        # If more than 80% of samples match a date pattern, consider it a date column
+        match_ratio = matches / len(check_samples) if check_samples else 0
+        return match_ratio > 0.8
+
+    @classmethod
+    def _infer_array_element_type(cls, non_null_values, max_sample_size: int = 100000) -> str:
+        """Infer the element type for array values.
+
+        :param non_null_values: numpy array of non-null list values
+        :param max_sample_size: maximum sample size for element inference
+        :return: element type string (e.g., 'String', 'Int') or None if should use Json
+        """
+        # Flatten all array elements
+        all_elements = []
+        for arr in non_null_values:
+            if not isinstance(arr, list):
+                return None  # Not a list, can't determine element type
+            for elem in arr:
+                if elem is not None:  # Skip None elements within arrays
+                    all_elements.append(elem)
+
+        if not all_elements:
+            return 'String'  # Empty arrays default to String[]
+
+        # Check if any elements are complex types (dicts or nested lists)
+        for elem in all_elements[:max_sample_size]:
+            if isinstance(elem, (dict, list)):
+                return None  # Complex nested structure, use Json instead
+
+        # Create a series from elements and infer type
+        try:
+            element_series = pd.Series(all_elements[:max_sample_size])
+            inferred_dtype = pd.api.types.infer_dtype(element_series.values)
+
+            if inferred_dtype not in cls._pandas_dtypes_name_to_aito_type:
+                return None  # Can't map to known type, use Json
+
+            element_aito_type = cls._pandas_dtypes_name_to_aito_type[inferred_dtype]
+
+            # Map types that don't have array variants to ones that do
+            if element_aito_type in cls._array_element_type_mapping:
+                element_aito_type = cls._array_element_type_mapping[element_aito_type]
+
+            # Only allow scalar types that have array variants
+            if element_aito_type in cls._array_element_types:
+                return element_aito_type
+            else:
+                return None  # Type doesn't have array variant, use Json
+        except Exception:
+            return None  # Inference failed, use Json
+
+    @classmethod
     def _infer_from_pandas_series(cls, series: pd.Series, max_sample_size: int = 100000) -> 'DataSeriesProperties':
         """Infer aito column type from a Pandas Series
 
@@ -749,10 +918,34 @@ class DataSeriesProperties :
         """
         sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
 
-        if len(series) == series.isna().sum(): # pandas will infer empty series as floating point as default
-            inferred_dtype = 'empty'
-        else:
-            inferred_dtype = pd.api.types.infer_dtype(sampled_values)
+        # Handle empty series
+        if len(series) == series.isna().sum():
+            return DataSeriesProperties('empty', None, None)
+
+        # Get non-null values for type detection
+        non_null_mask = pd.notna(series)
+        non_null_values = series[non_null_mask].values
+        if len(non_null_values) > max_sample_size:
+            non_null_values = non_null_values[:max_sample_size]
+
+        # Check if all non-null values are lists (array type)
+        if len(non_null_values) > 0 and all(isinstance(v, list) for v in non_null_values):
+            element_type = cls._infer_array_element_type(non_null_values, max_sample_size)
+            if element_type is not None:
+                LOG.debug(f'inferred array type with element type: {element_type}')
+                return DataSeriesProperties('array', None, None, element_type=element_type)
+            else:
+                # Complex array content, fall back to Json
+                LOG.debug('array contains complex elements, using Json type')
+                return DataSeriesProperties('json', None, None)
+
+        # Check if all non-null values are dicts (Json type)
+        if len(non_null_values) > 0 and all(isinstance(v, dict) for v in non_null_values):
+            LOG.debug('column contains dict values, using Json type')
+            return DataSeriesProperties('json', None, None)
+
+        # Standard inference for scalar types
+        inferred_dtype = pd.api.types.infer_dtype(sampled_values)
 
         lower_bound = None
         upper_bound = None
@@ -761,6 +954,34 @@ class DataSeriesProperties :
             upper_bound = sampled_values.max()
             # See integer MAX_VALUE and MIN_VALUE in https://docs.oracle.com/javase/8/docs/api/constant-values.html
             LOG.debug(f'inferred pandas dtype: {inferred_dtype}')
+
+        # Check if floating point values are actually whole numbers (prefer Int over Decimal)
+        if inferred_dtype == 'floating':
+            try:
+                # Check if all non-null values are whole numbers
+                numeric_values = pd.to_numeric(non_null_values, errors='coerce')
+                numeric_values = numeric_values[pd.notna(numeric_values)]
+                if len(numeric_values) > 0:
+                    all_whole = all(float(v).is_integer() for v in numeric_values)
+                    if all_whole:
+                        # Check if within Int range
+                        min_val = float(numeric_values.min())
+                        max_val = float(numeric_values.max())
+                        if min_val >= cls.MIN_INT_VALUE and max_val <= cls.MAX_INT_VALUE:
+                            LOG.debug('floating values are all whole numbers within Int range, using Int')
+                            inferred_dtype = 'integer'
+                            lower_bound = int(min_val)
+                            upper_bound = int(max_val)
+            except (ValueError, TypeError):
+                pass  # Keep as floating if check fails
+
+        # Check if string values look like dates (use String without analyzer)
+        if inferred_dtype == 'string':
+            str_samples = [str(v) for v in non_null_values[:100]]
+            if cls._looks_like_date(str_samples):
+                LOG.debug('string values look like dates, using date_string type')
+                inferred_dtype = 'date_string'
+
         if inferred_dtype not in cls._pandas_dtypes_name_to_aito_type:
             LOG.debug(f'failed to convert pandas dtype {inferred_dtype} to aito dtype')
             raise Exception(f'failed to infer aito data type')
@@ -772,8 +993,8 @@ class AitoDataTypeSchema(AitoSchema, ABC):
     """The base class for Aito DataType"""
 
     _supported_data_types = [
-        "Boolean", "Decimal", "Int", "String", "Text",
-        "Boolean[]", "Decimal[]", "Int[]", "String[]", "Text[]"
+        "Boolean", "Decimal", "Int", "String", "Text", "Json",
+        "Boolean[]", "Decimal[]", "Int[]", "String[]"
     ]
 
     def __init__(self, aito_dtype: str):
@@ -842,6 +1063,14 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         return self._aito_dtype == 'Decimal'
 
     @property
+    def is_json(self) -> bool:
+        """returns True if the data type is Json
+
+        :rtype: bool
+        """
+        return self._aito_dtype == 'Json'
+
+    @property
     def is_array(self) -> bool:
         """returns True if the data type is an array type
 
@@ -894,8 +1123,9 @@ class AitoDataTypeSchema(AitoSchema, ABC):
             return AitoDecimalArrayType()
         if obj == 'String[]':
             return AitoStringArrayType()
-        if obj == 'Text[]':
-            return AitoTextArrayType()
+        # Json type
+        if obj == 'Json':
+            return AitoJsonType()
 
     @property
     def comparison_properties(self) -> Iterable[str]:
@@ -1016,13 +1246,23 @@ class AitoStringArrayType(AitoDataTypeSchema):
         return list
 
 
-class AitoTextArrayType(AitoDataTypeSchema):
-    """Aito Text Array Type"""
+def _identity(x):
+    """Identity function - returns input unchanged. Used for Json type conversion."""
+    return x
+
+
+class AitoJsonType(AitoDataTypeSchema):
+    """Aito `Json Type <https://aito.ai/docs/api/#schema-json-type>`__
+
+    The Json type is a flexible type that can store any valid JSON structure,
+    including nested objects, arrays with mixed types, or any complex data
+    that doesn't fit into the more specific types.
+    """
     def __init__(self):
-        super().__init__('Text[]')
+        super().__init__('Json')
 
     def to_python_type(self):
-        return list
+        return _identity
 
 
 class AitoColumnLinkSchema(AitoSchema):
@@ -1232,6 +1472,39 @@ class AitoColumnTypeSchema(AitoSchema):
         link = AitoColumnLinkSchema.from_deserialized_object(link_data) if link_data is not None else None
         return cls(data_type=data_type, nullable=obj.get('nullable'), link=link, analyzer=analyzer)
 
+    # Common date/datetime patterns (ISO and common formats)
+    _date_patterns = [
+        r'^\d{4}-\d{2}-\d{2}$',  # ISO date: 2024-01-15
+        r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',  # ISO datetime: 2024-01-15T10:30:00
+        r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',  # Datetime with space: 2024-01-15 10:30:00
+        r'^\d{2}/\d{2}/\d{4}$',  # US date: 01/15/2024 or 15/01/2024
+        r'^\d{2}-\d{2}-\d{4}$',  # Alt date: 15-01-2024
+        r'^\d{4}/\d{2}/\d{2}$',  # ISO with slash: 2024/01/15
+    ]
+
+    @classmethod
+    def _looks_like_date(cls, samples: List[str]) -> bool:
+        """Check if samples appear to be date/datetime strings."""
+        if not samples:
+            return False
+
+        # Check a sample of values
+        check_samples = samples[:50]
+        matches = 0
+
+        for sample in check_samples:
+            if not isinstance(sample, str):
+                continue
+            sample = sample.strip()
+            for pattern in cls._date_patterns:
+                if re.match(pattern, sample):
+                    matches += 1
+                    break
+
+        # If more than 80% of samples match a date pattern, consider it a date column
+        match_ratio = matches / len(check_samples) if check_samples else 0
+        return match_ratio > 0.8
+
     @classmethod
     def _infer_from_pandas_series(cls, series: pd.Series, max_sample_size: int = 100000) -> 'AitoColumnTypeSchema':
         samples = series if len(series) < max_sample_size else series.sample(max_sample_size)
@@ -1241,9 +1514,15 @@ class AitoColumnTypeSchema(AitoSchema):
         col_aito_type = AitoDataTypeSchema._infer_from_pandas_series(samples, max_sample_size)
 
         if col_aito_type.is_text:
-            col_analyzer = AitoAnalyzerSchema.infer_from_samples(samples.dropna().__iter__())
-            if not col_analyzer:
+            # Check if values look like dates - use String without analyzer
+            non_null_samples = [str(v) for v in samples.dropna().values[:100]]
+            if cls._looks_like_date(non_null_samples):
+                LOG.debug('column values look like dates, using String type without analyzer')
                 col_aito_type = AitoStringType()
+            else:
+                col_analyzer = AitoAnalyzerSchema.infer_from_samples(samples.dropna().__iter__())
+                if not col_analyzer:
+                    col_aito_type = AitoStringType()
         return cls(
             data_type=col_aito_type, nullable=col_nullable, analyzer=col_analyzer
         )

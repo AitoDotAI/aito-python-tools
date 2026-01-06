@@ -127,6 +127,33 @@ class TestAitoAnalyzerSchema(BaseTestCase):
             AitoAliasAnalyzerSchema('whitespace')
         )
 
+    @parameterized.expand([
+        # Natural language text with commas should use language analyzer, not comma delimiter
+        ('english_with_commas', [
+            'To place an order, simply browse our products, add the items you want to your cart.',
+            'If you need help, please contact our support team, and we will assist you.',
+        ]),
+        # Natural language with sentence structure
+        ('english_sentences', [
+            'The quick brown fox jumps over the lazy dog. It was a sunny day.',
+            'Hello world! This is a test. How are you doing today?',
+        ]),
+    ])
+    def test_natural_language_prefers_language_over_delimiter(self, _, samples):
+        """Natural language text should use language analyzer even if delimiters are present."""
+        result = AitoAnalyzerSchema.infer_from_samples(samples)
+        # Should be language analyzer, not delimiter
+        self.assertNotIsInstance(result, AitoDelimiterAnalyzerSchema)
+
+    @parameterized.expand([
+        # True delimited data (short tokens, no sentence structure)
+        ('comma_list', ['apple,banana,cherry', 'dog,cat,bird'], ','),
+        ('pipe_list', ['red|green|blue', 'one|two|three'], '|'),
+    ])
+    def test_true_delimited_data_uses_delimiter(self, _, samples, delimiter):
+        """Actual delimited data should still use delimiter analyzer."""
+        self.assertEqual(AitoAnalyzerSchema.infer_from_samples(samples), AitoDelimiterAnalyzerSchema(delimiter))
+
 
 class TestAitoDataType(BaseTestCase):
     @parameterized.expand([
@@ -164,8 +191,10 @@ class TestAitoDataType(BaseTestCase):
 
     @parameterized.expand([
         ('int', [1, 2, 3], AitoIntType()),
-        ('float', [1.0, 2.0, 3.0], AitoDecimalType()),
-        ('mixed', [1, 2, 3.0], AitoDecimalType()),
+        ('float_whole_numbers', [1.0, 2.0, 3.0], AitoIntType()),  # Whole numbers as floats → Int
+        ('mixed_whole_numbers', [1, 2, 3.0], AitoIntType()),  # Mixed int/float whole numbers → Int
+        ('actual_decimals', [1.5, 2.5, 3.5], AitoDecimalType()),  # Actual fractional values → Decimal
+        ('mixed_with_fraction', [1, 2, 3.5], AitoDecimalType()),  # Mixed with fraction → Decimal
     ])
     def test_infer_from_numeric_type(self, _, samples, expected):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
@@ -182,6 +211,77 @@ class TestAitoDataType(BaseTestCase):
     ])
     def test_infer_from_mixed_type(self, _, samples, expected):
         self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
+
+    @parameterized.expand([
+        ('iso_date', ['2024-01-15', '2024-02-20', '2023-12-31']),
+        ('iso_datetime', ['2024-01-15T10:30:00', '2024-02-20T14:45:30']),
+        ('iso_datetime_ms', ['2024-01-15T10:30:00.123', '2024-02-20T14:45:30.456']),
+        ('iso_datetime_tz', ['2024-01-15T10:30:00Z', '2024-02-20T14:45:30+03:00']),
+        ('us_date', ['01/15/2024', '02/20/2024', '12/31/2023']),
+        ('eu_date', ['15.01.2024', '20.02.2024', '31.12.2023']),
+    ])
+    def test_date_strings_infer_as_string(self, _, samples):
+        """Date-like strings should be inferred as String type (not Text with delimiter)."""
+        self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), AitoStringType())
+
+    # Tests for Json type
+    def test_json_type_serialization(self):
+        json_type = AitoJsonType()
+        self.assertEqual(json_type.to_json_serializable(), 'Json')
+        self.assertEqual(AitoDataTypeSchema.from_deserialized_object('Json'), json_type)
+        self.assertTrue(json_type.is_json)
+        self.assertFalse(json_type.is_array)
+
+    # Tests for array types
+    @parameterized.expand([
+        ('Boolean[]', AitoBooleanArrayType()),
+        ('Int[]', AitoIntArrayType()),
+        ('Decimal[]', AitoDecimalArrayType()),
+        ('String[]', AitoStringArrayType()),
+    ])
+    def test_array_type_serialization(self, deserialized_obj, aito_type):
+        self.assertEqual(AitoDataTypeSchema.from_deserialized_object(deserialized_obj), aito_type)
+        self.assertEqual(aito_type.to_json_serializable(), deserialized_obj)
+        self.assertTrue(aito_type.is_array)
+        self.assertFalse(aito_type.is_json)
+
+    @parameterized.expand([
+        ('int_array', [AitoIntArrayType(), 'Int']),
+        ('string_array', [AitoStringArrayType(), 'String']),
+        ('boolean_array', [AitoBooleanArrayType(), 'Boolean']),
+        ('decimal_array', [AitoDecimalArrayType(), 'Decimal']),
+    ])
+    def test_array_element_type(self, _, args):
+        aito_type, expected_element = args
+        self.assertEqual(aito_type.element_type, expected_element)
+
+    # Tests for array type inference
+    @parameterized.expand([
+        ('string_array', [['a', 'b'], ['c', 'd', 'e']], AitoStringArrayType()),
+        ('int_array', [[1, 2, 3], [4, 5]], AitoIntArrayType()),
+        ('decimal_array', [[1.0, 2.5], [3.14]], AitoDecimalArrayType()),
+        ('boolean_array', [[True, False], [True]], AitoBooleanArrayType()),
+        ('empty_arrays', [[], []], AitoStringArrayType()),  # Empty arrays default to String[]
+    ])
+    def test_infer_array_type(self, _, samples, expected):
+        self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
+
+    # Tests for Json type inference
+    # Json is used for: nested objects, nested arrays, arrays containing dicts
+    # Mixed scalar arrays (like [1, 'a', True]) become String[] since Text maps to String for arrays
+    @parameterized.expand([
+        ('dict_values', [{'a': 1}, {'b': 2}], AitoJsonType()),
+        ('nested_dict', [{'a': {'nested': 1}}, {'b': 2}], AitoJsonType()),
+        ('nested_arrays', [[[1, 2], [3]], [[4]]], AitoJsonType()),
+        ('array_with_dicts', [[{'a': 1}], [{'b': 2}]], AitoJsonType()),
+    ])
+    def test_infer_json_type(self, _, samples, expected):
+        self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), expected)
+
+    def test_mixed_scalar_array_becomes_string(self):
+        # Mixed scalar arrays use String[] since pandas 'mixed' -> Text -> String for arrays
+        samples = [[1, 'a', True], [2, 'b']]
+        self.assertEqual(AitoDataTypeSchema.infer_from_samples(samples), AitoStringArrayType())
 
 
 class TestAitoColumnLink(BaseTestCase):
@@ -254,6 +354,40 @@ class TestDataSeriesProperties(BaseTestCase):
         self.assertEqual(
             ds.target_aito_dtype,
             aito_dtype)
+
+    # Tests for array type inference from pandas series
+    @parameterized.expand([
+        ('string_array', [['a', 'b'], ['c']], 'array', 'String[]'),
+        ('int_array', [[1, 2], [3, 4, 5]], 'array', 'Int[]'),
+        ('decimal_array', [[1.5, 2.5], [3.0]], 'array', 'Decimal[]'),
+        ('boolean_array', [[True], [False, True]], 'array', 'Boolean[]'),
+        ('empty_arrays', [[], [], []], 'array', 'String[]'),
+        ('nullable_array', [['a', 'b'], None, ['c']], 'array', 'String[]'),
+    ])
+    def test_array_inference_from_series(self, _, serie, expected_pandas_dtype, expected_aito_dtype):
+        ds = DataSeriesProperties._infer_from_pandas_series(pd.Series(serie))
+        self.assertEqual(ds.pandas_dtype, expected_pandas_dtype)
+        self.assertEqual(ds.target_aito_dtype, expected_aito_dtype)
+
+    # Tests for Json type inference from pandas series
+    # Json is used for: nested objects, nested arrays, arrays containing dicts
+    @parameterized.expand([
+        ('dict_values', [{'a': 1}, {'b': 2}], 'json', 'Json'),
+        ('nested_array', [[[1, 2]], [[3, 4]]], 'json', 'Json'),
+        ('array_of_dicts', [[{'x': 1}], [{'y': 2}]], 'json', 'Json'),
+        ('nullable_dict', [{'a': 1}, None, {'b': 2}], 'json', 'Json'),
+    ])
+    def test_json_inference_from_series(self, _, serie, expected_pandas_dtype, expected_aito_dtype):
+        ds = DataSeriesProperties._infer_from_pandas_series(pd.Series(serie))
+        self.assertEqual(ds.pandas_dtype, expected_pandas_dtype)
+        self.assertEqual(ds.target_aito_dtype, expected_aito_dtype)
+
+    def test_mixed_elements_array_becomes_string_array(self):
+        # Mixed scalar elements within arrays become String[] (pandas 'mixed' -> Text -> String for arrays)
+        serie = [[1, 'a'], [2, 'b']]
+        ds = DataSeriesProperties._infer_from_pandas_series(pd.Series(serie))
+        self.assertEqual(ds.pandas_dtype, 'array')
+        self.assertEqual(ds.target_aito_dtype, 'String[]')
 
 
 class TestAitoColumnTypeSchema(BaseTestCase):
