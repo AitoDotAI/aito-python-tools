@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aito SDK &mdash; aito-python-sdk 0.5.3 documentation</title>
+  <title>Aito SDK &mdash; aito-python-sdk 0.6.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -54,6 +54,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Aito SDK</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#aitoschema">AitoSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#aitoclient">AitoClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#aitoclientv2">AitoClientV2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#aitoapi">AitoAPI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
 </ul>
@@ -106,6 +107,7 @@
 <div><ul class="simple">
 <li><p><a class="reference internal" href="api_stubs/aito.schema.html#module-aito.schema" title="aito.schema"><code class="xref py py-mod docutils literal notranslate"><span class="pre">schema</span></code></a>: Data structure for the Aito Database Schema</p></li>
 <li><p><a class="reference internal" href="api_stubs/aito.client.html#module-aito.client" title="aito.client"><code class="xref py py-mod docutils literal notranslate"><span class="pre">client</span></code></a>: A versatile client to make requests to an Aito Database Instance</p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.client.v2.html#module-aito.client.v2" title="aito.client.v2"><code class="xref py py-mod docutils literal notranslate"><span class="pre">v2</span></code></a>: A client for the Aito v2 API</p></li>
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">client_request</span></code>: Request objects used in AitoClient request so that you don’t have to worry about the Aito API endpoint</p></li>
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">client_response</span></code>: Enriched response objects returned after executing a request with the AitoClient</p></li>
 <li><p><a class="reference internal" href="api_stubs/aito.api.html#module-aito.api" title="aito.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">api</span></code></a>: Different useful functions that uses an AitoClient object to interact with an Aito Database Instance</p></li>
@@ -133,6 +135,77 @@
 <li><p>Make multiple requests asynchronously: <code class="xref py py-func docutils literal notranslate"><span class="pre">batch_requests()</span></code></p></li>
 </ul>
 </div></blockquote>
+</section>
+<section id="aitoclientv2">
+<span id="sdkaitoclientv2"></span><h2>AitoClientV2<a class="headerlink" href="#aitoclientv2" title="Link to this heading"></a></h2>
+<p>The <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2" title="aito.client.v2.client.AitoClientV2"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClientV2</span></code></a> talks to the <strong>v2</strong> API. It is a separate
+class from the v1 <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> rather than a flag on it, because the two
+APIs return genuinely different response shapes — the reasoning is written up in
+<code class="docutils literal notranslate"><span class="pre">docs/v2-client-design.md</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClientV2</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">AitoClientV2</span><span class="p">(</span><span class="n">instance_url</span><span class="p">,</span> <span class="n">api_key</span><span class="p">)</span>
+
+<span class="n">prediction</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">from_table</span><span class="o">=</span><span class="s1">'invoices'</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">{</span><span class="s1">'vendor'</span><span class="p">:</span> <span class="s1">'Elenia Oy'</span><span class="p">},</span> <span class="n">predict</span><span class="o">=</span><span class="s1">'gl_code'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">prediction</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">prediction</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">probability</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Querying:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Predict a field’s value: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.predict" title="aito.client.v2.client.AitoClientV2.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a></p></li>
+<li><p>Retrieve rows: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.search" title="aito.client.v2.client.AitoClientV2.search"><code class="xref py py-func docutils literal notranslate"><span class="pre">search()</span></code></a></p></li>
+<li><p>Rank values by a goal: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.recommend" title="aito.client.v2.client.AitoClientV2.recommend"><code class="xref py py-func docutils literal notranslate"><span class="pre">recommend()</span></code></a></p></li>
+<li><p>Find statistical relationships: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.relate" title="aito.client.v2.client.AitoClientV2.relate"><code class="xref py py-func docutils literal notranslate"><span class="pre">relate()</span></code></a></p></li>
+<li><p>Estimate a numeric field: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.estimate" title="aito.client.v2.client.AitoClientV2.estimate"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate()</span></code></a></p></li>
+<li><p>Aggregate: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.aggregate" title="aito.client.v2.client.AitoClientV2.aggregate"><code class="xref py py-func docutils literal notranslate"><span class="pre">aggregate()</span></code></a></p></li>
+<li><p>Evaluate prediction quality: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.evaluate" title="aito.client.v2.client.AitoClientV2.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a></p></li>
+<li><p>Anything else, via the universal <code class="docutils literal notranslate"><span class="pre">_query</span></code> endpoint:
+<a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.query" title="aito.client.v2.client.AitoClientV2.query"><code class="xref py py-func docutils literal notranslate"><span class="pre">query()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The named methods post to v2’s <em>enforced</em> named endpoints, which validate that the body
+matches the operation. A mismatch is a <code class="docutils literal notranslate"><span class="pre">400</span></code> naming the endpoint that wants that body,
+rather than a query that silently does something else.</p>
+</div>
+<p>Manipulating the database:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These operations require the client to be setup with the READ-WRITE API key</p>
+<ul class="simple">
+<li><p>Create a collection: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.create_collection" title="aito.client.v2.client.AitoClientV2.create_collection"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_collection()</span></code></a></p></li>
+<li><p>Delete a collection: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.delete_collection" title="aito.client.v2.client.AitoClientV2.delete_collection"><code class="xref py py-func docutils literal notranslate"><span class="pre">delete_collection()</span></code></a></p></li>
+<li><p>Upload batches of entries: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.upload_entries" title="aito.client.v2.client.AitoClientV2.upload_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code></a></p></li>
+<li><p>Rebuild the index after a bulk load: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.optimize" title="aito.client.v2.client.AitoClientV2.optimize"><code class="xref py py-func docutils literal notranslate"><span class="pre">optimize()</span></code></a></p></li>
+<li><p>Branch an environment: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.branch_env" title="aito.client.v2.client.AitoClientV2.branch_env"><code class="xref py py-func docutils literal notranslate"><span class="pre">branch_env()</span></code></a></p></li>
+</ul>
+</div>
+<p>Errors carry a machine-readable code, so you branch on the code rather than on the text of the
+message:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoV2Error</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">delete_collection</span><span class="p">(</span><span class="s1">'invoices'</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">AitoV2Error</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">err</span><span class="o">.</span><span class="n">is_not_found</span><span class="p">:</span>   <span class="c1"># a 404 here is the ordinary "drop if exists" case</span>
+        <span class="k">raise</span>
+</pre></div>
+</div>
+<p>Responses carry the engine’s non-fatal warnings, which are the only in-band signal that the
+server answered a slightly different query than the one you sent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query</span><span class="p">({</span><span class="s1">'from'</span><span class="p">:</span> <span class="s1">'invoices'</span><span class="p">,</span> <span class="s1">'where'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'no_such_column'</span><span class="p">:</span> <span class="s1">'x'</span><span class="p">}})</span>
+<span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">warnings</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">warning</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">warning</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+<span class="c1"># or make it a hard failure:</span>
+<span class="n">strict</span> <span class="o">=</span> <span class="n">AitoClientV2</span><span class="p">(</span><span class="n">instance_url</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="n">on_warning</span><span class="o">=</span><span class="s1">'raise'</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A complete runnable example — create a collection, load it, predict, explain, evaluate, drop it
+— is in <code class="docutils literal notranslate"><span class="pre">examples/v2_quickstart.py</span></code>.</p>
 </section>
 <section id="aitoapi">
 <span id="sdkapi"></span><h2>AitoAPI<a class="headerlink" href="#aitoapi" title="Link to this heading"></a></h2>

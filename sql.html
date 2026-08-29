@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SQL Database Integration &mdash; aito-python-sdk 0.5.3 documentation</title>
+  <title>SQL Database Integration &mdash; aito-python-sdk 0.6.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -198,7 +198,7 @@ $ tar zxvf mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz
 $ sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz/bin/* /usr/local/bin
 $ sudo cp mysql-connector-odbc-8.0.18-linux-ubuntu18.04-x86-64bit.tar.gz/lib/* /usr/local/lib
 $ sudo chmod 777 /usr/local/lib/libmyodbc*
-$ sudo myodbc-installer -a -d -n &quot;MySQL ODBC 8.0 Driver&quot; -t &quot;Driver=/usr/local/lib/libmyodbc8w.so&quot;``
+$ sudo myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"``
 </pre></div>
 </div>
 </li>
@@ -230,7 +230,7 @@ $ export SQL_PASSWORD=the password for authentication
 </ol>
 <blockquote>
 <div><p>You can now perform the sql operations. For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql &quot;PostgreSQL Unicode&quot; &quot;SELECT * FROM table
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql "PostgreSQL Unicode" "SELECT * FROM table
 </pre></div>
 </div>
 </div></blockquote>
@@ -240,7 +240,7 @@ $ export SQL_PASSWORD=the password for authentication
 <blockquote>
 <div><p>Your .env file should contain environment variables as described above</p>
 <p>You can set up the credentials using a dotenv file with the <code class="docutils literal notranslate"><span class="pre">-e</span></code> flag. For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql -e path/to/dotEnvFile.env &quot;PostgreSQL Unicode&quot; &quot;SELECT * FROM table&quot;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql -e path/to/dotEnvFile.env "PostgreSQL Unicode" "SELECT * FROM table"
 </pre></div>
 </div>
 <div class="admonition note">
@@ -269,7 +269,7 @@ $ export SQL_PASSWORD=the password for authentication
 <h3>Supported Functions<a class="headerlink" href="#supported-functions" title="Link to this heading"></a></h3>
 <ul>
 <li><p>Infer a table schema from the result of a SQL query:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql &quot;SELECT * FROM tableName&quot; &gt; inferredSchema.json
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito infer-table-schema from-sql "SELECT * FROM tableName" &gt; inferredSchema.json
 </pre></div>
 </div>
 <p>To see help:</p>
@@ -278,7 +278,7 @@ $ export SQL_PASSWORD=the password for authentication
 </div>
 </li>
 <li><p>Upload the result of a SQL to an existing table:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito tableName &quot;SELECT * FROM tableName&quot;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito tableName "SELECT * FROM tableName"
 </pre></div>
 </div>
 <p>To see help:</p>
@@ -287,7 +287,7 @@ $ export SQL_PASSWORD=the password for authentication
 </div>
 </li>
 <li><p>Infer schema, create table, and upload the result of a SQL to the database:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito quick-add-table-from-sql -D &quot;PostgreSQL Unicode&quot; -s localhost -u root -d testDB -tableName &quot;SELECT * FROM tableName&quot;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito quick-add-table-from-sql -D "PostgreSQL Unicode" -s localhost -u root -d testDB -tableName "SELECT * FROM tableName"
 </pre></div>
 </div>
 <p>To see help:</p>
@@ -306,22 +306,22 @@ $ export SQL_PASSWORD=the password for authentication
 <span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_entries</span>
 
 <span class="n">connection</span> <span class="o">=</span> <span class="n">SQLConnection</span><span class="p">(</span>
-  <span class="n">sql_driver</span><span class="o">=</span><span class="s1">&#39;PostgreSQL Unicode&#39;</span><span class="p">,</span>
-  <span class="n">sql_server</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
-  <span class="n">sql_database</span><span class="o">=</span><span class="s1">&#39;database_name&#39;</span><span class="p">,</span>
-  <span class="n">sql_usersname</span><span class="o">=</span><span class="s1">&#39;username&#39;</span><span class="p">,</span>
-  <span class="n">sql_password</span><span class="o">=</span><span class="s1">&#39;password&#39;</span>
+  <span class="n">sql_driver</span><span class="o">=</span><span class="s1">'PostgreSQL Unicode'</span><span class="p">,</span>
+  <span class="n">sql_server</span><span class="o">=</span><span class="s1">'localhost'</span><span class="p">,</span>
+  <span class="n">sql_database</span><span class="o">=</span><span class="s1">'database_name'</span><span class="p">,</span>
+  <span class="n">sql_usersname</span><span class="o">=</span><span class="s1">'username'</span><span class="p">,</span>
+  <span class="n">sql_password</span><span class="o">=</span><span class="s1">'password'</span>
 <span class="p">)</span>
 
 <span class="c1"># save query results to pandas DataFrame</span>
-<span class="n">query_results_df</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">execute_query_and_save_result</span><span class="p">(</span><span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;from table select *&#39;</span><span class="p">)</span>
+<span class="n">query_results_df</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">execute_query_and_save_result</span><span class="p">(</span><span class="n">query</span> <span class="o">=</span> <span class="s1">'from table select *'</span><span class="p">)</span>
 <span class="c1"># convert DataFrame to list of entries</span>
-<span class="n">query_results_entries</span> <span class="o">=</span> <span class="n">query_results_df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+<span class="n">query_results_entries</span> <span class="o">=</span> <span class="n">query_results_df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">"records"</span><span class="p">)</span>
 
 <span class="c1"># create aito client</span>
-<span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">instance_url</span><span class="o">=</span><span class="s2">&quot;your_aito_instance_url&quot;</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your_rw_api_key&quot;</span><span class="p">)</span>
+<span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">instance_url</span><span class="o">=</span><span class="s2">"your_aito_instance_url"</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="s2">"your_rw_api_key"</span><span class="p">)</span>
 <span class="c1"># upload entries to table</span>
-<span class="n">upload_entries</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;table&#39;</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="n">query_results_entries</span><span class="p">)</span>
+<span class="n">upload_entries</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">'table'</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="n">query_results_entries</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

@@ -1,0 +1,6 @@
+aito.client.v2.responses.unwrap\_payload
+========================================
+
+.. currentmodule:: aito.client.v2.responses
+
+.. autofunction:: unwrap_payload

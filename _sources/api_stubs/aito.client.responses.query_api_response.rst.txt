@@ -1,4 +1,4 @@
-﻿aito.client.responses.query\_api\_response
+aito.client.responses.query\_api\_response
 ==========================================
 
 .. automodule:: aito.client.responses.query_api_response

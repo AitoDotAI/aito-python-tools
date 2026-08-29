@@ -39,6 +39,7 @@ aito.schema.AitoBooleanType
           ~AitoBooleanType.is_bool
           ~AitoBooleanType.is_decimal
           ~AitoBooleanType.is_int
+          ~AitoBooleanType.is_json
           ~AitoBooleanType.is_string
           ~AitoBooleanType.is_text
           ~AitoBooleanType.table_name_pattern

@@ -1,0 +1,49 @@
+aito.schema.AitoJsonType
+========================
+
+.. currentmodule:: aito.schema
+
+.. autoclass:: AitoJsonType
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoJsonType.from_deserialized_object
+        ~AitoJsonType.from_json_string
+        ~AitoJsonType.infer_from_samples
+        ~AitoJsonType.json_schema
+        ~AitoJsonType.json_schema_validate
+        ~AitoJsonType.json_schema_validate_with_schema
+        ~AitoJsonType.to_json_serializable
+        ~AitoJsonType.to_json_string
+        ~AitoJsonType.to_python_type
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoJsonType.aito_dtype
+          ~AitoJsonType.column_link_pattern
+          ~AitoJsonType.column_name_pattern
+          ~AitoJsonType.comparison_properties
+          ~AitoJsonType.element_type
+          ~AitoJsonType.is_array
+          ~AitoJsonType.is_bool
+          ~AitoJsonType.is_decimal
+          ~AitoJsonType.is_int
+          ~AitoJsonType.is_json
+          ~AitoJsonType.is_string
+          ~AitoJsonType.is_text
+          ~AitoJsonType.table_name_pattern
+          ~AitoJsonType.type
+          ~AitoJsonType.uuid_pattern
+  
+  

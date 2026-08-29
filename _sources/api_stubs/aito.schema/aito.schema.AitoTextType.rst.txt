@@ -39,6 +39,7 @@ aito.schema.AitoTextType
           ~AitoTextType.is_bool
           ~AitoTextType.is_decimal
           ~AitoTextType.is_int
+          ~AitoTextType.is_json
           ~AitoTextType.is_string
           ~AitoTextType.is_text
           ~AitoTextType.table_name_pattern

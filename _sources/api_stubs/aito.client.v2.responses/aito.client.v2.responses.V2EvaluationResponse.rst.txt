@@ -1,0 +1,36 @@
+aito.client.v2.responses.V2EvaluationResponse
+=============================================
+
+.. currentmodule:: aito.client.v2.responses
+
+.. autoclass:: V2EvaluationResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~V2EvaluationResponse.accuracy
+          ~V2EvaluationResponse.base_accuracy
+          ~V2EvaluationResponse.cases
+          ~V2EvaluationResponse.data
+          ~V2EvaluationResponse.engine
+          ~V2EvaluationResponse.json
+          ~V2EvaluationResponse.kind
+          ~V2EvaluationResponse.meta
+          ~V2EvaluationResponse.test_sample_count
+          ~V2EvaluationResponse.train_sample_count
+          ~V2EvaluationResponse.warnings
+  
+  

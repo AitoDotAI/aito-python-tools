@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.schema.DataSeriesProperties &mdash; aito-python-sdk 0.5.3 documentation</title>
+  <title>aito.schema.DataSeriesProperties &mdash; aito-python-sdk 0.6.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -72,12 +72,12 @@
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoDelimiterAnalyzerSchema.html">aito.schema.AitoDelimiterAnalyzerSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoIntArrayType.html">aito.schema.AitoIntArrayType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoIntType.html">aito.schema.AitoIntType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoJsonType.html">aito.schema.AitoJsonType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoLanguageAnalyzerSchema.html">aito.schema.AitoLanguageAnalyzerSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoSchema.html">aito.schema.AitoSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoStringArrayType.html">aito.schema.AitoStringArrayType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoStringType.html">aito.schema.AitoStringType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTableSchema.html">aito.schema.AitoTableSchema</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTextArrayType.html">aito.schema.AitoTextArrayType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTextType.html">aito.schema.AitoTextType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTokenNgramAnalyzerSchema.html">aito.schema.AitoTokenNgramAnalyzerSchema</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">aito.schema.DataSeriesProperties</a><ul>
@@ -130,12 +130,14 @@
 <h1>aito.schema.DataSeriesProperties<a class="headerlink" href="#aito-schema-dataseriesproperties" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="aito.schema.DataSeriesProperties">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aito.schema.</span></span><span class="sig-name descname"><span class="pre">DataSeriesProperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pandas_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.schema.DataSeriesProperties" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aito.schema.</span></span><span class="sig-name descname"><span class="pre">DataSeriesProperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pandas_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.schema.DataSeriesProperties" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>DataSeriesProperties is an utility class that is used to inspect pandas data series
 properties and infer the Aito data type based on it. It checks the maximum and
 minimum value and it will convert integers into string, if Aito does support the
 numeric range.</p>
+<p>Also handles array types (columns containing lists) and Json type (columns containing
+dicts or complex nested structures).</p>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>

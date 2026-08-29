@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.api.upload_entries &mdash; aito-python-sdk 0.5.3 documentation</title>
+  <title>aito.api.upload_entries &mdash; aito-python-sdk 0.6.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -169,18 +169,18 @@ the table on finished, defaults to True</p></li>
 </dl>
 <p>Upload a Pandas DataFrame</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">94</span><span class="p">,</span> <span class="mi">170</span><span class="p">],</span> <span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">31</span><span class="p">,</span> <span class="mi">115</span><span class="p">],</span> <span class="s1">&#39;depth&#39;</span><span class="p">:</span>  <span class="p">[</span> <span class="mi">3</span><span class="p">,</span>  <span class="mi">29</span><span class="p">]})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">entries</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s1">&#39;records&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">upload_entries</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;specifications&#39;</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="n">entries</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'height'</span><span class="p">:</span> <span class="p">[</span><span class="mi">94</span><span class="p">,</span> <span class="mi">170</span><span class="p">],</span> <span class="s1">'weight'</span><span class="p">:</span> <span class="p">[</span><span class="mi">31</span><span class="p">,</span> <span class="mi">115</span><span class="p">],</span> <span class="s1">'depth'</span><span class="p">:</span>  <span class="p">[</span> <span class="mi">3</span><span class="p">,</span>  <span class="mi">29</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entries</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s1">'records'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">upload_entries</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="s1">'specifications'</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="n">entries</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Upload a generator of entries</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">entries_generator</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span><span class="n">clea</span> <span class="n">end</span><span class="p">):</span>
-<span class="gp">... </span>        <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">idx</span><span class="p">}</span>
+<span class="gp">... </span>        <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'id'</span><span class="p">:</span> <span class="n">idx</span><span class="p">}</span>
 <span class="gp">... </span>        <span class="k">yield</span> <span class="n">entry</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">upload_entries</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;table_name&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">table_name</span><span class="o">=</span><span class="s2">"table_name"</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">entries</span><span class="o">=</span><span class="n">entries_generator</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">10000</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">optimize_on_finished</span><span class="o">=</span><span class="kc">False</span>

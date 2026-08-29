@@ -1,0 +1,30 @@
+aito.client.v2.responses.V2Warning
+==================================
+
+.. currentmodule:: aito.client.v2.responses
+
+.. autoclass:: V2Warning
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~V2Warning.code
+          ~V2Warning.field
+          ~V2Warning.json
+          ~V2Warning.message
+          ~V2Warning.severity
+  
+  

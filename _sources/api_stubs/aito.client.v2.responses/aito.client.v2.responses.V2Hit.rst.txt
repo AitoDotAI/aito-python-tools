@@ -1,0 +1,30 @@
+aito.client.v2.responses.V2Hit
+==============================
+
+.. currentmodule:: aito.client.v2.responses
+
+.. autoclass:: V2Hit
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~V2Hit.get
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~V2Hit.json
+          ~V2Hit.probability
+          ~V2Hit.value
+          ~V2Hit.why
+  
+  

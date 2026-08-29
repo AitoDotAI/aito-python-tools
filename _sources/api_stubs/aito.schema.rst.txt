@@ -32,12 +32,12 @@
       AitoDelimiterAnalyzerSchema
       AitoIntArrayType
       AitoIntType
+      AitoJsonType
       AitoLanguageAnalyzerSchema
       AitoSchema
       AitoStringArrayType
       AitoStringType
       AitoTableSchema
-      AitoTextArrayType
       AitoTextType
       AitoTokenNgramAnalyzerSchema
       DataSeriesProperties

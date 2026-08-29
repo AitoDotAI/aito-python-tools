@@ -1,0 +1,6 @@
+aito.client.v2.responses.response\_for\_kind
+============================================
+
+.. currentmodule:: aito.client.v2.responses
+
+.. autofunction:: response_for_kind

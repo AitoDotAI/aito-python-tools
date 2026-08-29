@@ -1,4 +1,4 @@
-﻿aito.client.aito\_client.AitoClient
+aito.client.aito\_client.AitoClient
 ===================================
 
 .. currentmodule:: aito.client.aito_client

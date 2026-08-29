@@ -1,4 +1,4 @@
-﻿aito.client.requests
+aito.client.requests
 ====================
 
 .. automodule:: aito.client.requests

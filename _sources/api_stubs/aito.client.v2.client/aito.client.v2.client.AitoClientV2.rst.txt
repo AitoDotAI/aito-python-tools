@@ -1,0 +1,50 @@
+aito.client.v2.client.AitoClientV2
+==================================
+
+.. currentmodule:: aito.client.v2.client
+
+.. autoclass:: AitoClientV2
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoClientV2.aggregate
+        ~AitoClientV2.batch
+        ~AitoClientV2.branch_env
+        ~AitoClientV2.copy_schema
+        ~AitoClientV2.create_collection
+        ~AitoClientV2.delete_collection
+        ~AitoClientV2.delete_entries
+        ~AitoClientV2.delete_env
+        ~AitoClientV2.estimate
+        ~AitoClientV2.evaluate
+        ~AitoClientV2.get_operators
+        ~AitoClientV2.get_schema
+        ~AitoClientV2.get_version
+        ~AitoClientV2.list_envs
+        ~AitoClientV2.modify
+        ~AitoClientV2.optimize
+        ~AitoClientV2.predict
+        ~AitoClientV2.query
+        ~AitoClientV2.recommend
+        ~AitoClientV2.relate
+        ~AitoClientV2.request
+        ~AitoClientV2.search
+        ~AitoClientV2.upload_entries
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoClientV2.api_url
+          ~AitoClientV2.headers
+  
+  

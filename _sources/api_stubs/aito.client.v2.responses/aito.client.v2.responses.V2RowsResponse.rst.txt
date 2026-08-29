@@ -1,0 +1,34 @@
+aito.client.v2.responses.V2RowsResponse
+=======================================
+
+.. currentmodule:: aito.client.v2.responses
+
+.. autoclass:: V2RowsResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~V2RowsResponse.engine
+          ~V2RowsResponse.first
+          ~V2RowsResponse.hits
+          ~V2RowsResponse.json
+          ~V2RowsResponse.kind
+          ~V2RowsResponse.meta
+          ~V2RowsResponse.offset
+          ~V2RowsResponse.total
+          ~V2RowsResponse.warnings
+  
+  

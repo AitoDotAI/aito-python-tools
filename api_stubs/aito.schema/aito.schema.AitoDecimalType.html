@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.schema.AitoDecimalType &mdash; aito-python-sdk 0.5.3 documentation</title>
+  <title>aito.schema.AitoDecimalType &mdash; aito-python-sdk 0.6.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -80,6 +80,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoDecimalType.is_bool"><code class="docutils literal notranslate"><span class="pre">AitoDecimalType.is_bool</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoDecimalType.is_decimal"><code class="docutils literal notranslate"><span class="pre">AitoDecimalType.is_decimal</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoDecimalType.is_int"><code class="docutils literal notranslate"><span class="pre">AitoDecimalType.is_int</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoDecimalType.is_json"><code class="docutils literal notranslate"><span class="pre">AitoDecimalType.is_json</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoDecimalType.is_string"><code class="docutils literal notranslate"><span class="pre">AitoDecimalType.is_string</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoDecimalType.is_text"><code class="docutils literal notranslate"><span class="pre">AitoDecimalType.is_text</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aito.schema.AitoDecimalType.json_schema"><code class="docutils literal notranslate"><span class="pre">AitoDecimalType.json_schema()</span></code></a></li>
@@ -96,12 +97,12 @@
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoDelimiterAnalyzerSchema.html">aito.schema.AitoDelimiterAnalyzerSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoIntArrayType.html">aito.schema.AitoIntArrayType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoIntType.html">aito.schema.AitoIntType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoJsonType.html">aito.schema.AitoJsonType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoLanguageAnalyzerSchema.html">aito.schema.AitoLanguageAnalyzerSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoSchema.html">aito.schema.AitoSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoStringArrayType.html">aito.schema.AitoStringArrayType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoStringType.html">aito.schema.AitoStringType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTableSchema.html">aito.schema.AitoTableSchema</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTextArrayType.html">aito.schema.AitoTextArrayType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTextType.html">aito.schema.AitoTextType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTokenNgramAnalyzerSchema.html">aito.schema.AitoTokenNgramAnalyzerSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.DataSeriesProperties.html">aito.schema.DataSeriesProperties</a></li>
@@ -217,19 +218,22 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoDecimalType.is_int" title="aito.schema.AitoDecimalType.is_int"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_int</span></code></a></p></td>
 <td><p>returns True if the data type is Int</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#aito.schema.AitoDecimalType.is_string" title="aito.schema.AitoDecimalType.is_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_string</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.schema.AitoDecimalType.is_json" title="aito.schema.AitoDecimalType.is_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_json</span></code></a></p></td>
+<td><p>returns True if the data type is Json</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoDecimalType.is_string" title="aito.schema.AitoDecimalType.is_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_string</span></code></a></p></td>
 <td><p>returns True if the data type is String</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoDecimalType.is_text" title="aito.schema.AitoDecimalType.is_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_text</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.schema.AitoDecimalType.is_text" title="aito.schema.AitoDecimalType.is_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_text</span></code></a></p></td>
 <td><p>returns True if the data type is Text</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">table_name_pattern</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">table_name_pattern</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#aito.schema.AitoDecimalType.type" title="aito.schema.AitoDecimalType.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.schema.AitoDecimalType.type" title="aito.schema.AitoDecimalType.type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></a></p></td>
 <td><p>the type of the schema component</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">uuid_pattern</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">uuid_pattern</span></code></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -344,6 +348,17 @@
 <dt class="sig sig-object py" id="aito.schema.AitoDecimalType.is_int">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_int</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#aito.schema.AitoDecimalType.is_int" title="Link to this definition"></a></dt>
 <dd><p>returns True if the data type is Int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="aito.schema.AitoDecimalType.is_json">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_json</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#aito.schema.AitoDecimalType.is_json" title="Link to this definition"></a></dt>
+<dd><p>returns True if the data type is Json</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>

@@ -1,0 +1,6 @@
+aito.client.v2.errors.AitoV2ResponseError
+=========================================
+
+.. currentmodule:: aito.client.v2.errors
+
+.. autoexception:: AitoV2ResponseError

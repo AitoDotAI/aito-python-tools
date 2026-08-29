@@ -30,4 +30,5 @@
      aito_client
      requests
      responses
+     v2
 

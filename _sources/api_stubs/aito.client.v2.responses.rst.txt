@@ -1,0 +1,52 @@
+aito.client.v2.responses
+========================
+
+.. automodule:: aito.client.v2.responses
+
+  
+  
+  .. rubric:: Module Attributes
+
+  .. autosummary::
+    :toctree: ./aito.client.v2.responses
+    
+      KIND_TO_RESPONSE_CLS
+  
+  
+
+  
+  
+  .. rubric:: Functions
+
+  .. autosummary::
+    :toctree: ./aito.client.v2.responses
+    
+      response_for_kind
+      unwrap_payload
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.client.v2.responses
+    
+      V2AggregateResponse
+      V2BatchResponse
+      V2EstimateResponse
+      V2EvaluationResponse
+      V2Hit
+      V2Response
+      V2RowsResponse
+      V2Warning
+  
+  
+
+  
+  
+  
+
+
+

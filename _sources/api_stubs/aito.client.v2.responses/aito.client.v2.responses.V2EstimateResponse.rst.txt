@@ -1,0 +1,33 @@
+aito.client.v2.responses.V2EstimateResponse
+===========================================
+
+.. currentmodule:: aito.client.v2.responses
+
+.. autoclass:: V2EstimateResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~V2EstimateResponse.data
+          ~V2EstimateResponse.engine
+          ~V2EstimateResponse.json
+          ~V2EstimateResponse.kind
+          ~V2EstimateResponse.meta
+          ~V2EstimateResponse.value
+          ~V2EstimateResponse.warnings
+          ~V2EstimateResponse.why
+  
+  

@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quickstart &mdash; aito-python-sdk 0.5.3 documentation</title>
+  <title>Quickstart &mdash; aito-python-sdk 0.6.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -161,7 +161,7 @@ you want to upload to a new table and don’t think you need to adjust the infer
 <p>You might want to change the <a class="reference external" href="https://aito.ai/docs/api/#schema-column-type">ColumnType</a>, e.g: The <code class="docutils literal notranslate"><span class="pre">id</span></code> column should be of type <code class="docutils literal notranslate"><span class="pre">String</span></code> instead of <code class="docutils literal notranslate"><span class="pre">Int</span></code>,
 or add an <a class="reference external" href="https://aito.ai/docs/api/#schema-analyzer">Analyzer</a> to a <code class="docutils literal notranslate"><span class="pre">Text</span></code> column. In that case, just make changes to the inferred schema JSON file.</p>
 <p>The example below use <a class="reference external" href="https://stedolan.github.io/jq/">jq</a> to change the <code class="docutils literal notranslate"><span class="pre">id</span></code> column type:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ jq &#39;.columns.id.type = &quot;String&quot;&#39; &lt; path/to/schemaFile.json &gt; path/to/updatedSchemaFile.json
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ jq '.columns.id.type = "String"' &lt; path/to/schemaFile.json &gt; path/to/updatedSchemaFile.json
 </pre></div>
 </div>
 </section>
@@ -223,8 +223,8 @@ or add an <a class="reference external" href="https://aito.ai/docs/api/#schema-a
 </pre></div>
 </div>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito search &#39;{&quot;from&quot;: &quot;products&quot;}&#39;
-$ aito predict &#39;{&quot;from&quot;: &quot;products&quot;, &quot;where&quot;: {&quot;name&quot;: {&quot;$match&quot;: &quot;rye bread&quot;}}, &quot;predict&quot;: &quot;tags&quot;}&#39;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ aito search '{"from": "products"}'
+$ aito predict '{"from": "products", "where": {"name": {"$match": "rye bread"}}, "predict": "tags.$feature"}'
 </pre></div>
 </div>
 </section>
@@ -235,7 +235,7 @@ $ aito predict &#39;{&quot;from&quot;: &quot;products&quot;, &quot;where&quot;: 
 <p>The example below shows how you can load a csv file into a DataFrame, please read the <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html">official pandas guide</a> for further instructions.
 You can download an example csv file <code class="docutils literal notranslate"><span class="pre">reddit_sample.csv</span></code> <a class="reference external" href="https://raw.githubusercontent.com/AitoDotAI/kickstart/master/reddit_sample.csv">here</a> and run the code below:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span>
-<span class="n">reddit_df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;reddit_sample.csv&quot;</span><span class="p">)</span>
+<span class="n">reddit_df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"reddit_sample.csv"</span><span class="p">)</span>
 </pre></div>
 </div>
 <section id="sdkquickstartinfertableschema">
@@ -248,73 +248,68 @@ You can download an example csv file <code class="docutils literal notranslate">
 </pre></div>
 </div>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{
-  &quot;columns&quot;: {
-    &quot;author&quot;: {
-      &quot;nullable&quot;: false,
-      &quot;type&quot;: &quot;String&quot;
+  "columns": {
+    "author": {
+      "nullable": false,
+      "type": "String"
     },
-    &quot;comment&quot;: {
-      &quot;analyzer&quot;: {
-        &quot;customKeyWords&quot;: [],
-        &quot;customStopWords&quot;: [],
-        &quot;language&quot;: &quot;english&quot;,
-        &quot;type&quot;: &quot;language&quot;,
-        &quot;useDefaultStopWords&quot;: false
+    "comment": {
+      "analyzer": {
+        "customKeyWords": [],
+        "customStopWords": [],
+        "language": "english",
+        "type": "language",
+        "useDefaultStopWords": false
       },
-      &quot;nullable&quot;: true,
-      &quot;type&quot;: &quot;Text&quot;
+      "nullable": true,
+      "type": "Text"
     },
-    &quot;created_utc&quot;: {
-      &quot;analyzer&quot;: {
-        &quot;delimiter&quot;: &quot;:&quot;,
-        &quot;trimWhitespace&quot;: true,
-        &quot;type&quot;: &quot;delimiter&quot;
+    "created_utc": {
+      "nullable": false,
+      "type": "String"
+    },
+    "date": {
+      "analyzer": {
+        "delimiter": "-",
+        "trimWhitespace": true,
+        "type": "delimiter"
       },
-      &quot;nullable&quot;: false,
-      &quot;type&quot;: &quot;Text&quot;
+      "nullable": false,
+      "type": "Text"
     },
-    &quot;date&quot;: {
-      &quot;analyzer&quot;: {
-        &quot;delimiter&quot;: &quot;-&quot;,
-        &quot;trimWhitespace&quot;: true,
-        &quot;type&quot;: &quot;delimiter&quot;
+    "downs": {
+      "nullable": false,
+      "type": "Int"
+    },
+    "label": {
+      "nullable": false,
+      "type": "Int"
+    },
+    "parent_comment": {
+      "analyzer": {
+        "customKeyWords": [],
+        "customStopWords": [],
+        "language": "english",
+        "type": "language",
+        "useDefaultStopWords": false
       },
-      &quot;nullable&quot;: false,
-      &quot;type&quot;: &quot;Text&quot;
+      "nullable": false,
+      "type": "Text"
     },
-    &quot;downs&quot;: {
-      &quot;nullable&quot;: false,
-      &quot;type&quot;: &quot;Int&quot;
+    "score": {
+      "nullable": false,
+      "type": "Int"
     },
-    &quot;label&quot;: {
-      &quot;nullable&quot;: false,
-      &quot;type&quot;: &quot;Int&quot;
+    "subreddit": {
+      "nullable": false,
+      "type": "String"
     },
-    &quot;parent_comment&quot;: {
-      &quot;analyzer&quot;: {
-        &quot;customKeyWords&quot;: [],
-        &quot;customStopWords&quot;: [],
-        &quot;language&quot;: &quot;english&quot;,
-        &quot;type&quot;: &quot;language&quot;,
-        &quot;useDefaultStopWords&quot;: false
-      },
-      &quot;nullable&quot;: false,
-      &quot;type&quot;: &quot;Text&quot;
-    },
-    &quot;score&quot;: {
-      &quot;nullable&quot;: false,
-      &quot;type&quot;: &quot;Int&quot;
-    },
-    &quot;subreddit&quot;: {
-      &quot;nullable&quot;: false,
-      &quot;type&quot;: &quot;String&quot;
-    },
-    &quot;ups&quot;: {
-      &quot;nullable&quot;: false,
-      &quot;type&quot;: &quot;Int&quot;
+    "ups": {
+      "nullable": false,
+      "type": "Int"
     }
   },
-  &quot;type&quot;: &quot;table&quot;
+  "type": "table"
 }
 </pre></div>
 </div>
@@ -327,11 +322,11 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoStringType</span><span class="p">,</span> <span class="n">AitoTokenNgramAnalyzerSchema</span><span class="p">,</span> <span class="n">AitoAliasAnalyzerSchema</span>
 
 <span class="c1"># Change the label type to String instead of Int</span>
-<span class="n">reddit_schema</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="n">AitoStringType</span><span class="p">()</span>
+<span class="n">reddit_schema</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="n">AitoStringType</span><span class="p">()</span>
 
 <span class="c1"># Change the analyzer of the `comments` column</span>
-<span class="n">reddit_schema</span><span class="p">[</span><span class="s1">&#39;comment&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">AitoTokenNgramAnalyzerSchema</span><span class="p">(</span>
-  <span class="n">source</span><span class="o">=</span><span class="n">AitoAliasAnalyzerSchema</span><span class="p">(</span><span class="s1">&#39;en&#39;</span><span class="p">),</span>
+<span class="n">reddit_schema</span><span class="p">[</span><span class="s1">'comment'</span><span class="p">]</span><span class="o">.</span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">AitoTokenNgramAnalyzerSchema</span><span class="p">(</span>
+  <span class="n">source</span><span class="o">=</span><span class="n">AitoAliasAnalyzerSchema</span><span class="p">(</span><span class="s1">'en'</span><span class="p">),</span>
   <span class="n">min_gram</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
   <span class="n">max_gram</span><span class="o">=</span><span class="mi">3</span>
 <span class="p">)</span>
@@ -348,7 +343,7 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_table</span>
 <span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">instance_url</span><span class="o">=</span><span class="n">YOUR_AITO_INSTANCE_URL</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">YOUR_AITO_INSTANCE_API_KEY</span><span class="p">)</span>
-<span class="n">create_table</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;reddit&#39;</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">reddit_schema</span><span class="p">)</span>
+<span class="n">create_table</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">'reddit'</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">reddit_schema</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -367,16 +362,16 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 <blockquote>
 <div><ul>
 <li><p>A list of entries in JSON format for <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-table-batch">Batch Upload</a>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">reddit_entries</span> <span class="o">=</span> <span class="n">converted_reddit_df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">reddit_entries</span> <span class="o">=</span> <span class="n">converted_reddit_df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">"records"</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
 <li><p>A gzipped NDJSON file for <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-data-table-file">File Upload</a> using the <a class="reference internal" href="api_stubs/aito.utils.data_frame_handler/aito.utils.data_frame_handler.DataFrameHandler.html#aito.utils.data_frame_handler.DataFrameHandler" title="aito.utils.data_frame_handler.DataFrameHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrameHandler</span></code></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data_frame_handler</span><span class="o">.</span><span class="n">df_to_format</span><span class="p">(</span>
   <span class="n">df</span><span class="o">=</span><span class="n">converted_reddit_df</span><span class="p">,</span>
-  <span class="n">out_format</span><span class="o">=</span><span class="s1">&#39;ndjson&#39;</span><span class="p">,</span>
-  <span class="n">write_output</span><span class="o">=</span><span class="s1">&#39;reddit_sample.ndjson.gz&#39;</span><span class="p">,</span>
-  <span class="n">convert_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;compression&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip&#39;</span><span class="p">}</span>
+  <span class="n">out_format</span><span class="o">=</span><span class="s1">'ndjson'</span><span class="p">,</span>
+  <span class="n">write_output</span><span class="o">=</span><span class="s1">'reddit_sample.ndjson.gz'</span><span class="p">,</span>
+  <span class="n">convert_options</span><span class="o">=</span><span class="p">{</span><span class="s1">'compression'</span><span class="p">:</span> <span class="s1">'gzip'</span><span class="p">}</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -391,7 +386,7 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 <div><ul>
 <li><p>Batch Upload:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_entries</span>
-<span class="n">upload_entries</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;reddit&#39;</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="n">reddit_entries</span><span class="p">)</span>
+<span class="n">upload_entries</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">'reddit'</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="n">reddit_entries</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -399,10 +394,10 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_file</span><span class="p">,</span> <span class="n">get_table_size</span>
 
-<span class="n">upload_file</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;reddit&#39;</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;reddit_sample.ndjson.gz&#39;</span><span class="p">))</span>
+<span class="n">upload_file</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">'reddit'</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s1">'reddit_sample.ndjson.gz'</span><span class="p">))</span>
 
 <span class="c1"># Check that the data has been uploaded</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">get_table_size</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="s1">&#39;reddit&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">get_table_size</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="s1">'reddit'</span><span class="p">))</span>
 </pre></div>
 </div>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>10000
@@ -415,12 +410,12 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">entries_generator</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
   <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
-    <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">idx</span><span class="p">}</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'id'</span><span class="p">:</span> <span class="n">idx</span><span class="p">}</span>
     <span class="k">yield</span> <span class="n">entry</span>
 
 <span class="n">upload_entries</span><span class="p">(</span>
   <span class="n">aito_client</span><span class="p">,</span>
-  <span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;table_name&quot;</span><span class="p">,</span>
+  <span class="n">table_name</span><span class="o">=</span><span class="s2">"table_name"</span><span class="p">,</span>
   <span class="n">entries</span><span class="o">=</span><span class="n">entries_generator</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
   <span class="n">batch_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
   <span class="n">optimize_on_finished</span><span class="o">=</span><span class="kc">False</span>
@@ -437,14 +432,14 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 <span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span><span class="p">,</span> <span class="n">predict</span>
 <span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">instance_url</span><span class="o">=</span><span class="n">INSTANCE_URL</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">INSTANCE_API_KEY</span><span class="p">)</span>
 <span class="n">search</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="p">{</span>
-  <span class="s2">&quot;from&quot;</span><span class="p">:</span> <span class="s2">&quot;products&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;where&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;$match&quot;</span><span class="p">:</span> <span class="s2">&quot;rye bread&quot;</span><span class="p">}}</span>
+  <span class="s2">"from"</span><span class="p">:</span> <span class="s2">"products"</span><span class="p">,</span>
+  <span class="s2">"where"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"$match"</span><span class="p">:</span> <span class="s2">"rye bread"</span><span class="p">}}</span>
 <span class="p">})</span>
 
 <span class="n">predict</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="p">{</span>
-  <span class="s2">&quot;from&quot;</span><span class="p">:</span> <span class="s2">&quot;products&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;where&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;rye bread&quot;</span><span class="p">},</span>
-  <span class="s2">&quot;predict&quot;</span><span class="p">:</span> <span class="s2">&quot;tags&quot;</span>
+  <span class="s2">"from"</span><span class="p">:</span> <span class="s2">"products"</span><span class="p">,</span>
+  <span class="s2">"where"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"rye bread"</span><span class="p">},</span>
+  <span class="s2">"predict"</span><span class="p">:</span> <span class="s2">"tags.$feature"</span>
 <span class="p">})</span>
 </pre></div>
 </div>

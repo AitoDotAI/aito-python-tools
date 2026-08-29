@@ -6,20 +6,20 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.schema.AitoTableSchema &mdash; aito-python-sdk 0.5.3 documentation</title>
+  <title>aito.schema.AitoTableSchema &mdash; aito-python-sdk 0.6.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="aito.schema.AitoTextArrayType" href="aito.schema.AitoTextArrayType.html" />
+    <link rel="next" title="aito.schema.AitoTextType" href="aito.schema.AitoTextType.html" />
     <link rel="prev" title="aito.schema.AitoStringType" href="aito.schema.AitoStringType.html" /> 
 </head>
 
@@ -72,6 +72,7 @@
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoDelimiterAnalyzerSchema.html">aito.schema.AitoDelimiterAnalyzerSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoIntArrayType.html">aito.schema.AitoIntArrayType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoIntType.html">aito.schema.AitoIntType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoJsonType.html">aito.schema.AitoJsonType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoLanguageAnalyzerSchema.html">aito.schema.AitoLanguageAnalyzerSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoSchema.html">aito.schema.AitoSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoStringArrayType.html">aito.schema.AitoStringArrayType</a></li>
@@ -96,7 +97,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTextArrayType.html">aito.schema.AitoTextArrayType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTextType.html">aito.schema.AitoTextType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.AitoTokenNgramAnalyzerSchema.html">aito.schema.AitoTokenNgramAnalyzerSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema.DataSeriesProperties.html">aito.schema.DataSeriesProperties</a></li>
@@ -148,64 +148,64 @@
 <p>Can be thought of as a dict-like container for <a class="reference internal" href="aito.schema.AitoColumnTypeSchema.html#aito.schema.AitoColumnTypeSchema" title="aito.schema.AitoColumnTypeSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoColumnTypeSchema</span></code></a> objects</p>
 <p>Infer AitoTableSchema from a Pandas DataFrame</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Neil&#39;</span><span class="p">,</span> <span class="s1">&#39;Buzz&#39;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">'id'</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="s1">'name'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Neil'</span><span class="p">,</span> <span class="s1">'Buzz'</span><span class="p">]})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">table_schema</span> <span class="o">=</span> <span class="n">AitoTableSchema</span><span class="o">.</span><span class="n">infer_from_pandas_data_frame</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">table_schema</span><span class="o">.</span><span class="n">to_json_string</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="go">{</span>
-<span class="go">  &quot;columns&quot;: {</span>
-<span class="go">    &quot;id&quot;: {</span>
-<span class="go">      &quot;nullable&quot;: false,</span>
-<span class="go">      &quot;type&quot;: &quot;Int&quot;</span>
+<span class="go">  "columns": {</span>
+<span class="go">    "id": {</span>
+<span class="go">      "nullable": false,</span>
+<span class="go">      "type": "Int"</span>
 <span class="go">    },</span>
-<span class="go">    &quot;name&quot;: {</span>
-<span class="go">      &quot;nullable&quot;: false,</span>
-<span class="go">      &quot;type&quot;: &quot;String&quot;</span>
+<span class="go">    "name": {</span>
+<span class="go">      "nullable": false,</span>
+<span class="go">      "type": "String"</span>
 <span class="go">    }</span>
 <span class="go">  },</span>
-<span class="go">  &quot;type&quot;: &quot;table&quot;</span>
+<span class="go">  "type": "table"</span>
 <span class="go">}</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">table_schema</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
-<span class="go">{&quot;type&quot;: &quot;String&quot;, &quot;nullable&quot;: false}</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">table_schema</span><span class="p">[</span><span class="s1">'name'</span><span class="p">])</span>
+<span class="go">{"type": "String", "nullable": false}</span>
 </pre></div>
 </div>
 <p>change the property of a column</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">table_schema</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">nullable</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">table_schema</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
-<span class="go">{&quot;type&quot;: &quot;String&quot;, &quot;nullable&quot;: true}</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">table_schema</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="o">.</span><span class="n">nullable</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">table_schema</span><span class="p">[</span><span class="s1">'name'</span><span class="p">])</span>
+<span class="go">{"type": "String", "nullable": true}</span>
 </pre></div>
 </div>
 <p>add a column to the table schema</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">table_schema</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">AitoColumnTypeSchema</span><span class="p">(</span><span class="n">AitoTextType</span><span class="p">(),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">table_schema</span><span class="p">[</span><span class="s1">'description'</span><span class="p">]</span> <span class="o">=</span> <span class="n">AitoColumnTypeSchema</span><span class="p">(</span><span class="n">AitoTextType</span><span class="p">(),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">table_schema</span><span class="o">.</span><span class="n">to_json_string</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="go">{</span>
-<span class="go">  &quot;columns&quot;: {</span>
-<span class="go">    &quot;description&quot;: {</span>
-<span class="go">      &quot;nullable&quot;: true,</span>
-<span class="go">      &quot;type&quot;: &quot;Text&quot;</span>
+<span class="go">  "columns": {</span>
+<span class="go">    "description": {</span>
+<span class="go">      "nullable": true,</span>
+<span class="go">      "type": "Text"</span>
 <span class="go">    },</span>
-<span class="go">    &quot;id&quot;: {</span>
-<span class="go">      &quot;nullable&quot;: false,</span>
-<span class="go">      &quot;type&quot;: &quot;Int&quot;</span>
+<span class="go">    "id": {</span>
+<span class="go">      "nullable": false,</span>
+<span class="go">      "type": "Int"</span>
 <span class="go">    },</span>
-<span class="go">    &quot;name&quot;: {</span>
-<span class="go">      &quot;nullable&quot;: true,</span>
-<span class="go">      &quot;type&quot;: &quot;String&quot;</span>
+<span class="go">    "name": {</span>
+<span class="go">      "nullable": true,</span>
+<span class="go">      "type": "String"</span>
 <span class="go">    }</span>
 <span class="go">  },</span>
-<span class="go">  &quot;type&quot;: &quot;table&quot;</span>
+<span class="go">  "type": "table"</span>
 <span class="go">}</span>
 </pre></div>
 </div>
 <p>delete a column in the table schema</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">table_schema</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">table_schema</span><span class="p">[</span><span class="s1">'description'</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">table_schema</span><span class="o">.</span><span class="n">columns</span>
-<span class="go">[&#39;id&#39;, &#39;name&#39;]</span>
+<span class="go">['id', 'name']</span>
 </pre></div>
 </div>
 <p>check if a column exist in the table schema</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;id&#39;</span> <span class="ow">in</span> <span class="n">table_schema</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="s1">'id'</span> <span class="ow">in</span> <span class="n">table_schema</span>
 <span class="go">True</span>
 </pre></div>
 </div>
@@ -474,7 +474,7 @@ Returns the object if validation success, else raise <code class="xref py py-cla
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="aito.schema.AitoStringType.html" class="btn btn-neutral float-left" title="aito.schema.AitoStringType" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="aito.schema.AitoTextArrayType.html" class="btn btn-neutral float-right" title="aito.schema.AitoTextArrayType" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="aito.schema.AitoTextType.html" class="btn btn-neutral float-right" title="aito.schema.AitoTextType" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

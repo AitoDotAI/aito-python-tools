@@ -1,0 +1,33 @@
+aito.client.v2
+==============
+
+.. automodule:: aito.client.v2
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+  
+     client
+     errors
+     responses
+

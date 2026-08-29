@@ -1,0 +1,32 @@
+aito.client.v2.responses.V2BatchResponse
+========================================
+
+.. currentmodule:: aito.client.v2.responses
+
+.. autoclass:: V2BatchResponse
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~V2BatchResponse.data
+          ~V2BatchResponse.engine
+          ~V2BatchResponse.json
+          ~V2BatchResponse.kind
+          ~V2BatchResponse.meta
+          ~V2BatchResponse.responses
+          ~V2BatchResponse.warnings
+  
+  

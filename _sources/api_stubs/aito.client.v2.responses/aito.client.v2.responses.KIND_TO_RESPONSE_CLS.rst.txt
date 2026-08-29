@@ -1,0 +1,6 @@
+aito.client.v2.responses.KIND\_TO\_RESPONSE\_CLS
+================================================
+
+.. currentmodule:: aito.client.v2.responses
+
+.. autodata:: KIND_TO_RESPONSE_CLS

@@ -5,6 +5,7 @@ The Aito SDK consists of:
 
   - :py:mod:`~aito.schema`: Data structure for the Aito Database Schema
   - :py:mod:`~aito.client`: A versatile client to make requests to an Aito Database Instance
+  - :py:mod:`~aito.client.v2`: A client for the Aito v2 API
   - :py:mod:`~aito.client_request`: Request objects used in AitoClient request so that you don't have to worry about the Aito API endpoint
   - :py:mod:`~aito.client_response`: Enriched response objects returned after executing a request with the AitoClient
   - :py:mod:`~aito.api`: Different useful functions that uses an AitoClient object to interact with an Aito Database Instance
@@ -36,6 +37,84 @@ The :py:class:`~aito.client.AitoClient` offers different functions to send a :py
   - Make a request asynchronously using `AIOHTTP ClientSession`_: :py:func:`~aito.client.AitoClient.async_request`
   - Bounded asynchronous request with `asyncio semaphore`_: :py:func:`~aito.client.AitoClient.bounded_async_request`
   - Make multiple requests asynchronously: :py:func:`~aito.client.AitoClient.batch_requests`
+
+.. _sdkAitoClientV2:
+
+AitoClientV2
+------------
+
+The :py:class:`~aito.client.v2.client.AitoClientV2` talks to the **v2** API. It is a separate
+class from the v1 :py:class:`~aito.client.AitoClient` rather than a flag on it, because the two
+APIs return genuinely different response shapes — the reasoning is written up in
+``docs/v2-client-design.md``.
+
+.. code:: python
+
+    from aito.client.v2 import AitoClientV2
+
+    client = AitoClientV2(instance_url, api_key)
+
+    prediction = client.predict(
+        from_table='invoices', where={'vendor': 'Elenia Oy'}, predict='gl_code')
+    print(prediction.first.value, prediction.first.probability)
+
+Querying:
+
+  - Predict a field's value: :py:func:`~aito.client.v2.client.AitoClientV2.predict`
+  - Retrieve rows: :py:func:`~aito.client.v2.client.AitoClientV2.search`
+  - Rank values by a goal: :py:func:`~aito.client.v2.client.AitoClientV2.recommend`
+  - Find statistical relationships: :py:func:`~aito.client.v2.client.AitoClientV2.relate`
+  - Estimate a numeric field: :py:func:`~aito.client.v2.client.AitoClientV2.estimate`
+  - Aggregate: :py:func:`~aito.client.v2.client.AitoClientV2.aggregate`
+  - Evaluate prediction quality: :py:func:`~aito.client.v2.client.AitoClientV2.evaluate`
+  - Anything else, via the universal ``_query`` endpoint:
+    :py:func:`~aito.client.v2.client.AitoClientV2.query`
+
+.. note::
+
+  The named methods post to v2's *enforced* named endpoints, which validate that the body
+  matches the operation. A mismatch is a ``400`` naming the endpoint that wants that body,
+  rather than a query that silently does something else.
+
+Manipulating the database:
+
+.. note::
+
+  These operations require the client to be setup with the READ-WRITE API key
+
+  - Create a collection: :py:func:`~aito.client.v2.client.AitoClientV2.create_collection`
+  - Delete a collection: :py:func:`~aito.client.v2.client.AitoClientV2.delete_collection`
+  - Upload batches of entries: :py:func:`~aito.client.v2.client.AitoClientV2.upload_entries`
+  - Rebuild the index after a bulk load: :py:func:`~aito.client.v2.client.AitoClientV2.optimize`
+  - Branch an environment: :py:func:`~aito.client.v2.client.AitoClientV2.branch_env`
+
+Errors carry a machine-readable code, so you branch on the code rather than on the text of the
+message:
+
+.. code:: python
+
+    from aito.client.v2 import AitoV2Error
+
+    try:
+        client.delete_collection('invoices')
+    except AitoV2Error as err:
+        if not err.is_not_found:   # a 404 here is the ordinary "drop if exists" case
+            raise
+
+Responses carry the engine's non-fatal warnings, which are the only in-band signal that the
+server answered a slightly different query than the one you sent:
+
+.. code:: python
+
+    res = client.query({'from': 'invoices', 'where': {'no_such_column': 'x'}})
+    for warning in res.warnings:
+        print(warning.code, warning.message)
+
+    # or make it a hard failure:
+    strict = AitoClientV2(instance_url, api_key, on_warning='raise')
+
+A complete runnable example — create a collection, load it, predict, explain, evaluate, drop it
+— is in ``examples/v2_quickstart.py``.
 
 .. _sdkAPI:
 
