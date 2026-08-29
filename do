@@ -30,10 +30,20 @@ case "$COMMAND" in
       exit 1
     fi
 
-    # Activate virtualenv if present
+    # Activate the virtualenv only if it actually works. A venv whose
+    # interpreter has been garbage-collected still has an activate script --
+    # a real hazard on Nix, where venv/bin/python3 is a symlink into
+    # /nix/store -- so testing for the file alone activates a broken
+    # environment and the failure surfaces several steps later as a missing
+    # module rather than here.
     if [[ -f venv/bin/activate ]]; then
-      echo "Activating virtual environment..."
-      source venv/bin/activate
+      if venv/bin/python --version >/dev/null 2>&1; then
+        echo "Activating virtual environment..."
+        source venv/bin/activate
+      else
+        echo "Warning: venv/ exists but its interpreter does not run; using the ambient python."
+        echo "         Recreate it with: rm -rf venv && python3 -m venv venv"
+      fi
     fi
 
     # Check sphinx-build is available
@@ -88,10 +98,20 @@ case "$COMMAND" in
       exit 1
     fi
 
-    # Activate virtualenv if present
+    # Activate the virtualenv only if it actually works. A venv whose
+    # interpreter has been garbage-collected still has an activate script --
+    # a real hazard on Nix, where venv/bin/python3 is a symlink into
+    # /nix/store -- so testing for the file alone activates a broken
+    # environment and the failure surfaces several steps later as a missing
+    # module rather than here.
     if [[ -f venv/bin/activate ]]; then
-      echo "Activating virtual environment..."
-      source venv/bin/activate
+      if venv/bin/python --version >/dev/null 2>&1; then
+        echo "Activating virtual environment..."
+        source venv/bin/activate
+      else
+        echo "Warning: venv/ exists but its interpreter does not run; using the ambient python."
+        echo "         Recreate it with: rm -rf venv && python3 -m venv venv"
+      fi
     fi
 
     # Check required tools
@@ -158,13 +178,18 @@ case "$COMMAND" in
     python3 setup.py sdist bdist_wheel
     twine check dist/*
 
+    # Deploy docs BEFORE publishing. deploy-docs builds with -W, so any doc
+    # problem is a hard failure, and this step used to run *after* the upload:
+    # a failure there left a version live on PyPI with no matching docs and no
+    # git tag, and PyPI will not accept that version number a second time.
+    # Docs are idempotent and re-deployable; the upload is permanent, so the
+    # irreversible step goes last.
+    echo "Deploying documentation..."
+    ./do deploy-docs
+
     # Upload to PyPI
     echo "Uploading to PyPI..."
     twine upload dist/*
-
-    # Deploy docs
-    echo "Deploying documentation..."
-    ./do deploy-docs
 
     # Tag release
     echo "Creating git tag..."
