@@ -15,6 +15,25 @@ to `Aito <https://aito.ai/>`_ quicker and more efficiently.
 The SDK also includes the `Aito Command Line Interface (CLI) <https://aito-python-sdk.readthedocs.io/en/latest/cli.html>`_ that enables you to interact with Aito
 using commands in your command-line shell, e.g: infer a table schema from a file or upload a file to Aito.
 
+The Aito v2 API
+---------------
+
+``AitoClient`` speaks the v1 API. For the v2 API, use ``AitoClientV2``:
+
+  .. code-block:: python
+
+    from aito.client.v2 import AitoClientV2
+
+    client = AitoClientV2(instance_url, api_key)
+    prediction = client.predict(
+        from_table='invoices', where={'vendor': 'Elenia Oy'}, predict='gl_code')
+    print(prediction.first.value, prediction.first.probability)
+
+v2 is a separate client class rather than a flag on the v1 one, because the two APIs return
+genuinely different response shapes. The reasoning is written up in ``docs/v2-client-design.md``,
+and ``examples/v2_quickstart.py`` is a runnable end-to-end example that creates a collection,
+loads it, predicts, explains, evaluates and drops it again.
+
 
 Support / Feedback
 ------------------
