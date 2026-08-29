@@ -12,12 +12,21 @@ channel is real.
 
 import os
 import unittest
+from uuid import uuid4
 
 from aito.client.v2 import AitoClientV2, AitoV2Error, V2EstimateResponse
 from tests.cases import BaseTestCase
 
-#: the collection this suite creates and drops
-TEST_COLLECTION = 'aito_python_sdk_v2_test'
+#: The collection this suite creates and drops, named uniquely PER RUN.
+#:
+#: It must not be a fixed name. CI runs `run_sdk_and_cli_tests_linux`,
+#: `_win` and `_built_package` concurrently, and they share one Aito instance
+#: — so with a fixed name, whichever job finishes first drops the collection
+#: out from under the two still querying it, and they fail with a 404 that
+#: looks like a client bug. (That is exactly what happened; see the commit that
+#: introduced this comment.) A unique name per process makes the three runs
+#: independent.
+TEST_COLLECTION = f'aito_python_sdk_v2_test_{uuid4().hex[:10]}'
 
 VENDORS = [
     ('Elenia Oy', 'electricity network transfer invoice', '6110'),
@@ -55,12 +64,9 @@ class TestAitoClientV2Live(BaseTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.client = AitoClientV2(_env('AITO_INSTANCE_URL'), _env('AITO_API_KEY'))
-        # Drop a collection left behind by an interrupted run, then recreate.
-        try:
-            cls.client.delete_collection(TEST_COLLECTION)
-        except AitoV2Error as err:
-            if not err.is_not_found:
-                raise
+        # No drop-first: the name is unique to this process, so there is nothing
+        # to inherit — and sweeping leftovers by prefix would reintroduce the
+        # cross-job race the unique name exists to remove.
         cls.client.create_collection(TEST_COLLECTION, {
             'vendor': {'type': 'String'},
             'description': {'type': 'Text', 'analyzer': 'english'},
@@ -99,11 +105,6 @@ class TestAitoClientV2Live(BaseTestCase):
     def test_delete_entries_removes_only_the_selected_rows(self):
         # Runs on its own collection so it cannot disturb the shared fixture.
         scratch = f'{TEST_COLLECTION}_delete'
-        try:
-            self.client.delete_collection(scratch)
-        except AitoV2Error as err:
-            if not err.is_not_found:
-                raise
         self.client.create_collection(scratch, {'a': {'type': 'String'}})
         try:
             self.client.upload_entries(scratch, [{'a': 'keep'}, {'a': 'drop'}, {'a': 'drop'}])
