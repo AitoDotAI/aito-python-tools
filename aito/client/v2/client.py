@@ -92,8 +92,13 @@ class AitoClientV2:
         # A pooled session keeps the TCP+TLS connection alive across calls. A
         # fresh connection per request pays the handshake every time, which
         # dominates the per-call wall-clock against a shared instance.
+        #
+        # The headers are NOT pinned onto the session here. `api_key` is a
+        # plain attribute and the v1 client documents reassigning it to swap
+        # between the read-only and read-write keys; baking the key into the
+        # session at construction would leave `client.headers` reporting the
+        # new key while every request still sent the old one.
         self._session = requestslib.Session()
-        self._session.headers.update(self.headers)
 
         if check_credentials:
             self.get_schema()
@@ -162,6 +167,7 @@ class AitoClientV2:
         try:
             resp = self._session.request(
                 method=method, url=url, json=query, params=params,
+                headers=self.headers,
                 timeout=self.timeout if timeout is None else timeout,
             )
         except requestslib.RequestException as e:
@@ -310,24 +316,47 @@ class AitoClientV2:
         """
         return self.request('POST', f'/data/{name}/optimize', {})
 
-    def delete_entries(self, query: Dict) -> Dict:
-        """delete rows, via ``POST /data/_delete``
+    def delete_entries(self, from_table: str, where: Dict) -> Dict:
+        """delete the rows a filter selects
 
-        :param query: the delete specification, e.g. ``{'from': 'invoices',
-            'where': {'gl_code': '6110'}}``
-        :type query: Dict
+        :param from_table: the collection to delete from
+        :type from_table: str
+        :param where: which rows to delete. Must select something: an empty
+            filter matches every row, so it is refused rather than treated as
+            "delete everything"
+        :type where: Dict
+        :raises ValueError: ``where`` is empty
         :rtype: Dict
+
+        >>> client.delete_entries('invoices', {'gl_code': '6110'}) # doctest: +SKIP
         """
-        return self.request('POST', '/data/_delete', query)
+        if not where:
+            raise ValueError(
+                'delete_entries requires a non-empty `where` — an empty filter matches '
+                'every row. To clear a whole collection, delete it with '
+                'delete_collection() and create it again.'
+            )
+        return self.request('POST', '/data/_delete', {'from': from_table, 'where': where})
 
-    def modify(self, query: Union[Dict, List]) -> Dict:
-        """modify rows, via ``POST /data/_modify``
+    def modify(self, operations: Union[Dict, List[Dict]]) -> Dict:
+        """apply table maintenance operations atomically
 
-        :param query: the modify specification
-        :type query: Union[Dict, List]
+        Despite the endpoint's name this does **not** modify rows — use
+        :func:`upload_entries` and :func:`delete_entries` for that. ``_modify``
+        applies table-level operations (``optimize``, ``repair``, ``migrate``,
+        ``copy``, ``warm``) as one transaction, which is what makes it worth
+        having over calling :func:`optimize` in a loop: several tables move
+        together, all or nothing.
+
+        :param operations: one operation, or a list of them. A list is sent as
+            ``{'operations': [...]}``, the shape the endpoint expects
+        :type operations: Union[Dict, List[Dict]]
         :rtype: Dict
+
+        >>> client.modify([{'optimize': 'invoices'}, {'optimize': 'vendors'}]) # doctest: +SKIP
         """
-        return self.request('POST', '/data/_modify', query)
+        body = {'operations': operations} if isinstance(operations, list) else operations
+        return self.request('POST', '/data/_modify', body)
 
     # --- environments --------------------------------------------------
 
@@ -594,10 +623,16 @@ class AitoClientV2:
     def batch(self, queries: List[Dict], timeout: Optional[float] = None) -> V2BatchResponse:
         """run several queries in one request
 
+        All or nothing: a batch is not a way to collect per-query failures. One
+        bad element fails the whole request — a query naming a missing table
+        makes the call answer ``404 not_found``, with no partial results — so
+        this raises rather than returning a batch with an error in it.
+
         :param queries: the query bodies
         :type queries: List[Dict]
         :param timeout: override the client's timeout for this call
         :type timeout: Optional[float]
+        :raises AitoV2Error: any one of the queries failed
         :rtype: V2BatchResponse
         """
         return self._respond(V2BatchResponse, 'POST', '/_batch', queries, timeout=timeout)

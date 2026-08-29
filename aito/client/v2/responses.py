@@ -477,6 +477,12 @@ class V2BatchResponse(V2Response):
 
     Each element is itself a full typed response, so a caller dispatches per
     element with :func:`response_for_kind`.
+
+    In practice the engine returns a **bare JSON array** here, not the
+    ``{"kind": "batch", "data": [...]}`` envelope the response-format spec
+    documents. Both are accepted: the bare array is what actually arrives
+    today, and the envelope is what the spec promises, so the class keeps
+    working if the engine is brought in line. Filed against the engine.
     """
 
     kind = 'batch'

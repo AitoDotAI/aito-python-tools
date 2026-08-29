@@ -96,6 +96,25 @@ class TestAitoClientV2Live(BaseTestCase):
         # `analyzer` used to be accepted and then dropped from the read-back.
         self.assertEqual(columns['description'].get('analyzer'), 'english')
 
+    def test_delete_entries_removes_only_the_selected_rows(self):
+        # Runs on its own collection so it cannot disturb the shared fixture.
+        scratch = f'{TEST_COLLECTION}_delete'
+        try:
+            self.client.delete_collection(scratch)
+        except AitoV2Error as err:
+            if not err.is_not_found:
+                raise
+        self.client.create_collection(scratch, {'a': {'type': 'String'}})
+        try:
+            self.client.upload_entries(scratch, [{'a': 'keep'}, {'a': 'drop'}, {'a': 'drop'}])
+            self.assertEqual(self.client.search(from_table=scratch, limit=0).total, 3)
+            self.client.delete_entries(scratch, {'a': 'drop'})
+            self.assertEqual(self.client.search(from_table=scratch, limit=0).total, 1)
+            # `_modify` is table maintenance, not row modification.
+            self.client.modify([{'optimize': scratch}])
+        finally:
+            self.client.delete_collection(scratch)
+
     def test_missing_collection_is_a_typed_not_found(self):
         with self.assertRaises(AitoV2Error) as ctx:
             self.client.get_schema('no_such_collection_here')
@@ -177,6 +196,26 @@ class TestAitoClientV2Live(BaseTestCase):
              'predict': 'gl_code', 'select': ['$p', '$value'], 'limit': 1},
         ])
         self.assertEqual(len(res), 2)
+        # The engine answers a bare array here, not the documented
+        # {"kind": "batch", "data": [...]} envelope.
+        self.assertIsInstance(res.json, list)
+        self.assertEqual(res.responses[1].first.value, '6110')
+
+    def test_one_bad_query_fails_the_whole_batch(self):
+        # A batch is not a way to collect per-query failures.
+        with self.assertRaises(AitoV2Error) as ctx:
+            self.client.batch([
+                {'from': TEST_COLLECTION, 'limit': 1},
+                {'from': 'no_such_collection_here', 'limit': 1},
+            ])
+        self.assertEqual(ctx.exception.code, 'not_found')
+
+    def test_reassigning_the_api_key_takes_effect(self):
+        client = AitoClientV2(_env('AITO_INSTANCE_URL'), 'a-wrong-key', check_credentials=False)
+        with self.assertRaises(AitoV2Error):
+            client.get_schema()
+        client.api_key = _env('AITO_API_KEY')
+        self.assertIn('schema', client.get_schema())
 
     # --- the sharp edges the client exists to smooth --------------------
 

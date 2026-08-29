@@ -170,7 +170,17 @@ class TestEvaluationResponse(BaseTestCase):
 
 
 class TestBatchResponse(BaseTestCase):
-    def test_dispatches_each_sub_result_to_its_own_class(self):
+    def test_reads_the_bare_array_the_engine_actually_returns(self):
+        # POST /api/v2/_batch answers a bare JSON array, NOT the
+        # {"kind": "batch", "data": [...]} envelope the spec documents.
+        # This is the shape a caller meets today.
+        resp = V2BatchResponse([PREDICT_BODY, PREDICT_BODY])
+        self.assertEqual(len(resp), 2)
+        self.assertTrue(all(isinstance(r, V2RowsResponse) for r in resp.responses))
+        self.assertEqual(resp.responses[0].first.value, '6110')
+
+    def test_reads_the_enveloped_form_the_spec_documents(self):
+        # Kept so the class survives the engine being brought in line.
         resp = V2BatchResponse({'kind': 'batch', 'data': [PREDICT_BODY, ESTIMATE_V2_BODY]})
         self.assertEqual(len(resp), 2)
         rows, estimate = resp.responses

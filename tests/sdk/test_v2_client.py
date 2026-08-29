@@ -34,9 +34,9 @@ class RecordingSession:
         self.headers = {}
         self._responses = list(responses or [])
 
-    def request(self, method, url, json=None, params=None, timeout=None):
+    def request(self, method, url, json=None, params=None, headers=None, timeout=None):
         self.calls.append({'method': method, 'url': url, 'json': json,
-                           'params': params, 'timeout': timeout})
+                           'params': params, 'headers': headers, 'timeout': timeout})
         if self._responses:
             return self._responses.pop(0)
         return FakeResponse(200, {'offset': 0, 'total': 0, 'hits': []})
@@ -183,6 +183,34 @@ class TestRequestBodies(BaseTestCase):
         self.assertEqual(client._session.calls[0]['json'], [{'i': 0}, {'i': 1}])
         self.assertTrue(client._session.calls[0]['url'].endswith('/api/v2/data/t/batch'))
 
+    def test_delete_entries_builds_the_body(self):
+        client = make_client([FakeResponse(200, {'total': 2})])
+        client.delete_entries('invoices', {'gl_code': '6110'})
+        call = client._session.last
+        self.assertTrue(call['url'].endswith('/api/v2/data/_delete'))
+        self.assertEqual(call['json'], {'from': 'invoices', 'where': {'gl_code': '6110'}})
+
+    def test_delete_entries_refuses_an_empty_where_without_a_round_trip(self):
+        # An empty filter matches every row. The server refuses it too, but
+        # failing here costs nothing and says what to do instead.
+        client = make_client()
+        for empty in ({}, None):
+            with self.assertRaises(ValueError) as ctx:
+                client.delete_entries('invoices', empty)
+            self.assertIn('non-empty `where`', str(ctx.exception))
+        self.assertEqual(client._session.calls, [])
+
+    def test_modify_wraps_a_list_of_operations(self):
+        client = make_client([FakeResponse(200, {})])
+        client.modify([{'optimize': 'a'}, {'optimize': 'b'}])
+        self.assertEqual(client._session.last['json'],
+                         {'operations': [{'optimize': 'a'}, {'optimize': 'b'}]})
+
+    def test_modify_passes_a_single_operation_through(self):
+        client = make_client([FakeResponse(200, {})])
+        client.modify({'optimize': 'a'})
+        self.assertEqual(client._session.last['json'], {'optimize': 'a'})
+
     def test_create_collection_sends_the_collection_type(self):
         client = make_client([FakeResponse(200, {'status': 'created'})])
         client.create_collection('invoices', {'vendor': {'type': 'String'}})
@@ -284,6 +312,22 @@ class TestHeadersAndRepr(BaseTestCase):
         client = make_client()
         self.assertEqual(client.headers,
                          {'Content-Type': 'application/json', 'x-api-key': 'a-key'})
+
+    def test_every_request_carries_the_key(self):
+        client = make_client()
+        client.query({'from': 't'})
+        self.assertEqual(client._session.last['headers']['x-api-key'], 'a-key')
+
+    def test_reassigning_the_api_key_takes_effect(self):
+        # The v1 client documents swapping between the read-only and read-write
+        # keys this way. Pinning the header onto the session at construction
+        # would leave `client.headers` reporting the new key while the wire
+        # still carried the old one — divergence that is worse than not
+        # supporting the pattern at all.
+        client = make_client()
+        client.api_key = 'a-second-key'
+        client.query({'from': 't'})
+        self.assertEqual(client._session.last['headers']['x-api-key'], 'a-second-key')
 
     def test_repr_does_not_leak_the_key(self):
         self.assertNotIn('a-key', repr(make_client()))
