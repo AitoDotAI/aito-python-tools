@@ -1,1 +1,10 @@
 parameterized==0.7.4
+
+# Not a test library. `run_dependencies_security_check` scans the venv built
+# from build.txt + test.txt, and the setuptools that `python -m venv` seeds
+# is old enough to carry CVE-2026-59890 (an information disclosure via
+# Unicode normalisation, affecting everything below 83.0.0). It cannot go in
+# build.txt, which setup.py reads verbatim as install_requires — no consumer
+# of `aitoai` should inherit a setuptools floor. Pinning it here raises the
+# tool in the environment we actually build and test in.
+setuptools>=83.0.0

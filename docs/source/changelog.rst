@@ -1,6 +1,64 @@
 Changelog
 =========
 
+0.6.0
+-----
+
+This version adds a client for the Aito **v2** API.
+
+SDK
+^^^
+
+Aito v2 client
+""""""""""""""
+
+- Added :py:class:`~aito.client.v2.client.AitoClientV2`, a client for the v2 API, in the new
+  :py:mod:`aito.client.v2` package. The v1 :py:class:`~aito.client.AitoClient` is unchanged;
+  v2 is a separate class rather than a flag, because the response shapes genuinely differ.
+  The reasoning is written up in ``docs/v2-client-design.md``
+- Query methods address the **enforced named endpoints** (``_predict``, ``_search``,
+  ``_recommend``, ``_relate``), so posting a body whose mode does not match the operation is a
+  ``400`` naming the right endpoint rather than a silently different query.
+  :py:func:`~aito.client.v2.client.AitoClientV2.query` posts to the universal ``_query``
+- Added typed responses: :py:class:`~aito.client.v2.responses.V2RowsResponse`,
+  :py:class:`~aito.client.v2.responses.V2EstimateResponse`,
+  :py:class:`~aito.client.v2.responses.V2AggregateResponse`,
+  :py:class:`~aito.client.v2.responses.V2EvaluationResponse` and
+  :py:class:`~aito.client.v2.responses.V2BatchResponse`
+- Predicted values are read as ``$value``, v2's own name for them. They are deliberately not
+  aliased back to v1's ``feature``
+- Schema, data and environment operations: create and delete collections, batch upload,
+  ``optimize``, ``_modify``, ``_delete``, and branching or deleting an environment
+
+Errors and warnings
+"""""""""""""""""""
+
+- :py:class:`~aito.client.v2.errors.AitoV2Error` exposes v2's machine-readable error
+  ``code`` (``not_found``, ``request.invalid``, ``query.invalid``, ...) alongside the HTTP
+  status, so a caller branches on the code instead of matching text in the message.
+  :py:attr:`~aito.client.v2.errors.AitoV2Error.is_not_found` covers the drop-if-exists idiom
+- The v2 ``warnings`` channel is surfaced on every response as
+  :py:attr:`~aito.client.v2.responses.V2Response.warnings`. The client's ``on_warning``
+  argument (``'ignore'``, ``'log'``, ``'raise'``) decides what happens to them — ``'raise'``
+  turns a query the server had to broaden into a hard failure
+- Environment names that the engine reserves (``_``, ``env.``, ``release.`` prefixes) are
+  rejected locally with a message naming the fix
+
+Known API behaviour handled by the client
+"""""""""""""""""""""""""""""""""""""""""
+
+- ``_estimate``, ``_aggregate`` and ``_evaluate`` return the ``{kind, data}`` envelope for a
+  v2 collection but the flat v1 shape for a legacy table served by the compatibility shim.
+  The response classes read both, so ``.value`` and ``.accuracy`` work either way
+- ``relate`` takes a list of field names on v2 where v1 took a bare string. A single name
+  given as a string is wrapped for you
+
+Examples
+""""""""
+
+- Added ``examples/v2_quickstart.py``, a runnable end-to-end script that creates a
+  collection, loads it, predicts, explains, evaluates and drops it again
+
 0.5.4
 -----
 

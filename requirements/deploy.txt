@@ -1,6 +1,6 @@
 twine==6.1.0
 requests==2.32.3
-setuptools==78.1.0
+setuptools==84.0.0
 wheel==0.45.1
 
 ## On top of these, you must install sphinx
