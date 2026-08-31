@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.schema &mdash; aito-python-sdk 0.6.1 documentation</title>
+  <title>aito.schema &mdash; aito-python-sdk 0.6.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2bd037f0"></script>
+      <script src="../_static/documentation_options.js?v=1c28bd9a"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -121,6 +121,13 @@
   <section id="module-aito.schema">
 <span id="aito-schema"></span><h1>aito.schema<a class="headerlink" href="#module-aito.schema" title="Link to this heading"></a></h1>
 <p>Data structure for the Aito Database Schema</p>
+<p><cite>pandas</cite> and <cite>langdetect</cite> are imported inside the functions that use them
+rather than at module scope. Both are heavy — pandas pulls numpy and its
+compiled extensions — and this module is reachable from
+<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">aito.client.v2</span></code>, which needs neither: it is a plain HTTP client whose
+only third-party dependency is <cite>requests</cite>. A top-level import here made every
+v2 caller pay for a dataframe library at install and import time, and fail
+outright wherever numpy’s C extensions could not load.</p>
 <p class="rubric">Classes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
