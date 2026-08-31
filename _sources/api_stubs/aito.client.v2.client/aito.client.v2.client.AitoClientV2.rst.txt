@@ -27,6 +27,7 @@ aito.client.v2.client.AitoClientV2
         ~AitoClientV2.get_schema
         ~AitoClientV2.get_version
         ~AitoClientV2.list_envs
+        ~AitoClientV2.match
         ~AitoClientV2.modify
         ~AitoClientV2.optimize
         ~AitoClientV2.predict

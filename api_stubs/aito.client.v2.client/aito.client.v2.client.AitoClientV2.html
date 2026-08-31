@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.client.v2.client.AitoClientV2 &mdash; aito-python-sdk 0.6.0 documentation</title>
+  <title>aito.client.v2.client.AitoClientV2 &mdash; aito-python-sdk 0.6.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=8fa8b3e9"></script>
+      <script src="../../_static/documentation_options.js?v=2bd037f0"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -114,7 +114,7 @@
 <h1>aito.client.v2.client.AitoClientV2<a class="headerlink" href="#aito-client-v2-client-aitoclientv2" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="aito.client.v2.client.AitoClientV2">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aito.client.v2.client.</span></span><span class="sig-name descname"><span class="pre">AitoClientV2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_warning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'log'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_credentials</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.v2.client.AitoClientV2" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aito.client.v2.client.</span></span><span class="sig-name descname"><span class="pre">AitoClientV2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_warning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'log'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_credentials</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_response</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.client.v2.client.AitoClientV2" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A client that connects to the Aito v2 API</p>
 <dl class="field-list simple">
@@ -130,6 +130,14 @@ engine that answered. Off by default, matching the API’s own opt-in</p></li>
 <code class="docutils literal notranslate"><span class="pre">'log'</span></code> (the default), or <code class="docutils literal notranslate"><span class="pre">'raise'</span></code></p></li>
 <li><p><strong>timeout</strong> (<em>float</em>) – the request timeout in seconds</p></li>
 <li><p><strong>check_credentials</strong> (<em>bool</em>) – verify the URL and key by fetching the schema</p></li>
+<li><p><strong>on_response</strong> (<em>Optional</em><em>[</em><em>Callable</em><em>[</em><em>[</em><em>Any</em><em>, </em><em>str</em><em>]</em><em>, </em><em>None</em><em>]</em><em>]</em>) – called as <code class="docutils literal notranslate"><span class="pre">on_response(response,</span> <span class="pre">path)</span></code> after every
+HTTP call, successful or not, with the raw <code class="docutils literal notranslate"><span class="pre">requests.Response</span></code>. The
+only way to reach anything the parsed body does not carry — response
+headers in particular. Aito reports its own server-side processing time
+in <code class="docutils literal notranslate"><span class="pre">x-aitoai-response-time</span></code> (milliseconds), which is what an app
+should show a user rather than the round trip, since the round trip is
+mostly network. Keep the callback cheap and non-throwing: it runs
+inline, and an exception in it would surface as a failed request</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
@@ -191,31 +199,34 @@ engine that answered. Off by default, matching the API’s own opt-in</p></li>
 <tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.list_envs" title="aito.client.v2.client.AitoClientV2.list_envs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_envs</span></code></a>()</p></td>
 <td><p>the environments of this database</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.modify" title="aito.client.v2.client.AitoClientV2.modify"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modify</span></code></a>(operations)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.match" title="aito.client.v2.client.AitoClientV2.match"><code class="xref py py-obj docutils literal notranslate"><span class="pre">match</span></code></a>(from_table, match[, where, select, ...])</p></td>
+<td><p>rank the candidate values of a link field against some evidence</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.modify" title="aito.client.v2.client.AitoClientV2.modify"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modify</span></code></a>(operations)</p></td>
 <td><p>apply table maintenance operations atomically</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.optimize" title="aito.client.v2.client.AitoClientV2.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a>(name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.optimize" title="aito.client.v2.client.AitoClientV2.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a>(name)</p></td>
 <td><p>rebuild a collection's index after a bulk load</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.predict" title="aito.client.v2.client.AitoClientV2.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(from_table, predict[, where, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.predict" title="aito.client.v2.client.AitoClientV2.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(from_table, predict[, where, ...])</p></td>
 <td><p>predict the values of a field, ranked by probability</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.query" title="aito.client.v2.client.AitoClientV2.query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">query</span></code></a>(query[, timeout])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.query" title="aito.client.v2.client.AitoClientV2.query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">query</span></code></a>(query[, timeout])</p></td>
 <td><p>run any query body against <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/_query</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.recommend" title="aito.client.v2.client.AitoClientV2.recommend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recommend</span></code></a>(from_table, recommend, goal[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.recommend" title="aito.client.v2.client.AitoClientV2.recommend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recommend</span></code></a>(from_table, recommend, goal[, ...])</p></td>
 <td><p>rank the values of a field by how well they achieve a goal</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.relate" title="aito.client.v2.client.AitoClientV2.relate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">relate</span></code></a>(from_table, relate[, where, select, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.relate" title="aito.client.v2.client.AitoClientV2.relate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">relate</span></code></a>(from_table, relate[, where, select, ...])</p></td>
 <td><p>find the statistical relationships between a condition and some fields</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.request" title="aito.client.v2.client.AitoClientV2.request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code></a>(method, path[, query, timeout])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.request" title="aito.client.v2.client.AitoClientV2.request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code></a>(method, path[, query, timeout])</p></td>
 <td><p>make a raw request to a v2 endpoint and return the parsed JSON</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.search" title="aito.client.v2.client.AitoClientV2.search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">search</span></code></a>(from_table[, where, select, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.search" title="aito.client.v2.client.AitoClientV2.search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">search</span></code></a>(from_table[, where, select, ...])</p></td>
 <td><p>retrieve matching rows</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.upload_entries" title="aito.client.v2.client.AitoClientV2.upload_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_entries</span></code></a>(name, entries[, batch_size])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.client.v2.client.AitoClientV2.upload_entries" title="aito.client.v2.client.AitoClientV2.upload_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_entries</span></code></a>(name, entries[, batch_size])</p></td>
 <td><p>insert rows into a collection, in batches</p></td>
 </tr>
 </tbody>
@@ -512,6 +523,43 @@ checking whether a capability exists on the deploy you are talking to.</p>
 <dd class="field-odd"><p>Dict</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aito.client.v2.client.AitoClientV2.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">where</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">why</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../aito.client.v2.responses/aito.client.v2.responses.V2RowsResponse.html#aito.client.v2.responses.V2RowsResponse" title="aito.client.v2.responses.V2RowsResponse"><span class="pre">V2RowsResponse</span></a></span></span><a class="headerlink" href="#aito.client.v2.client.AitoClientV2.match" title="Link to this definition"></a></dt>
+<dd><p>rank the candidate values of a link field against some evidence</p>
+<p>The operator behind record matching — a bank payment against the open
+invoice it settles, say. Candidates come back ranked by <code class="docutils literal notranslate"><span class="pre">$p</span></code>, and it
+generalizes: evidence never seen verbatim still ranks, on the strength
+of the parts of it that were.</p>
+<p>Hits carry v1’s <code class="docutils literal notranslate"><span class="pre">feature</span></code> and <code class="docutils literal notranslate"><span class="pre">field</span></code> keys alongside <code class="docutils literal notranslate"><span class="pre">$p</span></code> and
+<code class="docutils literal notranslate"><span class="pre">$value</span></code>. That is deliberate — v2 keeps a v1 key and adds the v2 one
+rather than replacing it, so a v1-era caller moving to <code class="docutils literal notranslate"><span class="pre">/api/v2</span></code> over a
+legacy table keeps working. <code class="docutils literal notranslate"><span class="pre">$value</span></code> is the canonical one to read.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from_table</strong> (<em>str</em>) – the collection holding the evidence rows</p></li>
+<li><p><strong>match</strong> (<em>str</em>) – the link field whose values are the candidates</p></li>
+<li><p><strong>where</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>]</em>) – the evidence to match on</p></li>
+<li><p><strong>select</strong> (<em>Optional</em><em>[</em><em>List</em><em>]</em>) – the columns to return, defaulting to <code class="docutils literal notranslate"><span class="pre">['$p',</span> <span class="pre">'$value']</span></code>
+(plus <code class="docutils literal notranslate"><span class="pre">$why</span></code> when <code class="docutils literal notranslate"><span class="pre">why</span></code> is set)</p></li>
+<li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – the maximum number of candidates</p></li>
+<li><p><strong>why</strong> (<em>bool</em>) – include the <code class="docutils literal notranslate"><span class="pre">$why</span></code> explanation tree in the default select</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../aito.client.v2.responses/aito.client.v2.responses.V2RowsResponse.html#aito.client.v2.responses.V2RowsResponse" title="aito.client.v2.responses.V2RowsResponse">V2RowsResponse</a></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">from_table</span><span class="o">=</span><span class="s1">'payments'</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="s1">'invoice_id'</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">where</span><span class="o">=</span><span class="p">{</span><span class="s1">'description'</span><span class="p">:</span> <span class="s1">'KULJETUSLIIKE OY VIITE 999'</span><span class="p">,</span> <span class="s1">'amount'</span><span class="p">:</span> <span class="mf">10734.5</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">probability</span>
+<span class="go">('INV-000002', 0.000209)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">

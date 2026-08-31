@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aito SDK &mdash; aito-python-sdk 0.6.0 documentation</title>
+  <title>Aito SDK &mdash; aito-python-sdk 0.6.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
+      <script src="_static/documentation_options.js?v=2bd037f0"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -158,6 +158,7 @@ APIs return genuinely different response shapes — the reasoning is written up 
 <li><p>Retrieve rows: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.search" title="aito.client.v2.client.AitoClientV2.search"><code class="xref py py-func docutils literal notranslate"><span class="pre">search()</span></code></a></p></li>
 <li><p>Rank values by a goal: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.recommend" title="aito.client.v2.client.AitoClientV2.recommend"><code class="xref py py-func docutils literal notranslate"><span class="pre">recommend()</span></code></a></p></li>
 <li><p>Find statistical relationships: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.relate" title="aito.client.v2.client.AitoClientV2.relate"><code class="xref py py-func docutils literal notranslate"><span class="pre">relate()</span></code></a></p></li>
+<li><p>Match a link field’s candidates against evidence: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.match" title="aito.client.v2.client.AitoClientV2.match"><code class="xref py py-func docutils literal notranslate"><span class="pre">match()</span></code></a></p></li>
 <li><p>Estimate a numeric field: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.estimate" title="aito.client.v2.client.AitoClientV2.estimate"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate()</span></code></a></p></li>
 <li><p>Aggregate: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.aggregate" title="aito.client.v2.client.AitoClientV2.aggregate"><code class="xref py py-func docutils literal notranslate"><span class="pre">aggregate()</span></code></a></p></li>
 <li><p>Evaluate prediction quality: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.evaluate" title="aito.client.v2.client.AitoClientV2.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a></p></li>
@@ -202,6 +203,15 @@ server answered a slightly different query than the one you sent:</p>
 
 <span class="c1"># or make it a hard failure:</span>
 <span class="n">strict</span> <span class="o">=</span> <span class="n">AitoClientV2</span><span class="p">(</span><span class="n">instance_url</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="n">on_warning</span><span class="o">=</span><span class="s1">'raise'</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Aito reports its own server-side processing time in the <code class="docutils literal notranslate"><span class="pre">x-aitoai-response-time</span></code> header,
+which is what an application should surface rather than the round trip. The parsed body does
+not carry it, so pass <code class="docutils literal notranslate"><span class="pre">on_response</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">timings</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">AitoClientV2</span><span class="p">(</span><span class="n">instance_url</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span>
+                      <span class="n">on_response</span><span class="o">=</span><span class="k">lambda</span> <span class="n">resp</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">timings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                          <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">'x-aitoai-response-time'</span><span class="p">]))))</span>
 </pre></div>
 </div>
 <p>A complete runnable example — create a collection, load it, predict, explain, evaluate, drop it
