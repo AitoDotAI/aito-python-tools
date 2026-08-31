@@ -1,6 +1,14 @@
 """
 
 Data structure for the Aito Database Schema
+
+`pandas` and `langdetect` are imported inside the functions that use them
+rather than at module scope. Both are heavy — pandas pulls numpy and its
+compiled extensions — and this module is reachable from
+``import aito.client.v2``, which needs neither: it is a plain HTTP client whose
+only third-party dependency is `requests`. A top-level import here made every
+v2 caller pay for a dataframe library at install and import time, and fail
+outright wherever numpy's C extensions could not load.
 """
 import re
 import itertools
@@ -8,11 +16,11 @@ import logging
 from abc import abstractmethod, ABC
 from collections import Counter
 from csv import Sniffer, Error as csvError
-from typing import List, Iterable, Dict, Optional
+from typing import List, Iterable, Dict, Optional, TYPE_CHECKING
 import re
 
-import pandas as pd
-from langdetect import detect_langs
+if TYPE_CHECKING:  # pragma: no cover - import-time typing only
+    import pandas as pd
 
 from aito.utils._json_format import JsonFormat, JsonValidationError
 
@@ -194,6 +202,7 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
     @classmethod
     def _infer_language(cls, samples: Iterable[str]) -> Optional[str]:
         """infer language from samples"""
+        from langdetect import detect_langs  # deferred: see the module docstring
         concatenated_sample_text = ' '.join(samples)
         try:
             detected_langs_and_probs = detect_langs(concatenated_sample_text)
@@ -865,6 +874,7 @@ class DataSeriesProperties :
         :param max_sample_size: maximum sample size for element inference
         :return: element type string (e.g., 'String', 'Int') or None if should use Json
         """
+        import pandas as pd  # deferred: see the module docstring
         # Flatten all array elements
         all_elements = []
         for arr in non_null_values:
@@ -905,17 +915,18 @@ class DataSeriesProperties :
             return None  # Inference failed, use Json
 
     @classmethod
-    def _infer_from_pandas_series(cls, series: pd.Series, max_sample_size: int = 100000) -> 'DataSeriesProperties':
+    def _infer_from_pandas_series(cls, series: 'pd.Series', max_sample_size: int = 100000) -> 'DataSeriesProperties':
         """Infer aito column type from a Pandas Series
 
         :param series: input Pandas Series
-        :type series: pd.Series
+        :type series: 'pd.Series'
         :param max_sample_size: maximum sample size that will be used for type inference, defaults to 100000
         :type max_sample_size: int, optional
         :raises Exception: fail to infer type
         :return: inferred Aito type
         :rtype: str
         """
+        import pandas as pd  # deferred: see the module docstring
         sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
 
         # Handle empty series
@@ -1132,11 +1143,11 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         return ['aito_dtype']
 
     @classmethod
-    def _infer_from_pandas_series(cls, series: pd.Series, max_sample_size: int = 100000) -> 'AitoDataTypeSchema':
+    def _infer_from_pandas_series(cls, series: 'pd.Series', max_sample_size: int = 100000) -> 'AitoDataTypeSchema':
         """Infer aito column type from a Pandas Series
 
         :param series: input Pandas Series
-        :type series: pd.Series
+        :type series: 'pd.Series'
         :param max_sample_size: maximum sample size that will be used for type inference, defaults to 100000
         :type max_sample_size: int, optional
         :raises Exception: fail to infer type
@@ -1156,6 +1167,7 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         :return: inferred Aito column type
         :rtype: str
         """
+        import pandas as pd  # deferred: see the module docstring
         try:
             casted_samples = pd.Series(itertools.islice(samples, max_sample_size))
         except Exception as e:
@@ -1390,6 +1402,7 @@ class AitoColumnTypeSchema(AitoSchema):
         self._nullable = value
 
     def to_conversion(self):
+        import pandas as pd  # deferred: see the module docstring
         if self._nullable:
             tpt = self._data_type.to_python_type()
             return lambda x: None if pd.isna(x) else tpt(x)
@@ -1506,7 +1519,7 @@ class AitoColumnTypeSchema(AitoSchema):
         return match_ratio > 0.8
 
     @classmethod
-    def _infer_from_pandas_series(cls, series: pd.Series, max_sample_size: int = 100000) -> 'AitoColumnTypeSchema':
+    def _infer_from_pandas_series(cls, series: 'pd.Series', max_sample_size: int = 100000) -> 'AitoColumnTypeSchema':
         samples = series if len(series) < max_sample_size else series.sample(max_sample_size)
 
         col_nullable = True if series.isna().sum() > 0 else False
@@ -1750,7 +1763,7 @@ class AitoTableSchema(AitoSchema):
         return cls(columns=columns)
 
     @classmethod
-    def infer_from_pandas_data_frame(cls, df: pd.DataFrame, max_sample_size: int = 100000) -> 'AitoTableSchema':
+    def infer_from_pandas_data_frame(cls, df: 'pd.DataFrame', max_sample_size: int = 100000) -> 'AitoTableSchema':
         """Infer a TableSchema from a Pandas DataFrame
 
         :param df: input Pandas DataFrame

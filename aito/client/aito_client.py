@@ -1,14 +1,20 @@
 """A versatile client that makes requests to an Aito Database Instance
 
+`aiohttp` is imported inside the functions that use it rather than at module
+scope. It is needed only for the asynchronous path, and this module is
+reachable from ``import aito.client.v2`` -- a synchronous client that does not
+use it.
 """
 
 import asyncio
 import logging
 import warnings
-from typing import Dict, List, Union, Tuple, Optional
+from typing import Dict, List, Union, Tuple, Optional, TYPE_CHECKING
 
 import requests as requestslib
-from aiohttp import ClientSession, ClientResponseError
+
+if TYPE_CHECKING:  # pragma: no cover - import-time typing only
+    from aiohttp import ClientSession
 
 from aito.exceptions import BaseError
 from .requests import AitoRequest, BaseRequest, GetVersionRequest
@@ -23,6 +29,21 @@ class Error(BaseError):
     """
     def __init__(self, message: str):
         super().__init__(message, LOG)
+
+
+def _is_aiohttp_response_error(error: Exception) -> bool:
+    """whether `error` is aiohttp's ClientResponseError, importing aiohttp lazily
+
+    aiohttp is only needed for the async path. Importing it at module scope made
+    it load for every caller of this package -- including
+    ``import aito.client.v2``, which is synchronous and does not use it. If
+    aiohttp is not installed at all, an error plainly cannot be one of its.
+    """
+    try:
+        from aiohttp import ClientResponseError
+    except ImportError:  # pragma: no cover - aiohttp is a declared dependency
+        return False
+    return isinstance(error, ClientResponseError)
 
 
 class RequestError(Error):
@@ -46,7 +67,7 @@ class RequestError(Error):
             except (ValueError, KeyError):
                 # Response is not valid JSON or doesn't have expected structure
                 error_msg = error.response.text or str(error)
-        elif isinstance(error, ClientResponseError):
+        elif _is_aiohttp_response_error(error):
             error_msg = error.message
         else:
             error_msg = str(error)
@@ -265,7 +286,7 @@ class AitoClient:
         return request_obj.response_cls(json_resp)
 
     async def async_request(
-            self, session: ClientSession, *,
+            self, session: 'ClientSession', *,
             method: Optional[str] = None,
             endpoint: Optional[str] = None,
             query: Optional[Union[Dict, List]] = None,
@@ -386,6 +407,7 @@ class AitoClient:
 
         """
         async def run():
+            from aiohttp import ClientSession  # deferred: see the module docstring
             async with ClientSession() as session:
                 tasks = [
                     self.bounded_async_request(semaphore, session=session, request_obj=req, raise_for_status=False)

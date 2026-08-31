@@ -1,7 +1,12 @@
 import datetime
 
+import pandas as pd
 from parameterized import parameterized
 
+# `pd` used to arrive through this star-import, because aito.schema imported
+# pandas at module scope. It no longer does — the v2 client is reachable from
+# that module and does not need a dataframe library — so this file imports
+# pandas for itself, which is what it should always have done.
 from aito.schema import *
 from aito.utils._json_format import JsonValidationError
 from tests.cases import BaseTestCase
