@@ -1,6 +1,44 @@
 Changelog
 =========
 
+0.6.1
+-----
+
+Follow-ups from the first real consumer of the v2 client, and from Aito engine v2.7.0.
+
+SDK
+^^^
+
+Added
+"""""
+
+- :py:func:`~aito.client.v2.client.AitoClientV2.match` — rank the candidate values of a
+  link field against some evidence, the operator behind record matching (a bank payment
+  against the invoice it settles). Deliberately absent in 0.6.0 because ``_match`` could
+  not rank on v2; engine v2.7.0 fixed that, so the reason is gone. Hits carry v1's
+  ``feature`` and ``field`` keys alongside ``$p`` and ``$value`` — v2 keeps a v1 key and
+  adds the v2 one rather than replacing it
+- ``on_response`` — an optional callback invoked with the raw ``requests.Response`` after
+  every call, successful or not. The only way to reach what the parsed body does not
+  carry: notably ``x-aitoai-response-time``, Aito's own server-side processing time, which
+  is what an application should show rather than the round trip. v2 did not send that
+  header at all before engine v2.7.0
+
+Engine v2.7.0 behaviour
+"""""""""""""""""""""""
+
+- ``_estimate`` / ``_aggregate`` / ``_evaluate`` now return the same envelope whichever
+  storage engine answers. The client's tolerance for the older bare shape is kept, so one
+  client works against both an older engine and a current one
+- ``_estimate`` on a legacy table carries both ``data.value`` and ``data.estimate``.
+  :py:attr:`~aito.client.v2.responses.V2EstimateResponse.value` prefers ``value``
+- ``_batch`` now returns the documented ``{kind, data}`` envelope instead of a bare array,
+  with each element tagged ``kind: "rows"``. Both forms are still accepted
+- Errors from the schema and data endpoints are now the structured ``error`` kind, so
+  :py:attr:`~aito.client.v2.errors.AitoV2Error.code` is populated on them. The
+  status-code fallback in :py:attr:`~aito.client.v2.errors.AitoV2Error.is_not_found`
+  is kept for older engines
+
 0.6.0
 -----
 

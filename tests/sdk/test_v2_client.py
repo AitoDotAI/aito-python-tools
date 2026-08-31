@@ -144,6 +144,22 @@ class TestRequestBodies(BaseTestCase):
             'goal': {'purchase': True}, 'limit': 8,
         })
 
+    def test_match_addresses_its_endpoint(self):
+        client = make_client()
+        client.match(from_table='payments', match='invoice_id',
+                     where={'amount': 10734.5}, limit=5)
+        call = client._session.last
+        self.assertTrue(call['url'].endswith('/api/v2/_match'))
+        self.assertEqual(call['json'], {
+            'from': 'payments', 'match': 'invoice_id',
+            'where': {'amount': 10734.5}, 'select': ['$p', '$value'], 'limit': 5,
+        })
+
+    def test_match_why_adds_the_explanation(self):
+        client = make_client()
+        client.match(from_table='t', match='c', why=True)
+        self.assertEqual(client._session.last['json']['select'], ['$p', '$value', '$why'])
+
     def test_query_uses_the_universal_endpoint(self):
         client = make_client()
         client.query({'from': 't', 'limit': 1})
@@ -305,6 +321,42 @@ class TestWarningPolicy(BaseTestCase):
         with self.assertRaises(AssertionError):
             with self.assertLogs(logger, level=logging.WARNING):
                 client.query({'from': 't'})
+
+
+class TestOnResponseHook(BaseTestCase):
+    """The seam for anything the parsed body does not carry — headers, mainly"""
+
+    def test_hook_sees_every_response(self):
+        seen = []
+        client = make_client(on_response=lambda resp, path: seen.append((path, resp.status_code)))
+        client.query({'from': 't'})
+        client.search(from_table='t')
+        self.assertEqual(seen, [('/_query', 200), ('/_search', 200)])
+
+    def test_hook_can_read_the_server_side_timing_header(self):
+        # The reason this exists: Aito reports its own processing time, which is
+        # what an app should show rather than the round trip.
+        resp = FakeResponse(200, {'offset': 0, 'total': 0, 'hits': []})
+        resp.headers = {'x-aitoai-response-time': '9.51'}
+        timings = []
+        client = make_client(
+            [resp],
+            on_response=lambda r, p: timings.append((p, float(r.headers['x-aitoai-response-time']))))
+        client.query({'from': 't'})
+        self.assertEqual(timings, [('/_query', 9.51)])
+
+    def test_hook_also_fires_on_a_failed_call(self):
+        # A call that took 30 s and then failed is the one worth timing.
+        seen = []
+        client = make_client(
+            [FakeResponse(404, {'kind': 'error', 'data': {'code': 'not_found', 'message': 'x'}})],
+            on_response=lambda resp, path: seen.append((path, resp.status_code)))
+        with self.assertRaises(AitoV2Error):
+            client.query({'from': 'x'})
+        self.assertEqual(seen, [('/_query', 404)])
+
+    def test_no_hook_by_default(self):
+        self.assertIsNone(make_client().on_response)
 
 
 class TestHeadersAndRepr(BaseTestCase):

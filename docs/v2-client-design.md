@@ -107,31 +107,27 @@ Rows responses stay bare (`{offset, total, hits}`, no `kind`) for v1
 compatibility; everything else carries an explicit `kind` and puts its payload
 under `data`.
 
-**That contract is not sufficient, and following it literally produces a bug.**
-The non-rows shapes are produced by the *rep2-native* builders only; a legacy
-`type: table` served through the v2 endpoint falls to the rep1 compat shim,
-which returns the bare v1 shape with no `kind`. Verified live on the same
-build (`3de8f4f7ede5`, built 2026-08-27), same endpoint, two shapes:
+**That contract was not sufficient when this client was written, and following
+it literally produced a bug.** The non-rows shapes came from the *rep2-native*
+builders only; a legacy `type: table` served through a v2 endpoint fell to the
+rep1 compat shim, which returned the bare v1 shape with no `kind`. So
+`kind ?? "rows"` classified an `_estimate` scalar as a page of rows, and the
+caller then read `.hits` off something that had none.
 
-```
-POST /api/v2/_estimate  {"from":"products",…}      (legacy table)
-→ {"estimate": 0.754…, "why": {…}}                  ← no kind, v1 shape
+**Engine v2.7.0 fixed it** (filed from here as `td-20260829111229412011`). The
+rep1 path now wraps in the same envelope, and `v2-response-format.md` §3 states
+the engine-independence rule outright: the shape does not depend on the storage
+engine. Where the fallback's payload uses a v1 field name, the v2 name is added
+*beside* it rather than replacing it — `_estimate` emits both `data.value` and
+`data.estimate`. That pairing is deliberate, not a leftover.
 
-POST /api/v2/_estimate  {"from":"sdk_v2_probe",…}  (v2 collection)
-→ {"kind":"estimate","data":{"value": 325.79…}}     ← enveloped
-```
-
-`kind ?? "rows"` classifies the first one as `rows`, and the caller then reads
-`.hits` off a response that has none.
-
-So the SDK dispatches on **the requested operation** (which it knows, because
-it chose the endpoint) and treats the envelope as optional:
-`_unwrap(json, kind)` returns `json['data']` when `json['kind'] == kind`, the
-bare object when there is no `kind`, and raises when the `kind` is a *different*
-one — a genuine mismatch. `EstimateResponse.value` then reads `value` with
-`estimate` as a fallback, and works on both paths. This is filed as a bug
-(see the ticket report); the adapter is deliberately one function so that when
-the engine unifies the shapes, one edit removes it.
+The client still does not dispatch on `kind`. `_unwrap(json, kind)` takes the
+kind the caller asked for, unwraps an envelope of that kind, passes a bare body
+through, and raises when the `kind` is a *different* one. Keeping the tolerant
+branch is what lets one client talk to an older engine and a current one, and
+`V2EstimateResponse.value` reads `value` with `estimate` as the fallback for the
+same reason. It is deliberately one function, so if the tolerance is ever
+retired it is one deletion.
 
 ## Decision 3 — warnings are surfaced, not swallowed
 
@@ -186,7 +182,19 @@ pooling both demos care about is `requests.Session`, which is what
 - **No retry.** The accounting demo retries once on 5xx. Retrying a
   non-idempotent write by default is a policy decision that belongs to the
   caller, not the transport.
-- **No `_match` convenience method.** `_match` cannot rank on v2 (V2-12: hits
-  carry a raw `$f`, never `$p`, and every candidate ties at 0 for unseen
-  input). `query()` reaches it; wrapping it in a named SDK method would
-  advertise a working feature.
+- ~~**No `_match` convenience method.**~~ **Reversed in 0.6.1.** The original
+  reasoning was that `_match` could not rank on v2 (V2-12: hits carried a raw
+  `$f`, never `$p`, and every candidate tied at 0 for unseen input), so a named
+  method would advertise a working feature.
+
+  That is no longer true, and the way it stopped being true is worth recording.
+  The finding was verified against the *deployed* build while master was ahead
+  of it — the same deploy-lag trap that had several v2 issues re-reported as
+  broken after they were fixed. Re-tested against engine v2.7.0: a payment
+  whose reference number appears nowhere in the data ranks the correct invoice
+  first, on a graded `$p`, and `select`/`$why` are honoured. `match()` exists
+  as of 0.6.1.
+
+  The lesson generalises: **check the deployed revision against master before
+  concluding an engine defect is real.** `GET /api/v2/_version` gives the
+  former.
