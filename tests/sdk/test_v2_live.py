@@ -197,9 +197,12 @@ class TestAitoClientV2Live(BaseTestCase):
              'predict': 'gl_code', 'select': ['$p', '$value'], 'limit': 1},
         ])
         self.assertEqual(len(res), 2)
-        # The engine answers a bare array here, not the documented
-        # {"kind": "batch", "data": [...]} envelope.
-        self.assertIsInstance(res.json, list)
+        # Enveloped since engine v2.7.0. Each element carries its own explicit
+        # `kind` — deliberately, and only inside a batch: within `data` there is
+        # no endpoint to infer the shape from, so "absent means rows" would make
+        # a rows element indistinguishable from a malformed one.
+        self.assertEqual(res.json.get('kind'), 'batch')
+        self.assertEqual([sub.get('kind') for sub in res.data], ['rows', 'rows'])
         self.assertEqual(res.responses[1].first.value, '6110')
 
     def test_one_bad_query_fails_the_whole_batch(self):
@@ -256,6 +259,24 @@ class TestAitoClientV2Live(BaseTestCase):
                              where={'vendor': 'Elenia Oy'}, predict='gl_code', limit=1)
         self.assertEqual(res.engine, 'v2')
 
+    def test_on_response_reads_the_server_side_timing_header(self):
+        """Aito reports its own processing time; the round trip is mostly network.
+
+        The parsed body does not carry it, so `on_response` is the only way to
+        reach it. The header was missing from v2 entirely until engine v2.7.0.
+        """
+        seen = []
+        client = AitoClientV2(_env('AITO_INSTANCE_URL'), _env('AITO_API_KEY'),
+                              check_credentials=False,
+                              on_response=lambda resp, path: seen.append((path, resp.headers)))
+        client.search(from_table=TEST_COLLECTION, limit=1)
+        self.assertEqual(len(seen), 1)
+        path, headers = seen[0]
+        self.assertEqual(path, '/_search')
+        self.assertIn('x-aitoai-response-time', {k.lower() for k in headers})
+        server_ms = float(headers['x-aitoai-response-time'])
+        self.assertGreaterEqual(server_ms, 0.0)
+
     def test_introspection_endpoints(self):
         self.assertIn('version', self.client.get_version())
         ops = self.client.get_operators()
@@ -292,15 +313,110 @@ class TestAitoClientV2AgainstLegacyTables(BaseTestCase):
                              predict='category', limit=1)
         self.assertEqual(res.engine, 'v1')
 
-    def test_estimate_returns_the_bare_v1_shape_and_is_still_read_correctly(self):
-        # The documented client rule `kind ?? "rows"` would call this a page of
-        # rows. It is a scalar, in the v1 shape, from a v2 endpoint.
+    def test_estimate_is_enveloped_on_a_legacy_table_too(self):
+        """The response shape must not depend on the storage engine.
+
+        It used to: a collection answered `{kind, data}` and a legacy table
+        answered the bare v1 body, so the documented `kind ?? "rows"` rule read
+        a scalar as a page of rows. Engine v2.7.0 wraps the rep1 path in the
+        same envelope, and the response-format spec §3 now states the rule.
+        """
         res = self.client.estimate(from_table='products',
                                    where={'name': 'Pirkka banana'}, estimate='price')
-        self.assertNotIn('kind', res.json)
+        self.assertEqual(res.json.get('kind'), 'estimate')
         self.assertIsInstance(res.value, float)
+
+    def test_estimate_keeps_the_v1_key_beside_the_v2_one(self):
+        """Deliberate, not a leftover: keep the v1 name, add the v2 name.
+
+        The rep1 payload carries `estimate` (v1's name for the scalar) *and*
+        `value` (v2's), so `data.value` reads on either engine — the same
+        `feature`/`$value` precedent the rest of v2 follows. `.value` prefers
+        `value`; the fallback to `estimate` is what covers pre-2.7.0 engines.
+        """
+        res = self.client.estimate(from_table='products',
+                                   where={'name': 'Pirkka banana'}, estimate='price')
+        self.assertIn('value', res.data)
+        self.assertIn('estimate', res.data)
+        self.assertEqual(res.value, res.data['value'])
 
     def test_a_missing_table_is_a_typed_not_found(self):
         with self.assertRaises(AitoV2Error) as ctx:
             self.client.query({'from': 'no_such_table', 'limit': 1})
         self.assertEqual(ctx.exception.code, 'not_found')
+
+
+@unittest.skipUnless(
+    _env('AITO_INSTANCE_URL') and _env('AITO_API_KEY'),
+    'AITO_INSTANCE_URL and a read-write AITO_API_KEY are required for the live v2 tests')
+class TestMatchLive(BaseTestCase):
+    """`match` needs a linked pair, so it carries its own fixture.
+
+    Worth a live test rather than only a request-shape one: `match` was reported
+    unusable on v2 (raw counts, no ranking, every candidate tied at zero for
+    unseen input) and that is why the client had no `match` method at first.
+    These assert the behaviour that changed the decision — a graded `$p`, and a
+    correct answer for evidence the engine has never seen verbatim.
+    """
+
+    INVOICES = f'{TEST_COLLECTION}_minv'
+    PAYMENTS = f'{TEST_COLLECTION}_mpay'
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.client = AitoClientV2(_env('AITO_INSTANCE_URL'), _env('AITO_API_KEY'))
+        cls.client.create_collection(cls.INVOICES, {
+            'inv_id': {'type': 'String'},
+            'vendor': {'type': 'String'},
+            'amount': {'type': 'Decimal'},
+        })
+        cls.client.create_collection(cls.PAYMENTS, {
+            'descr': {'type': 'Text', 'analyzer': 'english'},
+            'amount': {'type': 'Decimal'},
+            'inv_id': {'type': 'String', 'link': f'{cls.INVOICES}.inv_id'},
+        })
+        vendors = ['Elenia', 'Neste', 'Fazer', 'Telia']
+        # Amount identifies the invoice: INV-041 is the only one at 141.00.
+        cls.client.upload_entries(cls.INVOICES, [
+            {'inv_id': f'INV-{i:03d}', 'vendor': vendors[i % 4], 'amount': 100.0 + i}
+            for i in range(60)])
+        cls.client.upload_entries(cls.PAYMENTS, [
+            {'descr': f'payment to {vendors[i % 4]} ref {i}',
+             'amount': 100.0 + i, 'inv_id': f'INV-{i:03d}'}
+            for i in range(60)])
+        for name in (cls.INVOICES, cls.PAYMENTS):
+            cls.client.optimize(name)
+
+    @classmethod
+    def tearDownClass(cls):
+        for name in (cls.PAYMENTS, cls.INVOICES):
+            try:
+                cls.client.delete_collection(name)
+            except AitoV2Error:
+                pass
+
+    def test_match_ranks_an_unseen_payment_to_the_right_invoice(self):
+        # Reference 999 appears nowhere in the data — the engine has to
+        # generalize from the amount and the description tokens.
+        res = self.client.match(
+            from_table=self.PAYMENTS, match='inv_id',
+            where={'descr': 'payment to Neste ref 999', 'amount': 141.0}, limit=3)
+        self.assertEqual(res.first.value, 'INV-041')
+        self.assertGreater(res.first.probability, 0.0)
+        # Graded, not a flat tie: the runner-up must score strictly lower.
+        self.assertGreater(res.first.probability, res.hits[1].probability)
+
+    def test_match_hits_carry_the_v1_aliases_beside_the_v2_keys(self):
+        """Deliberate: v2 keeps a v1 key and adds the v2 one, never removes."""
+        res = self.client.match(
+            from_table=self.PAYMENTS, match='inv_id', where={'amount': 141.0}, limit=1)
+        hit = res.first
+        self.assertEqual(hit['feature'], hit.value)
+        self.assertEqual(hit['field'], 'inv_id')
+
+    def test_match_honours_select_and_why(self):
+        res = self.client.match(
+            from_table=self.PAYMENTS, match='inv_id',
+            where={'amount': 141.0}, why=True, limit=1)
+        self.assertIsInstance(res.first.why, dict)

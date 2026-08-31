@@ -18,7 +18,7 @@ The reasoning is written down in ``docs/v2-client-design.md``; the short form:
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import requests as requestslib
 
@@ -57,6 +57,15 @@ class AitoClientV2:
     :type timeout: float
     :param check_credentials: verify the URL and key by fetching the schema
     :type check_credentials: bool
+    :param on_response: called as ``on_response(response, path)`` after every
+        HTTP call, successful or not, with the raw ``requests.Response``. The
+        only way to reach anything the parsed body does not carry — response
+        headers in particular. Aito reports its own server-side processing time
+        in ``x-aitoai-response-time`` (milliseconds), which is what an app
+        should show a user rather than the round trip, since the round trip is
+        mostly network. Keep the callback cheap and non-throwing: it runs
+        inline, and an exception in it would surface as a failed request
+    :type on_response: Optional[Callable[[Any, str], None]]
     :raises ValueError: the environment name is one the engine reserves
     :raises AitoV2Error: the credentials could not be verified
 
@@ -76,6 +85,7 @@ class AitoClientV2:
             on_warning: str = 'log',
             timeout: float = 30.0,
             check_credentials: bool = True,
+            on_response: Optional[Callable[[Any, str], None]] = None,
     ):
         if on_warning not in _ON_WARNING_CHOICES:
             raise ValueError(
@@ -89,6 +99,7 @@ class AitoClientV2:
         self.meta = meta
         self.on_warning = on_warning
         self.timeout = timeout
+        self.on_response = on_response
         # A pooled session keeps the TCP+TLS connection alive across calls. A
         # fresh connection per request pays the handshake every time, which
         # dominates the per-call wall-clock against a shared instance.
@@ -172,6 +183,11 @@ class AitoClientV2:
             )
         except requestslib.RequestException as e:
             raise AitoV2Error(f'Aito v2 request failed: {method} {path}: {e}') from e
+
+        if self.on_response is not None:
+            # Before the status check, so a caller observing timings still sees
+            # the calls that failed — those are the ones worth looking at.
+            self.on_response(resp, path)
 
         try:
             parsed = resp.json()
@@ -550,6 +566,54 @@ class AitoClientV2:
             {'from': from_table, 'relate': relate},
             where=where, select=select, orderBy=order_by, limit=limit)
         return self._respond(V2RowsResponse, 'POST', '/_relate', query)
+
+    def match(
+            self,
+            from_table: str,
+            match: str,
+            where: Optional[Dict] = None,
+            select: Optional[List] = None,
+            limit: Optional[int] = None,
+            why: bool = False,
+    ) -> V2RowsResponse:
+        """rank the candidate values of a link field against some evidence
+
+        The operator behind record matching — a bank payment against the open
+        invoice it settles, say. Candidates come back ranked by ``$p``, and it
+        generalizes: evidence never seen verbatim still ranks, on the strength
+        of the parts of it that were.
+
+        Hits carry v1's ``feature`` and ``field`` keys alongside ``$p`` and
+        ``$value``. That is deliberate — v2 keeps a v1 key and adds the v2 one
+        rather than replacing it, so a v1-era caller moving to ``/api/v2`` over a
+        legacy table keeps working. ``$value`` is the canonical one to read.
+
+        :param from_table: the collection holding the evidence rows
+        :type from_table: str
+        :param match: the link field whose values are the candidates
+        :type match: str
+        :param where: the evidence to match on
+        :type where: Optional[Dict]
+        :param select: the columns to return, defaulting to ``['$p', '$value']``
+            (plus ``$why`` when ``why`` is set)
+        :type select: Optional[List]
+        :param limit: the maximum number of candidates
+        :type limit: Optional[int]
+        :param why: include the ``$why`` explanation tree in the default select
+        :type why: bool
+        :rtype: V2RowsResponse
+
+        >>> res = client.match( # doctest: +SKIP
+        ...     from_table='payments', match='invoice_id',
+        ...     where={'description': 'KULJETUSLIIKE OY VIITE 999', 'amount': 10734.5})
+        >>> res.first.value, res.first.probability # doctest: +SKIP
+        ('INV-000002', 0.000209)
+        """
+        if select is None:
+            select = ['$p', '$value', '$why'] if why else ['$p', '$value']
+        query = self._body(
+            {'from': from_table, 'match': match}, where=where, select=select, limit=limit)
+        return self._respond(V2RowsResponse, 'POST', '/_match', query)
 
     def estimate(
             self,

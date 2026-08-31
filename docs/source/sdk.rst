@@ -64,6 +64,7 @@ Querying:
   - Retrieve rows: :py:func:`~aito.client.v2.client.AitoClientV2.search`
   - Rank values by a goal: :py:func:`~aito.client.v2.client.AitoClientV2.recommend`
   - Find statistical relationships: :py:func:`~aito.client.v2.client.AitoClientV2.relate`
+  - Match a link field's candidates against evidence: :py:func:`~aito.client.v2.client.AitoClientV2.match`
   - Estimate a numeric field: :py:func:`~aito.client.v2.client.AitoClientV2.estimate`
   - Aggregate: :py:func:`~aito.client.v2.client.AitoClientV2.aggregate`
   - Evaluate prediction quality: :py:func:`~aito.client.v2.client.AitoClientV2.evaluate`
@@ -112,6 +113,17 @@ server answered a slightly different query than the one you sent:
 
     # or make it a hard failure:
     strict = AitoClientV2(instance_url, api_key, on_warning='raise')
+
+Aito reports its own server-side processing time in the ``x-aitoai-response-time`` header,
+which is what an application should surface rather than the round trip. The parsed body does
+not carry it, so pass ``on_response``:
+
+.. code:: python
+
+    timings = []
+    client = AitoClientV2(instance_url, api_key,
+                          on_response=lambda resp, path: timings.append(
+                              (path, float(resp.headers['x-aitoai-response-time']))))
 
 A complete runnable example — create a collection, load it, predict, explain, evaluate, drop it
 — is in ``examples/v2_quickstart.py``.
