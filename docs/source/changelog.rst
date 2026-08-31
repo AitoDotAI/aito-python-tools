@@ -1,6 +1,36 @@
 Changelog
 =========
 
+0.6.2
+-----
+
+Importing the v2 client no longer drags in the v1 stack's heavy dependencies.
+
+SDK
+^^^
+
+Fixed
+"""""
+
+- ``from aito.client.v2 import AitoClientV2`` no longer imports **pandas**, **numpy**,
+  **aiohttp** or **langdetect**. The v2 client is a plain HTTP client whose only
+  third-party dependency is ``requests``, but importing a submodule runs the parent
+  package's ``__init__``, and that chain reached :py:mod:`aito.schema`, which imported
+  pandas at module scope. Beyond the weight, it meant a service that had never touched a
+  dataframe **failed to start** wherever numpy's compiled extensions could not load.
+  Found by the first application to adopt the v2 client
+- ``pandas`` and ``langdetect`` are now imported inside the functions in
+  :py:mod:`aito.schema` that use them, and ``aiohttp`` inside the asynchronous paths of
+  :py:class:`~aito.client.AitoClient`. Every feature behaves as before; only the moment
+  of import changed. The v1 client and the CLI import faster as a side effect
+- Import cost of ``import aito.client.v2``: 933 modules before, 409 after
+
+.. note::
+
+  ``pip install aitoai`` still installs pandas and the other file-format and CLI
+  dependencies -- they remain in ``install_requires``. Moving them behind extras
+  (``aitoai[cli]``) is a breaking packaging change and is tracked separately.
+
 0.6.1
 -----
 
