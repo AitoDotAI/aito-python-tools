@@ -1,10 +1,24 @@
 """A utility to read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema
+
+pandas is imported inside the two methods that actually call it, rather than at
+module scope. Building the `aito` CLI parser imports every subcommand module,
+so a top-level import here made `aito -V` and `aito list` load a dataframe
+library before doing anything -- and fail outright wherever numpy's compiled
+extensions could not load. `aito/cli/parser.py` already defers `sql_connection`
+for the same reason.
+
+`from __future__ import annotations` makes the `pd.DataFrame` annotations
+throughout this module strings evaluated on demand, so the signatures still read
+as they did without needing pandas present to define them.
 """
 
-import logging
-from typing import List, Dict, Callable
+from __future__ import annotations
 
-import pandas as pd
+import logging
+from typing import List, Dict, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - import-time typing only
+    import pandas as pd
 
 from aito.utils._typing import *
 from aito.schema import AitoTableSchema, DataSeriesProperties
@@ -20,6 +34,7 @@ class DataFrameHandler:
     allowed_format = ['csv', 'json', 'excel', 'ndjson', 'parquet']
 
     def __init__(self):
+        import pandas as pd  # deferred: see the module docstring
 
         pandas_version = version.parse(pd.__version__)
 
@@ -148,6 +163,8 @@ class DataFrameHandler:
         :rtype: pd.DataFrame
         """
         LOG.debug(f'reading data from {read_input} to df...')
+        import pandas as pd  # deferred: see the module docstring
+
         read_functions = {
             'csv': pd.read_csv,
             'excel': pd.read_excel,

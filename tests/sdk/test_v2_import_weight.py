@@ -1,4 +1,4 @@
-"""The v2 client must stay cheap to import
+"""The client and the CLI must stay cheap to import
 
 `from aito.client.v2 import AitoClientV2` used to load pandas, numpy, aiohttp
 and langdetect — the whole v1 stack, because importing a submodule runs the
@@ -10,6 +10,10 @@ cannot load, ``import aito.client.v2`` raised — so a service that had never
 touched a dataframe stopped starting the moment it depended on this SDK. That
 is how it was found: the first real consumer (aito-erp-demo) could not import
 the client it had just adopted.
+
+The CLI has the same requirement for the same reason: building its parser
+imports every subcommand module, so `aito -V` used to load a dataframe library
+before printing a version string.
 
 These run in a **subprocess**. An in-process check is worthless: by the time
 this module executes, another test in the same run has almost certainly
@@ -56,6 +60,34 @@ class TestV2ImportWeight(BaseTestCase):
         # worth holding: aiohttp is only needed for the async path.
         loaded = _modules_loaded_by('from aito.client import AitoClient')
         self.assertEqual(loaded, set(), f'importing AitoClient pulled in {sorted(loaded)}')
+
+    def test_building_the_cli_parser_stays_light(self):
+        """`aito -V` must not load a dataframe library.
+
+        Building the parser imports every subcommand module, and one of them
+        reaches `aito/utils/data_frame_handler.py`. That made the whole CLI —
+        including commands that touch no data, like `-V`, `list` and the
+        planned `server start` — pay for pandas, and fail outright wherever
+        numpy could not load. Only `convert` and the file-reading commands
+        genuinely need it, and they now pull it when they run.
+        """
+        loaded = _modules_loaded_by(
+            'from aito.cli.main_parser import MainParser; MainParser()')
+        self.assertEqual(loaded, set(), f'building the CLI parser pulled in {sorted(loaded)}')
+
+    def test_the_cli_still_converts_a_file(self):
+        """The deferred pandas must still arrive for the commands that need it."""
+        probe = (
+            'import io, sys;'
+            'from aito.utils.data_frame_handler import DataFrameHandler;'
+            'buf = io.StringIO("id,name\\n1,Neil\\n2,Buzz\\n");'
+            'df = DataFrameHandler().read_file_to_df(buf, "csv");'
+            'print(len(df), sorted(df.columns))'
+        )
+        result = subprocess.run([sys.executable, '-c', probe],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr[-2000:])
+        self.assertEqual(result.stdout.strip(), "2 ['id', 'name']")
 
     def test_the_deferred_dependencies_still_work_when_actually_used(self):
         """Deferring an import must not mean losing the feature.
