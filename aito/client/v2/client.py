@@ -583,10 +583,16 @@ class AitoClientV2:
         generalizes: evidence never seen verbatim still ranks, on the strength
         of the parts of it that were.
 
-        Hits carry v1's ``feature`` and ``field`` keys alongside ``$p`` and
-        ``$value``. That is deliberate — v2 keeps a v1 key and adds the v2 one
-        rather than replacing it, so a v1-era caller moving to ``/api/v2`` over a
-        legacy table keeps working. ``$value`` is the canonical one to read.
+        Read the matched value from ``$value``. Engine 2.7.0 briefly also
+        returned v1's ``feature`` and ``field`` keys here, on the
+        keep-the-v1-name-add-the-v2-one rule; ``/api/v2`` now strips them
+        deliberately so the v2 shape stays clean, and a v1-era client that wants
+        them calls ``/api/v1x`` instead, where they are put back. Do not read
+        ``hit['feature']`` from this method — on a current engine it is absent.
+
+        ``match`` is not part of the ``_query`` grammar — ``_match`` is its own
+        endpoint — so :meth:`query` cannot reach it. Use :meth:`request` with
+        ``/_match`` for a body this method cannot express.
 
         :param from_table: the collection holding the evidence rows
         :type from_table: str
