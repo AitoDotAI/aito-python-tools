@@ -1,6 +1,27 @@
 Changelog
 =========
 
+0.6.3
+-----
+
+The ``aito`` CLI no longer imports pandas before it can print its own version.
+
+SDK
+^^^
+
+Fixed
+"""""
+
+- ``aito -V``, ``aito list`` and every command that touches no data no longer load
+  **pandas** and **numpy**. Building the CLI parser imports every subcommand module, and
+  one of those reached :py:mod:`aito.utils.data_frame_handler`, which imported pandas at
+  module scope. 0.6.2 made the *library* light to import but left the CLI paying the same
+  cost — and failing outright wherever numpy's compiled extensions could not load
+- pandas is now imported inside the two methods of
+  :py:class:`~aito.utils.data_frame_handler.DataFrameHandler` that call it. ``convert``
+  and the file-reading commands pull it when they run, which is when it is needed.
+  :py:mod:`aito.cli.parser` already deferred ``sql_connection`` the same way
+
 0.6.2
 -----
 

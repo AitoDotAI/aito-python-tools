@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.client.v2.client.AitoClientV2 &mdash; aito-python-sdk 0.6.2 documentation</title>
+  <title>aito.client.v2.client.AitoClientV2 &mdash; aito-python-sdk 0.6.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../../_static/documentation_options.js?v=b8503983"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -533,10 +533,15 @@ checking whether a capability exists on the deploy you are talking to.</p>
 invoice it settles, say. Candidates come back ranked by <code class="docutils literal notranslate"><span class="pre">$p</span></code>, and it
 generalizes: evidence never seen verbatim still ranks, on the strength
 of the parts of it that were.</p>
-<p>Hits carry v1’s <code class="docutils literal notranslate"><span class="pre">feature</span></code> and <code class="docutils literal notranslate"><span class="pre">field</span></code> keys alongside <code class="docutils literal notranslate"><span class="pre">$p</span></code> and
-<code class="docutils literal notranslate"><span class="pre">$value</span></code>. That is deliberate — v2 keeps a v1 key and adds the v2 one
-rather than replacing it, so a v1-era caller moving to <code class="docutils literal notranslate"><span class="pre">/api/v2</span></code> over a
-legacy table keeps working. <code class="docutils literal notranslate"><span class="pre">$value</span></code> is the canonical one to read.</p>
+<p>Read the matched value from <code class="docutils literal notranslate"><span class="pre">$value</span></code>. Engine 2.7.0 briefly also
+returned v1’s <code class="docutils literal notranslate"><span class="pre">feature</span></code> and <code class="docutils literal notranslate"><span class="pre">field</span></code> keys here, on the
+keep-the-v1-name-add-the-v2-one rule; <code class="docutils literal notranslate"><span class="pre">/api/v2</span></code> now strips them
+deliberately so the v2 shape stays clean, and a v1-era client that wants
+them calls <code class="docutils literal notranslate"><span class="pre">/api/v1x</span></code> instead, where they are put back. Do not read
+<code class="docutils literal notranslate"><span class="pre">hit['feature']</span></code> from this method — on a current engine it is absent.</p>
+<p><code class="docutils literal notranslate"><span class="pre">match</span></code> is not part of the <code class="docutils literal notranslate"><span class="pre">_query</span></code> grammar — <code class="docutils literal notranslate"><span class="pre">_match</span></code> is its own
+endpoint — so <a class="reference internal" href="#aito.client.v2.client.AitoClientV2.query" title="aito.client.v2.client.AitoClientV2.query"><code class="xref py py-meth docutils literal notranslate"><span class="pre">query()</span></code></a> cannot reach it. Use <a class="reference internal" href="#aito.client.v2.client.AitoClientV2.request" title="aito.client.v2.client.AitoClientV2.request"><code class="xref py py-meth docutils literal notranslate"><span class="pre">request()</span></code></a> with
+<code class="docutils literal notranslate"><span class="pre">/_match</span></code> for a body this method cannot express.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
