@@ -407,13 +407,23 @@ class TestMatchLive(BaseTestCase):
         # Graded, not a flat tie: the runner-up must score strictly lower.
         self.assertGreater(res.first.probability, res.hits[1].probability)
 
-    def test_match_hits_carry_the_v1_aliases_beside_the_v2_keys(self):
-        """Deliberate: v2 keeps a v1 key and adds the v2 one, never removes."""
+    def test_match_hits_do_not_carry_the_v1_aliases(self):
+        """`/api/v2` strips v1's `feature`/`field` from a match hit, on purpose.
+
+        Engine 2.7.0 briefly added them here, on the
+        keep-the-v1-name-add-the-v2-one rule that `_estimate` still follows.
+        That was reversed for `_match`: the v2 shape stays `$p`/`$value`, and a
+        v1-era client that wants the old keys calls `/api/v1x`, which puts them
+        back. Asserted rather than left implicit because this client's `match()`
+        docstring used to promise the aliases, and a reader who believed it
+        would write `hit['feature']` and get a KeyError.
+        """
         res = self.client.match(
             from_table=self.PAYMENTS, match='inv_id', where={'amount': 141.0}, limit=1)
         hit = res.first
-        self.assertEqual(hit['feature'], hit.value)
-        self.assertEqual(hit['field'], 'inv_id')
+        self.assertIsNotNone(hit.value)
+        self.assertNotIn('feature', hit)
+        self.assertNotIn('field', hit)
 
     def test_match_honours_select_and_why(self):
         res = self.client.match(
