@@ -486,9 +486,9 @@ class AitoClientV2:
         :rtype: V2RowsResponse
 
         >>> res = client.predict( # doctest: +SKIP
-        ...     from_table='invoices', where={'vendor': 'Elenia Oy'}, predict='gl_code')
+        ...     from_table='invoices', where={'Description': 'cloud services'}, predict='GLCode')
         >>> res.first.value # doctest: +SKIP
-        '6110'
+        'E002'
         """
         if select is None:
             select = ['$p', '$value', '$why'] if why else ['$p', '$value']
