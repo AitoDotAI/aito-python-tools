@@ -1,36 +1,25 @@
-"""The Aito **v2** API client
+"""DEPRECATED: the v2 client's old home. Use ``aito.v2``.
 
-``AitoClientV2`` is a separate class from the v1 :class:`~aito.client.aito_client.AitoClient`
-rather than a flag on it. The reasoning is in ``docs/v2-client-design.md``.
-
->>> from aito.client.v2 import AitoClientV2 # doctest: +SKIP
->>> client = AitoClientV2(instance_url, api_key) # doctest: +SKIP
->>> client.predict(from_table='invoices', where={'vendor': 'Elenia Oy'}, # doctest: +SKIP
-...                predict='gl_code').first.value
-'6110'
+The old dotted paths (``aito.client.v2.client`` and so on) keep resolving, to the same
+module objects as ``aito.v2``. Importing this path also imports the v1 stack, because
+``aito.client`` is its parent package — one more reason to move to ``aito.v2``, which
+does not. Removed in aitoai 1.0.
 """
 
-from .client import AitoClientV2
-from .errors import AitoV2Error, AitoV2ResponseError
-from .responses import (
-    V2AggregateResponse, V2BatchResponse, V2EstimateResponse, V2EvaluationResponse,
-    KIND_TO_RESPONSE_CLS, V2RowsResponse, V2Hit, V2Response, V2Warning,
-    response_for_kind, unwrap_payload,
+import importlib as _importlib
+import sys as _sys
+import warnings as _warnings
+
+_warnings.warn(
+    "`aito.client.v2` is deprecated and will be removed in aitoai 1.0. "
+    "Import from `aito.v2` instead (e.g. `from aito.v2 import Client`).",
+    DeprecationWarning, stacklevel=2,
 )
 
-__all__ = [
-    'AitoClientV2',
-    'AitoV2Error',
-    'AitoV2ResponseError',
-    'V2Response',
-    'V2Hit',
-    'V2Warning',
-    'V2RowsResponse',
-    'V2EstimateResponse',
-    'V2AggregateResponse',
-    'V2EvaluationResponse',
-    'V2BatchResponse',
-    'KIND_TO_RESPONSE_CLS',
-    'response_for_kind',
-    'unwrap_payload',
-]
+from aito.v2 import *  # noqa: E402,F401,F403
+from aito.v2 import __all__  # noqa: E402,F401
+
+for _name in ('client', 'errors', 'responses'):
+    _mod = _importlib.import_module(f'aito.v2.{_name}')
+    _sys.modules[f'aito.client.v2.{_name}'] = _mod
+    setattr(_sys.modules[__name__], _name, _mod)

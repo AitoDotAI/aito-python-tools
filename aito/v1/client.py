@@ -2,7 +2,7 @@
 
 `aiohttp` is imported inside the functions that use it rather than at module
 scope. It is needed only for the asynchronous path, and this module is
-reachable from ``import aito.client.v2`` -- a synchronous client that does not
+reachable from ``import aito.v2`` -- a synchronous client that does not
 use it.
 """
 
@@ -36,7 +36,7 @@ def _is_aiohttp_response_error(error: Exception) -> bool:
 
     aiohttp is only needed for the async path. Importing it at module scope made
     it load for every caller of this package -- including
-    ``import aito.client.v2``, which is synchronous and does not use it. If
+    ``import aito.v2``, which is synchronous and does not use it. If
     aiohttp is not installed at all, an error plainly cannot be one of its.
     """
     try:
@@ -244,7 +244,7 @@ class AitoClient:
 
          Sends a `PREDICT <https://aito.ai/docs/api/#post-api-v1-predict>`__ query:
 
-         >>> from aito.client import PredictRequest
+         >>> from aito.v1 import PredictRequest
          >>> res = client.request(request_obj=PredictRequest(
          ...    query={
          ...        "from": "impressions",
@@ -386,7 +386,7 @@ class AitoClient:
 
         Find products that multiple users would most likely buy
 
-        >>> from aito.client import MatchRequest
+        >>> from aito.v1 import MatchRequest
         >>> users = ['veronica', 'larry', 'alice']
         >>> responses = client.batch_requests([
         ...     MatchRequest(

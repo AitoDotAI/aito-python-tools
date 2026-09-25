@@ -1,4 +1,4 @@
-"""Request classes that is sent by an :class:`~aito.client.aito_client.AitoClient` to an Aito instance
+"""Request classes that is sent by an :class:`~aito.v1.client.AitoClient` to an Aito instance
 
 """
 

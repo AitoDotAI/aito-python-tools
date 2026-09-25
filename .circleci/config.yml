@@ -193,7 +193,9 @@ commonYAMLStructure:
       command: |
         . venv/bin/activate
         ./scripts/deploy test.pypi --no-publish --bump-version dev --no-check-git-tree
-        pip install dist/*.whl
+        # [cli]: the built-package jobs run the CLI and schema-inference suites, which
+        # need the dataframe extra since 0.7.0 moved it out of the base install.
+        pip install "$(ls dist/*.whl)[cli]"
   - &install_and_run_safety_check
     run:
       name: install safety and security check dependencies

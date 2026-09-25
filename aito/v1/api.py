@@ -1,5 +1,5 @@
 """
-Different APIs that takes an :class:`Aito Client object <aito.client.AitoClient>` as the first argument
+Different APIs that takes an :class:`Aito Client object <aito.v1.client.AitoClient>` as the first argument
 """
 
 import logging
@@ -13,9 +13,9 @@ import traceback
 import ndjson
 import requests as requestslib
 
-import aito.client.requests as aito_requests
-import aito.client.responses as aito_responses
-from aito.client import AitoClient, RequestError
+import aito.v1.requests as aito_requests
+import aito.v1.responses as aito_responses
+from aito.v1.client import AitoClient, RequestError
 from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema
 from aito.utils._file_utils import gzip_file, check_file_is_gzipped, read_ndjson_gz_file
 from aito.utils.data_frame_handler import DataFrameHandler
@@ -1233,7 +1233,7 @@ def modify(
 
     Can accept a raw query dict, a single ModifyOperation, or a list of ModifyOperations::
 
-        from aito.client.requests import Insert, Update, Delete
+        from aito.v1.requests import Insert, Update, Delete
 
         # Insert a single entry
         api.modify(client, Insert("products", {"id": "1", "name": "Apple"}))
@@ -1293,7 +1293,7 @@ def batch(
 
     Example::
 
-        import aito.api as api
+        import aito.v1.api as api
 
         # Execute multiple queries in one request
         results = api.batch(client, [

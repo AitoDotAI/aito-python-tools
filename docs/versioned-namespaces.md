@@ -95,9 +95,13 @@ describe `aito.Client` in prose as an alias, rather than autodoc-ing it.
 - `aito.v1` and `aito.v2` packages; code physically moves there.
 - `aito.Client` added, resolving to `aito.v1.Client`.
 - `aito.client` / `aito.client.v2` become deprecated re-export shims.
-- **Extras split** (the install-weight half of td-20260829212355565150): the base install
-  needs `requests` and `packaging`; pandas, fastparquet, openpyxl, xlrd, langdetect,
-  ndjson, argcomplete move behind `aitoai[cli]`. Breaking for anyone who expected the CLI
+- **Extras split** (the install-weight half of td-20260829212355565150): pandas,
+  fastparquet, openpyxl, xlrd, langdetect and argcomplete move behind `aitoai[cli]`.
+  *Amended during implementation:* the base keeps `jsonschema`, `aiohttp` and `ndjson`
+  as well as `requests` and `packaging`, because the v1 client — the default throughout
+  0.x — imports `jsonschema` on every response and `aito.v1.api` imports `ndjson` at load.
+  A base install that could not run `aito.Client` would break the default. All three are
+  small; the ~100 MB is pandas/numpy/fastparquet, and that is what moved. Breaking for anyone who expected the CLI
   from a bare `pip install aitoai`, which is why it rides the same release. Requires
   ending setup.py's verbatim reading of `requirements/build.txt` as `install_requires`.
 - Dead `pandas~=1.0; python_version < "3.9"` marker removed.

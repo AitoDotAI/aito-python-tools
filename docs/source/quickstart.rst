@@ -252,7 +252,7 @@ You can access and update the column schema by using the column name as the key:
 Create a table
 ~~~~~~~~~~~~~~
 
-You can :py:func:`~aito.api.create_table` using an :py:class:`~aito.client.AitoClient` and specifying the table name and the table schema
+You can :py:func:`~aito.v1.api.create_table` using an :py:class:`~aito.v1.client.AitoClient` and specifying the table name and the table schema
 
 .. note::
   The example is not direclty copy-pastable. Please use your own Aito environment credentials
@@ -266,8 +266,8 @@ You can :py:func:`~aito.api.create_table` using an :py:class:`~aito.client.AitoC
 
 .. testcode::
 
-  from aito.client import AitoClient
-  from aito.api import create_table
+  from aito.v1 import AitoClient
+  from aito.v1.api import create_table
   aito_client = AitoClient(instance_url=YOUR_AITO_INSTANCE_URL, api_key=YOUR_AITO_INSTANCE_API_KEY)
   create_table(client=aito_client, table_name='reddit', schema=reddit_schema)
 
@@ -311,13 +311,13 @@ A DataFrame can be converted to:
 Upload the Data
 ~~~~~~~~~~~~~~~
 
-You can :py:func:`~aito.api.upload_entries` using an :py:class:`~aito.client.AitoClient`
+You can :py:func:`~aito.v1.api.upload_entries` using an :py:class:`~aito.v1.client.AitoClient`
 
   - Batch Upload:
 
     .. code-block:: python
 
-      from aito.api import upload_entries
+      from aito.v1.api import upload_entries
       upload_entries(aito_client, table_name='reddit', entries=reddit_entries)
 
   - File Upload:
@@ -325,7 +325,7 @@ You can :py:func:`~aito.api.upload_entries` using an :py:class:`~aito.client.Ait
     .. testcode::
 
       from pathlib import Path
-      from aito.api import upload_file, get_table_size
+      from aito.v1.api import upload_file, get_table_size
 
       upload_file(aito_client, table_name='reddit', file_path=Path('reddit_sample.ndjson.gz'))
 
@@ -339,7 +339,7 @@ You can :py:func:`~aito.api.upload_entries` using an :py:class:`~aito.client.Ait
     .. testcleanup::
 
       import os
-      from aito.api import delete_table
+      from aito.v1.api import delete_table
       delete_table(aito_client, 'reddit')
       os.unlink('reddit_sample.ndjson.gz')
 
@@ -377,8 +377,8 @@ You can send a query to an Aito endpoint by using the AitoClient method:
 
   .. testcode:: [grocery_demo]
 
-    from aito.client import AitoClient
-    from aito.api import search, predict
+    from aito.v1 import AitoClient
+    from aito.v1.api import search, predict
     aito_client = AitoClient(instance_url=INSTANCE_URL, api_key=INSTANCE_API_KEY)
     search(client=aito_client, query={
       "from": "products",

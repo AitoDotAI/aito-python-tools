@@ -3,18 +3,18 @@
 The examples that reach an instance are marked ``# doctest: +SKIP`` in the source
 — they are there to be read, and the live suite in ``tests/sdk/test_v2_live.py``
 is what proves they work. What runs here are the pure ones, chiefly
-:func:`~aito.client.v2.responses.unwrap_payload`, whose whole job is to document
+:func:`~aito.v2.responses.unwrap_payload`, whose whole job is to document
 the two shapes a non-rows v2 endpoint can return.
 """
 
 import doctest
 
-import aito.client.v2.client
-import aito.client.v2.errors
-import aito.client.v2.responses
+import aito.v2.client
+import aito.v2.errors
+import aito.v2.responses
 
 
 def load_tests(loader, tests, ignore):
-    for module in (aito.client.v2.responses, aito.client.v2.errors, aito.client.v2.client):
+    for module in (aito.v2.responses, aito.v2.errors, aito.v2.client):
         tests.addTests(doctest.DocTestSuite(module=module))
     return tests

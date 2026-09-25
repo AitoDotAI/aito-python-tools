@@ -4,11 +4,11 @@ Aito SDK
 The Aito SDK consists of:
 
   - :py:mod:`~aito.schema`: Data structure for the Aito Database Schema
-  - :py:mod:`~aito.client`: A versatile client to make requests to an Aito Database Instance
-  - :py:mod:`~aito.client.v2`: A client for the Aito v2 API
-  - :py:mod:`~aito.client_request`: Request objects used in AitoClient request so that you don't have to worry about the Aito API endpoint
-  - :py:mod:`~aito.client_response`: Enriched response objects returned after executing a request with the AitoClient
-  - :py:mod:`~aito.api`: Different useful functions that uses an AitoClient object to interact with an Aito Database Instance
+  - :py:mod:`~aito.v1`: The v1 API client to make requests to an Aito Database Instance
+  - :py:mod:`~aito.v2`: A client for the Aito v2 API
+  - :py:mod:`~aito.v1.requests`: Request objects used in AitoClient request so that you don't have to worry about the Aito API endpoint
+  - :py:mod:`~aito.v1.responses`: Enriched response objects returned after executing a request with the AitoClient
+  - :py:mod:`~aito.v1.api`: Different useful functions that uses an AitoClient object to interact with an Aito Database Instance
   - :py:class:`~aito.utils.data_frame_handler.DataFrameHandler`: Utility to read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema
 
 .. note::
@@ -31,28 +31,53 @@ You can also create a table schema column-by-column and infer the :py:class:`~ai
 AitoClient
 ----------
 
-The :py:class:`~aito.client.AitoClient` offers different functions to send a :py:mod:`Request object <aito.client_request>` to your Aito instance.
+The :py:class:`~aito.v1.client.AitoClient` offers different functions to send a :py:mod:`Request object <aito.v1.requests>` to your Aito instance.
 
-  - Make a request: :py:func:`~aito.client.AitoClient.request`
-  - Make a request asynchronously using `AIOHTTP ClientSession`_: :py:func:`~aito.client.AitoClient.async_request`
-  - Bounded asynchronous request with `asyncio semaphore`_: :py:func:`~aito.client.AitoClient.bounded_async_request`
-  - Make multiple requests asynchronously: :py:func:`~aito.client.AitoClient.batch_requests`
+  - Make a request: :py:func:`~aito.v1.client.AitoClient.request`
+  - Make a request asynchronously using `AIOHTTP ClientSession`_: :py:func:`~aito.v1.client.AitoClient.async_request`
+  - Bounded asynchronous request with `asyncio semaphore`_: :py:func:`~aito.v1.client.AitoClient.bounded_async_request`
+  - Make multiple requests asynchronously: :py:func:`~aito.v1.client.AitoClient.batch_requests`
+
+.. _sdkVersions:
+
+Choosing an API version
+-----------------------
+
+Each Aito API version has its own package, whose meaning never changes:
+
+.. code:: python
+
+    from aito.v1 import Client   # the v1 API: /api/v1
+    from aito.v2 import Client   # the v2 API: /api/v2
+
+``aito.Client`` is the one name that follows the current default version. It moves only on a
+**major** release of ``aitoai``, so the major version tells you which API it is — 0.x is v1,
+1.x will be v2 — and pinning ``aitoai<1`` keeps it on v1. Use ``aito.Client`` in quick
+experiments; in production code import the explicit version.
+
+Before 0.7 the v1 client lived in ``aito.client`` and the helpers in ``aito.api``, and the v2
+client in ``aito.client.v2``. Those paths still work, resolve to the very same objects, and
+emit a ``DeprecationWarning``; they are removed in 1.0. ``aito.client`` stays v1 until then —
+it does **not** follow the default.
+
+A bare ``pip install aitoai`` installs the API clients only. The command-line tool, schema
+inference and file conversion need ``pip install 'aitoai[cli]'``.
 
 .. _sdkAitoClientV2:
 
 AitoClientV2
 ------------
 
-The :py:class:`~aito.client.v2.client.AitoClientV2` talks to the **v2** API. It is a separate
-class from the v1 :py:class:`~aito.client.AitoClient` rather than a flag on it, because the two
+The :py:class:`~aito.v2.client.AitoClientV2` talks to the **v2** API. It is a separate
+class from the v1 :py:class:`~aito.v1.client.AitoClient` rather than a flag on it, because the two
 APIs return genuinely different response shapes — the reasoning is written up in
 ``docs/v2-client-design.md``.
 
 .. code:: python
 
-    from aito.client.v2 import AitoClientV2
+    from aito.v2 import Client
 
-    client = AitoClientV2(instance_url, api_key)
+    client = Client(instance_url, api_key)
 
     prediction = client.predict(
         from_table='invoices', where={'vendor': 'Elenia Oy'}, predict='gl_code')
@@ -60,16 +85,16 @@ APIs return genuinely different response shapes — the reasoning is written up 
 
 Querying:
 
-  - Predict a field's value: :py:func:`~aito.client.v2.client.AitoClientV2.predict`
-  - Retrieve rows: :py:func:`~aito.client.v2.client.AitoClientV2.search`
-  - Rank values by a goal: :py:func:`~aito.client.v2.client.AitoClientV2.recommend`
-  - Find statistical relationships: :py:func:`~aito.client.v2.client.AitoClientV2.relate`
-  - Match a link field's candidates against evidence: :py:func:`~aito.client.v2.client.AitoClientV2.match`
-  - Estimate a numeric field: :py:func:`~aito.client.v2.client.AitoClientV2.estimate`
-  - Aggregate: :py:func:`~aito.client.v2.client.AitoClientV2.aggregate`
-  - Evaluate prediction quality: :py:func:`~aito.client.v2.client.AitoClientV2.evaluate`
+  - Predict a field's value: :py:func:`~aito.v2.client.AitoClientV2.predict`
+  - Retrieve rows: :py:func:`~aito.v2.client.AitoClientV2.search`
+  - Rank values by a goal: :py:func:`~aito.v2.client.AitoClientV2.recommend`
+  - Find statistical relationships: :py:func:`~aito.v2.client.AitoClientV2.relate`
+  - Match a link field's candidates against evidence: :py:func:`~aito.v2.client.AitoClientV2.match`
+  - Estimate a numeric field: :py:func:`~aito.v2.client.AitoClientV2.estimate`
+  - Aggregate: :py:func:`~aito.v2.client.AitoClientV2.aggregate`
+  - Evaluate prediction quality: :py:func:`~aito.v2.client.AitoClientV2.evaluate`
   - Anything else, via the universal ``_query`` endpoint:
-    :py:func:`~aito.client.v2.client.AitoClientV2.query`
+    :py:func:`~aito.v2.client.AitoClientV2.query`
 
 .. note::
 
@@ -83,22 +108,22 @@ Manipulating the database:
 
   These operations require the client to be setup with the READ-WRITE API key
 
-  - Create a collection: :py:func:`~aito.client.v2.client.AitoClientV2.create_collection`
-  - Delete a collection: :py:func:`~aito.client.v2.client.AitoClientV2.delete_collection`
-  - Upload batches of entries: :py:func:`~aito.client.v2.client.AitoClientV2.upload_entries`
-  - Rebuild the index after a bulk load: :py:func:`~aito.client.v2.client.AitoClientV2.optimize`
-  - Branch an environment: :py:func:`~aito.client.v2.client.AitoClientV2.branch_env`
+  - Create a collection: :py:func:`~aito.v2.client.AitoClientV2.create_collection`
+  - Delete a collection: :py:func:`~aito.v2.client.AitoClientV2.delete_collection`
+  - Upload batches of entries: :py:func:`~aito.v2.client.AitoClientV2.upload_entries`
+  - Rebuild the index after a bulk load: :py:func:`~aito.v2.client.AitoClientV2.optimize`
+  - Branch an environment: :py:func:`~aito.v2.client.AitoClientV2.branch_env`
 
 Errors carry a machine-readable code, so you branch on the code rather than on the text of the
 message:
 
 .. code:: python
 
-    from aito.client.v2 import AitoV2Error
+    from aito.v2 import Error
 
     try:
         client.delete_collection('invoices')
-    except AitoV2Error as err:
+    except Error as err:
         if not err.is_not_found:   # a 404 here is the ordinary "drop if exists" case
             raise
 
@@ -112,7 +137,7 @@ server answered a slightly different query than the one you sent:
         print(warning.code, warning.message)
 
     # or make it a hard failure:
-    strict = AitoClientV2(instance_url, api_key, on_warning='raise')
+    strict = Client(instance_url, api_key, on_warning='raise')
 
 Aito reports its own server-side processing time in the ``x-aitoai-response-time`` header,
 which is what an application should surface rather than the round trip. The parsed body does
@@ -121,7 +146,7 @@ not carry it, so pass ``on_response``:
 .. code:: python
 
     timings = []
-    client = AitoClientV2(instance_url, api_key,
+    client = Client(instance_url, api_key,
                           on_response=lambda resp, path: timings.append(
                               (path, float(resp.headers['x-aitoai-response-time']))))
 
@@ -132,7 +157,7 @@ A complete runnable example — create a collection, load it, predict, explain, 
 
 AitoAPI
 -------
-:py:mod:`aito.api` module offers different functions that takes a :py:class:`Aito Client object <aito.client.AitoClient>` as the first argument
+:py:mod:`aito.v1.api` module offers different functions that takes a :py:class:`Aito Client object <aito.v1.client.AitoClient>` as the first argument
 
   - Manipulate the database:
 
@@ -140,12 +165,12 @@ AitoAPI
 
       These operations require the client to be setup with the READ-WRITE API key
 
-    - Create a table: :py:func:`~aito.api.create_table`
-    - Delete a table: :py:func:`~aito.api.delete_table`
-    - Create the database: :py:func:`~aito.api.create_database`
-    - Delete the database: :py:func:`~aito.api.delete_database`
-    - Copy a table: :py:func:`~aito.api.copy_table`
-    - Rename a table: :py:func:`~aito.api.rename_table`
+    - Create a table: :py:func:`~aito.v1.api.create_table`
+    - Delete a table: :py:func:`~aito.v1.api.delete_table`
+    - Create the database: :py:func:`~aito.v1.api.create_database`
+    - Delete the database: :py:func:`~aito.v1.api.delete_database`
+    - Copy a table: :py:func:`~aito.v1.api.copy_table`
+    - Rename a table: :py:func:`~aito.v1.api.rename_table`
 
   - Upload the data:
 
@@ -153,29 +178,29 @@ AitoAPI
 
       These operations require the client to be setup with the READ-WRITE API key
 
-    - Upload a binary file object to a table: :py:func:`~aito.api.upload_binary_file`
-    - Upload a file to a table: :py:func:`~aito.api.upload_file`
-    - Upload batches of entries to a table: :py:func:`~aito.api.upload_entries`
-    - Optimize a table after uploading the data: :py:func:`~aito.api.optimize_table`
+    - Upload a binary file object to a table: :py:func:`~aito.v1.api.upload_binary_file`
+    - Upload a file to a table: :py:func:`~aito.v1.api.upload_file`
+    - Upload batches of entries to a table: :py:func:`~aito.v1.api.upload_entries`
+    - Optimize a table after uploading the data: :py:func:`~aito.v1.api.optimize_table`
 
 
   - Get information about the database:
 
-    - Get the instance version: :py:func:`~aito.api.get_version`
-    - Check if a table exists in the instance: :py:func:`~aito.api.check_table_exists`
-    - Get a list of existing tables in the instance: :py:func:`~aito.api.get_existing_tables`
-    - Get a table schema: :py:func:`~aito.api.get_table_schema`
-    - Find the number of entries in a table: :py:func:`~aito.api.get_table_size`
-    - Get the database schema: :py:func:`~aito.api.get_database_schema`
+    - Get the instance version: :py:func:`~aito.v1.api.get_version`
+    - Check if a table exists in the instance: :py:func:`~aito.v1.api.check_table_exists`
+    - Get a list of existing tables in the instance: :py:func:`~aito.v1.api.get_existing_tables`
+    - Get a table schema: :py:func:`~aito.v1.api.get_table_schema`
+    - Find the number of entries in a table: :py:func:`~aito.v1.api.get_table_size`
+    - Get the database schema: :py:func:`~aito.v1.api.get_database_schema`
 
   - Querying:
 
-    - Query entries of a table: :py:func:`~aito.api.query_entries`
-    - Query all entries of a table: :py:func:`~aito.api.query_all_entries`
-    - Download a table: :py:func:`~aito.api.download_table`
+    - Query entries of a table: :py:func:`~aito.v1.api.query_entries`
+    - Query all entries of a table: :py:func:`~aito.v1.api.query_all_entries`
+    - Download a table: :py:func:`~aito.v1.api.download_table`
 
-    - Make a job request (for query that takes longer than 30 seconds): :py:func:`~aito.api.job_request`
-    - Make a job request step by step: :py:func:`~aito.api.create_job`, :py:func:`~aito.api.get_job_status`, :py:func:`~aito.api.get_job_result`
+    - Make a job request (for query that takes longer than 30 seconds): :py:func:`~aito.v1.api.job_request`
+    - Make a job request step by step: :py:func:`~aito.v1.api.create_job`, :py:func:`~aito.v1.api.get_job_status`, :py:func:`~aito.v1.api.get_job_result`
 
 .. _sdkTroubleshooting:
 

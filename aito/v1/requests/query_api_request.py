@@ -126,7 +126,7 @@ class BatchRequest(_PostRequest, _FinalRequest, AitoRequest):
 
     Example::
 
-        from aito.client.requests import BatchRequest
+        from aito.v1.requests import BatchRequest
 
         # Execute multiple queries in one request
         request = BatchRequest([

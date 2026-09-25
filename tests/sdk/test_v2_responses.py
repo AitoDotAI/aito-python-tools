@@ -6,7 +6,7 @@ implementing the client, so these lock the real wire contract rather than an
 assumed one. The live counterparts are in ``test_v2_live.py``.
 """
 
-from aito.client.v2 import (
+from aito.v2 import (
     V2AggregateResponse, AitoV2ResponseError, V2BatchResponse, V2EstimateResponse,
     V2EvaluationResponse, V2RowsResponse, V2Warning, response_for_kind, unwrap_payload,
 )

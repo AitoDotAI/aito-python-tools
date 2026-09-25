@@ -14,7 +14,7 @@ import os
 import unittest
 from uuid import uuid4
 
-from aito.client.v2 import AitoClientV2, AitoV2Error, V2EstimateResponse
+from aito.v2 import AitoClientV2, AitoV2Error, V2EstimateResponse
 from tests.cases import BaseTestCase
 
 #: The collection this suite creates and drops, named uniquely PER RUN.

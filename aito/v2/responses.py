@@ -1,4 +1,4 @@
-"""Response classes returned by the :class:`~aito.client.v2.client.AitoClientV2`
+"""Response classes returned by the :class:`~aito.v2.client.AitoClientV2`
 
 The v2 envelope (``core/docs/v2-response-format.md`` §3) is::
 
@@ -122,7 +122,7 @@ def unwrap_payload(json: Dict, kind: str) -> Any:
     >>> unwrap_payload({'kind': 'aggregate', 'data': {}}, 'estimate')
     Traceback (most recent call last):
        ...
-    aito.client.v2.errors.AitoV2ResponseError: expected a 'estimate' response from Aito v2, got 'aggregate'
+    aito.v2.errors.AitoV2ResponseError: expected a 'estimate' response from Aito v2, got 'aggregate'
     """
     if not isinstance(json, dict) or 'kind' not in json:
         return json

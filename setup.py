@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 PROJECT_ROOT_PATH = Path(__file__).parent
 VERSION_FILE_PATH = PROJECT_ROOT_PATH / 'aito' / '__init__.py'
-REQUIREMENTS_FILE_PATH = PROJECT_ROOT_PATH / 'requirements' / 'build.txt'
+REQUIREMENTS_DIR = PROJECT_ROOT_PATH / 'requirements'
 
 
 def find_current_version(version_file_path: Path) -> str:
@@ -19,10 +19,13 @@ def find_current_version(version_file_path: Path) -> str:
 
 
 def fetch_requirements(requirements_file_path: Path):
+    """read a requirements file, skipping blank lines and comments"""
     requirements = []
     with requirements_file_path.open() as in_f:
         for line in in_f:
-            requirements.append(line.strip())
+            line = line.strip()
+            if line and not line.startswith('#'):
+                requirements.append(line)
     return requirements
 
 
@@ -44,7 +47,8 @@ setup(
         'Tracker': 'https://github.com/AitoDotAI/aito-python-tools/issues',
     },
     packages=find_packages(exclude=['tests', 'tests.*']),
-    install_requires=fetch_requirements(REQUIREMENTS_FILE_PATH),
+    install_requires=fetch_requirements(REQUIREMENTS_DIR / 'base.txt'),
+    extras_require={'cli': fetch_requirements(REQUIREMENTS_DIR / 'cli.txt')},
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -65,7 +69,7 @@ setup(
     python_requires='>=3.9',
     entry_points={
         'console_scripts': [
-            'aito = aito.cli.main_parser:main'
+            'aito = aito.cli:main'
         ]
     }
 )
