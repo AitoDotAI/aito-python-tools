@@ -45,6 +45,16 @@ SDK
 - Fixed the ``SyntaxWarning: invalid escape sequence`` that every import printed on
   Python 3.12+.
 
+Docs
+^^^^
+
+- The v2 quickstart in the README and the SDK guide now runs verbatim against the public
+  read-only sandbox. It used to predict ``gl_code`` from a ``vendor`` column that the
+  sandbox's ``invoices`` table does not have, so a copy-paste failed with
+  ``Field not found: gl_code``.
+- Documented ``having``: it keeps only the predicted values seen with the evidence, and
+  accepts nothing but the per-candidate frequency ``$f``.
+
 0.6.3
 -----
 

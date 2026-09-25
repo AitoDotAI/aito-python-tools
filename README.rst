@@ -22,13 +22,14 @@ Each Aito API version has its own package, whose meaning never changes:
 
   .. code-block:: python
 
-    from aito.v2 import Client      # the v2 API
-    from aito.v1 import Client      # the v1 API
+    from aito.v2 import Client      # the v2 API  (`from aito.v1 import Client` for v1)
 
-    client = Client(instance_url, api_key)
+    # the public read-only sandbox; use your own instance URL and key in production
+    client = Client('https://shared.aito.ai/db/aito-demo',
+                    'yg4rTlXkqDzm4y8gPeY75HCKaNwfbTQ2si64ONTi', env='v2')
     prediction = client.predict(
-        from_table='invoices', where={'vendor': 'Elenia Oy'}, predict='gl_code')
-    print(prediction.first.value, prediction.first.probability)
+        from_table='invoices', where={'Description': 'cloud services'}, predict='GLCode')
+    print(prediction.first.value, prediction.first.probability)   # E002 0.83...
 
 ``aito.Client`` follows the current default version, and moves only on a major release of
 this package: **aitoai 0.x -> v1, 1.x -> v2**. Quickstarts can use it; production code

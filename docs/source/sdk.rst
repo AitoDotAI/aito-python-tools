@@ -77,11 +77,34 @@ APIs return genuinely different response shapes — the reasoning is written up 
 
     from aito.v2 import Client
 
-    client = Client(instance_url, api_key)
+    # the public read-only sandbox; use your own instance URL and key in production
+    client = Client('https://shared.aito.ai/db/aito-demo',
+                    'yg4rTlXkqDzm4y8gPeY75HCKaNwfbTQ2si64ONTi', env='v2')
 
     prediction = client.predict(
-        from_table='invoices', where={'vendor': 'Elenia Oy'}, predict='gl_code')
-    print(prediction.first.value, prediction.first.probability)
+        from_table='invoices', where={'Description': 'cloud services'}, predict='GLCode')
+    print(prediction.first.value, prediction.first.probability)   # E002 0.83...
+
+A predict ranks **every** value of the field; the evidence in ``where`` changes each
+candidate's probability but never removes one. To return only the values actually seen
+with the evidence, filter on the per-candidate frequency ``$f`` with ``having``, via
+:py:func:`~aito.v2.client.AitoClientV2.query`:
+
+.. code:: python
+
+    seen = client.query({
+        'from': 'invoices',
+        'where': {'Processor': 'Emily Davis'},
+        'predict': 'GLCode',
+        'select': ['$value', '$p', '$f'],
+        'having': {'$f': {'$gte': 1}},
+    })
+    print([(hit.value, hit['$f']) for hit in seen])   # [('F001', 20)]
+
+``having`` filters the ranked list after scoring: the remaining ``$p`` values are not
+renormalised, and ``$f`` is the only field it accepts — ``{'$f': {'$gte' | '$gt' | '$lte' |
+'$lt': <number>}}``. Filtering on anything else, such as ``$p``, is a ``400
+request.invalid``.
 
 Querying:
 
