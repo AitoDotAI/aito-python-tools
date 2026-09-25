@@ -26,8 +26,23 @@ class TestTheDefault(BaseTestCase):
         import aito.v1
         self.assertEqual(aito.DEFAULT_API_VERSION, 'v1')
         self.assertIs(aito.Client, aito.v1.Client)
-        self.assertTrue(aito.__version__.startswith('0.'),
-                        'moving DEFAULT_API_VERSION requires a major bump, and vice versa')
+
+    def test_the_package_major_says_which_api_is_the_default(self):
+        """Moving the default requires a major bump, and a major bump moves it.
+
+        Only meaningful for a real release. CI's test.pypi dev builds are versioned by
+        timestamp (`scripts/deploy --bump-version dev` -> 2026.9.25.12.0.0.dev), so
+        their "major" is the year and says nothing about the API.
+        """
+        import aito
+        from packaging.version import Version
+        version = Version(aito.__version__)
+        if version.is_devrelease:
+            self.skipTest(f'{version} is a timestamped dev build')
+        expected = {0: 'v1', 1: 'v2'}.get(version.major)
+        self.assertEqual(aito.DEFAULT_API_VERSION, expected,
+                         f'aitoai {version} must default to {expected}: moving '
+                         f'DEFAULT_API_VERSION requires a major bump, and vice versa')
 
     def test_importing_aito_loads_no_api_version(self):
         # `aito.Client` is resolved lazily, or `import aito.v2` would drag v1 in.
