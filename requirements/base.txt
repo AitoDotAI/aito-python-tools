@@ -1,0 +1,7 @@
+# What `pip install aitoai` installs: everything the API clients (aito.v1, aito.v2)
+# need at import time and on every call. Read verbatim by setup.py as install_requires.
+requests >= 2.22, <4
+packaging >= 21.0
+aiohttp >= 3.6.1, < 4.0
+ndjson >= 0.2.0
+jsonschema~=3.0

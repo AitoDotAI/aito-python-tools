@@ -168,8 +168,8 @@ You can connect to your SQL Database using the :py:class:`~aito.utils.sql_connec
 .. code:: python
 
   from aito.utils.sql_connection import SQLConnection
-  from aito.client import AitoClient
-  from aito.api import upload_entries
+  from aito.v1 import AitoClient
+  from aito.v1.api import upload_entries
 
   connection = SQLConnection(
     sql_driver='PostgreSQL Unicode',

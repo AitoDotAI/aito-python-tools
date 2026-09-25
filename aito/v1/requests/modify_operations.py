@@ -2,8 +2,8 @@
 
 These classes provide a fluent interface for building modify queries::
 
-    from aito.client.requests import Insert, Update, Delete
-    import aito.api as api
+    from aito.v1.requests import Insert, Update, Delete
+    import aito.v1.api as api
 
     # Insert a single entry
     api.modify(client, Insert("products", {"id": "1", "name": "Apple"}))

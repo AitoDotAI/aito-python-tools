@@ -5,7 +5,7 @@ from abc import abstractmethod
 from typing import Optional, Union, Dict, List, Type
 import traceback
 
-from aito.client import responses as aito_resp
+from aito.v1 import responses as aito_resp
 from .aito_request import AitoRequest, _PatternEndpoint, _GetRequest, _PostRequest
 from .query_api_request import QueryAPIRequest
 from .data_api_request import DataAPIRequest

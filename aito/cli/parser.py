@@ -7,7 +7,7 @@ from os import getenv
 from pathlib import Path
 from typing import Union, TextIO
 
-from aito.client import AitoClient
+from aito.v1.client import AitoClient
 from aito.exceptions import BaseError
 from aito.utils._credentials_file_utils import get_credentials_file_config
 

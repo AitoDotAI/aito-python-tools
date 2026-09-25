@@ -1,4 +1,4 @@
-"""Offline tests for :class:`~aito.client.v2.client.AitoClientV2`
+"""Offline tests for :class:`~aito.v2.client.AitoClientV2`
 
 No network: the session is replaced with a recorder that returns canned
 responses, so these assert what the client *sends* and how it interprets what
@@ -8,7 +8,7 @@ comes back. The error bodies are verbatim captures from a live instance.
 import json
 import logging
 
-from aito.client.v2 import AitoClientV2, AitoV2Error, V2RowsResponse
+from aito.v2 import AitoClientV2, AitoV2Error, V2RowsResponse
 from tests.cases import BaseTestCase
 
 

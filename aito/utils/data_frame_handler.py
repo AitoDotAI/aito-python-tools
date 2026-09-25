@@ -20,6 +20,7 @@ from typing import List, Dict, Callable, TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover - import-time typing only
     import pandas as pd
 
+from aito.utils._optional import import_optional
 from aito.utils._typing import *
 from aito.schema import AitoTableSchema, DataSeriesProperties
 from packaging import version
@@ -34,7 +35,7 @@ class DataFrameHandler:
     allowed_format = ['csv', 'json', 'excel', 'ndjson', 'parquet']
 
     def __init__(self):
-        import pandas as pd  # deferred: see the module docstring
+        pd = import_optional("pandas", "schema inference and file conversion")  # deferred: see the module docstring
 
         pandas_version = version.parse(pd.__version__)
 
@@ -163,7 +164,7 @@ class DataFrameHandler:
         :rtype: pd.DataFrame
         """
         LOG.debug(f'reading data from {read_input} to df...')
-        import pandas as pd  # deferred: see the module docstring
+        pd = import_optional("pandas", "schema inference and file conversion")  # deferred: see the module docstring
 
         read_functions = {
             'csv': pd.read_csv,

@@ -15,23 +15,29 @@ to `Aito <https://aito.ai/>`_ quicker and more efficiently.
 The SDK also includes the `Aito Command Line Interface (CLI) <https://aito-python-sdk.readthedocs.io/en/latest/cli.html>`_ that enables you to interact with Aito
 using commands in your command-line shell, e.g: infer a table schema from a file or upload a file to Aito.
 
-The Aito v2 API
----------------
+API versions
+------------
 
-``AitoClient`` speaks the v1 API. For the v2 API, use ``AitoClientV2``:
+Each Aito API version has its own package, whose meaning never changes:
 
   .. code-block:: python
 
-    from aito.client.v2 import AitoClientV2
+    from aito.v2 import Client      # the v2 API
+    from aito.v1 import Client      # the v1 API
 
-    client = AitoClientV2(instance_url, api_key)
+    client = Client(instance_url, api_key)
     prediction = client.predict(
         from_table='invoices', where={'vendor': 'Elenia Oy'}, predict='gl_code')
     print(prediction.first.value, prediction.first.probability)
 
-v2 is a separate client class rather than a flag on the v1 one, because the two APIs return
-genuinely different response shapes. The reasoning is written up in ``docs/v2-client-design.md``,
-and ``examples/v2_quickstart.py`` is a runnable end-to-end example that creates a collection,
+``aito.Client`` follows the current default version, and moves only on a major release of
+this package: **aitoai 0.x -> v1, 1.x -> v2**. Quickstarts can use it; production code
+should import the explicit version. The design is written up in ``docs/versioned-namespaces.md``.
+
+``pip install aitoai`` installs the API clients. The command-line tool, schema inference
+and file conversion need the dataframe toolchain: ``pip install 'aitoai[cli]'``.
+
+``examples/v2_quickstart.py`` is a runnable end-to-end example that creates a collection,
 loads it, predicts, explains, evaluates and drops it again.
 
 

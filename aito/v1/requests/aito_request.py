@@ -4,7 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Optional, Union, Dict, List
 
-from aito.client import responses as aito_responses
+from aito.v1 import responses as aito_responses
 
 LOG = logging.getLogger('AitoClientRequest')
 

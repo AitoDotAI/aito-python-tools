@@ -44,7 +44,7 @@ def update_version_file(new_version: Version):
     with VERSION_FILE_PATH.open() as f:
         init_content = f.read()
     with VERSION_FILE_PATH.open('w') as f:
-        f.write(re.sub(r"^__version__ = ['\"]([^'\"]*)['\"]", f'__version__ = "{new_version}"', init_content, re.M))
+        f.write(re.sub(r"^__version__ = ['\"]([^'\"]*)['\"]", f'__version__ = "{new_version}"', init_content, flags=re.M))
 
     assert find_current_version(VERSION_FILE_PATH) == new_version, 'version is not updated'
 

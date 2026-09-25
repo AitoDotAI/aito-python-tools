@@ -11,7 +11,7 @@ The reasoning is written down in ``docs/v2-client-design.md``; the short form:
 - **Collections vs legacy tables.** ``type: collection`` is v2's native table;
   anything created through v1 is a legacy table answered by a compatibility
   shim. Both are queryable through v2, and a few responses differ in shape
-  between them — handled in :mod:`aito.client.v2.responses`.
+  between them — handled in :mod:`aito.v2.responses`.
 - **Environments in the URL path.** An environment is addressed as
   ``/db/<db>/env/<name>/api/v2/...``. There is no env-scoped key; the database
   key authorizes every environment.

@@ -174,7 +174,9 @@ case "$COMMAND" in
 
     # Build package
     echo "Building package..."
-    rm -rf dist/
+    # build/ too: setuptools reuses build/lib and never deletes files that were
+    # removed from the tree, so a stale module would otherwise ship in the wheel.
+    rm -rf dist/ build/ *.egg-info
     python3 setup.py sdist bdist_wheel
     twine check dist/*
 

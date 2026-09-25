@@ -4,7 +4,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import Optional, Union, Dict, List
 
-from aito.client import responses as aito_resp
+from aito.v1 import responses as aito_resp
 from .aito_request import AitoRequest, _FinalRequest, _PatternEndpoint, _GetRequest, _PostRequest
 from aito.schema import AitoSchema
 from ..responses.query_api_response import ModifyResponse

@@ -4,7 +4,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import Optional, Union, Dict, List
 
-from aito.client import responses as aito_responses
+from aito.v1 import responses as aito_responses
 from .aito_request import AitoRequest, _PatternEndpoint, _GetRequest, _PutRequest, _DeleteRequest
 from aito.schema import AitoDatabaseSchema, AitoTableSchema
 
@@ -45,14 +45,14 @@ class _TableSchemaRequest(_PatternEndpoint):
     """Request to manipulate a table schema"""
     @classmethod
     def _endpoint_pattern(cls):
-        return re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)$')
+        return re.compile(rf'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)$')
 
 
 class _ColumnSchemaRequest(_PatternEndpoint):
     """Request to manipulate a column schema"""
     @classmethod
     def _endpoint_pattern(cls):
-        return re.compile(f'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)/([^/".$\r\n\s]+)$')
+        return re.compile(rf'^{_SchemaAPIRequest.endpoint_prefix}/([^/".$\r\n\s]+)/([^/".$\r\n\s]+)$')
 
 
 class GetDatabaseSchemaRequest(_GetRequest, _DatabaseSchemaRequest, _SchemaAPIRequest):

@@ -47,18 +47,24 @@ def _modules_loaded_by(statement: str) -> set:
 
 class TestV2ImportWeight(BaseTestCase):
     def test_importing_the_v2_client_stays_light(self):
-        loaded = _modules_loaded_by('import aito.client.v2')
+        loaded = _modules_loaded_by('import aito.v2')
         self.assertEqual(loaded, set(), f'importing the v2 client pulled in {sorted(loaded)}')
+
+    def test_the_deprecated_v2_path_stays_light_too(self):
+        # `aito.client.v2` is a shim until 1.0. It imports the v1 stack (its parent
+        # package), but that stack must still not pull the heavy set.
+        loaded = _modules_loaded_by('import aito.client.v2')
+        self.assertEqual(loaded, set(), f'the deprecated v2 path pulled in {sorted(loaded)}')
 
     def test_importing_the_public_name_stays_light(self):
         # The line a stranger actually writes.
-        loaded = _modules_loaded_by('from aito.client.v2 import AitoClientV2')
+        loaded = _modules_loaded_by('from aito.v2 import Client')
         self.assertEqual(loaded, set(), f'importing AitoClientV2 pulled in {sorted(loaded)}')
 
     def test_the_v1_client_is_also_light_to_import(self):
         # Not the headline case, but it falls out of the same change and is
         # worth holding: aiohttp is only needed for the async path.
-        loaded = _modules_loaded_by('from aito.client import AitoClient')
+        loaded = _modules_loaded_by('from aito.v1 import Client')
         self.assertEqual(loaded, set(), f'importing AitoClient pulled in {sorted(loaded)}')
 
     def test_building_the_cli_parser_stays_light(self):

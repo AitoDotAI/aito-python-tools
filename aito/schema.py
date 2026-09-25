@@ -5,7 +5,7 @@ Data structure for the Aito Database Schema
 `pandas` and `langdetect` are imported inside the functions that use them
 rather than at module scope. Both are heavy — pandas pulls numpy and its
 compiled extensions — and this module is reachable from
-``import aito.client.v2``, which needs neither: it is a plain HTTP client whose
+``import aito.v2``, which needs neither: it is a plain HTTP client whose
 only third-party dependency is `requests`. A top-level import here made every
 v2 caller pay for a dataframe library at install and import time, and fail
 outright wherever numpy's C extensions could not load.
@@ -22,6 +22,7 @@ import re
 if TYPE_CHECKING:  # pragma: no cover - import-time typing only
     import pandas as pd
 
+from aito.utils._optional import import_optional
 from aito.utils._json_format import JsonFormat, JsonValidationError
 
 LOG = logging.getLogger('AitoSchema')
@@ -62,7 +63,7 @@ class AitoSchema(JsonFormat, ABC):
 
     table_name_pattern = r'[^\/\".$\r\n\s]+'
     column_name_pattern = r'[^\/\".$\r\n\s]+'
-    column_link_pattern = f'{table_name_pattern}\.{column_name_pattern}'
+    column_link_pattern = rf'{table_name_pattern}\.{column_name_pattern}'
     uuid_pattern = r'[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}'
 
 
@@ -202,7 +203,7 @@ class AitoAnalyzerSchema(AitoSchema, ABC):
     @classmethod
     def _infer_language(cls, samples: Iterable[str]) -> Optional[str]:
         """infer language from samples"""
-        from langdetect import detect_langs  # deferred: see the module docstring
+        detect_langs = import_optional("langdetect", "text language detection").detect_langs  # deferred: see the module docstring
         concatenated_sample_text = ' '.join(samples)
         try:
             detected_langs_and_probs = detect_langs(concatenated_sample_text)
@@ -874,7 +875,7 @@ class DataSeriesProperties :
         :param max_sample_size: maximum sample size for element inference
         :return: element type string (e.g., 'String', 'Int') or None if should use Json
         """
-        import pandas as pd  # deferred: see the module docstring
+        pd = import_optional("pandas", "schema inference and file conversion")  # deferred: see the module docstring
         # Flatten all array elements
         all_elements = []
         for arr in non_null_values:
@@ -926,7 +927,7 @@ class DataSeriesProperties :
         :return: inferred Aito type
         :rtype: str
         """
-        import pandas as pd  # deferred: see the module docstring
+        pd = import_optional("pandas", "schema inference and file conversion")  # deferred: see the module docstring
         sampled_values = series.values if len(series) < max_sample_size else series.sample(max_sample_size).values
 
         # Handle empty series
@@ -1167,7 +1168,7 @@ class AitoDataTypeSchema(AitoSchema, ABC):
         :return: inferred Aito column type
         :rtype: str
         """
-        import pandas as pd  # deferred: see the module docstring
+        pd = import_optional("pandas", "schema inference and file conversion")  # deferred: see the module docstring
         try:
             casted_samples = pd.Series(itertools.islice(samples, max_sample_size))
         except Exception as e:
@@ -1402,7 +1403,7 @@ class AitoColumnTypeSchema(AitoSchema):
         self._nullable = value
 
     def to_conversion(self):
-        import pandas as pd  # deferred: see the module docstring
+        pd = import_optional("pandas", "schema inference and file conversion")  # deferred: see the module docstring
         if self._nullable:
             tpt = self._data_type.to_python_type()
             return lambda x: None if pd.isna(x) else tpt(x)
