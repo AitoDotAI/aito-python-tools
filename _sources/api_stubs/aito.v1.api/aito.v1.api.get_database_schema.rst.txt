@@ -1,0 +1,6 @@
+aito.v1.api.get\_database\_schema
+=================================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: get_database_schema

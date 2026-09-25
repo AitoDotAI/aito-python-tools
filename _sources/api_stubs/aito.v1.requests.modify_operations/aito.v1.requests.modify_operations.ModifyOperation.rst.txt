@@ -1,0 +1,22 @@
+aito.v1.requests.modify\_operations.ModifyOperation
+===================================================
+
+.. currentmodule:: aito.v1.requests.modify_operations
+
+.. autoclass:: ModifyOperation
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~ModifyOperation.to_query
+    
+    
+
+  
+  
+  

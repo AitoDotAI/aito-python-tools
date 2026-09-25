@@ -1,0 +1,27 @@
+aito.v1.requests.aito\_request.AitoRequest
+==========================================
+
+.. currentmodule:: aito.v1.requests.aito_request
+
+.. autoclass:: AitoRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~AitoRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~AitoRequest.response_cls
+  
+  

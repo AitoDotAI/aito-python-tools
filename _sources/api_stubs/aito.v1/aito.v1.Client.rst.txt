@@ -1,0 +1,32 @@
+aito.v1.Client
+==============
+
+.. currentmodule:: aito.v1
+
+.. autoclass:: Client
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~Client.async_request
+        ~Client.async_requests
+        ~Client.batch_requests
+        ~Client.bounded_async_request
+        ~Client.request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~Client.headers
+          ~Client.is_multitenant
+  
+  

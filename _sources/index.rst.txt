@@ -81,9 +81,9 @@ Aito SDK Overview
   :caption: API Documentation
   :recursive:
 
-  client
+  v1
+  v2
   schema
-  api
   utils.data_frame_handler
   utils.sql_connection
 

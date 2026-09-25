@@ -1,0 +1,6 @@
+aito.v1.api.rename\_table
+=========================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: rename_table

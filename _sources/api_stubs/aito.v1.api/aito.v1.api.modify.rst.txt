@@ -1,0 +1,6 @@
+aito.v1.api.modify
+==================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: modify

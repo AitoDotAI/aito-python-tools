@@ -1,0 +1,28 @@
+aito.v1.requests.schema\_api\_request.GetColumnSchemaRequest
+============================================================
+
+.. currentmodule:: aito.v1.requests.schema_api_request
+
+.. autoclass:: GetColumnSchemaRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~GetColumnSchemaRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~GetColumnSchemaRequest.endpoint_prefix
+          ~GetColumnSchemaRequest.method
+  
+  

@@ -1,0 +1,33 @@
+aito.v1.requests.modify\_operations
+===================================
+
+.. automodule:: aito.v1.requests.modify_operations
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.v1.requests.modify_operations
+    
+      Delete
+      Insert
+      ModifyOperation
+      Update
+  
+  
+
+  
+  
+  
+
+
+

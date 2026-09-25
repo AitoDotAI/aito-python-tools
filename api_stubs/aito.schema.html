@@ -6,21 +6,21 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.schema &mdash; aito-python-sdk 0.6.3 documentation</title>
+  <title>aito.schema &mdash; aito-python-sdk 0.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=b8503983"></script>
+      <script src="../_static/documentation_options.js?v=fe7df9b0"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="aito.schema.AitoAliasAnalyzerSchema" href="aito.schema/aito.schema.AitoAliasAnalyzerSchema.html" />
-    <link rel="prev" title="aito.client.v2.responses.V2Warning" href="aito.client.v2.responses/aito.client.v2.responses.V2Warning.html" /> 
+    <link rel="prev" title="aito.v2.responses.V2Warning" href="aito.v2.responses/aito.v2.responses.V2Warning.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -56,7 +56,8 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="aito.client.html">aito.client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aito.v1.html">aito.v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aito.v2.html">aito.v2</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">aito.schema</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema/aito.schema.AitoAliasAnalyzerSchema.html">aito.schema.AitoAliasAnalyzerSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aito.schema/aito.schema.AitoAnalyzerSchema.html">aito.schema.AitoAnalyzerSchema</a></li>
@@ -83,7 +84,6 @@
 <li class="toctree-l2"><a class="reference internal" href="aito.schema/aito.schema.DataSeriesProperties.html">aito.schema.DataSeriesProperties</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="aito.api.html">aito.api</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
 </ul>
@@ -124,7 +124,7 @@
 <p><cite>pandas</cite> and <cite>langdetect</cite> are imported inside the functions that use them
 rather than at module scope. Both are heavy — pandas pulls numpy and its
 compiled extensions — and this module is reachable from
-<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">aito.client.v2</span></code>, which needs neither: it is a plain HTTP client whose
+<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">aito.v2</span></code>, which needs neither: it is a plain HTTP client whose
 only third-party dependency is <cite>requests</cite>. A top-level import here made every
 v2 caller pay for a dataframe library at install and import time, and fail
 outright wherever numpy’s C extensions could not load.</p>
@@ -208,7 +208,7 @@ outright wherever numpy’s C extensions could not load.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="aito.client.v2.responses/aito.client.v2.responses.V2Warning.html" class="btn btn-neutral float-left" title="aito.client.v2.responses.V2Warning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="aito.v2.responses/aito.v2.responses.V2Warning.html" class="btn btn-neutral float-left" title="aito.v2.responses.V2Warning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="aito.schema/aito.schema.AitoAliasAnalyzerSchema.html" class="btn btn-neutral float-right" title="aito.schema.AitoAliasAnalyzerSchema" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

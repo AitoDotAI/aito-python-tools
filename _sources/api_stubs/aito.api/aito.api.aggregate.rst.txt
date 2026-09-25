@@ -1,6 +1,0 @@
-aito.api.aggregate
-==================
-
-.. currentmodule:: aito.api
-
-.. autofunction:: aggregate

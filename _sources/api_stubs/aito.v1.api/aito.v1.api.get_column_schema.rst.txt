@@ -1,0 +1,6 @@
+aito.v1.api.get\_column\_schema
+===============================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: get_column_schema

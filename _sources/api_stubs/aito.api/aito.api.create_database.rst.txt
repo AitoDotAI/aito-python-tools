@@ -1,6 +1,0 @@
-aito.api.create\_database
-=========================
-
-.. currentmodule:: aito.api
-
-.. autofunction:: create_database

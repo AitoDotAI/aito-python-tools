@@ -1,0 +1,45 @@
+aito.v1.responses.query\_api\_response
+======================================
+
+.. automodule:: aito.v1.responses.query_api_response
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.v1.responses.query_api_response
+    
+      AggregateResponse
+      BaseHit
+      BatchResponse
+      EstimateResponse
+      EvaluateResponse
+      HitsResponse
+      MatchResponse
+      ModifyResponse
+      PredictResponse
+      ProbabilityHit
+      RecommendResponse
+      RelateHit
+      RelateResponse
+      ScoredHit
+      SearchResponse
+      SimilarityResponse
+  
+  
+
+  
+  
+  
+
+
+

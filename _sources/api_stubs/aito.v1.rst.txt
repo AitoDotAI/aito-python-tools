@@ -1,0 +1,41 @@
+﻿aito.v1
+=======
+
+.. automodule:: aito.v1
+
+  
+  
+  .. rubric:: Module Attributes
+
+  .. autosummary::
+    :toctree: ./aito.v1
+    
+      Client
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+  
+     api
+     client
+     requests
+     responses
+

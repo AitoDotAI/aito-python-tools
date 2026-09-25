@@ -1,6 +1,0 @@
-aito.api.estimate
-=================
-
-.. currentmodule:: aito.api
-
-.. autofunction:: estimate

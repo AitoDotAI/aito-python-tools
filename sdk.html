@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aito SDK &mdash; aito-python-sdk 0.6.3 documentation</title>
+  <title>Aito SDK &mdash; aito-python-sdk 0.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=b8503983"></script>
+      <script src="_static/documentation_options.js?v=fe7df9b0"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -54,6 +54,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Aito SDK</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#aitoschema">AitoSchema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#aitoclient">AitoClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#choosing-an-api-version">Choosing an API version</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#aitoclientv2">AitoClientV2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#aitoapi">AitoAPI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
@@ -63,9 +64,9 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.client.html">aito.client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.v1.html">aito.v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.v2.html">aito.v2</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.schema.html">aito.schema</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.api.html">aito.api</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
 </ul>
@@ -106,11 +107,11 @@
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="api_stubs/aito.schema.html#module-aito.schema" title="aito.schema"><code class="xref py py-mod docutils literal notranslate"><span class="pre">schema</span></code></a>: Data structure for the Aito Database Schema</p></li>
-<li><p><a class="reference internal" href="api_stubs/aito.client.html#module-aito.client" title="aito.client"><code class="xref py py-mod docutils literal notranslate"><span class="pre">client</span></code></a>: A versatile client to make requests to an Aito Database Instance</p></li>
-<li><p><a class="reference internal" href="api_stubs/aito.client.v2.html#module-aito.client.v2" title="aito.client.v2"><code class="xref py py-mod docutils literal notranslate"><span class="pre">v2</span></code></a>: A client for the Aito v2 API</p></li>
-<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">client_request</span></code>: Request objects used in AitoClient request so that you don’t have to worry about the Aito API endpoint</p></li>
-<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">client_response</span></code>: Enriched response objects returned after executing a request with the AitoClient</p></li>
-<li><p><a class="reference internal" href="api_stubs/aito.api.html#module-aito.api" title="aito.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">api</span></code></a>: Different useful functions that uses an AitoClient object to interact with an Aito Database Instance</p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.v1.html#module-aito.v1" title="aito.v1"><code class="xref py py-mod docutils literal notranslate"><span class="pre">v1</span></code></a>: The v1 API client to make requests to an Aito Database Instance</p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.v2.html#module-aito.v2" title="aito.v2"><code class="xref py py-mod docutils literal notranslate"><span class="pre">v2</span></code></a>: A client for the Aito v2 API</p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.v1.requests.html#module-aito.v1.requests" title="aito.v1.requests"><code class="xref py py-mod docutils literal notranslate"><span class="pre">requests</span></code></a>: Request objects used in AitoClient request so that you don’t have to worry about the Aito API endpoint</p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.v1.responses.html#module-aito.v1.responses" title="aito.v1.responses"><code class="xref py py-mod docutils literal notranslate"><span class="pre">responses</span></code></a>: Enriched response objects returned after executing a request with the AitoClient</p></li>
+<li><p><a class="reference internal" href="api_stubs/aito.v1.api.html#module-aito.v1.api" title="aito.v1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">api</span></code></a>: Different useful functions that uses an AitoClient object to interact with an Aito Database Instance</p></li>
 <li><p><a class="reference internal" href="api_stubs/aito.utils.data_frame_handler/aito.utils.data_frame_handler.DataFrameHandler.html#aito.utils.data_frame_handler.DataFrameHandler" title="aito.utils.data_frame_handler.DataFrameHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrameHandler</span></code></a>: Utility to read, write, and convert a Pandas DataFrame in accordance to a Aito Table Schema</p></li>
 </ul>
 </div></blockquote>
@@ -126,44 +127,82 @@
 </section>
 <section id="aitoclient">
 <span id="sdkaitoclient"></span><h2>AitoClient<a class="headerlink" href="#aitoclient" title="Link to this heading"></a></h2>
-<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> offers different functions to send a <code class="xref py py-mod docutils literal notranslate"><span class="pre">Request</span> <span class="pre">object</span></code> to your Aito instance.</p>
+<p>The <a class="reference internal" href="api_stubs/aito.v1.client/aito.v1.client.AitoClient.html#aito.v1.client.AitoClient" title="aito.v1.client.AitoClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code></a> offers different functions to send a <a class="reference internal" href="api_stubs/aito.v1.requests.html#module-aito.v1.requests" title="aito.v1.requests"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Request</span> <span class="pre">object</span></code></a> to your Aito instance.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Make a request: <code class="xref py py-func docutils literal notranslate"><span class="pre">request()</span></code></p></li>
-<li><p>Make a request asynchronously using <a class="reference external" href="https://docs.aiohttp.org/en/stable/client.html">AIOHTTP ClientSession</a>: <code class="xref py py-func docutils literal notranslate"><span class="pre">async_request()</span></code></p></li>
-<li><p>Bounded asynchronous request with <a class="reference external" href="https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore">asyncio semaphore</a>: <code class="xref py py-func docutils literal notranslate"><span class="pre">bounded_async_request()</span></code></p></li>
-<li><p>Make multiple requests asynchronously: <code class="xref py py-func docutils literal notranslate"><span class="pre">batch_requests()</span></code></p></li>
+<li><p>Make a request: <a class="reference internal" href="api_stubs/aito.v1.client/aito.v1.client.AitoClient.html#aito.v1.client.AitoClient.request" title="aito.v1.client.AitoClient.request"><code class="xref py py-func docutils literal notranslate"><span class="pre">request()</span></code></a></p></li>
+<li><p>Make a request asynchronously using <a class="reference external" href="https://docs.aiohttp.org/en/stable/client.html">AIOHTTP ClientSession</a>: <a class="reference internal" href="api_stubs/aito.v1.client/aito.v1.client.AitoClient.html#aito.v1.client.AitoClient.async_request" title="aito.v1.client.AitoClient.async_request"><code class="xref py py-func docutils literal notranslate"><span class="pre">async_request()</span></code></a></p></li>
+<li><p>Bounded asynchronous request with <a class="reference external" href="https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore">asyncio semaphore</a>: <a class="reference internal" href="api_stubs/aito.v1.client/aito.v1.client.AitoClient.html#aito.v1.client.AitoClient.bounded_async_request" title="aito.v1.client.AitoClient.bounded_async_request"><code class="xref py py-func docutils literal notranslate"><span class="pre">bounded_async_request()</span></code></a></p></li>
+<li><p>Make multiple requests asynchronously: <a class="reference internal" href="api_stubs/aito.v1.client/aito.v1.client.AitoClient.html#aito.v1.client.AitoClient.batch_requests" title="aito.v1.client.AitoClient.batch_requests"><code class="xref py py-func docutils literal notranslate"><span class="pre">batch_requests()</span></code></a></p></li>
 </ul>
 </div></blockquote>
 </section>
-<section id="aitoclientv2">
-<span id="sdkaitoclientv2"></span><h2>AitoClientV2<a class="headerlink" href="#aitoclientv2" title="Link to this heading"></a></h2>
-<p>The <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2" title="aito.client.v2.client.AitoClientV2"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClientV2</span></code></a> talks to the <strong>v2</strong> API. It is a separate
-class from the v1 <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> rather than a flag on it, because the two
-APIs return genuinely different response shapes — the reasoning is written up in
-<code class="docutils literal notranslate"><span class="pre">docs/v2-client-design.md</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClientV2</span>
-
-<span class="n">client</span> <span class="o">=</span> <span class="n">AitoClientV2</span><span class="p">(</span><span class="n">instance_url</span><span class="p">,</span> <span class="n">api_key</span><span class="p">)</span>
-
-<span class="n">prediction</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-    <span class="n">from_table</span><span class="o">=</span><span class="s1">'invoices'</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">{</span><span class="s1">'vendor'</span><span class="p">:</span> <span class="s1">'Elenia Oy'</span><span class="p">},</span> <span class="n">predict</span><span class="o">=</span><span class="s1">'gl_code'</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">prediction</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">prediction</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">probability</span><span class="p">)</span>
+<section id="choosing-an-api-version">
+<span id="sdkversions"></span><h2>Choosing an API version<a class="headerlink" href="#choosing-an-api-version" title="Link to this heading"></a></h2>
+<p>Each Aito API version has its own package, whose meaning never changes:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>   <span class="c1"># the v1 API: /api/v1</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>   <span class="c1"># the v2 API: /api/v2</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">aito.Client</span></code> is the one name that follows the current default version. It moves only on a
+<strong>major</strong> release of <code class="docutils literal notranslate"><span class="pre">aitoai</span></code>, so the major version tells you which API it is — 0.x is v1,
+1.x will be v2 — and pinning <code class="docutils literal notranslate"><span class="pre">aitoai&lt;1</span></code> keeps it on v1. Use <code class="docutils literal notranslate"><span class="pre">aito.Client</span></code> in quick
+experiments; in production code import the explicit version.</p>
+<p>Before 0.7 the v1 client lived in <code class="docutils literal notranslate"><span class="pre">aito.client</span></code> and the helpers in <code class="docutils literal notranslate"><span class="pre">aito.api</span></code>, and the v2
+client in <code class="docutils literal notranslate"><span class="pre">aito.client.v2</span></code>. Those paths still work, resolve to the very same objects, and
+emit a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>; they are removed in 1.0. <code class="docutils literal notranslate"><span class="pre">aito.client</span></code> stays v1 until then —
+it does <strong>not</strong> follow the default.</p>
+<p>A bare <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">aitoai</span></code> installs the API clients only. The command-line tool, schema
+inference and file conversion need <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'aitoai[cli]'</span></code>.</p>
+</section>
+<section id="aitoclientv2">
+<span id="sdkaitoclientv2"></span><h2>AitoClientV2<a class="headerlink" href="#aitoclientv2" title="Link to this heading"></a></h2>
+<p>The <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2" title="aito.v2.client.AitoClientV2"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClientV2</span></code></a> talks to the <strong>v2</strong> API. It is a separate
+class from the v1 <a class="reference internal" href="api_stubs/aito.v1.client/aito.v1.client.AitoClient.html#aito.v1.client.AitoClient" title="aito.v1.client.AitoClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code></a> rather than a flag on it, because the two
+APIs return genuinely different response shapes — the reasoning is written up in
+<code class="docutils literal notranslate"><span class="pre">docs/v2-client-design.md</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+
+<span class="c1"># the public read-only sandbox; use your own instance URL and key in production</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s1">'https://shared.aito.ai/db/aito-demo'</span><span class="p">,</span>
+                <span class="s1">'yg4rTlXkqDzm4y8gPeY75HCKaNwfbTQ2si64ONTi'</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s1">'v2'</span><span class="p">)</span>
+
+<span class="n">prediction</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">from_table</span><span class="o">=</span><span class="s1">'invoices'</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">{</span><span class="s1">'Description'</span><span class="p">:</span> <span class="s1">'cloud services'</span><span class="p">},</span> <span class="n">predict</span><span class="o">=</span><span class="s1">'GLCode'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">prediction</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">prediction</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">probability</span><span class="p">)</span>   <span class="c1"># E002 0.83...</span>
+</pre></div>
+</div>
+<p>A predict ranks <strong>every</strong> value of the field; the evidence in <code class="docutils literal notranslate"><span class="pre">where</span></code> changes each
+candidate’s probability but never removes one. To return only the values actually seen
+with the evidence, filter on the per-candidate frequency <code class="docutils literal notranslate"><span class="pre">$f</span></code> with <code class="docutils literal notranslate"><span class="pre">having</span></code>, via
+<a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.query" title="aito.v2.client.AitoClientV2.query"><code class="xref py py-func docutils literal notranslate"><span class="pre">query()</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">seen</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query</span><span class="p">({</span>
+    <span class="s1">'from'</span><span class="p">:</span> <span class="s1">'invoices'</span><span class="p">,</span>
+    <span class="s1">'where'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'Processor'</span><span class="p">:</span> <span class="s1">'Emily Davis'</span><span class="p">},</span>
+    <span class="s1">'predict'</span><span class="p">:</span> <span class="s1">'GLCode'</span><span class="p">,</span>
+    <span class="s1">'select'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'$value'</span><span class="p">,</span> <span class="s1">'$p'</span><span class="p">,</span> <span class="s1">'$f'</span><span class="p">],</span>
+    <span class="s1">'having'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'$f'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'$gte'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span>
+<span class="p">})</span>
+<span class="nb">print</span><span class="p">([(</span><span class="n">hit</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">hit</span><span class="p">[</span><span class="s1">'$f'</span><span class="p">])</span> <span class="k">for</span> <span class="n">hit</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">])</span>   <span class="c1"># [('F001', 20)]</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">having</span></code> filters the ranked list after scoring: the remaining <code class="docutils literal notranslate"><span class="pre">$p</span></code> values are not
+renormalised, and <code class="docutils literal notranslate"><span class="pre">$f</span></code> is the only field it accepts — <code class="docutils literal notranslate"><span class="pre">{'$f':</span> <span class="pre">{'$gte'</span> <span class="pre">|</span> <span class="pre">'$gt'</span> <span class="pre">|</span> <span class="pre">'$lte'</span> <span class="pre">|</span>
+<span class="pre">'$lt':</span> <span class="pre">&lt;number&gt;}}</span></code>. Filtering on anything else, such as <code class="docutils literal notranslate"><span class="pre">$p</span></code>, is a <code class="docutils literal notranslate"><span class="pre">400</span>
+<span class="pre">request.invalid</span></code>.</p>
 <p>Querying:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Predict a field’s value: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.predict" title="aito.client.v2.client.AitoClientV2.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a></p></li>
-<li><p>Retrieve rows: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.search" title="aito.client.v2.client.AitoClientV2.search"><code class="xref py py-func docutils literal notranslate"><span class="pre">search()</span></code></a></p></li>
-<li><p>Rank values by a goal: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.recommend" title="aito.client.v2.client.AitoClientV2.recommend"><code class="xref py py-func docutils literal notranslate"><span class="pre">recommend()</span></code></a></p></li>
-<li><p>Find statistical relationships: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.relate" title="aito.client.v2.client.AitoClientV2.relate"><code class="xref py py-func docutils literal notranslate"><span class="pre">relate()</span></code></a></p></li>
-<li><p>Match a link field’s candidates against evidence: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.match" title="aito.client.v2.client.AitoClientV2.match"><code class="xref py py-func docutils literal notranslate"><span class="pre">match()</span></code></a></p></li>
-<li><p>Estimate a numeric field: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.estimate" title="aito.client.v2.client.AitoClientV2.estimate"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate()</span></code></a></p></li>
-<li><p>Aggregate: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.aggregate" title="aito.client.v2.client.AitoClientV2.aggregate"><code class="xref py py-func docutils literal notranslate"><span class="pre">aggregate()</span></code></a></p></li>
-<li><p>Evaluate prediction quality: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.evaluate" title="aito.client.v2.client.AitoClientV2.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a></p></li>
+<li><p>Predict a field’s value: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.predict" title="aito.v2.client.AitoClientV2.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a></p></li>
+<li><p>Retrieve rows: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.search" title="aito.v2.client.AitoClientV2.search"><code class="xref py py-func docutils literal notranslate"><span class="pre">search()</span></code></a></p></li>
+<li><p>Rank values by a goal: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.recommend" title="aito.v2.client.AitoClientV2.recommend"><code class="xref py py-func docutils literal notranslate"><span class="pre">recommend()</span></code></a></p></li>
+<li><p>Find statistical relationships: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.relate" title="aito.v2.client.AitoClientV2.relate"><code class="xref py py-func docutils literal notranslate"><span class="pre">relate()</span></code></a></p></li>
+<li><p>Match a link field’s candidates against evidence: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.match" title="aito.v2.client.AitoClientV2.match"><code class="xref py py-func docutils literal notranslate"><span class="pre">match()</span></code></a></p></li>
+<li><p>Estimate a numeric field: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.estimate" title="aito.v2.client.AitoClientV2.estimate"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate()</span></code></a></p></li>
+<li><p>Aggregate: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.aggregate" title="aito.v2.client.AitoClientV2.aggregate"><code class="xref py py-func docutils literal notranslate"><span class="pre">aggregate()</span></code></a></p></li>
+<li><p>Evaluate prediction quality: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.evaluate" title="aito.v2.client.AitoClientV2.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a></p></li>
 <li><p>Anything else, via the universal <code class="docutils literal notranslate"><span class="pre">_query</span></code> endpoint:
-<a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.query" title="aito.client.v2.client.AitoClientV2.query"><code class="xref py py-func docutils literal notranslate"><span class="pre">query()</span></code></a></p></li>
+<a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.query" title="aito.v2.client.AitoClientV2.query"><code class="xref py py-func docutils literal notranslate"><span class="pre">query()</span></code></a></p></li>
 </ul>
 </div></blockquote>
 <div class="admonition note">
@@ -177,20 +216,20 @@ rather than a query that silently does something else.</p>
 <p class="admonition-title">Note</p>
 <p>These operations require the client to be setup with the READ-WRITE API key</p>
 <ul class="simple">
-<li><p>Create a collection: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.create_collection" title="aito.client.v2.client.AitoClientV2.create_collection"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_collection()</span></code></a></p></li>
-<li><p>Delete a collection: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.delete_collection" title="aito.client.v2.client.AitoClientV2.delete_collection"><code class="xref py py-func docutils literal notranslate"><span class="pre">delete_collection()</span></code></a></p></li>
-<li><p>Upload batches of entries: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.upload_entries" title="aito.client.v2.client.AitoClientV2.upload_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code></a></p></li>
-<li><p>Rebuild the index after a bulk load: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.optimize" title="aito.client.v2.client.AitoClientV2.optimize"><code class="xref py py-func docutils literal notranslate"><span class="pre">optimize()</span></code></a></p></li>
-<li><p>Branch an environment: <a class="reference internal" href="api_stubs/aito.client.v2.client/aito.client.v2.client.AitoClientV2.html#aito.client.v2.client.AitoClientV2.branch_env" title="aito.client.v2.client.AitoClientV2.branch_env"><code class="xref py py-func docutils literal notranslate"><span class="pre">branch_env()</span></code></a></p></li>
+<li><p>Create a collection: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.create_collection" title="aito.v2.client.AitoClientV2.create_collection"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_collection()</span></code></a></p></li>
+<li><p>Delete a collection: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.delete_collection" title="aito.v2.client.AitoClientV2.delete_collection"><code class="xref py py-func docutils literal notranslate"><span class="pre">delete_collection()</span></code></a></p></li>
+<li><p>Upload batches of entries: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.upload_entries" title="aito.v2.client.AitoClientV2.upload_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code></a></p></li>
+<li><p>Rebuild the index after a bulk load: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.optimize" title="aito.v2.client.AitoClientV2.optimize"><code class="xref py py-func docutils literal notranslate"><span class="pre">optimize()</span></code></a></p></li>
+<li><p>Branch an environment: <a class="reference internal" href="api_stubs/aito.v2.client/aito.v2.client.AitoClientV2.html#aito.v2.client.AitoClientV2.branch_env" title="aito.v2.client.AitoClientV2.branch_env"><code class="xref py py-func docutils literal notranslate"><span class="pre">branch_env()</span></code></a></p></li>
 </ul>
 </div>
 <p>Errors carry a machine-readable code, so you branch on the code rather than on the text of the
 message:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoV2Error</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">Error</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="n">client</span><span class="o">.</span><span class="n">delete_collection</span><span class="p">(</span><span class="s1">'invoices'</span><span class="p">)</span>
-<span class="k">except</span> <span class="n">AitoV2Error</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+<span class="k">except</span> <span class="n">Error</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">err</span><span class="o">.</span><span class="n">is_not_found</span><span class="p">:</span>   <span class="c1"># a 404 here is the ordinary "drop if exists" case</span>
         <span class="k">raise</span>
 </pre></div>
@@ -202,14 +241,14 @@ server answered a slightly different query than the one you sent:</p>
     <span class="nb">print</span><span class="p">(</span><span class="n">warning</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">warning</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
 
 <span class="c1"># or make it a hard failure:</span>
-<span class="n">strict</span> <span class="o">=</span> <span class="n">AitoClientV2</span><span class="p">(</span><span class="n">instance_url</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="n">on_warning</span><span class="o">=</span><span class="s1">'raise'</span><span class="p">)</span>
+<span class="n">strict</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">instance_url</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="n">on_warning</span><span class="o">=</span><span class="s1">'raise'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Aito reports its own server-side processing time in the <code class="docutils literal notranslate"><span class="pre">x-aitoai-response-time</span></code> header,
 which is what an application should surface rather than the round trip. The parsed body does
 not carry it, so pass <code class="docutils literal notranslate"><span class="pre">on_response</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">timings</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">client</span> <span class="o">=</span> <span class="n">AitoClientV2</span><span class="p">(</span><span class="n">instance_url</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">instance_url</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span>
                       <span class="n">on_response</span><span class="o">=</span><span class="k">lambda</span> <span class="n">resp</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">timings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                           <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">'x-aitoai-response-time'</span><span class="p">]))))</span>
 </pre></div>
@@ -219,7 +258,7 @@ not carry it, so pass <code class="docutils literal notranslate"><span class="pr
 </section>
 <section id="aitoapi">
 <span id="sdkapi"></span><h2>AitoAPI<a class="headerlink" href="#aitoapi" title="Link to this heading"></a></h2>
-<p><a class="reference internal" href="api_stubs/aito.api.html#module-aito.api" title="aito.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.api</span></code></a> module offers different functions that takes a <code class="xref py py-class docutils literal notranslate"><span class="pre">Aito</span> <span class="pre">Client</span> <span class="pre">object</span></code> as the first argument</p>
+<p><a class="reference internal" href="api_stubs/aito.v1.api.html#module-aito.v1.api" title="aito.v1.api"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.v1.api</span></code></a> module offers different functions that takes a <a class="reference internal" href="api_stubs/aito.v1.client/aito.v1.client.AitoClient.html#aito.v1.client.AitoClient" title="aito.v1.client.AitoClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">Aito</span> <span class="pre">Client</span> <span class="pre">object</span></code></a> as the first argument</p>
 <blockquote>
 <div><ul>
 <li><p>Manipulate the database:</p>
@@ -228,12 +267,12 @@ not carry it, so pass <code class="docutils literal notranslate"><span class="pr
 <p>These operations require the client to be setup with the READ-WRITE API key</p>
 </div>
 <ul class="simple">
-<li><p>Create a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.create_table.html#aito.api.create_table" title="aito.api.create_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_table()</span></code></a></p></li>
-<li><p>Delete a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.delete_table.html#aito.api.delete_table" title="aito.api.delete_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">delete_table()</span></code></a></p></li>
-<li><p>Create the database: <a class="reference internal" href="api_stubs/aito.api/aito.api.create_database.html#aito.api.create_database" title="aito.api.create_database"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_database()</span></code></a></p></li>
-<li><p>Delete the database: <a class="reference internal" href="api_stubs/aito.api/aito.api.delete_database.html#aito.api.delete_database" title="aito.api.delete_database"><code class="xref py py-func docutils literal notranslate"><span class="pre">delete_database()</span></code></a></p></li>
-<li><p>Copy a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.copy_table.html#aito.api.copy_table" title="aito.api.copy_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">copy_table()</span></code></a></p></li>
-<li><p>Rename a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.rename_table.html#aito.api.rename_table" title="aito.api.rename_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">rename_table()</span></code></a></p></li>
+<li><p>Create a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.create_table.html#aito.v1.api.create_table" title="aito.v1.api.create_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_table()</span></code></a></p></li>
+<li><p>Delete a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.delete_table.html#aito.v1.api.delete_table" title="aito.v1.api.delete_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">delete_table()</span></code></a></p></li>
+<li><p>Create the database: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.create_database.html#aito.v1.api.create_database" title="aito.v1.api.create_database"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_database()</span></code></a></p></li>
+<li><p>Delete the database: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.delete_database.html#aito.v1.api.delete_database" title="aito.v1.api.delete_database"><code class="xref py py-func docutils literal notranslate"><span class="pre">delete_database()</span></code></a></p></li>
+<li><p>Copy a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.copy_table.html#aito.v1.api.copy_table" title="aito.v1.api.copy_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">copy_table()</span></code></a></p></li>
+<li><p>Rename a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.rename_table.html#aito.v1.api.rename_table" title="aito.v1.api.rename_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">rename_table()</span></code></a></p></li>
 </ul>
 </li>
 <li><p>Upload the data:</p>
@@ -242,29 +281,29 @@ not carry it, so pass <code class="docutils literal notranslate"><span class="pr
 <p>These operations require the client to be setup with the READ-WRITE API key</p>
 </div>
 <ul class="simple">
-<li><p>Upload a binary file object to a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.upload_binary_file.html#aito.api.upload_binary_file" title="aito.api.upload_binary_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_binary_file()</span></code></a></p></li>
-<li><p>Upload a file to a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.upload_file.html#aito.api.upload_file" title="aito.api.upload_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_file()</span></code></a></p></li>
-<li><p>Upload batches of entries to a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.upload_entries.html#aito.api.upload_entries" title="aito.api.upload_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code></a></p></li>
-<li><p>Optimize a table after uploading the data: <a class="reference internal" href="api_stubs/aito.api/aito.api.optimize_table.html#aito.api.optimize_table" title="aito.api.optimize_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">optimize_table()</span></code></a></p></li>
+<li><p>Upload a binary file object to a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.upload_binary_file.html#aito.v1.api.upload_binary_file" title="aito.v1.api.upload_binary_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_binary_file()</span></code></a></p></li>
+<li><p>Upload a file to a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.upload_file.html#aito.v1.api.upload_file" title="aito.v1.api.upload_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_file()</span></code></a></p></li>
+<li><p>Upload batches of entries to a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.upload_entries.html#aito.v1.api.upload_entries" title="aito.v1.api.upload_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code></a></p></li>
+<li><p>Optimize a table after uploading the data: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.optimize_table.html#aito.v1.api.optimize_table" title="aito.v1.api.optimize_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">optimize_table()</span></code></a></p></li>
 </ul>
 </li>
 <li><p>Get information about the database:</p>
 <ul class="simple">
-<li><p>Get the instance version: <a class="reference internal" href="api_stubs/aito.api/aito.api.get_version.html#aito.api.get_version" title="aito.api.get_version"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_version()</span></code></a></p></li>
-<li><p>Check if a table exists in the instance: <a class="reference internal" href="api_stubs/aito.api/aito.api.check_table_exists.html#aito.api.check_table_exists" title="aito.api.check_table_exists"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_table_exists()</span></code></a></p></li>
-<li><p>Get a list of existing tables in the instance: <a class="reference internal" href="api_stubs/aito.api/aito.api.get_existing_tables.html#aito.api.get_existing_tables" title="aito.api.get_existing_tables"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_existing_tables()</span></code></a></p></li>
-<li><p>Get a table schema: <a class="reference internal" href="api_stubs/aito.api/aito.api.get_table_schema.html#aito.api.get_table_schema" title="aito.api.get_table_schema"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_table_schema()</span></code></a></p></li>
-<li><p>Find the number of entries in a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.get_table_size.html#aito.api.get_table_size" title="aito.api.get_table_size"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_table_size()</span></code></a></p></li>
-<li><p>Get the database schema: <a class="reference internal" href="api_stubs/aito.api/aito.api.get_database_schema.html#aito.api.get_database_schema" title="aito.api.get_database_schema"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_database_schema()</span></code></a></p></li>
+<li><p>Get the instance version: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.get_version.html#aito.v1.api.get_version" title="aito.v1.api.get_version"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_version()</span></code></a></p></li>
+<li><p>Check if a table exists in the instance: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.check_table_exists.html#aito.v1.api.check_table_exists" title="aito.v1.api.check_table_exists"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_table_exists()</span></code></a></p></li>
+<li><p>Get a list of existing tables in the instance: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.get_existing_tables.html#aito.v1.api.get_existing_tables" title="aito.v1.api.get_existing_tables"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_existing_tables()</span></code></a></p></li>
+<li><p>Get a table schema: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.get_table_schema.html#aito.v1.api.get_table_schema" title="aito.v1.api.get_table_schema"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_table_schema()</span></code></a></p></li>
+<li><p>Find the number of entries in a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.get_table_size.html#aito.v1.api.get_table_size" title="aito.v1.api.get_table_size"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_table_size()</span></code></a></p></li>
+<li><p>Get the database schema: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.get_database_schema.html#aito.v1.api.get_database_schema" title="aito.v1.api.get_database_schema"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_database_schema()</span></code></a></p></li>
 </ul>
 </li>
 <li><p>Querying:</p>
 <ul class="simple">
-<li><p>Query entries of a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.query_entries.html#aito.api.query_entries" title="aito.api.query_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_entries()</span></code></a></p></li>
-<li><p>Query all entries of a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.query_all_entries.html#aito.api.query_all_entries" title="aito.api.query_all_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_all_entries()</span></code></a></p></li>
-<li><p>Download a table: <a class="reference internal" href="api_stubs/aito.api/aito.api.download_table.html#aito.api.download_table" title="aito.api.download_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">download_table()</span></code></a></p></li>
-<li><p>Make a job request (for query that takes longer than 30 seconds): <a class="reference internal" href="api_stubs/aito.api/aito.api.job_request.html#aito.api.job_request" title="aito.api.job_request"><code class="xref py py-func docutils literal notranslate"><span class="pre">job_request()</span></code></a></p></li>
-<li><p>Make a job request step by step: <a class="reference internal" href="api_stubs/aito.api/aito.api.create_job.html#aito.api.create_job" title="aito.api.create_job"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_job()</span></code></a>, <a class="reference internal" href="api_stubs/aito.api/aito.api.get_job_status.html#aito.api.get_job_status" title="aito.api.get_job_status"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_job_status()</span></code></a>, <a class="reference internal" href="api_stubs/aito.api/aito.api.get_job_result.html#aito.api.get_job_result" title="aito.api.get_job_result"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_job_result()</span></code></a></p></li>
+<li><p>Query entries of a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.query_entries.html#aito.v1.api.query_entries" title="aito.v1.api.query_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_entries()</span></code></a></p></li>
+<li><p>Query all entries of a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.query_all_entries.html#aito.v1.api.query_all_entries" title="aito.v1.api.query_all_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_all_entries()</span></code></a></p></li>
+<li><p>Download a table: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.download_table.html#aito.v1.api.download_table" title="aito.v1.api.download_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">download_table()</span></code></a></p></li>
+<li><p>Make a job request (for query that takes longer than 30 seconds): <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.job_request.html#aito.v1.api.job_request" title="aito.v1.api.job_request"><code class="xref py py-func docutils literal notranslate"><span class="pre">job_request()</span></code></a></p></li>
+<li><p>Make a job request step by step: <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.create_job.html#aito.v1.api.create_job" title="aito.v1.api.create_job"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_job()</span></code></a>, <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.get_job_status.html#aito.v1.api.get_job_status" title="aito.v1.api.get_job_status"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_job_status()</span></code></a>, <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.get_job_result.html#aito.v1.api.get_job_result" title="aito.v1.api.get_job_result"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_job_result()</span></code></a></p></li>
 </ul>
 </li>
 </ul>

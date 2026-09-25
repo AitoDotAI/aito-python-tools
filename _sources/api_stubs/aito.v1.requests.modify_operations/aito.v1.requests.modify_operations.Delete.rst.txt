@@ -1,0 +1,22 @@
+aito.v1.requests.modify\_operations.Delete
+==========================================
+
+.. currentmodule:: aito.v1.requests.modify_operations
+
+.. autoclass:: Delete
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~Delete.to_query
+    
+    
+
+  
+  
+  

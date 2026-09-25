@@ -1,0 +1,29 @@
+aito.v1.requests.data\_api\_request.UploadEntriesRequest
+========================================================
+
+.. currentmodule:: aito.v1.requests.data_api_request
+
+.. autoclass:: UploadEntriesRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~UploadEntriesRequest.make_request
+        ~UploadEntriesRequest.path_matches
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~UploadEntriesRequest.endpoint_prefix
+          ~UploadEntriesRequest.method
+  
+  

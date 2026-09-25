@@ -1,6 +1,0 @@
-aito.api.batch
-==============
-
-.. currentmodule:: aito.api
-
-.. autofunction:: batch

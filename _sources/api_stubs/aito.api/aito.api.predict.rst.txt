@@ -1,6 +1,0 @@
-aito.api.predict
-================
-
-.. currentmodule:: aito.api
-
-.. autofunction:: predict

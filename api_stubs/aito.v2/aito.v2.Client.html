@@ -1,0 +1,235 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aito.v2.Client &mdash; aito-python-sdk 0.7.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="aito.v2.client" href="../aito.v2.client.html" />
+    <link rel="prev" title="aito.v2" href="../aito.v2.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            aito-python-sdk
+              <img src="../../_static/aito.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Aito CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sdk.html">Aito SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sql.html">SQL Database Integration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../aito.v1.html">aito.v1</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../aito.v2.html">aito.v2</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">aito.v2.Client</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#aito.v2.Client"><code class="docutils literal notranslate"><span class="pre">Client</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../aito.v2.client.html">aito.v2.client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../aito.v2.errors.html">aito.v2.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../aito.v2.responses.html">aito.v2.responses</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.schema.html">aito.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Useful Links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html#stay-informed">Stay Informed</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">aito-python-sdk</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../aito.v2.html">aito.v2</a></li>
+      <li class="breadcrumb-item active">aito.v2.Client</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api_stubs/aito.v2/aito.v2.Client.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="aito-v2-client">
+<h1>aito.v2.Client<a class="headerlink" href="#aito-v2-client" title="Link to this heading"></a></h1>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aito.v2.Client">
+<span class="sig-prename descclassname"><span class="pre">aito.v2.</span></span><span class="sig-name descname"><span class="pre">Client</span></span><a class="headerlink" href="#aito.v2.Client" title="Link to this definition"></a></dt>
+<dd><p>Version-neutral names. The prefixed ones remain as aliases.</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">aggregate</span></code>(from_table, aggregate[, where])</p></td>
+<td><p>compute aggregates over the rows a filter selects</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">batch</span></code>(queries[, timeout])</p></td>
+<td><p>run several queries in one request</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">branch_env</span></code>(name)</p></td>
+<td><p>branch a new environment off master</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy_schema</span></code>(query)</p></td>
+<td><p>copy a schema, via <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/schema/_copy</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_collection</span></code>(name, columns)</p></td>
+<td><p>create a v2 collection</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete_collection</span></code>(name)</p></td>
+<td><p>delete a collection or legacy table and its data</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete_entries</span></code>(from_table, where)</p></td>
+<td><p>delete the rows a filter selects</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete_env</span></code>(name)</p></td>
+<td><p>delete an environment</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate</span></code>(from_table, estimate[, where, select])</p></td>
+<td><p>estimate the numeric value of a field</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate</span></code>(query[, timeout])</p></td>
+<td><p>run a held-out evaluation and return its metrics</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_operators</span></code>()</p></td>
+<td><p>the live operator inventory of this instance</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_schema</span></code>([table])</p></td>
+<td><p>the schema of the database, or of one table or collection</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_version</span></code>()</p></td>
+<td><p>the version of the Aito instance</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_envs</span></code>()</p></td>
+<td><p>the environments of this database</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">match</span></code>(from_table, match[, where, select, ...])</p></td>
+<td><p>rank the candidate values of a link field against some evidence</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">modify</span></code>(operations)</p></td>
+<td><p>apply table maintenance operations atomically</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code>(name)</p></td>
+<td><p>rebuild a collection's index after a bulk load</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code>(from_table, predict[, where, ...])</p></td>
+<td><p>predict the values of a field, ranked by probability</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">query</span></code>(query[, timeout])</p></td>
+<td><p>run any query body against <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/_query</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">recommend</span></code>(from_table, recommend, goal[, ...])</p></td>
+<td><p>rank the values of a field by how well they achieve a goal</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">relate</span></code>(from_table, relate[, where, select, ...])</p></td>
+<td><p>find the statistical relationships between a condition and some fields</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code>(method, path[, query, timeout])</p></td>
+<td><p>make a raw request to a v2 endpoint and return the parsed JSON</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">search</span></code>(from_table[, where, select, ...])</p></td>
+<td><p>retrieve matching rows</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_entries</span></code>(name, entries[, batch_size])</p></td>
+<td><p>insert rows into a collection, in batches</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">api_url</span></code></p></td>
+<td><p>the base URL of the v2 API, including the environment segment</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">headers</span></code></p></td>
+<td><p>the headers sent with every request</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../aito.v2.html" class="btn btn-neutral float-left" title="aito.v2" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../aito.v2.client.html" class="btn btn-neutral float-right" title="aito.v2.client" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, aito.ai.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+aito.v1.api.quick\_predict\_and\_evaluate
+=========================================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: quick_predict_and_evaluate

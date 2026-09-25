@@ -1,0 +1,6 @@
+aito.v1.api.create\_column
+==========================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: create_column

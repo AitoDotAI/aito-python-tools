@@ -1,6 +1,0 @@
-aito.api.upload\_entries
-========================
-
-.. currentmodule:: aito.api
-
-.. autofunction:: upload_entries

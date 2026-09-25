@@ -1,6 +1,0 @@
-aito.api.create\_job
-====================
-
-.. currentmodule:: aito.api
-
-.. autofunction:: create_job

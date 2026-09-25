@@ -1,0 +1,6 @@
+aito.v1.api.quick\_add\_table
+=============================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: quick_add_table

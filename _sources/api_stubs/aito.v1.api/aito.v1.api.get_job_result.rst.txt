@@ -1,0 +1,6 @@
+aito.v1.api.get\_job\_result
+============================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: get_job_result

@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quickstart &mdash; aito-python-sdk 0.6.3 documentation</title>
+  <title>Quickstart &mdash; aito-python-sdk 0.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=b8503983"></script>
+      <script src="_static/documentation_options.js?v=fe7df9b0"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -77,9 +77,9 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Documentation</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.client.html">aito.client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.v1.html">aito.v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.v2.html">aito.v2</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.schema.html">aito.schema</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.api.html">aito.api</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.data_frame_handler.html">aito.utils.data_frame_handler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_stubs/aito.utils.sql_connection.html">aito.utils.sql_connection</a></li>
 </ul>
@@ -335,13 +335,13 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 </section>
 <section id="sdkquickstartcreatetable">
 <span id="id3"></span><h3>Create a table<a class="headerlink" href="#sdkquickstartcreatetable" title="Link to this heading"></a></h3>
-<p>You can <a class="reference internal" href="api_stubs/aito.api/aito.api.create_table.html#aito.api.create_table" title="aito.api.create_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_table()</span></code></a> using an <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> and specifying the table name and the table schema</p>
+<p>You can <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.create_table.html#aito.v1.api.create_table" title="aito.v1.api.create_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_table()</span></code></a> using an <a class="reference internal" href="api_stubs/aito.v1.client/aito.v1.client.AitoClient.html#aito.v1.client.AitoClient" title="aito.v1.client.AitoClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code></a> and specifying the table name and the table schema</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The example is not direclty copy-pastable. Please use your own Aito environment credentials</p>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_table</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.v1.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_table</span>
 <span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">instance_url</span><span class="o">=</span><span class="n">YOUR_AITO_INSTANCE_URL</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">YOUR_AITO_INSTANCE_API_KEY</span><span class="p">)</span>
 <span class="n">create_table</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">'reddit'</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">reddit_schema</span><span class="p">)</span>
 </pre></div>
@@ -381,18 +381,18 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 </section>
 <section id="sdkquickstartuploaddata">
 <span id="id5"></span><h3>Upload the Data<a class="headerlink" href="#sdkquickstartuploaddata" title="Link to this heading"></a></h3>
-<p>You can <a class="reference internal" href="api_stubs/aito.api/aito.api.upload_entries.html#aito.api.upload_entries" title="aito.api.upload_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code></a> using an <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code></p>
+<p>You can <a class="reference internal" href="api_stubs/aito.v1.api/aito.v1.api.upload_entries.html#aito.v1.api.upload_entries" title="aito.v1.api.upload_entries"><code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code></a> using an <a class="reference internal" href="api_stubs/aito.v1.client/aito.v1.client.AitoClient.html#aito.v1.client.AitoClient" title="aito.v1.client.AitoClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code></a></p>
 <blockquote>
 <div><ul>
 <li><p>Batch Upload:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_entries</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.v1.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_entries</span>
 <span class="n">upload_entries</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">'reddit'</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="n">reddit_entries</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
 <li><p>File Upload:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_file</span><span class="p">,</span> <span class="n">get_table_size</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.v1.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">upload_file</span><span class="p">,</span> <span class="n">get_table_size</span>
 
 <span class="n">upload_file</span><span class="p">(</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">table_name</span><span class="o">=</span><span class="s1">'reddit'</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s1">'reddit_sample.ndjson.gz'</span><span class="p">))</span>
 
@@ -428,8 +428,8 @@ or add a <a class="reference external" href="https://aito.ai/docs/api/#schema-an
 <span id="id6"></span><h3>Send your first query<a class="headerlink" href="#sdkquickstartsendquery" title="Link to this heading"></a></h3>
 <p>You can send a query to an Aito endpoint by using the AitoClient method:</p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">aito.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span><span class="p">,</span> <span class="n">predict</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aito.v1.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span><span class="p">,</span> <span class="n">predict</span>
 <span class="n">aito_client</span> <span class="o">=</span> <span class="n">AitoClient</span><span class="p">(</span><span class="n">instance_url</span><span class="o">=</span><span class="n">INSTANCE_URL</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">INSTANCE_API_KEY</span><span class="p">)</span>
 <span class="n">search</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">aito_client</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="p">{</span>
   <span class="s2">"from"</span><span class="p">:</span> <span class="s2">"products"</span><span class="p">,</span>

@@ -1,6 +1,0 @@
-aito.api.recommend
-==================
-
-.. currentmodule:: aito.api
-
-.. autofunction:: recommend

@@ -1,0 +1,6 @@
+aito.v1.api.get\_existing\_tables
+=================================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: get_existing_tables

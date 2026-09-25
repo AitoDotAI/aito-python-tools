@@ -1,6 +1,0 @@
-aito.api.get\_job\_status
-=========================
-
-.. currentmodule:: aito.api
-
-.. autofunction:: get_job_status

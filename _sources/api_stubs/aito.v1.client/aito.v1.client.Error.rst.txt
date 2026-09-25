@@ -1,0 +1,6 @@
+aito.v1.client.Error
+====================
+
+.. currentmodule:: aito.v1.client
+
+.. autoexception:: Error

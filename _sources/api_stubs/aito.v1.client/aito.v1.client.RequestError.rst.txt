@@ -1,0 +1,6 @@
+aito.v1.client.RequestError
+===========================
+
+.. currentmodule:: aito.v1.client
+
+.. autoexception:: RequestError

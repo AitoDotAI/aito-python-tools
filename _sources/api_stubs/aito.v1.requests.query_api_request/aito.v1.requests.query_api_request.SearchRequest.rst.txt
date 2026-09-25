@@ -1,0 +1,28 @@
+aito.v1.requests.query\_api\_request.SearchRequest
+==================================================
+
+.. currentmodule:: aito.v1.requests.query_api_request
+
+.. autoclass:: SearchRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~SearchRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~SearchRequest.method
+          ~SearchRequest.path
+  
+  

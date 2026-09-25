@@ -1,0 +1,6 @@
+aito.v2.errors.AitoV2Error
+==========================
+
+.. currentmodule:: aito.v2.errors
+
+.. autoexception:: AitoV2Error

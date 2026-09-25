@@ -1,0 +1,29 @@
+aito.v1.requests.data\_api\_request.GetFileProcessingRequest
+============================================================
+
+.. currentmodule:: aito.v1.requests.data_api_request
+
+.. autoclass:: GetFileProcessingRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~GetFileProcessingRequest.make_request
+        ~GetFileProcessingRequest.path_matches
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~GetFileProcessingRequest.endpoint_prefix
+          ~GetFileProcessingRequest.method
+  
+  

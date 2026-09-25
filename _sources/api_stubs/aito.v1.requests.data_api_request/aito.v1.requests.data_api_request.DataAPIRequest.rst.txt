@@ -1,0 +1,29 @@
+aito.v1.requests.data\_api\_request.DataAPIRequest
+==================================================
+
+.. currentmodule:: aito.v1.requests.data_api_request
+
+.. autoclass:: DataAPIRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~DataAPIRequest.make_request
+        ~DataAPIRequest.path_matches
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~DataAPIRequest.endpoint_prefix
+          ~DataAPIRequest.response_cls
+  
+  

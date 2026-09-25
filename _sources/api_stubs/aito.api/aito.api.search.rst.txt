@@ -1,6 +1,0 @@
-aito.api.search
-===============
-
-.. currentmodule:: aito.api
-
-.. autofunction:: search

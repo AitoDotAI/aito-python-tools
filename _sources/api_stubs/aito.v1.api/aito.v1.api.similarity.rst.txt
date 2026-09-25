@@ -1,0 +1,6 @@
+aito.v1.api.similarity
+======================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: similarity

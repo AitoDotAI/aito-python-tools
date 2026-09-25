@@ -1,0 +1,38 @@
+aito.v1.client
+==============
+
+.. automodule:: aito.v1.client
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.v1.client
+    
+      AitoClient
+  
+  
+
+  
+  
+  .. rubric:: Exceptions
+
+  .. autosummary::
+    :toctree: ./aito.v1.client
+    
+      Error
+      RequestError
+  
+  
+
+
+

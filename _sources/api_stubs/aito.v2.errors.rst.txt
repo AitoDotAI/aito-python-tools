@@ -1,0 +1,31 @@
+aito.v2.errors
+==============
+
+.. automodule:: aito.v2.errors
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Exceptions
+
+  .. autosummary::
+    :toctree: ./aito.v2.errors
+    
+      AitoV2Error
+      AitoV2ResponseError
+  
+  
+
+
+

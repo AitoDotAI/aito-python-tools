@@ -1,0 +1,6 @@
+aito.v1.api.get\_table\_schema
+==============================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: get_table_schema

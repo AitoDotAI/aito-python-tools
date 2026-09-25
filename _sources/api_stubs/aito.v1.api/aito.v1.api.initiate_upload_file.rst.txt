@@ -1,0 +1,6 @@
+aito.v1.api.initiate\_upload\_file
+==================================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: initiate_upload_file

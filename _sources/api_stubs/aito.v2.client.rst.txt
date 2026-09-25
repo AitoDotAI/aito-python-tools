@@ -1,0 +1,30 @@
+aito.v2.client
+==============
+
+.. automodule:: aito.v2.client
+
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.v2.client
+    
+      AitoClientV2
+  
+  
+
+  
+  
+  
+
+
+

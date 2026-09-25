@@ -1,0 +1,6 @@
+aito.v1.api.evaluate
+====================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: evaluate

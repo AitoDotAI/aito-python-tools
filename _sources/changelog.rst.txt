@@ -1,6 +1,60 @@
 Changelog
 =========
 
+0.7.0
+-----
+
+Each Aito API version now has its own package, and ``aito.Client`` names the default.
+**Nothing changes meaning in this release**: every import that worked in 0.6 still works and
+resolves to the same object. The breaking change is to *installation* — see below.
+
+Migrating
+^^^^^^^^^
+
+=================================================  ================================================
+Before 0.7 (deprecated, removed in 1.0)            From 0.7
+=================================================  ================================================
+``from aito.client import AitoClient``             ``from aito.v1 import Client``
+``import aito.api as aito_api``                    ``import aito.v1.api as aito_api``
+``from aito.client.requests import ...``           ``from aito.v1.requests import ...``
+``from aito.client.v2 import AitoClientV2``        ``from aito.v2 import Client``
+``from aito.client.v2 import AitoV2Error``         ``from aito.v2 import Error``
+=================================================  ================================================
+
+The old paths emit a ``DeprecationWarning`` naming the replacement.
+
+**Installing the CLI now needs the extra.** ``pip install aitoai`` installs the API clients
+(requests, jsonschema, aiohttp, ndjson). The command-line tool, schema inference and file
+conversion need the dataframe toolchain — pandas, fastparquet, openpyxl, xlrd, langdetect,
+argcomplete — which moved to ``pip install 'aitoai[cli]'``. Without it, ``aito`` prints the
+install command instead of a traceback, and the affected functions raise an ``ImportError``
+that names it.
+
+SDK
+^^^
+
+- ``aito.v1`` and ``aito.v2`` packages. Their meaning never changes. ``aito.v2`` no longer
+  lives under ``aito.client``, so importing it loads no part of the v1 stack at all.
+- ``aito.Client``, the current default — **v1 throughout 0.x**. It moves only on a major
+  release: 1.0 makes it v2. Production code should import the explicit version.
+- Version-neutral names: ``aito.v1.Client``, ``aito.v2.Client``, ``aito.v2.Error``,
+  ``aito.v2.ResponseError``. The prefixed names remain as aliases.
+- ``aito.client``, ``aito.client.v2`` and ``aito.api`` are deprecated shims. ``aito.client``
+  stays **v1** — it does not follow the default, because code that says ``aito.client``
+  means v1.
+- Fixed the ``SyntaxWarning: invalid escape sequence`` that every import printed on
+  Python 3.12+.
+
+Docs
+^^^^
+
+- The v2 quickstart in the README and the SDK guide now runs verbatim against the public
+  read-only sandbox. It used to predict ``gl_code`` from a ``vendor`` column that the
+  sandbox's ``invoices`` table does not have, so a copy-paste failed with
+  ``Field not found: gl_code``.
+- Documented ``having``: it keeps only the predicted values seen with the evidence, and
+  accepts nothing but the per-candidate frequency ``$f``.
+
 0.6.3
 -----
 

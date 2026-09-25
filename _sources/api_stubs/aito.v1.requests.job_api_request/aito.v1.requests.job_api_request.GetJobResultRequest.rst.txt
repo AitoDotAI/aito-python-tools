@@ -1,0 +1,28 @@
+aito.v1.requests.job\_api\_request.GetJobResultRequest
+======================================================
+
+.. currentmodule:: aito.v1.requests.job_api_request
+
+.. autoclass:: GetJobResultRequest
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+        ~GetJobResultRequest.make_request
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~GetJobResultRequest.endpoint_prefix
+          ~GetJobResultRequest.method
+  
+  

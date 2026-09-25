@@ -1,6 +1,0 @@
-aito.api.relate
-===============
-
-.. currentmodule:: aito.api
-
-.. autofunction:: relate

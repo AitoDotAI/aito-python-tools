@@ -1,0 +1,6 @@
+aito.v1.api.match
+=================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: match

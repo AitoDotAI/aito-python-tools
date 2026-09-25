@@ -1,0 +1,6 @@
+aito.v1.api.optimize\_table
+===========================
+
+.. currentmodule:: aito.v1.api
+
+.. autofunction:: optimize_table

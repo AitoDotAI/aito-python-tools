@@ -1,6 +1,0 @@
-aito.api.check\_table\_exists
-=============================
-
-.. currentmodule:: aito.api
-
-.. autofunction:: check_table_exists
