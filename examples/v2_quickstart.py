@@ -20,7 +20,7 @@ the GL code for an invoice it has not seen, and explain why.
 import os
 import sys
 
-from aito.client.v2 import AitoClientV2, AitoV2Error
+from aito.v2 import Client, Error
 
 COLLECTION = 'v2_quickstart_invoices'
 
@@ -62,7 +62,7 @@ def main():
     # failure. In an example that is a way to prove the queries below are
     # actually the queries that ran; in a multi-tenant app it is how you find
     # out that a filter was dropped before your users do.
-    client = AitoClientV2(instance_url, api_key, on_warning='raise')
+    client = Client(instance_url, api_key, on_warning='raise')
     print(f'connected: {client}')
     print(f"instance:  {client.get_version()['version']}")
 
@@ -73,7 +73,7 @@ def main():
     try:
         client.delete_collection(COLLECTION)
         print(f'dropped the previous {COLLECTION}')
-    except AitoV2Error as err:
+    except Error as err:
         if not err.is_not_found:
             raise
     client.create_collection(COLLECTION, {
@@ -158,7 +158,7 @@ def main():
     step('10. errors are typed, not strings')
     try:
         client.query({'from': 'a_collection_that_does_not_exist', 'limit': 1})
-    except AitoV2Error as err:
+    except Error as err:
         print(f'  code={err.code!r} status={err.status_code} is_not_found={err.is_not_found}')
 
     step('clean up')
