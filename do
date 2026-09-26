@@ -122,6 +122,24 @@ case "$COMMAND" in
       fi
     done
 
+    # PyPI credentials. twine reads TWINE_USERNAME / TWINE_PASSWORD from the
+    # environment and otherwise prompts, which fails wherever there is no
+    # terminal (an agent's shell, `!` in Claude Code). Take them from .env
+    # when present. Only the TWINE_* names are read, each in a subshell, so
+    # nothing else from the file reaches the release's environment. A value
+    # already exported wins over the file.
+    if [[ -f .env ]]; then
+      for name in TWINE_USERNAME TWINE_PASSWORD TWINE_REPOSITORY_URL; do
+        [[ -n "${!name:-}" ]] && continue
+        value=$(set -a; source ./.env >/dev/null 2>&1; printf '%s' "${!name:-}")
+        [[ -n "$value" ]] && export "$name=$value"
+      done
+      unset name value
+    fi
+    if [[ -z "${TWINE_PASSWORD:-}" ]]; then
+      echo "Note: TWINE_PASSWORD is not set (nor in .env); twine will prompt for the token."
+    fi
+
     # Get version info
     VERSION=$(python3 -c "import aito; print(aito.__version__)")
     echo "Current version in code: $VERSION"
