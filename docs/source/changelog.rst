@@ -1,6 +1,38 @@
 Changelog
 =========
 
+1.0.0
+-----
+
+**Breaking.** ``aito.Client`` is now the **v2** client, and the paths deprecated in 0.7 are
+removed. This is the major release that 0.7 announced; there is no other breaking change.
+
+Migrating
+^^^^^^^^^
+
+- To stay on v1, change one line: ``from aito.v1 import Client`` (or pin ``aitoai<1``).
+- Code that already imports ``aito.v1`` or ``aito.v2`` explicitly is unaffected.
+
+=================================================  ================================================
+Removed                                            Use instead
+=================================================  ================================================
+``from aito.client import AitoClient``             ``from aito.v1 import Client``
+``import aito.api as aito_api``                    ``import aito.v1.api as aito_api``
+``from aito.client.requests import ...``           ``from aito.v1.requests import ...``
+``from aito.client.responses import ...``          ``from aito.v1.responses import ...``
+``from aito.client.v2 import AitoClientV2``        ``from aito.v2 import Client``
+=================================================  ================================================
+
+Importing a removed path raises an ``ImportError`` that names its replacement.
+
+SDK
+^^^
+
+- ``aito.Client`` resolves to ``aito.v2.Client`` (``DEFAULT_API_VERSION = 'v2'``).
+- ``aito.client``, ``aito.client.v2`` and ``aito.api`` removed.
+- The ``aito`` command-line tool still talks to the v1 API, and keeps doing so throughout 1.x:
+  v2 support will arrive as an opt-in, and the CLI's default moves to v2 only in 2.0.
+
 0.7.0
 -----
 

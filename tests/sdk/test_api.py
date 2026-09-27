@@ -8,10 +8,10 @@ from uuid import uuid4
 import ndjson
 from parameterized import parameterized
 
-import aito.api as api
+import aito.v1.api as api
 from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema, AitoIntType
-import aito.client.requests as aito_requests
-import aito.client.responses as aito_responses
+import aito.v1.requests as aito_requests
+import aito.v1.responses as aito_responses
 from aito.utils._file_utils import read_ndjson_gz_file
 from tests.cases import CompareTestCase
 from tests.sdk.contexts import default_client, grocery_demo_client, endpoint_methods_test_context

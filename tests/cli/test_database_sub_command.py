@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from parameterized import parameterized
 
-from aito.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries, upload_entries
+from aito.v1.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries, upload_entries
 from aito.utils._credentials_file_utils import get_credentials_file_config
 from aito.schema import AitoTableSchema, AitoDatabaseSchema
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase

@@ -31,9 +31,16 @@ Each Aito API version has its own package, whose meaning never changes:
         from_table='invoices', where={'Description': 'cloud services'}, predict='GLCode')
     print(prediction.first.value, prediction.first.probability)   # E002 0.83...
 
-``aito.Client`` follows the current default version, and moves only on a major release of
-this package: **aitoai 0.x -> v1, 1.x -> v2**. Quickstarts can use it; production code
-should import the explicit version. The design is written up in ``docs/versioned-namespaces.md``.
+``aito.Client`` is the default version, and moves only on a major release of this package:
+**since aitoai 1.0 it is the v2 client** (0.x: v1). Quickstarts can use it; production code
+should import the version it means, ``aito.v1`` or ``aito.v2``, so an upgrade cannot change
+the API underneath it. To stay on v1: ``from aito.v1 import Client``, or pin ``aitoai<1``.
+
+The pre-0.7 paths (``aito.client``, ``aito.client.v2``, ``aito.api``) were removed in 1.0;
+importing one raises an ``ImportError`` naming its replacement. The command-line tool still
+talks to the v1 API in 1.x: v2 support arrives as an opt-in in a 1.x minor release, and the
+CLI's default moves to v2 only in 2.0. The design is written up in
+``docs/versioned-namespaces.md``.
 
 ``pip install aitoai`` installs the API clients. The command-line tool, schema inference
 and file conversion need the dataframe toolchain: ``pip install 'aitoai[cli]'``.
