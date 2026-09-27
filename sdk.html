@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aito SDK &mdash; aito-python-sdk 0.7.0 documentation</title>
+  <title>Aito SDK &mdash; aito-python-sdk 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -144,14 +144,18 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">aito.v2</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>   <span class="c1"># the v2 API: /api/v2</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">aito.Client</span></code> is the one name that follows the current default version. It moves only on a
-<strong>major</strong> release of <code class="docutils literal notranslate"><span class="pre">aitoai</span></code>, so the major version tells you which API it is — 0.x is v1,
-1.x will be v2 — and pinning <code class="docutils literal notranslate"><span class="pre">aitoai&lt;1</span></code> keeps it on v1. Use <code class="docutils literal notranslate"><span class="pre">aito.Client</span></code> in quick
-experiments; in production code import the explicit version.</p>
+<p><code class="docutils literal notranslate"><span class="pre">aito.Client</span></code> is the one name that follows the default version. It moves only on a
+<strong>major</strong> release of <code class="docutils literal notranslate"><span class="pre">aitoai</span></code>, so the major version tells you which API it is: <strong>1.x is v2</strong>
+(0.x was v1). Use <code class="docutils literal notranslate"><span class="pre">aito.Client</span></code> in quick experiments; in production code import the
+explicit version, so an upgrade cannot change the API underneath it. To stay on v1, import
+<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">aito.v1</span> <span class="pre">import</span> <span class="pre">Client</span></code>, or pin <code class="docutils literal notranslate"><span class="pre">aitoai&lt;1</span></code>.</p>
 <p>Before 0.7 the v1 client lived in <code class="docutils literal notranslate"><span class="pre">aito.client</span></code> and the helpers in <code class="docutils literal notranslate"><span class="pre">aito.api</span></code>, and the v2
-client in <code class="docutils literal notranslate"><span class="pre">aito.client.v2</span></code>. Those paths still work, resolve to the very same objects, and
-emit a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>; they are removed in 1.0. <code class="docutils literal notranslate"><span class="pre">aito.client</span></code> stays v1 until then —
-it does <strong>not</strong> follow the default.</p>
+client in <code class="docutils literal notranslate"><span class="pre">aito.client.v2</span></code>. Those paths were deprecated in 0.7 and <strong>removed in 1.0</strong>:
+importing one raises an <code class="docutils literal notranslate"><span class="pre">ImportError</span></code> that names its replacement (<code class="docutils literal notranslate"><span class="pre">aito.v1</span></code>,
+<code class="docutils literal notranslate"><span class="pre">aito.v2</span></code>, <code class="docutils literal notranslate"><span class="pre">aito.v1.api</span></code>).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">aito</span></code> command-line tool still talks to the <strong>v1</strong> API throughout 1.x (it imports
+<code class="docutils literal notranslate"><span class="pre">aito.v1</span></code> explicitly, so the default switch does not move it). v2 support arrives as an
+opt-in in a 1.x minor release; the CLI’s default moves to v2 only in 2.0.</p>
 <p>A bare <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">aitoai</span></code> installs the API clients only. The command-line tool, schema
 inference and file conversion need <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'aitoai[cli]'</span></code>.</p>
 </section>
