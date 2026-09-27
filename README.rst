@@ -38,7 +38,8 @@ the API underneath it. To stay on v1: ``from aito.v1 import Client``, or pin ``a
 
 The pre-0.7 paths (``aito.client``, ``aito.client.v2``, ``aito.api``) were removed in 1.0;
 importing one raises an ``ImportError`` naming its replacement. The command-line tool still
-talks to the v1 API in 1.0; its move to v2 is planned for 1.1. The design is written up in
+talks to the v1 API in 1.x: v2 support arrives as an opt-in in a 1.x minor release, and the
+CLI's default moves to v2 only in 2.0. The design is written up in
 ``docs/versioned-namespaces.md``.
 
 ``pip install aitoai`` installs the API clients. The command-line tool, schema inference

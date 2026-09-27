@@ -61,8 +61,9 @@ client in ``aito.client.v2``. Those paths were deprecated in 0.7 and **removed i
 importing one raises an ``ImportError`` that names its replacement (``aito.v1``,
 ``aito.v2``, ``aito.v1.api``).
 
-The ``aito`` command-line tool still talks to the **v1** API in 1.0 (it imports ``aito.v1``
-explicitly, so the default switch does not move it); its port to v2 is planned for 1.1.
+The ``aito`` command-line tool still talks to the **v1** API throughout 1.x (it imports
+``aito.v1`` explicitly, so the default switch does not move it). v2 support arrives as an
+opt-in in a 1.x minor release; the CLI's default moves to v2 only in 2.0.
 
 A bare ``pip install aitoai`` installs the API clients only. The command-line tool, schema
 inference and file conversion need ``pip install 'aitoai[cli]'``.

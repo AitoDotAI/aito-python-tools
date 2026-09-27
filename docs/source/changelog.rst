@@ -30,7 +30,8 @@ SDK
 
 - ``aito.Client`` resolves to ``aito.v2.Client`` (``DEFAULT_API_VERSION = 'v2'``).
 - ``aito.client``, ``aito.client.v2`` and ``aito.api`` removed.
-- The ``aito`` command-line tool still talks to the v1 API; its port to v2 follows in 1.1.
+- The ``aito`` command-line tool still talks to the v1 API, and keeps doing so throughout 1.x:
+  v2 support will arrive as an opt-in, and the CLI's default moves to v2 only in 2.0.
 
 0.7.0
 -----

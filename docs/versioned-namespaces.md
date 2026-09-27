@@ -134,9 +134,10 @@ releases, and the default API is the one the platform recommends.
   helpers, several with no v2 client equivalent yet (binary file upload, table copy and
   rename, database create/delete, quick predict-and-evaluate), and schema inference emits
   v1 `table` schemas. That is more than the ~day the release could absorb. The CLI imports
-  `aito.v1` explicitly, so in 1.0 it stays on v1 unchanged; 1.1 ports it with a v1 fallback
-  flag, which is additive. Principle 3 ("the CLI follows the default") is therefore
-  deferred, not dropped.
+  `aito.v1` explicitly, so it stays on v1, unchanged, throughout 1.x. v2 support arrives as
+  an OPT-IN in a 1.x minor (additive); flipping the CLI's default is itself breaking, so it
+  waits for 2.0. Principle 3 ("the CLI follows the default") is therefore deferred to 2.0,
+  not dropped.
 - The error-code taxonomy item above is still open.
 
 ## Open
