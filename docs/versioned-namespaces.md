@@ -123,6 +123,22 @@ Nothing changes meaning in 0.7.0: every existing import still resolves to what i
 1.0 lands where it means something: the v2 contract has been stable across a few engine
 releases, and the default API is the one the platform recommends.
 
+### 1.0.0 as shipped (amended 2026-09-27)
+
+- `aito.Client` resolves to `aito.v2.Client`; `DEFAULT_API_VERSION = 'v2'`.
+- `aito.client`, `aito.client.v2` and `aito.api` are removed. Importing one raises an
+  `ImportError` that names the replacement (and `aitoai<1`), not a bare
+  `ModuleNotFoundError`. Removing them in the same major as the default switch keeps it to
+  ONE breaking release for users.
+- **Deviation: the CLI port moves to 1.1.** Its database commands use 15 `aito.v1.api`
+  helpers, several with no v2 client equivalent yet (binary file upload, table copy and
+  rename, database create/delete, quick predict-and-evaluate), and schema inference emits
+  v1 `table` schemas. That is more than the ~day the release could absorb. The CLI imports
+  `aito.v1` explicitly, so in 1.0 it stays on v1 unchanged; 1.1 ports it with a v1 fallback
+  flag, which is additive. Principle 3 ("the CLI follows the default") is therefore
+  deferred, not dropped.
+- The error-code taxonomy item above is still open.
+
 ## Open
 
 - The `aito server start` onboarding work (td-20260830190739726601) sits on the v2 CLI,

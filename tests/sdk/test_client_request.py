@@ -1,6 +1,6 @@
 from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchema, AitoStringType
 from tests.cases import CompareTestCase
-import aito.client.requests as aito_requests
+import aito.v1.requests as aito_requests
 from parameterized import parameterized
 
 

@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from aito.cli.parser import ParseError, ArgParser, parse_env_variable, create_client_from_parsed_args
-from aito.client import AitoClient, Error
+from aito.v1 import AitoClient, Error
 from tests.cases import BaseTestCase, CompareTestCase
 
 

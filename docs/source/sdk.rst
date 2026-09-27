@@ -50,15 +50,19 @@ Each Aito API version has its own package, whose meaning never changes:
     from aito.v1 import Client   # the v1 API: /api/v1
     from aito.v2 import Client   # the v2 API: /api/v2
 
-``aito.Client`` is the one name that follows the current default version. It moves only on a
-**major** release of ``aitoai``, so the major version tells you which API it is — 0.x is v1,
-1.x will be v2 — and pinning ``aitoai<1`` keeps it on v1. Use ``aito.Client`` in quick
-experiments; in production code import the explicit version.
+``aito.Client`` is the one name that follows the default version. It moves only on a
+**major** release of ``aitoai``, so the major version tells you which API it is: **1.x is v2**
+(0.x was v1). Use ``aito.Client`` in quick experiments; in production code import the
+explicit version, so an upgrade cannot change the API underneath it. To stay on v1, import
+``from aito.v1 import Client``, or pin ``aitoai<1``.
 
 Before 0.7 the v1 client lived in ``aito.client`` and the helpers in ``aito.api``, and the v2
-client in ``aito.client.v2``. Those paths still work, resolve to the very same objects, and
-emit a ``DeprecationWarning``; they are removed in 1.0. ``aito.client`` stays v1 until then —
-it does **not** follow the default.
+client in ``aito.client.v2``. Those paths were deprecated in 0.7 and **removed in 1.0**:
+importing one raises an ``ImportError`` that names its replacement (``aito.v1``,
+``aito.v2``, ``aito.v1.api``).
+
+The ``aito`` command-line tool still talks to the **v1** API in 1.0 (it imports ``aito.v1``
+explicitly, so the default switch does not move it); its port to v2 is planned for 1.1.
 
 A bare ``pip install aitoai`` installs the API clients only. The command-line tool, schema
 inference and file conversion need ``pip install 'aitoai[cli]'``.

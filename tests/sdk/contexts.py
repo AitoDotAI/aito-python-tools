@@ -1,9 +1,9 @@
 from os import getenv
 
-from aito.client import AitoClient
-from aito.client.requests import SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
+from aito.v1 import AitoClient
+from aito.v1.requests import SearchRequest, PredictRequest, RecommendRequest, EvaluateRequest, \
     SimilarityRequest, MatchRequest, RelateRequest, GenericQueryRequest, EstimateRequest
-from aito.client.responses import HitsResponse, SearchResponse, PredictResponse, RecommendResponse, \
+from aito.v1.responses import HitsResponse, SearchResponse, PredictResponse, RecommendResponse, \
     SimilarityResponse, MatchResponse, RelateResponse, EvaluateResponse, EstimateResponse
 
 

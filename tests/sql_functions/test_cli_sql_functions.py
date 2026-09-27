@@ -2,8 +2,8 @@ import json
 import os
 from uuid import uuid4
 
-from aito.api import create_table, delete_table, query_entries
-from aito.client import AitoClient, RequestError
+from aito.v1.api import create_table, delete_table, query_entries
+from aito.v1 import AitoClient, RequestError
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
 
 

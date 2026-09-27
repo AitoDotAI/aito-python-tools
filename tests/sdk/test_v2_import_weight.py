@@ -1,6 +1,6 @@
 """The client and the CLI must stay cheap to import
 
-`from aito.client.v2 import AitoClientV2` used to load pandas, numpy, aiohttp
+The v2 client (then `from aito.client.v2 import AitoClientV2`) used to load pandas, numpy, aiohttp
 and langdetect — the whole v1 stack, because importing a submodule runs the
 parent package's ``__init__``, and that chain reached ``aito/schema.py``. The v2
 client is a plain HTTP client whose only third-party dependency is ``requests``.
@@ -49,12 +49,6 @@ class TestV2ImportWeight(BaseTestCase):
     def test_importing_the_v2_client_stays_light(self):
         loaded = _modules_loaded_by('import aito.v2')
         self.assertEqual(loaded, set(), f'importing the v2 client pulled in {sorted(loaded)}')
-
-    def test_the_deprecated_v2_path_stays_light_too(self):
-        # `aito.client.v2` is a shim until 1.0. It imports the v1 stack (its parent
-        # package), but that stack must still not pull the heavy set.
-        loaded = _modules_loaded_by('import aito.client.v2')
-        self.assertEqual(loaded, set(), f'the deprecated v2 path pulled in {sorted(loaded)}')
 
     def test_importing_the_public_name_stays_light(self):
         # The line a stranger actually writes.

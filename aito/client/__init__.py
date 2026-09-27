@@ -1,43 +1,15 @@
-"""DEPRECATED: the v1 client's old home. Use ``aito.v1`` (or ``aito.Client``).
+"""Removed in aitoai 1.0: the pre-0.7 home of the clients.
 
-``aito.client`` is FROZEN to v1. It does not follow the default API version: every
-existing caller that writes ``from aito.client import AitoClient`` means v1, and
-switching it to v2 underneath them would break them silently. The name that follows
-the default is ``aito.Client``. See ``docs/versioned-namespaces.md``.
-
-The old dotted module paths (``aito.client.requests.query_api_request`` and so on)
-keep resolving, to the same module objects as their ``aito.v1`` counterparts.
-Removed in aitoai 1.0.
+Importing it raises an ``ImportError`` that names the replacement, rather than a bare
+``ModuleNotFoundError``: an upgrade to 1.0 should tell the caller what to write.
+``aito.client.v2`` and ``aito.client.requests`` etc. land here too, since a subpackage
+import runs this file first.
 """
 
-import importlib as _importlib
-import pkgutil as _pkgutil
-import sys as _sys
-import warnings as _warnings
-
-_warnings.warn(
-    "`aito.client` is deprecated and will be removed in aitoai 1.0. "
-    "Import the v1 client from `aito.v1` (e.g. `from aito.v1 import Client`), "
-    "or use `aito.Client` for the current default API version.",
-    DeprecationWarning, stacklevel=2,
+raise ImportError(
+    "`aito.client` was removed in aitoai 1.0. "
+    "For the v1 API: `from aito.v1 import Client` (was `aito.client.AitoClient`). "
+    "For the v2 API: `from aito.v2 import Client` (was `aito.client.v2.AitoClientV2`). "
+    "Requests and responses: `aito.v1.requests` / `aito.v1.responses`. "
+    "Or pin `aitoai<1` to keep the old paths."
 )
-
-import aito.v1 as _v1  # noqa: E402
-from aito.v1 import *  # noqa: E402,F401,F403
-
-
-def _alias(old, module):
-    _sys.modules[old] = module
-    parent, _, attr = old.rpartition('.')
-    if parent in _sys.modules:
-        setattr(_sys.modules[parent], attr, module)
-
-
-# `aito.client.aito_client` was the v1 client module; it is `aito.v1.client` now.
-_alias('aito.client.aito_client', _importlib.import_module('aito.v1.client'))
-for _pkg in ('requests', 'responses'):
-    _mod = _importlib.import_module(f'aito.v1.{_pkg}')
-    _alias(f'aito.client.{_pkg}', _mod)
-    for _info in _pkgutil.iter_modules(_mod.__path__):
-        _alias(f'aito.client.{_pkg}.{_info.name}',
-               _importlib.import_module(f'aito.v1.{_pkg}.{_info.name}'))

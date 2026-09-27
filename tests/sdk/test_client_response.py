@@ -1,9 +1,9 @@
 import requests
 from parameterized import parameterized, parameterized_class
 
-import aito.client.requests as aito_requests
+import aito.v1.requests as aito_requests
 import aito.schema as aito_schema
-from aito.client import AitoClient
+from aito.v1 import AitoClient
 from tests.cases import CompareTestCase
 from tests.sdk.contexts import grocery_demo_client
 
