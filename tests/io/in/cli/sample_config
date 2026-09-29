@@ -1,7 +1,7 @@
 [default]
-instance_url = space_oddity
+instance_url = https://space-oddity.aito.app
 api_key = star_man
 
 [space_oddity]
-instance_url = ground_control
+instance_url = https://ground-control.aito.app
 api_key = major_tom

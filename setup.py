@@ -42,7 +42,9 @@ setup(
     long_description_content_type="text/x-rst",
     url='https://github.com/AitoDotAI/aito-python-tools',
     project_urls={
-        'Documentation': 'https://aito-python-sdk.readthedocs.io/en/latest/',
+        # The one canonical SDK page (the v2 client, the default since 1.0.0). The
+        # CLI and v1 reference stay at the github.io site the page links to.
+        'Documentation': 'https://aito.ai/docs/api/v2/python-sdk/',
         'Source': 'https://github.com/AitoDotAI/aito-python-tools',
         'Tracker': 'https://github.com/AitoDotAI/aito-python-tools/issues',
     },

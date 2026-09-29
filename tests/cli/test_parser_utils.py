@@ -22,24 +22,25 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
 
     def test_create_client_from_flag(self):
         expected_parsed_args = {
-            'profile': None, 'instance_url': 'some_url', 'api_key': 'some_key', 'api_version': None, 'env': None
+            'profile': None, 'instance_url': 'https://some-url.aito.app', 'api_key': 'some_key',
+            'api_version': None, 'env': None
         }
         self.assertEqual(
-            vars(self.parser.parse_args(['-i', 'some_url', '-k', 'some_key'])),
+            vars(self.parser.parse_args(['-i', 'https://some-url.aito.app', '-k', 'some_key'])),
             expected_parsed_args
         )
         self.assertEqual(
-            vars(AitoClient('some_url', 'some_key', False)),
+            vars(AitoClient('https://some-url.aito.app', 'some_key', False)),
             vars(create_client_from_parsed_args(expected_parsed_args, check_credentials=False))
         )
 
     def test_create_client_from_aito_url_env_var(self):
         # AITO_URL is the name `aito start` prints; it wins over AITO_INSTANCE_URL, as in the SDK
-        self.stub_environment_variable('AITO_INSTANCE_URL', 'the_older_url')
-        self.stub_environment_variable('AITO_URL', 'some_url')
+        self.stub_environment_variable('AITO_INSTANCE_URL', 'https://older.aito.app')
+        self.stub_environment_variable('AITO_URL', 'https://some-url.aito.app')
         self.stub_environment_variable('AITO_API_KEY', 'some_key')
         self.assertEqual(
-            vars(AitoClient('some_url', 'some_key', False)),
+            vars(AitoClient('https://some-url.aito.app', 'some_key', False)),
             vars(create_client_from_parsed_args(vars(self.parser.parse_args([])), check_credentials=False))
         )
 
@@ -49,10 +50,10 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
             vars(self.parser.parse_args([])),
             expected_parsed_args
         )
-        self.stub_environment_variable('AITO_INSTANCE_URL', 'some_url')
+        self.stub_environment_variable('AITO_INSTANCE_URL', 'https://some-url.aito.app')
         self.stub_environment_variable('AITO_API_KEY', 'some_key')
         self.assertEqual(
-            vars(AitoClient('some_url', 'some_key', False)),
+            vars(AitoClient('https://some-url.aito.app', 'some_key', False)),
             vars(create_client_from_parsed_args(expected_parsed_args, check_credentials=False))
         )
 
@@ -68,7 +69,7 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
 
         with patch('aito.utils._credentials_file_utils.DEFAULT_CREDENTIAL_FILE', self.input_folder / 'sample_config'):
             self.assertEqual(
-                vars(AitoClient('space_oddity', 'star_man', False)),
+                vars(AitoClient('https://space-oddity.aito.app', 'star_man', False)),
                 vars(create_client_from_parsed_args(vars(self.parser.parse_args([])), check_credentials=False))
             )
 
@@ -82,7 +83,7 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
         self.stub_environment_variable('AITO_API_KEY', None)
         with patch('aito.utils._credentials_file_utils.DEFAULT_CREDENTIAL_FILE', self.input_folder / 'sample_config'):
             self.assertEqual(
-                vars(AitoClient('ground_control', 'major_tom', False)),
+                vars(AitoClient('https://ground-control.aito.app', 'major_tom', False)),
                 vars(create_client_from_parsed_args(expected_parsed_args, check_credentials=False))
             )
 
@@ -127,4 +128,4 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
 
     def test_create_error_client(self):
         with self.assertRaises(Error):
-            create_client_from_parsed_args(vars(self.parser.parse_args(['-i', 'some_url', '-k', 'some_key'])))
+            create_client_from_parsed_args(vars(self.parser.parse_args(['-i', 'https://some-url.aito.app', '-k', 'some_key'])))

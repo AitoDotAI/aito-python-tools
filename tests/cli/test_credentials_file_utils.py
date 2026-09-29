@@ -17,8 +17,8 @@ class TestCredentialsConfigFile(CompareTestCase):
     def test_get_config(self):
         config = get_credentials_file_config(self.input_folder / 'sample_config')
         self.assertEqual(config.sections(), ['default', 'space_oddity'])
-        self.assertConfigProfile(config, 'default', 'space_oddity', 'star_man')
-        self.assertConfigProfile(config, 'space_oddity', 'ground_control', 'major_tom')
+        self.assertConfigProfile(config, 'default', 'https://space-oddity.aito.app', 'star_man')
+        self.assertConfigProfile(config, 'space_oddity', 'https://ground-control.aito.app', 'major_tom')
 
     def test_write_config(self):
         out_fp = self.output_folder / 'nested' / 'config'
@@ -31,21 +31,21 @@ class TestCredentialsConfigFile(CompareTestCase):
 
         self.addCleanup(clean_up_folder)
         # write to a file with parents not created
-        write_credentials_file_profile('space_oddity', 'ground_control', 'major_tom', out_fp)
+        write_credentials_file_profile('space_oddity', 'https://ground-control.aito.app', 'major_tom', out_fp)
         config = get_credentials_file_config(out_fp)
         self.assertEqual(config.sections(), ['space_oddity'])
-        self.assertConfigProfile(config, 'space_oddity', 'ground_control', 'major_tom')
+        self.assertConfigProfile(config, 'space_oddity', 'https://ground-control.aito.app', 'major_tom')
         # write to a new profile
         write_credentials_file_profile('star_man', 'dont_blow_it', 'lets_boogie', out_fp)
         config = get_credentials_file_config(out_fp)
         self.assertEqual(config.sections(), ['space_oddity', 'star_man'])
-        self.assertConfigProfile(config, 'space_oddity', 'ground_control', 'major_tom')
+        self.assertConfigProfile(config, 'space_oddity', 'https://ground-control.aito.app', 'major_tom')
         self.assertConfigProfile(config, 'star_man', 'dont_blow_it', 'lets_boogie')
         # overwrite a profile
         write_credentials_file_profile('star_man', 'heroes', 'just_for_one_day', out_fp)
         config = get_credentials_file_config(out_fp)
         self.assertEqual(config.sections(), ['space_oddity', 'star_man'])
-        self.assertConfigProfile(config, 'space_oddity', 'ground_control', 'major_tom')
+        self.assertConfigProfile(config, 'space_oddity', 'https://ground-control.aito.app', 'major_tom')
         self.assertConfigProfile(config, 'star_man', 'heroes', 'just_for_one_day')
 
 
