@@ -17,7 +17,7 @@ eager ``from aito.v1 import Client`` here would make ``import aito.v2`` load the
 v1 stack — the import-weight defect fixed in 0.6.2, reintroduced one level up.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 #: The API version ``aito.Client`` points at. Changes only on a major release.
 DEFAULT_API_VERSION = 'v2'

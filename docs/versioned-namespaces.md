@@ -140,6 +140,21 @@ releases, and the default API is the one the platform recommends.
   not dropped.
 - The error-code taxonomy item above is still open.
 
+### 1.1.0: the CLI's v2 opt-in (2026-09-29)
+
+- Every database command takes `--api-version {v1,v2}` (or `AITO_API_VERSION`), plus
+  `--env` for a v2 environment. The commands say what to do; `aito/cli/_backends.py` holds
+  one backend per API. The v1 backend is the pre-1.1 CLI unchanged; the v2 backend maps
+  each command onto `aito.v2.Client`.
+- Without either, the CLI stays on v1 and warns (`FutureWarning`) that the default moves to
+  v2 in 2.0. That is the deprecation path: one or more 1.x minors of warning, then the
+  flip in the major, which is where principle 3 ("the CLI follows the default") lands.
+- Refused on v2, with the reason: `rename-table` (no `/api/v2/schema/_rename`),
+  `similarity` (no `_similarity`), `--use-job` (no jobs).
+- Measured on engine 2.11.1: v2 `/schema/_copy` copies a COLLECTION's schema but not its
+  rows (it does copy a legacy table's data), so the v2 `copy-table` copies the rows itself
+  and checks the count.
+
 ## Open
 
 - The `aito server start` onboarding work (td-20260830190739726601) sits on the v2 CLI,

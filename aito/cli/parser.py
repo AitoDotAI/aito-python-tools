@@ -1,6 +1,7 @@
 import json
 import logging.handlers
 import sys
+import warnings
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
 from os import getenv
@@ -15,6 +16,12 @@ from aito.utils._credentials_file_utils import get_credentials_file_config
 DEFAULT_CONFIG_DIR = CONFIG_DIR  # aito.local.profiles: XDG_CONFIG_HOME honoured
 
 LOG = logging.getLogger('Parser')
+
+#: the API the CLI talks to when neither --api-version nor AITO_API_VERSION says.
+#: v1 throughout aitoai 1.x: changing a CLI's default is breaking, so it moves to
+#: v2 in 2.0 (docs/versioned-namespaces.md, "1.0.0 as shipped").
+CLI_DEFAULT_API_VERSION = 'v1'
+CLI_API_VERSIONS = ('v1', 'v2')
 
 
 class ArgParser(ArgumentParser):
@@ -40,6 +47,14 @@ class ArgParser(ArgumentParser):
         args.add_argument('-i', '--instance-url', type=str, default='.env', help='specify aito instance url')
         args.add_argument(
             '-k', '--api-key', type=str, default='.env', help='specify aito read-write or read-only API key'
+        )
+        args.add_argument(
+            '--api-version', type=str, choices=CLI_API_VERSIONS, default=None,
+            help='the Aito API to use (default: AITO_API_VERSION, else v1; the default becomes v2 in aitoai 2.0)'
+        )
+        args.add_argument(
+            '--env', type=str, default=None,
+            help='the environment of the database to use (v2 only; default: master)'
         )
         epilog_str = '''You must provide your Aito credentials to execute database operations.
 The CLI checks for flag options, environment variables, and credentials of the specified profile in that order
@@ -260,6 +275,39 @@ def create_client_from_parsed_args(parsed_args, check_credentials=True) -> AitoC
         'check_credentials': check_credentials
     }
     return AitoClient(**client_args)
+
+
+def resolve_api_version(parsed_args) -> str:
+    """the API version a command uses: --api-version, then AITO_API_VERSION, then the default
+
+    Falling back to the default warns, because the default changes in aitoai 2.0:
+    a script that relies on it should say which API it means now.
+    """
+    version = parsed_args.get('api_version') or getenv('AITO_API_VERSION')
+    if version:
+        if version not in CLI_API_VERSIONS:
+            raise ParseError(f"invalid API version `{version}`: expected one of {', '.join(CLI_API_VERSIONS)}")
+        return version
+    warnings.warn(
+        "the aito CLI uses the v1 API by default in aitoai 1.x and will use v2 from aitoai 2.0. "
+        "Pass --api-version v1 (or set AITO_API_VERSION=v1) to keep v1, or --api-version v2 to move now.",
+        FutureWarning, stacklevel=2)
+    return CLI_DEFAULT_API_VERSION
+
+
+def create_backend_from_parsed_args(parsed_args, check_credentials=True):
+    """the v1 or v2 backend a database command runs on (see aito.cli._backends)"""
+    from aito.cli._backends import V1Backend, V2Backend
+    version = resolve_api_version(parsed_args)
+    env = parsed_args.get('env')
+    if version == 'v1':
+        if env:
+            raise ParseError('--env needs --api-version v2: the v1 API has no environments')
+        return V1Backend(create_client_from_parsed_args(parsed_args, check_credentials))
+    from aito.v2 import Client as V2Client
+    v1_client = create_client_from_parsed_args(parsed_args, check_credentials=False)
+    return V2Backend(V2Client(
+        v1_client.instance_url, v1_client.api_key, env=env, check_credentials=check_credentials))
 
 
 def create_sql_connecting_from_parsed_args(parsed_args):
