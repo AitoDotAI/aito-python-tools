@@ -6,8 +6,9 @@ Quickstart (v1 / CLI)
   This is the **v1** flow: the command-line tool plus the pandas-based schema and file tools
   (``pip install 'aitoai[cli]'``). The default Python client since 1.0.0 is **v2**
   (``aito.Client``), and its quickstart is the
-  `Python SDK page <https://aito.ai/docs/api/v2/python-sdk/>`__. A local Docker instance is
-  ``http://localhost:9005``.
+  `Python SDK page <https://aito.ai/docs/api/v2/python-sdk/>`__. ``aito start`` runs a local
+  instance in Docker at ``http://127.0.0.1:9005`` and stores its keys, so ``aito.Client()`` needs
+  no arguments.
 
 This section explains how to upload data to Aito and send your first query with either :doc:`CLI <cli>` or :doc:`Python SDK <sdk>`.
 
