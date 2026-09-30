@@ -159,6 +159,59 @@ class TestStartRefuses(LocalServerCase):
         self.assertTrue(self.docker.containers['aito']['State']['Running'])
 
 
+class TestPortsAcrossProfiles(LocalServerCase):
+    """from the fresh-eyes rerun (org/dx/2026-09-30-aito-start-first-hour.md)"""
+
+    def test_a_new_profile_does_not_default_onto_locals_port(self):
+        self.assertEqual(server.ServerConfig.for_start('demo').port, 9006)
+        self.assertEqual(server.ServerConfig.for_start('local').port, 9005)
+
+    def test_a_new_profile_skips_ports_in_use(self):
+        with mock.patch.object(server, '_port_free', lambda port: port not in (9006, 9007)):
+            self.assertEqual(server.ServerConfig.for_start('demo').port, 9008)
+
+    def test_the_port_hint_keeps_the_profile(self):
+        # following `aito start --port N` without --profile restarted `local` on N instead
+        with mock.patch.object(server, '_port_free', lambda port: False):
+            with self.assertRaises(server.LocalServerError) as ctx:
+                self.start('demo', port=9100)
+        self.assertIn('`aito start --profile demo --port 9101`', str(ctx.exception))
+
+
+class TestMessagesNameTheCause(LocalServerCase):
+    def test_a_port_held_by_another_profile_says_so(self):
+        self.start()
+        with mock.patch.object(server, '_port_free', lambda port: port != 9005):
+            with self.assertRaises(server.LocalServerError) as ctx:
+                self.start('demo', port=9005)
+        self.assertIn("by the local Aito of profile 'local'", str(ctx.exception))
+
+    def test_the_printed_curl_works_on_its_own(self):
+        from aito.local.cli import _connection_block
+        block = _connection_block(server.ServerConfig(), {'api_key': 'rw', 'read_only_api_key': 'ro'}, True)
+        self.assertIn('curl -H "x-api-key: rw" http://127.0.0.1:9005/api/v2/schema', block)
+
+    def test_an_installed_but_broken_module_is_not_called_missing(self):
+        import importlib
+        import importlib.util
+        from aito.utils._optional import import_optional
+        # find_spec first: mock.patch itself resolves targets through import_module
+        with mock.patch.object(importlib.util, 'find_spec', return_value=object()), \
+                mock.patch.object(importlib, 'import_module', side_effect=ImportError('libstdc++.so.6: cannot open')):
+            with self.assertRaises(ImportError) as ctx:
+                import_optional('pandas', 'schema inference')
+        self.assertIn('installed but failed to import', str(ctx.exception))
+
+    def test_a_refused_connection_to_a_local_url_hints_at_aito_start(self):
+        import requests
+        from aito.v2 import AitoClientV2, AitoV2Error
+        client = AitoClientV2('http://127.0.0.1:9005', 'k', check_credentials=False)
+        with mock.patch.object(client._session, 'request', side_effect=requests.ConnectionError('refused')):
+            with self.assertRaises(AitoV2Error) as ctx:
+                client.get_schema()
+        self.assertIn('`aito status`', str(ctx.exception))
+
+
 class TestIncompleteProfiles(LocalServerCase):
     def test_a_partial_profile_fails_with_a_message_not_a_traceback(self):
         profiles.save_profile('local', {'instance_url': 'http://127.0.0.1:9005', 'container': 'aito'})

@@ -25,6 +25,6 @@ def main():
             sys.exit(f"aito: the command-line tool needs extra dependencies "
                      f"({missing or 'see above'} is not installed). Install them with:\n"
                      f"  {INSTALL_HINT}\n"
-                     f"(`aito start`, `stop`, `status`, `logs`, `keys` and `upgrade` work without them.)")
+                     f"(`aito start`, `stop`, `status`, `logs`, `keys`, `upgrade` and `profile` work without them.)")
         raise
     _main()

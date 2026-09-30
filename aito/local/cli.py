@@ -36,7 +36,7 @@ def _connection_block(cfg: server.ServerConfig, keys, active: bool) -> str:
 
   Python   import aito; client = {client}
   Shell    export AITO_URL={cfg.url} AITO_API_KEY={rw}
-  curl     curl -H "x-api-key: $AITO_API_KEY" $AITO_URL/api/v2/schema
+  curl     curl -H "x-api-key: {rw}" {cfg.url}/api/v2/schema
   SQL      PGPASSWORD={rw} psql -h 127.0.0.1 -p {cfg.sql_port} -U aito -d aito
 """
 
@@ -63,7 +63,14 @@ def _cmd_status(a) -> int:
     print(f"  container  {cfg.container}: {s['container']}")
     print(f"  image      {s['image'].split('@')[0]}")
     print(f"  /version   {s['version_http'] or 'no answer'}")
-    print(f"  key        {'accepted' if s['key_accepted'] else 'REFUSED or unreachable'}")
+    if s['key_accepted']:
+        key_state = 'accepted'
+    elif s['version_http'] != 200:
+        key_state = ('not checked: the server is not answering'
+                     + ('' if s['container'] == 'running' else f" (container {s['container']}; `aito start`)"))
+    else:
+        key_state = 'REFUSED (`aito keys --rotate` issues new ones)'
+    print(f"  key        {key_state}")
     print(f"  SQL        127.0.0.1:{cfg.sql_port}   volume {cfg.volume}")
     return 0 if ok else 1
 

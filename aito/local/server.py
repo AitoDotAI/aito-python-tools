@@ -117,12 +117,19 @@ class ServerConfig:
             if given.get(key) is not None:
                 return given[key]
             return stored.get(key) or default
+
+        # A new profile other than `local` starts on the first free port after 9005, so it
+        # never collides with the `local` server (running or not yet started)
+        first_port = DEFAULT_PORT
+        if name != DEFAULT_PROFILE and given.get('port') is None and not stored.get('port'):
+            first_port = next((p for p in range(DEFAULT_PORT + 1, DEFAULT_PORT + 50) if _port_free(p)),
+                              DEFAULT_PORT + 1)
         try:
             cfg = cls(profile=name,
                       container=pick('container', default_container(name)),
                       volume=pick('volume', default_volume(name)),
                       image=pick('image', PINNED_IMAGE),
-                      port=int(pick('port', DEFAULT_PORT)),
+                      port=int(pick('port', first_port)),
                       sql_port=int(pick('sql_port', DEFAULT_SQL_PORT)))
         except ValueError:
             raise LocalServerError(f"profile '{name}' has a non-numeric port; pass --port / --sql-port")
@@ -330,6 +337,16 @@ def _remove_managed(container: str, profile: str) -> None:
     _docker('rm', '-f', container)
 
 
+def _profile_on_port(port: int) -> Optional[str]:
+    """the profile whose managed container publishes this port, if any"""
+    for name, p in profiles.profiles().items():
+        if p.get('container') and p.get('port') == str(port):
+            info = _inspect(p['container'])
+            if info and info['State'].get('Running'):
+                return name
+    return None
+
+
 def _running_with(cfg: ServerConfig, keys: Dict[str, str]) -> bool:
     """the managed container is up with exactly this image, these keys and these ports"""
     info = _inspect(cfg.container)
@@ -375,9 +392,14 @@ def start(cfg: ServerConfig, activate: Optional[bool] = None, log=say) -> Dict:
         if not _image_present(cfg.image):
             _pull(cfg.image, log)
         if not _port_free(cfg.port):
+            # the hint repeats --profile: without it, following the hint would restart the
+            # `local` server on the new port instead (fresh-eyes rerun, 30.9)
+            profile_flag = f" --profile {cfg.profile}" if cfg.profile != DEFAULT_PROFILE else ""
+            holder = _profile_on_port(cfg.port)
+            by = f"by the local Aito of profile '{holder}'" if holder else "by something else"
             raise LocalServerError(
-                f"port {cfg.port} on 127.0.0.1 is in use by something else. Pick another: "
-                f"`aito start --port {cfg.port + 1}`")
+                f"port {cfg.port} on 127.0.0.1 is in use {by}. Pick another: "
+                f"`aito start{profile_flag} --port {cfg.port + 1}`")
         if not _port_free(cfg.sql_port):
             free = next((p for p in range(cfg.sql_port + 1, cfg.sql_port + 20) if _port_free(p)), None)
             if free is None:

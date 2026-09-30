@@ -195,7 +195,11 @@ class AitoClientV2:
                 timeout=self.timeout if timeout is None else timeout,
             )
         except requestslib.RequestException as e:
-            raise AitoV2Error(f'Aito v2 request failed: {method} {path}: {e}') from e
+            hint = ''
+            if isinstance(e, requestslib.ConnectionError) and any(
+                    h in self.instance_url for h in ('://127.0.0.1', '://localhost')):
+                hint = ' (a local Aito: is it running? `aito status`, `aito start`)'
+            raise AitoV2Error(f'Aito v2 request failed: {method} {path}: {e}{hint}') from e
 
         if self.on_response is not None:
             # Before the status check, so a caller observing timings still sees
