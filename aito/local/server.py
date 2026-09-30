@@ -217,12 +217,21 @@ def wait_healthy(url: str, api_key: str, timeout: float = STARTUP_TIMEOUT, conta
             log(f"  still starting ({waited:.0f}s) ...")
             next_note += 15.0
         time.sleep(0.5)
-    status = _get(f'{url}/api/v2/schema', api_key)
-    if status != 200:
-        raise LocalServerError(
-            f"Aito is up but refused the stored key (HTTP {status}). If this volume was started "
-            f"with other keys, run `aito keys --rotate`.")
-    return time.monotonic() - start
+    # The first authenticated request can be slow on a slow host (colima's VM took more
+    # than 3 s): no answer, or a 5xx, is "not ready yet". Only 401/403 mean the key is wrong.
+    while True:
+        status = _get(f'{url}/api/v2/schema', api_key, timeout=30.0)
+        if status == 200:
+            return time.monotonic() - start
+        if status in (401, 403):
+            raise LocalServerError(
+                f"Aito is up but refused the stored key (HTTP {status}). If this volume was started "
+                f"with other keys, run `aito keys --rotate`.")
+        if time.monotonic() - start > timeout:
+            raise LocalServerError(
+                f"Aito answered /version but not an authenticated request within {timeout:.0f}s "
+                f"(last: {'no answer' if status == 0 else f'HTTP {status}'}). See `aito logs`.")
+        time.sleep(1.0)
 
 
 def _run_container(cfg: ServerConfig, keys: Dict[str, str]) -> None:
