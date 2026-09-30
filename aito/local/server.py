@@ -91,12 +91,19 @@ def _docker(*args: str, check: bool = True, capture: bool = True) -> subprocess.
 def check_docker() -> None:
     if shutil.which('docker') is None:
         _docker('version')  # raises the install hint
-    res = _docker('info', '--format', '{{.ServerVersion}}', check=False)
+    # No --format: podman-as-docker has no .ServerVersion, and only the exit code matters here
+    res = _docker('info', check=False)
     if res.returncode != 0:
         raise LocalServerError(
             "Docker is installed but its daemon is not reachable. Start Docker Desktop, or on Linux "
             "`sudo systemctl start docker` (and make sure your user may use it: `docker info`).\n"
             f"docker said: {(res.stderr or '').strip()}")
+    # Docker Desktop on Windows can be in Windows-containers mode, where a Linux image cannot run
+    os_type = _docker('version', '--format', '{{.Server.Os}}', check=False).stdout.strip().lower()
+    if os_type == 'windows':
+        raise LocalServerError(
+            "Docker is running Windows containers, and Aito is a Linux image. Switch Docker Desktop to "
+            "Linux containers (tray icon → \"Switch to Linux containers…\"), then run `aito start` again.")
 
 
 def _inspect(container: str) -> Optional[Dict]:
@@ -159,10 +166,28 @@ def _get(url: str, key: Optional[str] = None, timeout: float = 3.0) -> int:
         return 0
 
 
-def wait_healthy(url: str, api_key: str, timeout: float = 120.0) -> float:
-    """seconds until /version answers and the key is accepted; raises on timeout or a refused key"""
+def _exited(container: str) -> Optional[str]:
+    """None while the container runs; else why it stopped, with the last lines of its log"""
+    info = _inspect(container)
+    if info is None or info['State'].get('Running'):
+        return None
+    tail = _docker('logs', '--tail', '15', container, check=False)
+    log = ((tail.stdout or '') + (tail.stderr or '')).strip()
+    hint = ""
+    if 'exec format error' in log:
+        hint = ("\nThe image is for another CPU architecture and this host cannot emulate it. On an arm64 "
+                "Linux host, install emulation (`docker run --privileged --rm tonistiigi/binfmt --install amd64`) "
+                "or wait for the multi-arch image.")
+    return f"exit code {info['State'].get('ExitCode')}:\n{log}{hint}"
+
+
+def wait_healthy(url: str, api_key: str, timeout: float = 120.0, container: Optional[str] = None) -> float:
+    """seconds until /version answers and the key is accepted; raises on timeout, a refused key,
+    or (given the container) as soon as the container stops"""
     start = time.monotonic()
     while _get(f'{url}/version') != 200:
+        if container and (why := _exited(container)):
+            raise LocalServerError(f"the Aito container stopped during startup, {why}")
         if time.monotonic() - start > timeout:
             raise LocalServerError(
                 f"Aito did not answer on {url} within {timeout:.0f}s. See `aito logs`.")
@@ -255,7 +280,7 @@ def start(cfg: ServerConfig, activate: Optional[bool] = None, log=print) -> Dict
             notes.append(f"Port {cfg.sql_port} is taken (a local Postgres?), so SQL is on {free}.")
             cfg.sql_port = free
         _run_container(cfg, keys)
-        seconds = wait_healthy(cfg.url, keys['api_key'])
+        seconds = wait_healthy(cfg.url, keys['api_key'], container=cfg.container)
         state = 'started'
 
     profiles.save_profile(cfg.profile, {
@@ -313,7 +338,7 @@ def rotate_keys(cfg: ServerConfig) -> Dict[str, str]:
     keys = _new_keys()
     _remove_managed(cfg.container)
     _run_container(cfg, keys)
-    wait_healthy(cfg.url, keys['api_key'])
+    wait_healthy(cfg.url, keys['api_key'], container=cfg.container)
     profiles.save_profile(cfg.profile, keys)
     return keys
 
@@ -329,6 +354,6 @@ def upgrade(cfg: ServerConfig, image: str = PINNED_IMAGE, log=print) -> Dict:
         _pull(image, log)
     _remove_managed(cfg.container)
     _run_container(cfg, keys)
-    wait_healthy(cfg.url, keys['api_key'])
+    wait_healthy(cfg.url, keys['api_key'], container=cfg.container)
     profiles.save_profile(cfg.profile, {'image': image})
     return {'from': before, 'to': image}

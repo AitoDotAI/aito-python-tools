@@ -1,0 +1,97 @@
+name: aito start across platforms
+
+# `pip install .` -> `aito start` -> aito.Client() query -> `aito keys --rotate` -> `aito stop`,
+# on the container runtimes a newcomer has (td-20260930083456875743, ADR 0001). Runs on
+# GitHub's runners, pinned to the image this SDK version pins (aito/local/server.py).
+# Where Aito cannot run (Windows containers, no Docker) the job checks that `aito start`
+# refuses with a message that names the fix, not a traceback.
+
+on:
+  push:
+    paths:
+      - 'aito/local/**'
+      - 'aito/cli/__init__.py'
+      - 'aito/v2/client.py'
+      - 'scripts/ci/local_server_smoke.py'
+      - '.github/workflows/local-server.yml'
+  workflow_dispatch: {}
+
+jobs:
+  smoke:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    continue-on-error: ${{ matrix.exploratory || false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64 docker
+            os: ubuntu-latest
+            engine: docker
+          - name: linux-x64 podman-as-docker
+            os: ubuntu-latest
+            engine: podman
+          - name: linux-arm64 docker (amd64 image, emulated)
+            os: ubuntu-24.04-arm
+            engine: docker-binfmt
+          - name: linux-arm64 docker (amd64 image, no emulation)
+            os: ubuntu-24.04-arm
+            engine: docker
+            refusal: CPU architecture
+          - name: macos-arm64 without docker
+            os: macos-latest
+            engine: none
+            refusal: Docker is not installed
+          - name: macos-intel colima
+            os: macos-15-intel
+            engine: colima
+            exploratory: true
+          - name: windows (windows containers)
+            os: windows-latest
+            engine: docker
+            refusal: Linux containers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: podman stands in for docker
+        if: matrix.engine == 'podman'
+        run: |
+          mkdir -p "$HOME/shim"
+          printf '#!/bin/sh\nexec podman "$@"\n' > "$HOME/shim/docker"
+          chmod +x "$HOME/shim/docker"
+          echo "$HOME/shim" >> "$GITHUB_PATH"
+          podman --version
+      - name: amd64 emulation (what Docker Desktop provides on Apple Silicon)
+        if: matrix.engine == 'docker-binfmt'
+        run: docker run --privileged --rm tonistiigi/binfmt --install amd64
+      - name: colima
+        if: matrix.engine == 'colima'
+        run: |
+          brew install colima docker
+          colima start --cpu 2 --memory 4
+          docker info --format '{{.ServerVersion}} {{.OSType}}/{{.Architecture}}'
+      - name: no docker on PATH
+        if: matrix.engine == 'none'
+        run: if command -v docker; then echo "docker unexpectedly present"; exit 1; fi
+
+      - name: Runtime in use
+        if: matrix.engine != 'none'
+        shell: bash
+        run: docker version --format 'client {{.Client.Version}} server {{.Server.Version}} {{.Server.Os}}/{{.Server.Arch}}' || docker version
+
+      - name: pip install .   (no [cli] extra, as a newcomer installs it)
+        run: python -m pip install .
+
+      - name: aito start -> Client() -> keys --rotate -> stop
+        if: ${{ !matrix.refusal }}
+        run: python scripts/ci/local_server_smoke.py
+      - name: aito start refuses cleanly
+        if: ${{ matrix.refusal }}
+        env:
+          REFUSAL: ${{ matrix.refusal }}
+        shell: bash
+        run: python scripts/ci/local_server_smoke.py --expect-refusal "$REFUSAL"
