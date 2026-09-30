@@ -175,7 +175,13 @@ def _get(url: str, key: Optional[str] = None, timeout: float = 3.0) -> int:
 def _exited(container: str) -> Optional[str]:
     """None while the container runs; else why it stopped, with the last lines of its log"""
     info = _inspect(container)
-    if info is None or info['State'].get('Running'):
+    if info is None:
+        return None
+    state = info['State']
+    # --restart unless-stopped restarts a crashing container, so "running" alone hides the
+    # crash: a restart before the server ever answered is the same failure
+    crashed = state.get('Restarting') or info.get('RestartCount', 0) > 0
+    if state.get('Running') and not crashed:
         return None
     tail = _docker('logs', '--tail', '15', container, check=False)
     log = ((tail.stdout or '') + (tail.stderr or '')).strip()
@@ -184,7 +190,8 @@ def _exited(container: str) -> Optional[str]:
         hint = ("\nThe image is for another CPU architecture and this host cannot emulate it. On an arm64 "
                 "Linux host, install emulation (`docker run --privileged --rm tonistiigi/binfmt --install amd64`) "
                 "or wait for the multi-arch image.")
-    return f"exit code {info['State'].get('ExitCode')}:\n{log}{hint}"
+    how = (f"restarted {info.get('RestartCount', 0)} time(s)" if crashed else f"exit code {state.get('ExitCode')}")
+    return f"{how}:\n{log}{hint}"
 
 
 #: A native start is ~5 s on Linux, but ~70 s inside colima's VM and longer under CPU
@@ -322,8 +329,9 @@ def _emulation_note(image: str) -> Optional[str]:
     img = _docker('image', 'inspect', '--format', '{{.Architecture}}', image, check=False).stdout.strip()
     if not host or not img or host == img or '<no value>' in (host + img):
         return None
-    return (f"this image is {img}-only and this Docker host is {host}, so Aito runs under emulation: slower, "
-            f"and the first start can take a few minutes. A native {host} image comes with the multi-arch release.")
+    return (f"this image is {img}-only and this Docker host is {host}, so Docker has to emulate it: slower, and "
+            f"the first start can take a few minutes (a host without {img} emulation fails with 'exec format "
+            f"error'). A native {host} image comes with the multi-arch release.")
 
 
 def _image_id(image: str) -> str:
