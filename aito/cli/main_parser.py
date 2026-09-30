@@ -78,7 +78,10 @@ class MainParser(ArgParser):
             )
             cmd.build_parser(cmd_parser)
         commands_subparsers.add_parser('list', help='list all available commands')
-        self.epilog = f"""To see all available commands, you can run:
+        self.epilog = f"""Run Aito locally (needs Docker):
+  {self.prog} start | stop | status | logs | keys | upgrade | profile
+
+To see all available commands, you can run:
   {self.prog} list
 
 To see the help text, you can run:
@@ -150,6 +153,16 @@ To see the help text, you can run:
             else:
                 remaining_spaces = ' ' * (max_command_name_width - len(cmd_name))
                 formatted_text_items += text_wrapper.wrap(f"{cmd_name}{remaining_spaces}{cmd.help_message}")
+
+        # the local server commands are dispatched before this parser (aito.cli.main), so
+        # list them from their own parser rather than leaving them undiscoverable
+        import argparse as _argparse
+        from aito.local.cli import build_parser as local_parser
+        local_actions = next(a for a in local_parser()._actions if isinstance(a, _argparse._SubParsersAction))
+        formatted_text_items += ['', 'Run Aito locally (needs Docker):']
+        for choice in local_actions._choices_actions:
+            remaining_spaces = ' ' * max(1, max_command_name_width - len(choice.dest))
+            formatted_text_items += text_wrapper.wrap(f"{choice.dest}{remaining_spaces}{choice.help}")
 
         formatted_message = '\n'.join(formatted_text_items) + '\n'
         self.exit(status=0, message=formatted_message)

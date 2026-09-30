@@ -45,6 +45,24 @@ CLI's default moves to v2 only in 2.0. The design is written up in
 ``pip install aitoai`` installs the API clients. The command-line tool, schema inference
 and file conversion need the dataframe toolchain: ``pip install 'aitoai[cli]'``.
 
+Run Aito locally
+----------------
+
+With Docker installed, ``aito start`` runs a local Aito and stores its keys, so the client
+needs no arguments:
+
+  .. code-block:: console
+
+    $ pip install aitoai
+    $ aito start          # pulls a pinned image, listens on http://127.0.0.1:9005, prints the keys
+    $ python -c "import aito; print(aito.Client().get_schema())"
+
+``aito stop`` stops it (data and keys are kept), ``aito status`` checks it, ``aito keys``
+prints the keys again (``--rotate`` replaces them), ``aito logs`` shows its log and
+``aito upgrade`` moves to the engine version this package pins. These work without the
+``[cli]`` extra. From Python, ``aito.Client()`` with no arguments uses ``AITO_URL`` and
+``AITO_API_KEY`` if set, else the local server's profile.
+
 ``examples/v2_quickstart.py`` is a runnable end-to-end example that creates a collection,
 loads it, predicts, explains, evaluates and drops it again.
 

@@ -159,6 +159,25 @@ class TestStartRefuses(LocalServerCase):
         self.assertTrue(self.docker.containers['aito']['State']['Running'])
 
 
+class TestPortsAcrossProfiles(LocalServerCase):
+    """from the fresh-eyes rerun (org/dx/2026-09-30-aito-start-first-hour.md)"""
+
+    def test_a_new_profile_does_not_default_onto_locals_port(self):
+        self.assertEqual(server.ServerConfig.for_start('demo').port, 9006)
+        self.assertEqual(server.ServerConfig.for_start('local').port, 9005)
+
+    def test_a_new_profile_skips_ports_in_use(self):
+        with mock.patch.object(server, '_port_free', lambda port: port not in (9006, 9007)):
+            self.assertEqual(server.ServerConfig.for_start('demo').port, 9008)
+
+    def test_the_port_hint_keeps_the_profile(self):
+        # following `aito start --port N` without --profile restarted `local` on N instead
+        with mock.patch.object(server, '_port_free', lambda port: False):
+            with self.assertRaises(server.LocalServerError) as ctx:
+                self.start('demo', port=9100)
+        self.assertIn('`aito start --profile demo --port 9101`', str(ctx.exception))
+
+
 class TestIncompleteProfiles(LocalServerCase):
     def test_a_partial_profile_fails_with_a_message_not_a_traceback(self):
         profiles.save_profile('local', {'instance_url': 'http://127.0.0.1:9005', 'container': 'aito'})
