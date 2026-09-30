@@ -60,8 +60,12 @@ class BaseTestCase(unittest.TestCase):
         old_var_value = os.getenv(var_name)
 
         def cleanup():
+            # restore the variable, or remove it if the stub created it: a leftover
+            # (AITO_URL, say) would silently change every later test's credentials
             if old_var_value is not None:
                 os.environ[var_name] = old_var_value
+            else:
+                os.environ.pop(var_name, None)
 
         self.addCleanup(cleanup)
         if new_var_value is not None:

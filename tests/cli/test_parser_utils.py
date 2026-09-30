@@ -22,7 +22,7 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
 
     def test_create_client_from_flag(self):
         expected_parsed_args = {
-            'profile': 'default', 'instance_url': 'some_url', 'api_key': 'some_key'
+            'profile': None, 'instance_url': 'some_url', 'api_key': 'some_key'
         }
         self.assertEqual(
             vars(self.parser.parse_args(['-i', 'some_url', '-k', 'some_key'])),
@@ -33,8 +33,17 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
             vars(create_client_from_parsed_args(expected_parsed_args, check_credentials=False))
         )
 
+    def test_create_client_from_aito_url_env_var(self):
+        # AITO_URL is the name `aito serve` prints; AITO_INSTANCE_URL keeps working
+        self.stub_environment_variable('AITO_URL', 'some_url')
+        self.stub_environment_variable('AITO_API_KEY', 'some_key')
+        self.assertEqual(
+            vars(AitoClient('some_url', 'some_key', False)),
+            vars(create_client_from_parsed_args(vars(self.parser.parse_args([])), check_credentials=False))
+        )
+
     def test_create_client_from_env_var(self):
-        expected_parsed_args = {'profile': 'default', 'instance_url': '.env', 'api_key': '.env'}
+        expected_parsed_args = {'profile': None, 'instance_url': '.env', 'api_key': '.env'}
         self.assertEqual(
             vars(self.parser.parse_args([])),
             expected_parsed_args

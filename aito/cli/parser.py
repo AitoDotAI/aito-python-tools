@@ -9,6 +9,7 @@ from typing import Union, TextIO
 
 from aito.v1.client import AitoClient
 from aito.exceptions import BaseError
+from aito.local.profiles import active_profile_name
 from aito.utils._credentials_file_utils import get_credentials_file_config
 
 DEFAULT_CONFIG_DIR = Path.home() / '.config' / 'aito'
@@ -32,8 +33,9 @@ class ArgParser(ArgumentParser):
         """
         args = self.add_argument_group("aito credential arguments")
         args.add_argument(
-            '--profile', type=str, default="default",
-            help='use the credentials of the specified profile from the credentials file'
+            '--profile', type=str, default=None,
+            help='use the credentials of the specified profile from the credentials file '
+                 '(default: AITO_PROFILE, else the active profile, else "default")'
         )
         args.add_argument('-i', '--instance-url', type=str, default='.env', help='specify aito instance url')
         args.add_argument(
@@ -215,11 +217,12 @@ def create_client_from_parsed_args(parsed_args, check_credentials=True) -> AitoC
     def check_flag_env_var_default_credential(flag_name, env_var_name, credential_key):
         if parsed_args[flag_name] != '.env':
             return parsed_args[flag_name]
-        if parse_env_variable(env_var_name):
-            return parse_env_variable(env_var_name)
+        for name in ((env_var_name, 'AITO_URL') if env_var_name == 'AITO_INSTANCE_URL' else (env_var_name,)):
+            if parse_env_variable(name):
+                return parse_env_variable(name)
         LOG.debug(f"{env_var_name} environment variable not found. Checking credentials file")
         config = get_credentials_file_config()
-        profile = parsed_args['profile']
+        profile = parsed_args['profile'] or active_profile_name()
         if not config.has_section(profile):
             raise ParseError(f"profile `{profile}` not found. "
                              f"Please edit the credentials file or run `aito configure`")
