@@ -58,7 +58,9 @@ class ServerConfig:
 
     @property
     def url(self) -> str:
-        return f'http://localhost:{self.port}'
+        # 127.0.0.1, not localhost: the ports are published on IPv4 loopback only, and a
+        # client that resolves localhost to ::1 first (macOS, some Linux) is refused there
+        return f'http://127.0.0.1:{self.port}'
 
     @classmethod
     def from_profile(cls, name: str) -> 'ServerConfig':

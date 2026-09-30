@@ -12,7 +12,7 @@ from aito.local import profiles
 from aito.v2 import AitoClientV2
 from tests.cases import BaseTestCase
 
-LOCAL = {'instance_url': 'http://localhost:9005', 'api_key': 'rw-local', 'read_only_api_key': 'ro-local'}
+LOCAL = {'instance_url': 'http://127.0.0.1:9005', 'api_key': 'rw-local', 'read_only_api_key': 'ro-local'}
 CLOUD = {'instance_url': 'https://shared.aito.ai/db/x', 'api_key': 'rw-cloud'}
 
 
@@ -56,7 +56,7 @@ class TestResolveCredentials(BaseTestCase):
     def test_the_active_profile_is_the_fallback(self):
         profiles.save_profile('local', LOCAL)
         profiles.set_active_profile('local')
-        self.assertEqual(profiles.resolve_credentials(), ('http://localhost:9005', 'rw-local'))
+        self.assertEqual(profiles.resolve_credentials(), ('http://127.0.0.1:9005', 'rw-local'))
 
     def test_aito_profile_env_selects_another_profile(self):
         profiles.save_profile('local', LOCAL)
@@ -71,6 +71,12 @@ class TestResolveCredentials(BaseTestCase):
         profiles.set_active_profile('local')
         self.assertEqual(profiles.resolve_credentials(CLOUD['instance_url'] + '/'),
                          (CLOUD['instance_url'] + '/', 'rw-cloud'))
+
+    def test_localhost_and_127_0_0_1_name_the_same_instance(self):
+        # the profile stores 127.0.0.1 (IPv4-only publish); a user typing localhost still gets its key
+        profiles.save_profile('local', LOCAL)
+        self.assertEqual(profiles.resolve_credentials('http://localhost:9005'),
+                         ('http://localhost:9005', 'rw-local'))
 
     def test_a_url_with_no_stored_key_fails(self):
         profiles.save_profile('local', LOCAL)
@@ -111,7 +117,35 @@ class TestResolveCredentials(BaseTestCase):
         profiles.save_profile('local', LOCAL)
         profiles.set_active_profile('local')
         client = AitoClientV2(check_credentials=False)
-        self.assertEqual((client.instance_url, client.api_key), ('http://localhost:9005', 'rw-local'))
+        self.assertEqual((client.instance_url, client.api_key), ('http://127.0.0.1:9005', 'rw-local'))
+
+
+class TestLoopbackIsLiteral(BaseTestCase):
+    """macOS resolves localhost to ::1 first, and the ports are published on 127.0.0.1 only"""
+
+    def test_the_url_aito_start_stores_is_127_0_0_1(self):
+        from aito.local.server import ServerConfig
+        self.assertEqual(ServerConfig().url, 'http://127.0.0.1:9005')
+        self.assertEqual(ServerConfig(port=19005).url, 'http://127.0.0.1:19005')
+
+    def test_every_printed_line_uses_127_0_0_1(self):
+        from aito.local.cli import _connection_block
+        from aito.local.server import ServerConfig
+        block = _connection_block(ServerConfig(sql_port=5433), {'api_key': 'rw', 'read_only_api_key': 'ro'}, True)
+        self.assertNotIn('localhost', block)
+        self.assertIn('AITO_URL=http://127.0.0.1:9005', block)
+        self.assertIn('psql -h 127.0.0.1 -p 5433', block)
+
+    def test_the_sdk_uses_the_stored_url_unchanged(self):
+        with tempfile.TemporaryDirectory() as d, \
+                mock.patch.object(profiles, 'CREDENTIALS_FILE', Path(d) / 'credentials'), \
+                mock.patch.object(profiles, 'SETTINGS_FILE', Path(d) / 'config'), \
+                mock.patch.dict(os.environ, {'AITO_PROFILE': 'local'}):
+            for var in profiles.URL_ENV_VARS + (profiles.KEY_ENV_VAR,):
+                os.environ.pop(var, None)
+            profiles.save_profile('local', LOCAL)
+            client = AitoClientV2(check_credentials=False)
+            self.assertEqual(client.api_url, 'http://127.0.0.1:9005/api/v2')
 
 
 class TestConfigureWritesOwnerOnly(BaseTestCase):

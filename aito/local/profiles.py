@@ -104,6 +104,12 @@ def _env_url() -> Optional[str]:
     return None
 
 
+def _same_instance(a: str, b: str) -> bool:
+    """URLs naming the same instance; localhost and 127.0.0.1 count as one host"""
+    norm = lambda u: u.rstrip('/').replace('://localhost', '://127.0.0.1')  # noqa: E731
+    return norm(a) == norm(b)
+
+
 def resolve_credentials(
         instance_url: Optional[str] = None, api_key: Optional[str] = None,
 ) -> Tuple[str, str]:
@@ -125,7 +131,7 @@ def resolve_credentials(
     if url:
         # A URL without a key: the key stored for that same URL, if any profile has it
         for candidate in ([profile] if profile else []) + list(profiles().values()):
-            if candidate.get('instance_url', '').rstrip('/') == url.rstrip('/') and candidate.get('api_key'):
+            if _same_instance(candidate.get('instance_url', ''), url) and candidate.get('api_key'):
                 return url, candidate['api_key']
         raise NoCredentialsError(
             f"no API key for {url}: pass api_key, set AITO_API_KEY, or store it in a profile "

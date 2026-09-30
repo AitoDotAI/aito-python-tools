@@ -80,7 +80,8 @@ kept for the other two.
 - a URL given alone takes the key of the profile stored for *that* URL, or fails;
 - a key given alone fails instead of being sent to whatever the active profile points at.
 
-So after `aito start`, `aito.Client()` just works, and so does `aito.Client('http://localhost:9005')`.
+So after `aito start`, `aito.Client()` just works, and so does `aito.Client('http://localhost:9005')`: `localhost` and
+`127.0.0.1` count as the same host when a URL is matched to its stored key.
 
 ### Keys
 
@@ -111,9 +112,17 @@ So after `aito start`, `aito.Client()` just works, and so does `aito.Client('htt
   so Apple Silicon would run it under emulation.
 - **Bind.** Both ports are published on **127.0.0.1** only. Docker's `-p 9005:9005` publishes on 0.0.0.0 and bypasses ufw/firewalld.
   - HTTP: 9005.
-  - SQL: 5432, or the next free port when a local Postgres holds 5432 (the note says so).
+  - SQL: 5432, or the next free port when a local Postgres holds 5432, which is common on developer Macs (Postgres.app,
+    Homebrew). The start output names the chosen port in a note and in its psql line; the start never fails over SQL.
+  - **The URL is `http://127.0.0.1:<port>`, never `localhost`**, in the profile and in every printed line (`AITO_URL`, curl,
+    psql). macOS, and some Linux setups, resolve `localhost` to `::1` first, and a port published on IPv4 loopback does not
+    answer there, so the connection is refused (azure-81's Mac check). The SDK uses the stored URL as it is. A URL a user types as
+    `localhost` still finds its stored key.
 - **Volume.** `aito-state`, the name aito.ai/docker already uses. A user moving from the page to `aito start` keeps their data.
-  The compose file in aito-core `docker/free` still says `aito-data`; it should move to `aito-state` so all three agree (asked of azure-81).
+  aito-core #1533 (azure-81) renames the compose file's volume from `aito-data` to `aito-state`, so the CLI, compose and the docs
+  agree. It declares `name: aito-state`, because compose prefixes volume names with the project name: a bare `aito-state:` would
+  create `<project>_aito-state`, a different, empty volume. The same PR moves compose's host port from 8080 to 9005 and binds
+  127.0.0.1.
 - **Managed label.** Containers carry `ai.aito.managed-by=aitoai-cli`. A container `aito start` did not create is never removed or
   stopped; the error names the fix.
 

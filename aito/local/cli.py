@@ -37,7 +37,7 @@ def _connection_block(cfg: server.ServerConfig, keys, active: bool) -> str:
   Python   import aito; client = {client}
   Shell    export AITO_URL={cfg.url} AITO_API_KEY={rw}
   curl     curl -H "x-api-key: $AITO_API_KEY" $AITO_URL/api/v2/schema
-  SQL      PGPASSWORD={rw} psql -h localhost -p {cfg.sql_port} -U aito -d aito
+  SQL      PGPASSWORD={rw} psql -h 127.0.0.1 -p {cfg.sql_port} -U aito -d aito
 """
 
 
@@ -64,7 +64,7 @@ def _cmd_status(a) -> int:
     print(f"  image      {s['image'].split('@')[0]}")
     print(f"  /version   {s['version_http'] or 'no answer'}")
     print(f"  key        {'accepted' if s['key_accepted'] else 'REFUSED or unreachable'}")
-    print(f"  SQL        localhost:{cfg.sql_port}   volume {cfg.volume}")
+    print(f"  SQL        127.0.0.1:{cfg.sql_port}   volume {cfg.volume}")
     return 0 if ok else 1
 
 
