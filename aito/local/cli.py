@@ -21,7 +21,7 @@ RESERVED_HINT = ("`aito start` starts a local Aito in the background (see `aito 
 
 
 def _mask(key: str) -> str:
-    return f'{key[:4]}…{key[-4:]}' if key and len(key) > 12 else '****'
+    return f'{key[:4]}...{key[-4:]}' if key and len(key) > 12 else '****'
 
 
 def _connection_block(cfg: server.ServerConfig, keys, active: bool) -> str:

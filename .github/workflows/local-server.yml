@@ -35,9 +35,9 @@ jobs:
           - name: linux-arm64 docker (amd64 image, emulated)
             os: ubuntu-24.04-arm
             engine: docker-binfmt
-          - name: linux-arm64 docker (amd64 image, no emulation)
+          - name: linux-arm64 docker (amd64 image, emulation removed)
             os: ubuntu-24.04-arm
-            engine: docker
+            engine: docker-nobinfmt
             refusal: CPU architecture
           - name: macos-arm64 without docker
             os: macos-latest
@@ -68,6 +68,11 @@ jobs:
       - name: amd64 emulation (what Docker Desktop provides on Apple Silicon)
         if: matrix.engine == 'docker-binfmt'
         run: docker run --privileged --rm tonistiigi/binfmt --install amd64
+      - name: remove amd64 emulation (GitHub's arm64 runners ship with it registered)
+        if: matrix.engine == 'docker-nobinfmt'
+        run: |
+          docker run --privileged --rm tonistiigi/binfmt --uninstall qemu-x86_64
+          docker run --privileged --rm tonistiigi/binfmt
       - name: colima
         if: matrix.engine == 'colima'
         run: |

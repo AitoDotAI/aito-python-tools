@@ -43,6 +43,12 @@ MANAGED_LABEL = 'ai.aito.managed-by=aitoai-cli'
 KEY_FILE = '/io/state/.aito-api-keys'
 
 
+def say(message: str) -> None:
+    """print now: docker's own output (a pull) goes straight to the terminal, and a buffered
+    line of ours would otherwise appear after it"""
+    print(message, flush=True)
+
+
 class LocalServerError(RuntimeError):
     """a step failed; the message says what to do"""
 
@@ -103,7 +109,7 @@ def check_docker() -> None:
     if os_type == 'windows':
         raise LocalServerError(
             "Docker is running Windows containers, and Aito is a Linux image. Switch Docker Desktop to "
-            "Linux containers (tray icon → \"Switch to Linux containers…\"), then run `aito start` again.")
+            "Linux containers (tray icon, \"Switch to Linux containers...\"), then run `aito start` again.")
 
 
 def _inspect(container: str) -> Optional[Dict]:
@@ -181,16 +187,28 @@ def _exited(container: str) -> Optional[str]:
     return f"exit code {info['State'].get('ExitCode')}:\n{log}{hint}"
 
 
-def wait_healthy(url: str, api_key: str, timeout: float = 120.0, container: Optional[str] = None) -> float:
+#: A native start is ~5 s on Linux, but ~70 s inside colima's VM and longer under CPU
+#: emulation (measured in CI, .github/workflows/local-server.yml), so the wait is generous
+#: and reports progress rather than sitting silent.
+STARTUP_TIMEOUT = 300.0
+
+
+def wait_healthy(url: str, api_key: str, timeout: float = STARTUP_TIMEOUT, container: Optional[str] = None,
+                 log=None) -> float:
     """seconds until /version answers and the key is accepted; raises on timeout, a refused key,
     or (given the container) as soon as the container stops"""
     start = time.monotonic()
+    next_note = 15.0
     while _get(f'{url}/version') != 200:
         if container and (why := _exited(container)):
             raise LocalServerError(f"the Aito container stopped during startup, {why}")
-        if time.monotonic() - start > timeout:
+        waited = time.monotonic() - start
+        if waited > timeout:
             raise LocalServerError(
                 f"Aito did not answer on {url} within {timeout:.0f}s. See `aito logs`.")
+        if log and waited > next_note:
+            log(f"  still starting ({waited:.0f}s) ...")
+            next_note += 15.0
         time.sleep(0.5)
     status = _get(f'{url}/api/v2/schema', api_key)
     if status != 200:
@@ -234,13 +252,14 @@ def _running_with(cfg: ServerConfig, keys: Dict[str, str]) -> bool:
     env = dict(e.split('=', 1) for e in info['Config'].get('Env', []) if '=' in e)
     ports = info['HostConfig'].get('PortBindings') or {}
     host_port = lambda p: int((ports.get(p) or [{}])[0].get('HostPort') or 0)  # noqa: E731
-    return (info['Config']['Image'] == cfg.image
+    # by image ID, not by the reference string: podman normalises the reference it stores
+    return (str(info.get('Image', '')).replace('sha256:', '') == _image_id(cfg.image)
             and env.get('READ_WRITE_APIKEY') == keys['api_key']
             and env.get('APIKEY') == keys['read_only_api_key']
             and host_port('9005/tcp') == cfg.port and host_port('5432/tcp') == cfg.sql_port)
 
 
-def start(cfg: ServerConfig, activate: Optional[bool] = None, log=print) -> Dict:
+def start(cfg: ServerConfig, activate: Optional[bool] = None, log=say) -> Dict:
     """start (or confirm) the local server and store its profile; idempotent
 
     Keys, in order: the profile's (so a restart never changes them), the ones an earlier
@@ -279,8 +298,11 @@ def start(cfg: ServerConfig, activate: Optional[bool] = None, log=print) -> Dict
                 raise LocalServerError(f"no free port for SQL near {cfg.sql_port}; pass --sql-port")
             notes.append(f"Port {cfg.sql_port} is taken (a local Postgres?), so SQL is on {free}.")
             cfg.sql_port = free
+        emulated = _emulation_note(cfg.image)
+        if emulated:
+            log(f"note: {emulated}")
         _run_container(cfg, keys)
-        seconds = wait_healthy(cfg.url, keys['api_key'], container=cfg.container)
+        seconds = wait_healthy(cfg.url, keys['api_key'], container=cfg.container, log=log)
         state = 'started'
 
     profiles.save_profile(cfg.profile, {
@@ -292,6 +314,21 @@ def start(cfg: ServerConfig, activate: Optional[bool] = None, log=print) -> Dict
         active = cfg.profile
     return {'state': state, 'seconds': seconds, 'keys': keys, 'config': cfg,
             'active': active == cfg.profile, 'notes': notes}
+
+
+def _emulation_note(image: str) -> Optional[str]:
+    """a warning when the image is for another CPU than the Docker host (Apple Silicon, arm64 Linux)"""
+    host = _docker('version', '--format', '{{.Server.Arch}}', check=False).stdout.strip()
+    img = _docker('image', 'inspect', '--format', '{{.Architecture}}', image, check=False).stdout.strip()
+    if not host or not img or host == img or '<no value>' in (host + img):
+        return None
+    return (f"this image is {img}-only and this Docker host is {host}, so Aito runs under emulation: slower, "
+            f"and the first start can take a few minutes. A native {host} image comes with the multi-arch release.")
+
+
+def _image_id(image: str) -> str:
+    res = _docker('image', 'inspect', '--format', '{{.Id}}', image, check=False)
+    return res.stdout.strip().replace('sha256:', '')
 
 
 def _image_present(image: str) -> bool:
@@ -343,7 +380,7 @@ def rotate_keys(cfg: ServerConfig) -> Dict[str, str]:
     return keys
 
 
-def upgrade(cfg: ServerConfig, image: str = PINNED_IMAGE, log=print) -> Dict:
+def upgrade(cfg: ServerConfig, image: str = PINNED_IMAGE, log=say) -> Dict:
     """move the container to `image` (default: the one this SDK version pins), same keys and data"""
     check_docker()
     p = profiles.load_profile(cfg.profile) or {}
