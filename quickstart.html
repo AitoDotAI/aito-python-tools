@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quickstart &mdash; aito-python-sdk 1.0.0 documentation</title>
+  <title>Quickstart (v1 / CLI) &mdash; aito-python-sdk 1.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/documentation_options.js?v=fc837d61"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -46,7 +46,7 @@
               <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart (v1 / CLI)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#upload-data-and-send-your-first-query-with-the-cli">Upload data and send your first query with the CLI</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#setup-aito-credentials"><span class="xref std std-ref">Setup Aito credentials</span></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#infer-a-table-schema"><span class="xref std std-ref">Infer a Table Schema</span></a></li>
@@ -104,7 +104,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Quickstart</li>
+      <li class="breadcrumb-item active">Quickstart (v1 / CLI)</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -114,8 +114,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="quickstart">
-<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
+  <section id="quickstart-v1-cli">
+<h1>Quickstart (v1 / CLI)<a class="headerlink" href="#quickstart-v1-cli" title="Link to this heading"></a></h1>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This is the <strong>v1</strong> flow: the command-line tool plus the pandas-based schema and file tools
+(<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'aitoai[cli]'</span></code>). The default Python client since 1.0.0 is <strong>v2</strong>
+(<code class="docutils literal notranslate"><span class="pre">aito.Client</span></code>), and its quickstart is the
+<a class="reference external" href="https://aito.ai/docs/api/v2/python-sdk/">Python SDK page</a>. <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">start</span></code> runs a local
+instance in Docker at <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:9005</span></code> and stores its keys, so <code class="docutils literal notranslate"><span class="pre">aito.Client()</span></code> needs
+no arguments.</p>
+</div>
 <p>This section explains how to upload data to Aito and send your first query with either <a class="reference internal" href="cli.html"><span class="doc">CLI</span></a> or <a class="reference internal" href="sdk.html"><span class="doc">Python SDK</span></a>.</p>
 <p>Essentially, uploading data into Aito can be broken down into the following steps:</p>
 <ol class="arabic simple">

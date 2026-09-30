@@ -68,6 +68,22 @@ There are 3 ways to set up the credentials:
 
     $ aito -i MY_AITO_INSTANCE_URL -k MY_API_KEY <command> ...
 
+Choose the API Version
+~~~~~~~~~~~~~~~~~~~~~~
+
+Every database command can talk to the v1 or the v2 API. Choose with ``--api-version`` or
+the ``AITO_API_VERSION`` environment variable::
+
+    $ aito predict --api-version v2 '{"from": "invoices", "where": {"vendor": "Neste Oyj"}, "predict": "gl_code"}'
+    $ export AITO_API_VERSION=v2    # for every command in this shell
+
+On v2, ``--env <name>`` selects an environment of the database. Tables are created as v2
+collections, and a v1 table schema file works unchanged. ``rename-table``, ``similarity``
+and ``--use-job`` exist only on v1.
+
+Without either setting, the CLI uses **v1** throughout aitoai 1.x and warns that the default
+becomes **v2 in aitoai 2.0**. Set ``AITO_API_VERSION=v1`` now to keep v1 after that.
+
 .. _cliQuickAddTable:
 
 Quick Add a Table
