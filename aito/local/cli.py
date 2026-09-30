@@ -11,10 +11,13 @@ from typing import List, Optional
 from . import profiles, server
 
 COMMANDS = ('start', 'stop', 'status', 'logs', 'keys', 'upgrade', 'profile')
-#: Accepted for `start` but not listed in the help: `start` pairs with stop/status, as in
-#: supabase, localstack, neo4j and pg_ctl, while people and agents will guess these too.
-#: (`serve` usually means a foreground server, `up` a compose stack; see ADR 0001.)
-ALIASES = {'serve': 'start', 'up': 'start'}
+#: Words people and agents will guess, reserved for a possible FOREGROUND mode: `serve`,
+#: `run` and `up` (compose stays attached without -d) all read as foreground, while
+#: `start` returns once the server is up. They print a hint and fail rather than run
+#: `start`, so no silent alias becomes behaviour we would have to keep. See ADR 0001.
+RESERVED = ('serve', 'run', 'up')
+RESERVED_HINT = ("`aito start` starts a local Aito in the background (see `aito start -h`); "
+                 "a foreground mode may come later")
 
 
 def _mask(key: str) -> str:
@@ -160,8 +163,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Optional[List[str]] = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
-    if argv and argv[0] in ALIASES:
-        argv[0] = ALIASES[argv[0]]
+    if argv and argv[0] in RESERVED:
+        print(f"aito {argv[0]}: {RESERVED_HINT}", file=sys.stderr)
+        return 2
     args = build_parser().parse_args(argv)
     if getattr(args, 'action', None) == 'use' and not args.name:
         build_parser().error('profile use needs a NAME')

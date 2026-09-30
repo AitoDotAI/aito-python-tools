@@ -11,8 +11,8 @@ import sys
 def main():
     # The local server commands need only the standard library, so they are dispatched
     # before the [cli] extra is imported: `pip install aitoai && aito start` works.
-    from aito.local.cli import ALIASES as LOCAL_ALIASES, COMMANDS as LOCAL_COMMANDS
-    if len(sys.argv) > 1 and (sys.argv[1] in LOCAL_COMMANDS or sys.argv[1] in LOCAL_ALIASES):
+    from aito.local.cli import COMMANDS as LOCAL_COMMANDS, RESERVED as LOCAL_RESERVED
+    if len(sys.argv) > 1 and (sys.argv[1] in LOCAL_COMMANDS or sys.argv[1] in LOCAL_RESERVED):
         from aito.local.cli import main as local_main
         sys.exit(local_main(sys.argv[1:]))
 

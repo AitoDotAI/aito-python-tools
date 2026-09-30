@@ -40,13 +40,15 @@ The commands are additive to the existing CLI:
 | `aito upgrade [--image]` | Moves to the image this SDK version pins, with the same keys and data. |
 | `aito profile [list \| use NAME]` | Lists profiles; selects the active one. |
 
-- **Naming: `aito start`**, with `aito serve` and `aito up` as quiet aliases. Antti delegated this ("follow common practice"), and the
-  CPO decided it on 30.9. Tools that start a *background* local server container and return use `start` / `stop` / `status`:
-  `supabase start`, `localstack start`, `neo4j start`, `pg_ctl start`, `brew services start`. `serve` usually means a *foreground*
-  server (`ollama serve`, `npx serve`), and `up` / `down` a compose stack. This command returns once the server is healthy and pairs
-  with `stop`, `status` and `logs`, so it is `start`.
-  People and agents will guess `serve` and `up`, so both run `start`. They are not in the help listing; the docs mention them in one
-  line.
+- **Naming: `aito start`.** Antti delegated this ("follow common practice"), and the CPO decided it on 30.9. Tools that start a
+  *background* local server container and return use `start` / `stop` / `status`: `supabase start`, `localstack start`,
+  `neo4j start`, `pg_ctl start`, `brew services start`. This command returns once the server is healthy and pairs with `stop`,
+  `status` and `logs`, so it is `start`.
+- **Reserved: `serve`, `run`, `up`.** All three read as *foreground* operations: `ollama serve`, `npx serve`, `docker run`, and
+  `docker compose up`, which stays attached unless `-d`. People and agents will guess them, so each prints a one-line hint and exits
+  non-zero (2): "`aito start` starts a local Aito in the background (see `aito start -h`); a foreground mode may come later".
+  They're not aliases, so no silent behaviour exists that would have to be kept, and they stay free for a foreground mode (logs
+  attached, Ctrl-C stops the server). They aren't in the help listing either.
 - **Additive.** These commands are dispatched in `aito.cli.main` *before* the `[cli]` extra is imported, so they run on a bare
   `pip install aitoai`. The existing v1 commands, their names and their behaviour are unchanged, and none of the new names collides.
   The CLI's v1 default through 1.x (the 1.0 promise) is untouched.
@@ -152,7 +154,7 @@ Also verified live:
 - a real port conflict, which is refused with the fix named.
 
 Offline tests: `tests/sdk/test_local_profiles.py` covers resolution order, pairing, 0600, profile preservation, `Client()` with no
-arguments, `aito start -h` with the `[cli]` extra unimportable, and `serve` / `up` running `start` without being listed.
+arguments, `aito start -h` with the `[cli]` extra unimportable, and `serve` / `run` / `up` each giving the hint and a non-zero exit without being listed.
 
 ## Consequences
 

@@ -138,15 +138,20 @@ class TestLocalCommandsNeedNoExtra(BaseTestCase):
         self.assertIn('usage: aito start', res.stdout)
         self.assertIn('--sql-port', res.stdout)
 
-    def test_serve_and_up_are_quiet_aliases_of_start(self):
-        for alias in ('serve', 'up'):
-            res = self._help(alias, '-h')
-            self.assertEqual(res.returncode, 0, res.stderr)
-            self.assertIn('usage: aito start', res.stdout, alias)
+    def test_serve_run_and_up_hint_at_start_and_fail(self):
+        # reserved for a possible foreground mode: never a silent alias of the background start
+        for word in ('serve', 'run', 'up'):
+            res = self._help(word)
+            self.assertNotEqual(res.returncode, 0, word)
+            self.assertIn('`aito start` starts a local Aito in the background', res.stderr, word)
+            self.assertIn('a foreground mode may come later', res.stderr, word)
+            self.assertEqual(res.stdout, '', word)
 
-    def test_the_aliases_are_not_listed(self):
+    def test_the_reserved_words_are_not_listed(self):
+        import argparse
         from aito.local.cli import build_parser
-        listing = build_parser().format_help()
-        self.assertIn('start', listing)
-        for alias in ('serve', ' up '):
-            self.assertNotIn(alias, listing)
+        parser = build_parser()
+        commands = next(a for a in parser._actions if isinstance(a, argparse._SubParsersAction)).choices
+        self.assertIn('start', commands)
+        for word in ('serve', 'run', 'up'):
+            self.assertNotIn(word, commands, word)
