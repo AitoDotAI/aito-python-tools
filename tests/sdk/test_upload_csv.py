@@ -169,8 +169,9 @@ class TestUploadCsv(BaseTestCase):
 
     def test_a_str_source_is_always_a_path(self):
         c = self.client()
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(FileNotFoundError) as ctx:
             c.upload_csv('invoices', 'invoice_id,amount\nA1,1\n')
+        self.assertIn('a str is a path', str(ctx.exception))
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / 'x.csv'
             p.write_bytes(self.CSV)

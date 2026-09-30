@@ -35,8 +35,16 @@ def read_source(source: CsvSource, encoding: str = 'utf-8') -> bytes:
     if isinstance(source, bytes):
         return source
     if isinstance(source, (str, os.PathLike)):
-        with open(source, 'rb') as f:
-            return f.read()
+        try:
+            with open(source, 'rb') as f:
+                return f.read()
+        except OSError as e:
+            # the same error on every platform: Windows refuses a "path" holding newlines
+            # (CSV text passed as a str) with a generic OSError rather than "not found"
+            shown = str(source) if len(str(source)) <= 60 else str(source)[:57] + '...'
+            raise FileNotFoundError(
+                f"no CSV file at {shown!r}: a str is a path. To pass the CSV's content, "
+                f"pass it as bytes (text.encode()).") from e
     data = source.read()
     return data.encode(encoding) if isinstance(data, str) else data
 
