@@ -2,6 +2,7 @@
 
 import os
 import stat
+import unittest
 import subprocess
 import sys
 import tempfile
@@ -99,6 +100,7 @@ class TestResolveCredentials(BaseTestCase):
         for hint in ('Client(instance_url, api_key)', 'AITO_URL', 'aito start'):
             self.assertIn(hint, message)
 
+    @unittest.skipIf(os.name == 'nt', 'POSIX file modes: on Windows the per-user profile directory is private by ACL')
     def test_the_store_is_owner_only(self):
         profiles.save_profile('local', LOCAL)
         profiles.set_active_profile('local')
@@ -149,6 +151,7 @@ class TestLoopbackIsLiteral(BaseTestCase):
 
 
 class TestConfigureWritesOwnerOnly(BaseTestCase):
+    @unittest.skipIf(os.name == 'nt', 'POSIX file modes: on Windows the per-user profile directory is private by ACL')
     def test_aito_configure_file_is_0600(self):
         from aito.utils._credentials_file_utils import write_credentials_file_profile
         with tempfile.TemporaryDirectory() as d:

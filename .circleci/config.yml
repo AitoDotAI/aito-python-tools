@@ -160,8 +160,14 @@ commonYAMLStructure:
           (git diff --quiet HEAD origin/master -- . ":!docs") -and (echo "NO CHANGE - SKIP") -and (exit 0)
         }
         venv\Scripts\activate.ps1
+        # PowerShell does not stop on a failing native command, and a job's result is the
+        # LAST command's exit code: an sdk-suite failure was reported green whenever the
+        # cli suite passed. Check both.
         python -m tests -v suite sdk
+        $sdk = $LASTEXITCODE
         python -m tests -v suite cli
+        $cli = $LASTEXITCODE
+        if ($sdk -ne 0 -or $cli -ne 0) { Write-Host "sdk suite: $sdk, cli suite: $cli"; exit 1 }
   - &run_postgres_connection_test
     run:
       name: run postgres connection test
