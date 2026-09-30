@@ -13,14 +13,17 @@ Resolution, for both ``aito.Client()`` and the CLI, highest first:
 3. the active profile: ``AITO_PROFILE`` if set, else the one ``aito start`` or
    ``aito profile use`` recorded, else ``default``
 
-A key is never paired with a URL it was not stored with. A URL given without a key
-takes the key of the profile stored for that same URL, or fails; a key given without
-a URL fails rather than being sent to whatever the profile points at.
+A key read from a profile is only ever sent to that profile's own URL. A URL given (as an
+argument or in AITO_URL) without any key takes the key of the profile stored for that same
+URL, or fails; a key given without any URL fails rather than being sent to whatever the
+active profile points at. An argument and an environment variable may be combined (for
+example ``Client(url)`` with ``AITO_API_KEY`` set): both are the caller's own choice.
 """
 
 import configparser
 import os
 import stat
+import tempfile
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
@@ -53,12 +56,18 @@ def _write_private(path: Path, config: configparser.ConfigParser) -> None:
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     os.chmod(path.parent, stat.S_IRWXU)
-    tmp = path.with_name(path.name + '.tmp')
-    fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, 'w') as f:
-        config.write(f)
-    os.chmod(tmp, 0o600)
-    os.replace(tmp, path)
+    # a unique temp file per write (mkstemp creates it 0600), so two writers at once never
+    # share one; the last os.replace wins whole, never a mix
+    fd, tmp = tempfile.mkstemp(prefix=path.name + '.', suffix='.tmp', dir=str(path.parent))
+    try:
+        with os.fdopen(fd, 'w') as f:
+            config.write(f)
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, path)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
 
 
 def active_profile_name() -> str:
@@ -104,7 +113,7 @@ def _env_url() -> Optional[str]:
     return None
 
 
-def _same_instance(a: str, b: str) -> bool:
+def same_instance(a: str, b: str) -> bool:
     """URLs naming the same instance; localhost and 127.0.0.1 count as one host"""
     norm = lambda u: u.rstrip('/').replace('://localhost', '://127.0.0.1')  # noqa: E731
     return norm(a) == norm(b)
@@ -131,7 +140,7 @@ def resolve_credentials(
     if url:
         # A URL without a key: the key stored for that same URL, if any profile has it
         for candidate in ([profile] if profile else []) + list(profiles().values()):
-            if _same_instance(candidate.get('instance_url', ''), url) and candidate.get('api_key'):
+            if same_instance(candidate.get('instance_url', ''), url) and candidate.get('api_key'):
                 return url, candidate['api_key']
         raise NoCredentialsError(
             f"no API key for {url}: pass api_key, set AITO_API_KEY, or store it in a profile "

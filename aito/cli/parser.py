@@ -9,10 +9,10 @@ from typing import Union, TextIO
 
 from aito.v1.client import AitoClient
 from aito.exceptions import BaseError
-from aito.local.profiles import active_profile_name
+from aito.local.profiles import CONFIG_DIR, active_profile_name, same_instance
 from aito.utils._credentials_file_utils import get_credentials_file_config
 
-DEFAULT_CONFIG_DIR = Path.home() / '.config' / 'aito'
+DEFAULT_CONFIG_DIR = CONFIG_DIR  # aito.local.profiles: XDG_CONFIG_HOME honoured
 
 LOG = logging.getLogger('Parser')
 
@@ -214,11 +214,16 @@ def create_client_from_parsed_args(parsed_args, check_credentials=True) -> AitoC
     add_aito_default_credentials_arguments
 
     """
+    sources = {}
+
     def check_flag_env_var_default_credential(flag_name, env_var_name, credential_key):
         if parsed_args[flag_name] != '.env':
+            sources[credential_key] = 'flag'
             return parsed_args[flag_name]
-        for name in ((env_var_name, 'AITO_URL') if env_var_name == 'AITO_INSTANCE_URL' else (env_var_name,)):
+        # AITO_URL first, as in the SDK (aito.local.profiles.URL_ENV_VARS)
+        for name in (('AITO_URL', env_var_name) if env_var_name == 'AITO_INSTANCE_URL' else (env_var_name,)):
             if parse_env_variable(name):
+                sources[credential_key] = 'env'
                 return parse_env_variable(name)
         LOG.debug(f"{env_var_name} environment variable not found. Checking credentials file")
         config = get_credentials_file_config()
@@ -229,10 +234,23 @@ def create_client_from_parsed_args(parsed_args, check_credentials=True) -> AitoC
         if credential_key not in config[profile]:
             raise ParseError(f"{credential_key} not found in profile `{profile}`."
                              f"Please edit the credentials file or run `aito configure`")
+        sources[credential_key] = profile
         return config[profile][credential_key]
 
     instance_url = check_flag_env_var_default_credential('instance_url', 'AITO_INSTANCE_URL', 'instance_url')
     api_key = check_flag_env_var_default_credential('api_key', 'AITO_API_KEY', 'api_key')
+
+    # A key read from a profile goes only to that profile's own instance: with the URL from
+    # a flag or AITO_URL and no key given, the active profile (perhaps `local`, from
+    # `aito start`) must not hand its key to some other server.
+    key_profile = sources['api_key']
+    if key_profile not in ('flag', 'env') and sources['instance_url'] in ('flag', 'env'):
+        profile_url = get_credentials_file_config()[key_profile].get('instance_url', '')
+        if not same_instance(profile_url, instance_url):
+            raise ParseError(
+                f"no API key for {instance_url}: the key in profile `{key_profile}` belongs to "
+                f"{profile_url or 'another instance'}. Pass --api-key, set AITO_API_KEY, or use "
+                f"--profile with a profile for that instance")
 
     client_args = {
         'instance_url': instance_url,

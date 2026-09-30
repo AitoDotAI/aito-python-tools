@@ -40,7 +40,20 @@ DEFAULT_PORT = 9005
 DEFAULT_SQL_PORT = 5432
 #: Marks the containers this tool may replace. One it did not create is never touched.
 MANAGED_LABEL = 'ai.aito.managed-by=aitoai-cli'
+#: Which profile a managed container belongs to: another profile never replaces it.
+PROFILE_LABEL = 'ai.aito.profile'
 KEY_FILE = '/io/state/.aito-api-keys'
+#: What a profile written by `aito start` holds; `from_profile` refuses one missing any.
+PROFILE_FIELDS = ('instance_url', 'api_key', 'read_only_api_key', 'container', 'volume', 'image', 'port', 'sql_port')
+
+
+def default_container(profile: str) -> str:
+    """`aito` for the default profile, `aito-<profile>` otherwise, so profiles never share one"""
+    return DEFAULT_CONTAINER if profile == DEFAULT_PROFILE else f'aito-{profile}'
+
+
+def default_volume(profile: str) -> str:
+    return DEFAULT_VOLUME if profile == DEFAULT_PROFILE else f'aito-{profile}-state'
 
 
 def say(message: str) -> None:
@@ -70,13 +83,49 @@ class ServerConfig:
 
     @classmethod
     def from_profile(cls, name: str) -> 'ServerConfig':
+        """the server a profile describes; raises when there is none, or it is incomplete"""
         p = profiles.load_profile(name)
+        again = "`aito start`" + (f" --profile {name}" if name != DEFAULT_PROFILE else "")
         if not p or 'container' not in p:
+            raise LocalServerError(f"no local server profile '{name}'. Start one with {again}")
+        missing = [f for f in PROFILE_FIELDS if not p.get(f)]
+        if missing:
             raise LocalServerError(
-                f"no local server profile '{name}'. Start one with `aito start`"
-                + (f" --profile {name}" if name != DEFAULT_PROFILE else ""))
-        return cls(profile=name, container=p['container'], volume=p['volume'], image=p['image'],
-                   port=int(p['port']), sql_port=int(p['sql_port']))
+                f"profile '{name}' is missing {', '.join(missing)} (edited by hand, or written by "
+                f"`aito configure`?). {again} fills them in again.")
+        try:
+            return cls(profile=name, container=p['container'], volume=p['volume'], image=p['image'],
+                       port=int(p['port']), sql_port=int(p['sql_port']))
+        except ValueError:
+            raise LocalServerError(f"profile '{name}' has a non-numeric port; {again} fixes it")
+
+    @classmethod
+    def for_start(cls, name: str, **given) -> 'ServerConfig':
+        """what `aito start` runs: the options given, else the profile's stored values, else defaults
+
+        So a rerun keeps the image, ports and names it ran with: only `aito upgrade` moves
+        the image, and a fallback SQL port stays put.
+        """
+        stored = profiles.load_profile(name) or {}
+        pick = lambda key, default: given.get(key) or stored.get(key) or default  # noqa: E731
+        try:
+            return cls(profile=name,
+                       container=pick('container', default_container(name)),
+                       volume=pick('volume', default_volume(name)),
+                       image=pick('image', PINNED_IMAGE),
+                       port=int(pick('port', DEFAULT_PORT)),
+                       sql_port=int(pick('sql_port', DEFAULT_SQL_PORT)))
+        except ValueError:
+            raise LocalServerError(f"profile '{name}' has a non-numeric port; pass --port / --sql-port")
+
+
+def stored_keys(name: str) -> Dict[str, str]:
+    p = profiles.load_profile(name) or {}
+    if not p.get('api_key') or not p.get('read_only_api_key'):
+        raise LocalServerError(
+            f"profile '{name}' holds no complete key pair; `aito start` stores one, "
+            f"`aito keys --rotate` makes a new one")
+    return {'api_key': p['api_key'], 'read_only_api_key': p['read_only_api_key']}
 
 
 def _docker(*args: str, check: bool = True, capture: bool = True) -> subprocess.CompletedProcess:
@@ -176,7 +225,7 @@ def _exited(container: str) -> Optional[str]:
     """None while the container runs; else why it stopped, with the last lines of its log"""
     info = _inspect(container)
     if info is None:
-        return None
+        return "the container no longer exists (removed while starting?)"
     state = info['State']
     # --restart unless-stopped restarts a crashing container, so "running" alone hides the
     # crash: a restart before the server ever answered is the same failure
@@ -242,6 +291,7 @@ def _run_container(cfg: ServerConfig, keys: Dict[str, str]) -> None:
         with os.fdopen(fd, 'w') as f:
             f.write(f"READ_WRITE_APIKEY={keys['api_key']}\nAPIKEY={keys['read_only_api_key']}\n")
         _docker('run', '-d', '--name', cfg.container, '--label', MANAGED_LABEL,
+                '--label', f'{PROFILE_LABEL}={cfg.profile}',
                 '--restart', 'unless-stopped',
                 '-p', f'127.0.0.1:{cfg.port}:9005', '-p', f'127.0.0.1:{cfg.sql_port}:5432',
                 '-v', f'{cfg.volume}:/io/state', '--env-file', env_path, cfg.image)
@@ -249,7 +299,7 @@ def _run_container(cfg: ServerConfig, keys: Dict[str, str]) -> None:
         os.unlink(env_path)
 
 
-def _remove_managed(container: str) -> None:
+def _remove_managed(container: str, profile: str) -> None:
     info = _inspect(container)
     if info is None:
         return
@@ -257,6 +307,11 @@ def _remove_managed(container: str) -> None:
         raise LocalServerError(
             f"a container named '{container}' exists that `aito start` did not create; it is left "
             f"alone. Remove it (`docker rm -f {container}`) or choose another name with --container.")
+    owner = (info.get('Config', {}).get('Labels') or {}).get(PROFILE_LABEL)
+    if owner and owner != profile:
+        raise LocalServerError(
+            f"container '{container}' belongs to profile '{owner}'; replacing it would break that "
+            f"profile's keys. Use --profile {owner}, or give this profile its own --container.")
     _docker('rm', '-f', container)
 
 
@@ -301,7 +356,7 @@ def start(cfg: ServerConfig, activate: Optional[bool] = None, log=say) -> Dict:
         seconds = wait_healthy(cfg.url, keys['api_key'])
         state = 'already running'
     else:
-        _remove_managed(cfg.container)
+        _remove_managed(cfg.container, cfg.profile)
         if not _image_present(cfg.image):
             _pull(cfg.image, log)
         if not _port_free(cfg.port):
@@ -318,18 +373,25 @@ def start(cfg: ServerConfig, activate: Optional[bool] = None, log=say) -> Dict:
         if emulated:
             log(f"note: {emulated}")
         _run_container(cfg, keys)
+        # Stored BEFORE the wait: if startup fails, `aito logs`, `status` and `stop` can still
+        # reach the container, and the keys it runs with are not lost
+        _save(cfg, keys)
         seconds = wait_healthy(cfg.url, keys['api_key'], container=cfg.container, log=log)
         state = 'started'
 
-    profiles.save_profile(cfg.profile, {
-        'instance_url': cfg.url, **keys, 'container': cfg.container, 'volume': cfg.volume,
-        'image': cfg.image, 'port': str(cfg.port), 'sql_port': str(cfg.sql_port)})
+    _save(cfg, keys)
     active = profiles.active_profile_name()
     if activate or (activate is None and profiles.load_profile(active) is None):
         profiles.set_active_profile(cfg.profile)
         active = cfg.profile
     return {'state': state, 'seconds': seconds, 'keys': keys, 'config': cfg,
             'active': active == cfg.profile, 'notes': notes}
+
+
+def _save(cfg: ServerConfig, keys: Dict[str, str]) -> None:
+    profiles.save_profile(cfg.profile, {
+        'instance_url': cfg.url, **keys, 'container': cfg.container, 'volume': cfg.volume,
+        'image': cfg.image, 'port': str(cfg.port), 'sql_port': str(cfg.sql_port)})
 
 
 def _emulation_note(image: str) -> Optional[str]:
@@ -386,28 +448,33 @@ def stop(cfg: ServerConfig) -> bool:
     return True
 
 
-def rotate_keys(cfg: ServerConfig) -> Dict[str, str]:
-    """new keys: recreate the container with them and store them; the data stays"""
+def rotate_keys(cfg: ServerConfig) -> Dict:
+    """new keys: recreate the container with them and store them; the data stays
+
+    The container is recreated to take the new keys, so a stopped server runs again
+    afterwards; `was_running` lets the caller say so.
+    """
     check_docker()
+    info = _inspect(cfg.container)
+    was_running = bool(info and info['State'].get('Running'))
     keys = _new_keys()
-    _remove_managed(cfg.container)
+    _remove_managed(cfg.container, cfg.profile)
     _run_container(cfg, keys)
-    wait_healthy(cfg.url, keys['api_key'], container=cfg.container)
     profiles.save_profile(cfg.profile, keys)
-    return keys
+    wait_healthy(cfg.url, keys['api_key'], container=cfg.container)
+    return {'keys': keys, 'was_running': was_running}
 
 
 def upgrade(cfg: ServerConfig, image: str = PINNED_IMAGE, log=say) -> Dict:
     """move the container to `image` (default: the one this SDK version pins), same keys and data"""
     check_docker()
-    p = profiles.load_profile(cfg.profile) or {}
-    keys = {'api_key': p['api_key'], 'read_only_api_key': p['read_only_api_key']}
+    keys = stored_keys(cfg.profile)
     before = cfg.image
     cfg.image = image
     if not _image_present(image):
         _pull(image, log)
-    _remove_managed(cfg.container)
+    _remove_managed(cfg.container, cfg.profile)
     _run_container(cfg, keys)
-    wait_healthy(cfg.url, keys['api_key'], container=cfg.container)
     profiles.save_profile(cfg.profile, {'image': image})
+    wait_healthy(cfg.url, keys['api_key'], container=cfg.container)
     return {'from': before, 'to': image}

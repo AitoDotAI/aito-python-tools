@@ -24,7 +24,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         cls.input_folder = cls.input_folder.parent.parent / 'sample_invoice'
         cls.default_parser_args = {
             'verbose': False, 'version': False, 'quiet': False,
-            'profile': 'default', 'api_key': '.env', 'instance_url': '.env'
+            'profile': None, 'api_key': '.env', 'instance_url': '.env'
         }
         cls.client = default_client()
         with (cls.input_folder / "invoice_aito_schema.json").open() as f:
@@ -371,7 +371,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
                 {
                     **self.default_parser_args,
                     'command': 'show-tables',
-                    'profile': 'default' if profile_name is None else profile_name
+                    'profile': profile_name  # None: resolved to the active profile
                 },
                 stub_stdout=out_f
             )

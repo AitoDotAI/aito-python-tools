@@ -34,7 +34,8 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
         )
 
     def test_create_client_from_aito_url_env_var(self):
-        # AITO_URL is the name `aito serve` prints; AITO_INSTANCE_URL keeps working
+        # AITO_URL is the name `aito start` prints; it wins over AITO_INSTANCE_URL, as in the SDK
+        self.stub_environment_variable('AITO_INSTANCE_URL', 'the_older_url')
         self.stub_environment_variable('AITO_URL', 'some_url')
         self.stub_environment_variable('AITO_API_KEY', 'some_key')
         self.assertEqual(
@@ -84,6 +85,18 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
                 vars(AitoClient('ground_control', 'major_tom', False)),
                 vars(create_client_from_parsed_args(expected_parsed_args, check_credentials=False))
             )
+
+    def test_a_profile_key_is_not_sent_to_another_url(self):
+        # AITO_URL names a cloud instance but no key is given: the profile (space_oddity, whose
+        # URL is ground_control) must not hand its key to that other server
+        self.stub_environment_variable('AITO_INSTANCE_URL', None)
+        self.stub_environment_variable('AITO_API_KEY', None)
+        self.stub_environment_variable('AITO_URL', 'https://elsewhere.aito.app')
+        with patch('aito.utils._credentials_file_utils.DEFAULT_CREDENTIAL_FILE', self.input_folder / 'sample_config'):
+            with self.assertRaises(ParseError) as ctx:
+                create_client_from_parsed_args(vars(self.parser.parse_args(['--profile', 'space_oddity'])),
+                                               check_credentials=False)
+        self.assertIn('no API key for https://elsewhere.aito.app', str(ctx.exception))
 
     def test_create_client_unknown_profile(self):
         self.stub_environment_variable('AITO_INSTANCE_URL', None)

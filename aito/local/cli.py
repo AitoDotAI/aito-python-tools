@@ -42,8 +42,8 @@ def _connection_block(cfg: server.ServerConfig, keys, active: bool) -> str:
 
 
 def _cmd_start(a) -> int:
-    cfg = server.ServerConfig(profile=a.profile, container=a.container, volume=a.volume,
-                              image=a.image or server.PINNED_IMAGE, port=a.port, sql_port=a.sql_port)
+    cfg = server.ServerConfig.for_start(a.profile, container=a.container, volume=a.volume, image=a.image,
+                                        port=a.port, sql_port=a.sql_port)
     res = server.start(cfg, activate=True if a.activate else None)
     print(f"Aito is {res['state']} on {cfg.url} (ready in {res['seconds']:.1f}s, image "
           f"{cfg.image.split('@')[0].rsplit(':', 1)[-1]}, data in volume '{cfg.volume}').")
@@ -82,11 +82,13 @@ def _cmd_stop(a) -> int:
 def _cmd_keys(a) -> int:
     cfg = server.ServerConfig.from_profile(a.profile)
     if a.rotate:
-        keys = server.rotate_keys(cfg)
-        print("New keys are live; the old ones no longer work. Data is unchanged.")
+        res = server.rotate_keys(cfg)
+        keys = res['keys']
+        print("New keys are live; the old ones no longer work. Data is unchanged."
+              + ("" if res['was_running'] else
+                 " The server was stopped; taking the new keys started it again (`aito stop` stops it)."))
     else:
-        p = profiles.load_profile(cfg.profile)
-        keys = {'api_key': p['api_key'], 'read_only_api_key': p['read_only_api_key']}
+        keys = server.stored_keys(cfg.profile)
     if a.export:
         print(f"export AITO_URL={cfg.url}\nexport AITO_API_KEY={keys['api_key']}")
     else:
@@ -129,12 +131,15 @@ def build_parser() -> argparse.ArgumentParser:
         return p
 
     p = with_profile(sub.add_parser('start', help='start a local Aito in Docker and store its keys in a profile'))
-    p.add_argument('--port', type=int, default=server.DEFAULT_PORT, help='HTTP port on 127.0.0.1 (default 9005)')
-    p.add_argument('--sql-port', type=int, default=server.DEFAULT_SQL_PORT,
+    # No defaults here: an option not given comes from the profile, so a rerun keeps what
+    # the server runs with (ServerConfig.for_start), and only then from the defaults
+    p.add_argument('--port', type=int, help='HTTP port on 127.0.0.1 (default 9005)')
+    p.add_argument('--sql-port', type=int,
                    help='Postgres-wire port on 127.0.0.1 (default 5432; the next free one if taken)')
-    p.add_argument('--volume', default=server.DEFAULT_VOLUME, help='Docker volume for the data (default aito-state)')
-    p.add_argument('--container', default=server.DEFAULT_CONTAINER, help='container name (default aito)')
-    p.add_argument('--image', help='run another image than the one this SDK version pins')
+    p.add_argument('--volume', help='Docker volume for the data (default aito-state; aito-<profile>-state '
+                                    'for other profiles)')
+    p.add_argument('--container', help='container name (default aito; aito-<profile> for other profiles)')
+    p.add_argument('--image', help='run another image than the stored one (first start: the one this SDK pins)')
     p.add_argument('--activate', action='store_true',
                    help='make this the active profile even if another one is active')
     p.set_defaults(func=_cmd_start)

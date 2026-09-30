@@ -17,7 +17,7 @@ class TestSQLFunctions(ParserAndCLITestCase):
             'driver': '.env', 'server': '.env', 'port': '.env', 'database': '.env', 'username': '.env',
             'password': '.env'
         }
-        cls.default_client_args = {'profile': 'default', 'api_key': '.env', 'instance_url': '.env'}
+        cls.default_client_args = {'profile': None, 'api_key': '.env', 'instance_url': '.env'}
         cls.client = AitoClient(os.environ['AITO_INSTANCE_URL'], os.environ['AITO_API_KEY'])
         cls.default_table_name = f"invoice_{str(uuid4()).replace('-', '_')}"
 

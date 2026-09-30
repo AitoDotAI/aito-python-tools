@@ -2,7 +2,9 @@ import configparser
 import re
 from pathlib import Path
 
-DEFAULT_CREDENTIAL_FILE = Path.home() / '.config' / 'aito' / 'credentials'
+# The same file aito.local.profiles uses (XDG_CONFIG_HOME honoured), so `aito configure`,
+# `aito start` and aito.Client() always agree on where profiles are
+from aito.local.profiles import CREDENTIALS_FILE as DEFAULT_CREDENTIAL_FILE  # noqa: E402
 
 
 def get_credentials_file_config(credentials_file_path=None):
@@ -40,6 +42,9 @@ def write_credentials_file_profile(
         existing_config = get_credentials_file_config(credentials_file_path)
     if not existing_config.has_section(profile_name):
          existing_config.add_section(profile_name)
+    elif existing_config.get(profile_name, 'api_key', fallback=None) != api_key:
+        # a read-only key stored beside the old key (by `aito start`) no longer matches
+        existing_config.remove_option(profile_name, 'read_only_api_key')
     existing_config.set(section=profile_name, option='instance_url', value=instance_url)
     existing_config.set(section=profile_name, option='api_key', value=api_key)
     # owner-only (0600), like the profiles `aito start` writes: the file holds API keys

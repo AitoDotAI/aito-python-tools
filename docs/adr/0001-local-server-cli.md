@@ -32,7 +32,7 @@ The commands are additive to the existing CLI:
 
 | Command | Does |
 |---|---|
-| `aito start` | Checks Docker; pulls the **pinned** image; creates or reuses the `aito-state` volume; starts the container on **127.0.0.1**; waits for health; stores the profile; prints one copy-paste block (URL, keys, Python, shell export, curl, psql). Idempotent: rerunning it on a healthy server changes nothing. |
+| `aito start` | Checks Docker; pulls the **pinned** image; creates or reuses the `aito-state` volume; starts the container on **127.0.0.1**; waits for health; stores the profile (before the wait, so a failed start stays reachable by `logs`/`status`/`stop`); prints one copy-paste block (URL, keys, Python, shell export, curl, psql). Idempotent: a rerun on a healthy server changes nothing, and any rerun keeps the stored image, ports and names; only `aito upgrade` moves the image. |
 | `aito status` | Container state, `GET /version`, and whether the stored key is accepted. Exits 1 when not ready. |
 | `aito logs [-f] [--tail N]` | The container's logs. |
 | `aito stop` | Stops the container. The volume, and with it the data and keys, stays; `aito start` resumes. |
@@ -76,9 +76,11 @@ The ticket listed env, then the active profile, then explicit args. Explicit arg
 since 0.x (documented in its `--help`): an argument you typed must not be overridden by a variable you forgot. The ticket's order is
 kept for the other two.
 
-**Pairing rule.** A key is never paired with a URL it was not stored with:
-- a URL given alone takes the key of the profile stored for *that* URL, or fails;
-- a key given alone fails instead of being sent to whatever the active profile points at.
+**Pairing rule.** A key read from a profile goes only to that profile's own URL:
+- a URL given alone (argument, flag or `AITO_URL`) takes the key of the profile stored for *that* URL, or fails; the v1 CLI
+  applies the same check;
+- a key given alone fails instead of being sent to whatever the active profile points at;
+- an argument and an environment variable may be combined (`Client(url)` with `AITO_API_KEY` set): both are the caller's choice.
 
 So after `aito start`, `aito.Client()` just works, and so does `aito.Client('http://localhost:9005')`: `localhost` and
 `127.0.0.1` count as the same host when a URL is matched to its stored key.
@@ -125,6 +127,9 @@ So after `aito start`, `aito.Client()` just works, and so does `aito.Client('htt
   127.0.0.1.
 - **Managed label.** Containers carry `ai.aito.managed-by=aitoai-cli`. A container `aito start` did not create is never removed or
   stopped; the error names the fix.
+- **One container per profile.** `local` runs as `aito` on the volume `aito-state`; any other profile as `aito-<profile>` on
+  `aito-<profile>-state`. Each container is labelled with its profile, and one profile never replaces another's container, which
+  would break that profile's keys.
 
 ### Image contract (azure-81, checked against code and running images)
 
