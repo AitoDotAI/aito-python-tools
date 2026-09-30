@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+- ``Client.upload_csv(name, source)``: a CSV file into a v2 collection in one call. A new collection
+  gets the engine's CSV typing, with free text as ``Text``: the engine imports the file itself where it
+  supports ``text/csv`` (aito-core #1535), and older engines get the same rules applied in the SDK. An
+  append converts cells to the declared types and names a bad cell's row and column before anything
+  is sent. ``aito._csv_types.infer_csv`` shows the types without uploading. Standard library only.
+- The v1 ``upload-file`` warns when a String column receives free text, which it would treat as an
+  exact-match category.
+
 1.1.0
 -----
 
@@ -36,13 +47,6 @@ since 1.0: the major says which API is the default). To keep v1 after 2.0, set
 Local server and profiles
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- ``Client.upload_csv(name, source)``: a CSV file into a v2 collection in one call. A new collection
-  gets the engine's CSV typing, with free text as ``Text``: the engine imports the file itself where it
-  supports ``text/csv`` (aito-core #1535), and older engines get the same rules applied in the SDK. An
-  append converts cells to the declared types and names a bad cell's row and column before anything
-  is sent. ``aito._csv_types.infer_csv`` shows the types without uploading. Standard library only.
-- The v1 ``upload-file`` warns when a String column receives free text, which it would treat as an
-  exact-match category.
 - ``aito start | stop | status | logs | keys | upgrade | profile``: run a local Aito in Docker (pinned image, ports on
   127.0.0.1, volume ``aito-state``) and store its keys in a profile. They work on a bare ``pip install aitoai``, without the
   ``[cli]`` extra. ``aito serve``, ``run`` and ``up`` print a hint: they are reserved for a possible foreground mode.
