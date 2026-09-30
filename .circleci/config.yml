@@ -13,13 +13,21 @@ workflows:
       - run_sdk_and_cli_tests_win
       - run_sdk_and_cli_tests_built_package
       - run_postgres_tests_built_package
+      # Deletes and recreates the shared test instance's database, so a PR pipeline running
+      # it wiped any other open PR's live tests mid-run (#77 and #78, 30.9.2026). It runs on
+      # master only, and one pipeline at a time: the serial group queues a second master
+      # pipeline's run instead of overlapping it.
       - run_alter_instance_db_tests:
+          serial-group: << pipeline.project.slug >>/alter-instance-db
           requires:
             - run_sdk_and_cli_tests_linux
             - run_postgres_tests_linux
             - run_sdk_and_cli_tests_win
             - run_sdk_and_cli_tests_built_package
             - run_postgres_tests_built_package
+          filters:
+            branches:
+              only: master
       - build_docs
       - build_and_deploy_to_test_pypi:
           requires:
