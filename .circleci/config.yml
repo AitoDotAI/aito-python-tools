@@ -28,7 +28,10 @@ workflows:
           filters:
             branches:
               only: master
-      - build_docs
+      # Its doctests upload to the same shared instance (quickstart's 'reddit' table), so two
+      # pipelines' doc builds counted each other's rows (#81 and #82: 16000, expected 10000).
+      - build_docs:
+          serial-group: << pipeline.project.slug >>/build-docs
       - build_and_deploy_to_test_pypi:
           requires:
             - build_docs
