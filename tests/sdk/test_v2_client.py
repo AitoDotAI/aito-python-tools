@@ -85,6 +85,27 @@ class TestUrlAndEnv(BaseTestCase):
         with self.assertRaises(ValueError):
             make_client().branch_env('env.nope')
 
+    def test_instance_url_without_a_scheme_names_the_fix(self):
+        # `localhost:9005` used to fail inside requests with "No connection
+        # adapters were found", naming neither the argument nor the fix
+        for url in ('localhost:9005', 'shared.aito.ai/db/x', ''):
+            with self.assertRaises(ValueError) as ctx:
+                AitoClientV2(url, 'k', check_credentials=False)
+            self.assertIn("'http://127.0.0.1:9005'", str(ctx.exception))
+
+    def test_a_scheme_less_url_from_the_environment_gets_the_same_fix(self):
+        # the URL check runs after resolution, so AITO_URL=localhost:9005 is caught too
+        import os
+        from unittest import mock
+        with mock.patch.dict(os.environ, {'AITO_URL': 'localhost:9005', 'AITO_API_KEY': 'k'}):
+            with self.assertRaises(ValueError) as ctx:
+                AitoClientV2(check_credentials=False)
+        self.assertIn("'http://127.0.0.1:9005'", str(ctx.exception))
+
+    def test_local_docker_url_is_accepted(self):
+        client = AitoClientV2('http://localhost:9005', 'k', check_credentials=False)
+        self.assertEqual(client.api_url, 'http://localhost:9005/api/v2')
+
     def test_invalid_on_warning_is_rejected(self):
         with self.assertRaises(ValueError):
             AitoClientV2('https://x/db/y', 'k', on_warning='explode', check_credentials=False)

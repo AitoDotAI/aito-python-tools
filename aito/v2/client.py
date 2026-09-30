@@ -23,6 +23,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import requests as requestslib
 
 from aito.local.profiles import resolve_credentials
+from aito.utils._generic_utils import instance_url_problem
 from .errors import AitoV2Error
 from .responses import (
     V2AggregateResponse, V2BatchResponse, V2EstimateResponse, V2EvaluationResponse,
@@ -70,8 +71,9 @@ class AitoClientV2:
         mostly network. Keep the callback cheap and non-throwing: it runs
         inline, and an exception in it would surface as a failed request
     :type on_response: Optional[Callable[[Any, str], None]]
-    :raises ValueError: the environment name is one the engine reserves, or no
-        instance URL and key could be resolved (``NoCredentialsError``)
+    :raises ValueError: the instance URL has no scheme or host, the environment name is
+        one the engine reserves, or no instance URL and key could be resolved
+        (``NoCredentialsError``)
     :raises AitoV2Error: the credentials could not be verified
 
     >>> client = AitoClientV2(your_instance_url, your_api_key) # doctest: +SKIP
@@ -95,11 +97,15 @@ class AitoClientV2:
         if on_warning not in _ON_WARNING_CHOICES:
             raise ValueError(
                 f"invalid on_warning '{on_warning}', expected one of {'|'.join(_ON_WARNING_CHOICES)}")
+        if instance_url is None or api_key is None:
+            instance_url, api_key = resolve_credentials(instance_url, api_key)
+        # after resolution: a scheme-less AITO_URL or profile URL gets the same named fix
+        url_problem = instance_url_problem(instance_url)
+        if url_problem:
+            raise ValueError(url_problem)
         if env is not None:
             self._validate_env_name(env)
 
-        if instance_url is None or api_key is None:
-            instance_url, api_key = resolve_credentials(instance_url, api_key)
         self.instance_url = instance_url.rstrip('/')
         self.api_key = api_key
         self.env = env

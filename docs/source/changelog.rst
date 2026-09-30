@@ -48,6 +48,17 @@ Local server and profiles
   ``aito configure`` resolve as before.
 - ``~/.config/aito/credentials`` is written owner-only (0600) by ``aito configure`` too, and follows ``XDG_CONFIG_HOME``.
 
+SDK
+^^^
+
+- ``jsonschema`` is accepted from 3 up to (not including) 5. The ``~=3.0`` pin from 2019 conflicted
+  with most current environments, which use 4.x. Tested on 3.2.0 and 4.26.0.
+- A client given an instance URL without a scheme or host (``localhost:9005``) now says so and names
+  the fix, ``http://127.0.0.1:9005``. It used to fail inside ``requests`` with "No connection adapters
+  were found", or, on v1, with the catch-all "please check your credentials". v2 raises
+  ``ValueError`` and v1 raises its ``Error``, both before any request is made.
+- PyPI's Documentation link points at the v2 SDK page, https://aito.ai/docs/api/v2/python-sdk/.
+
 
 1.0.0
 -----

@@ -17,6 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover - import-time typing only
     from aiohttp import ClientSession
 
 from aito.exceptions import BaseError
+from aito.utils._generic_utils import instance_url_problem
 from .requests import AitoRequest, BaseRequest, GetVersionRequest
 from .responses import BaseResponse
 
@@ -118,6 +119,10 @@ class AitoClient:
         >>> # Change the API key to READ-WRITE or READ-ONLY
         >>> aito_client.api_key = new_api_key # doctest: +SKIP
         """
+        # Before the credential check, whose catch-all would hide the fix
+        url_problem = instance_url_problem(instance_url)
+        if url_problem:
+            raise Error(url_problem)
         self.instance_url = instance_url.strip("/")
         self.api_key = api_key
         self.raise_for_status = raise_for_status
