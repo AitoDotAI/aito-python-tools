@@ -106,7 +106,7 @@ So after `aito serve`, `aito.Client()` just works, and so does `aito.Client('htt
   - HTTP: 9005.
   - SQL: 5432, or the next free port when a local Postgres holds 5432 (the note says so).
 - **Volume.** `aito-state`, the name aito.ai/docker already uses. A user moving from the page to `aito serve` keeps their data.
-  (The compose file says `aito-data`; azure-81 is aligning it.)
+  The compose file in aito-core `docker/free` still says `aito-data`; it should move to `aito-state` so all three agree (asked of azure-81).
 - **Managed label.** Containers carry `ai.aito.managed-by=aitoai-cli`. A container `aito serve` did not create is never removed or
   stopped; the error names the fix.
 
