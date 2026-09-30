@@ -9,6 +9,7 @@ through here, so a missing one fails with the command that fixes it rather than 
 """
 
 import importlib
+import importlib.util
 
 #: The packages that come with ``aitoai[cli]``, by import name.
 CLI_EXTRA = frozenset({'pandas', 'numpy', 'fastparquet', 'openpyxl', 'xlrd', 'langdetect', 'argcomplete'})
@@ -21,6 +22,15 @@ def import_optional(name: str, feature: str = 'this feature'):
     try:
         return importlib.import_module(name)
     except ImportError as e:
+        try:
+            installed = importlib.util.find_spec(name) is not None
+        except (ImportError, ValueError):
+            installed = False
+        if installed:
+            # present but broken (a missing system library, say): "not installed" would
+            # send the user to reinstall something that is already there
+            raise ImportError(
+                f"{feature} needs `{name}`, which is installed but failed to import: {e}") from e
         raise ImportError(
             f"{feature} needs `{name}`, which is not installed. "
             f"It ships with the command-line extra: {INSTALL_HINT}"
