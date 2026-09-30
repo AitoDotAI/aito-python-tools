@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+- ``Client.upload_csv(name, source)``: a CSV file into a v2 collection in one call. A new collection
+  gets the engine's CSV typing, with free text as ``Text``: the engine imports the file itself where it
+  supports ``text/csv`` (aito-core #1535), and older engines get the same rules applied in the SDK. An
+  append converts cells to the declared types and names a bad cell's row and column before anything
+  is sent. ``aito._csv_types.infer_csv`` shows the types without uploading. Standard library only.
+- The v1 ``upload-file`` warns when a String column receives free text, which it would treat as an
+  exact-match category.
+
 1.1.0
 -----
 

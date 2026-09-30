@@ -169,6 +169,9 @@ class AitoClientV2:
             path: str,
             query: Optional[Union[Dict, List]] = None,
             timeout: Optional[float] = None,
+            *,
+            data: Optional[bytes] = None,
+            content_type: Optional[str] = None,
     ) -> Any:
         """make a raw request to a v2 endpoint and return the parsed JSON
 
@@ -183,16 +186,24 @@ class AitoClientV2:
         :type query: Optional[Union[Dict, List]]
         :param timeout: override the client's timeout for this call
         :type timeout: Optional[float]
+        :param data: a raw body instead of ``query`` (for example a CSV for ``/import``)
+        :type data: Optional[bytes]
+        :param content_type: the raw body's media type, e.g. ``text/csv``
+        :type content_type: Optional[str]
         :raises AitoV2Error: the request failed or the response was not 2xx
         :rtype: Any
         """
         url = f'{self.api_url}{path}'
         params = {'meta': 'true'} if self.meta else None
+        headers = self.headers
+        body = {'json': query}
+        if data is not None:
+            headers = {**headers, 'Content-Type': content_type or 'application/octet-stream'}
+            body = {'data': data}
         try:
             resp = self._session.request(
-                method=method, url=url, json=query, params=params,
-                headers=self.headers,
-                timeout=self.timeout if timeout is None else timeout,
+                method=method, url=url, params=params, headers=headers,
+                timeout=self.timeout if timeout is None else timeout, **body,
             )
         except requestslib.RequestException as e:
             hint = ''
@@ -334,6 +345,37 @@ class AitoClientV2:
             result = self.request('POST', f'/data/{name}/batch', chunk)
             total += int(result.get('count', len(chunk)))
         return total
+
+    def upload_csv(self, name: str, source, *, schema: Optional[Dict] = None, via: str = 'auto',
+                   delimiter: str = ',', encoding: str = 'utf-8', batch_size: int = 1000):
+        """load a CSV file into a collection, creating it with inferred types if needed
+
+        A new collection gets the engine's CSV typing: numbers, booleans and strings
+        read from every cell (a leading zero keeps a column a string), and free text
+        as ``Text``. ``schema`` overrides the columns it names, which is how an
+        analyzer is chosen. Rows for an existing collection are converted to its
+        declared types, and a cell that does not fit fails, naming its row and
+        column, before anything is sent.
+
+        :param name: the collection
+        :type name: str
+        :param source: a path (a ``str`` is always a path), an open file, or the CSV as ``bytes``
+        :param schema: column definitions overriding the inferred ones, as in ``create_collection``
+        :type schema: Optional[Dict]
+        :param via: ``'auto'``: the engine imports the CSV when it can (aito-core with
+            ``text/csv`` import), else it is typed here with the same rules;
+            ``'server'`` or ``'client'`` forces one
+        :type via: str
+        :return: rows, the column types, which path was used, and warnings
+        :rtype: aito.v2.CsvUploadResult
+
+        >>> res = client.upload_csv('invoices', 'invoices.csv') # doctest: +SKIP
+        >>> res.rows, res.inferred['description'], res.via # doctest: +SKIP
+        (200, 'Text', 'client')
+        """
+        from .csv_upload import upload_csv
+        return upload_csv(self, name, source, schema=schema, via=via, delimiter=delimiter,
+                          encoding=encoding, batch_size=batch_size)
 
     def optimize(self, name: str) -> Dict:
         """rebuild a collection's index after a bulk load

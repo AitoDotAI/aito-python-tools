@@ -15,6 +15,7 @@ This package's meaning never changes: ``aito.v2`` is v2 for as long as it exists
 
 from .client import AitoClientV2
 from .errors import AitoV2Error, AitoV2ResponseError
+from .csv_upload import CsvUploadResult
 
 #: Version-neutral names. The prefixed ones remain as aliases.
 Client = AitoClientV2
@@ -28,6 +29,7 @@ from .responses import (
 
 __all__ = [
     'Client',
+    'CsvUploadResult',
     'Error',
     'ResponseError',
     'AitoClientV2',
