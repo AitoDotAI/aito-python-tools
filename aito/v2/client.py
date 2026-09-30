@@ -22,6 +22,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import requests as requestslib
 
+from aito.local.profiles import resolve_credentials
 from .errors import AitoV2Error
 from .responses import (
     V2AggregateResponse, V2BatchResponse, V2EstimateResponse, V2EvaluationResponse,
@@ -41,10 +42,13 @@ class AitoClientV2:
     """A client that connects to the Aito v2 API
 
     :param instance_url: the database URL, e.g. ``https://shared.aito.ai/db/my-db``,
-        with no ``/api/...`` suffix
-    :type instance_url: str
-    :param api_key: the database API key
-    :type api_key: str
+        with no ``/api/...`` suffix. Optional: when omitted, ``AITO_URL`` (or
+        ``AITO_INSTANCE_URL``) and ``AITO_API_KEY``, then the active profile in
+        ``~/.config/aito/credentials``, are used, so after ``aito start``
+        ``Client()`` reaches the local instance
+    :type instance_url: Optional[str]
+    :param api_key: the database API key; resolved like ``instance_url`` when omitted
+    :type api_key: Optional[str]
     :param env: the environment to address; ``None`` addresses master
     :type env: Optional[str]
     :param meta: request the ``meta`` block on every response, which names the
@@ -66,7 +70,8 @@ class AitoClientV2:
         mostly network. Keep the callback cheap and non-throwing: it runs
         inline, and an exception in it would surface as a failed request
     :type on_response: Optional[Callable[[Any, str], None]]
-    :raises ValueError: the environment name is one the engine reserves
+    :raises ValueError: the environment name is one the engine reserves, or no
+        instance URL and key could be resolved (``NoCredentialsError``)
     :raises AitoV2Error: the credentials could not be verified
 
     >>> client = AitoClientV2(your_instance_url, your_api_key) # doctest: +SKIP
@@ -78,8 +83,8 @@ class AitoClientV2:
 
     def __init__(
             self,
-            instance_url: str,
-            api_key: str,
+            instance_url: Optional[str] = None,
+            api_key: Optional[str] = None,
             env: Optional[str] = None,
             meta: bool = False,
             on_warning: str = 'log',
@@ -93,6 +98,8 @@ class AitoClientV2:
         if env is not None:
             self._validate_env_name(env)
 
+        if instance_url is None or api_key is None:
+            instance_url, api_key = resolve_credentials(instance_url, api_key)
         self.instance_url = instance_url.rstrip('/')
         self.api_key = api_key
         self.env = env
