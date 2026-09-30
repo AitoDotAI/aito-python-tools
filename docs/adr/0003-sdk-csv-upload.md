@@ -50,10 +50,11 @@ def upload_csv(self, name, source, *, schema=None, via='auto', delimiter=',', en
   - 400 `data.bad_request` with **exactly** `Expected JSON array for import` for a quoted header (`"a","b"`).
 
   Only those two answers mean "no CSV support", and `auto` then takes the client path.
-  - #1535 reports a real CSV problem as `data.bad_request` with `CSV import: …`, and a bad row as `import.failed`. Both are raised,
-    **never retried**, with a test for each direction.
-  - `data.bad_request` is shared with the old engine's quoted-header answer, so the match on the exact old message is load-bearing.
-    **Asked of core:** give #1535's CSV errors a code of their own (for example `import.csv_invalid`).
+  - #1535 (shipping in v2.11.3) reports a malformed file as **`import.csv_invalid`**, a code of its own, at this lane's request, and
+    a bad row as `import.failed`. Both are raised, **never retried**.
+  - The exact-message check on `data.bad_request` stays even with the new code. A new engine can still answer `data.bad_request`
+    on `text/csv` for another reason (a schema mismatch, say), and that must raise, not fall back. There are tests for each of these
+    and for the two fallback answers.
   - The CSV is parsed here before anything is sent, so a malformed file fails locally on either engine. The server path only ever
     receives files that parse.
   - The path taken is in `result.via` and in a DEBUG log line on `aito.v2`.

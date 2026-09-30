@@ -16,9 +16,10 @@ LOG = logging.getLogger('aito.v2')
 
 _VIA = ('auto', 'server', 'client')
 #: What an engine without CSV import answers when it parses a CSV body as JSON, as
-#: observed on v2.11.1. Only these trigger the fallback: an engine WITH CSV import
-#: reports a bad CSV as `data.bad_request` "CSV import: ...", which is raised, never
-#: retried here.
+#: observed on v2.11.1: `json.malformed`, or (for a quoted header) `data.bad_request`
+#: with exactly this message. Only those trigger the fallback. An engine WITH CSV import
+#: (v2.11.3+) reports a malformed file as `import.csv_invalid`; that, and any other
+#: `data.bad_request` (a schema mismatch, say), is raised, never retried here.
 _OLD_ENGINE_BAD_REQUEST = 'Expected JSON array for import'
 
 

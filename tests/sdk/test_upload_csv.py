@@ -135,7 +135,11 @@ class TestUploadCsv(BaseTestCase):
 
     def test_a_new_engines_csv_error_is_raised_never_retried(self):
         # the other direction: a real CSV problem must not silently become a client-side upload
-        for body in ({'code': 'data.bad_request', 'message': 'CSV import: row 3 has 2 cells; the header has 3'},
+        for body in ({'code': 'import.csv_invalid', 'message': 'CSV import: row 3 has 2 cells; the header has 3'},
+                     {'code': 'data.bad_request', 'message': 'CSV import: row 3 has 2 cells; the header has 3'},
+                     # a new engine's data.bad_request on text/csv for another reason (a schema
+                     # mismatch, say) is not the old engine's refusal: raise, never fall back
+                     {'code': 'data.bad_request', 'message': "column 'amount' has type Decimal, got String"},
                      {'code': 'import.failed', 'message': "column 'amount' is required"}):
             c = self.client(FakeResponse(404, {'kind': 'error', 'data': {'code': 'not_found', 'message': 'x'}}),
                             FakeResponse(400, {'kind': 'error', 'data': body}))
