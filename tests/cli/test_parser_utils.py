@@ -22,7 +22,7 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
 
     def test_create_client_from_flag(self):
         expected_parsed_args = {
-            'profile': None, 'instance_url': 'some_url', 'api_key': 'some_key'
+            'profile': None, 'instance_url': 'some_url', 'api_key': 'some_key', 'api_version': None, 'env': None
         }
         self.assertEqual(
             vars(self.parser.parse_args(['-i', 'some_url', '-k', 'some_key'])),
@@ -44,7 +44,7 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
         )
 
     def test_create_client_from_env_var(self):
-        expected_parsed_args = {'profile': None, 'instance_url': '.env', 'api_key': '.env'}
+        expected_parsed_args = {'profile': None, 'instance_url': '.env', 'api_key': '.env', 'api_version': None, 'env': None}
         self.assertEqual(
             vars(self.parser.parse_args([])),
             expected_parsed_args
@@ -73,7 +73,7 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
             )
 
     def test_create_client_select_profile(self):
-        expected_parsed_args = {'profile': 'space_oddity', 'instance_url': '.env', 'api_key': '.env'}
+        expected_parsed_args = {'profile': 'space_oddity', 'instance_url': '.env', 'api_key': '.env', 'api_version': None, 'env': None}
         self.assertEqual(
             vars(self.parser.parse_args(['--profile', 'space_oddity'])),
             expected_parsed_args

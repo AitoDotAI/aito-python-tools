@@ -1,8 +1,40 @@
 Changelog
 =========
 
-Unreleased
-----------
+1.1.0
+-----
+
+The ``aito`` command-line tool can use the **v2 API**, as an opt-in. Nothing changes for
+existing scripts: the CLI still uses v1 unless told otherwise, and will until 2.0.
+
+CLI
+^^^
+
+- ``--api-version {v1,v2}`` on every database command, or ``AITO_API_VERSION`` in the
+  environment. On v2, tables are created as v2 collections (a v1 table schema file works as
+  it is), files and SQL results are uploaded as JSON rows, and a query command posts its body
+  unchanged to the matching ``/api/v2/_<endpoint>``.
+- ``--env <name>`` selects a v2 environment of the database (v2 only).
+- On v2, ``copy-table`` copies the rows as well as the schema, as it does on v1: the engine's
+  v2 ``_copy`` copies only a collection's schema, so the CLI copies the rows and checks the
+  counts match.
+- Not available on v2, and refused with a message rather than approximated: ``rename-table``
+  (use ``copy-table`` then ``delete-table``), ``similarity``, and ``--use-job``.
+- A schema inferred by ``quick-add-table`` writes its text analyzers as v2 aliases
+  (``english``) on v2; a language analyzer with custom stop or key words has no v2 form and is
+  refused.
+
+Deprecation
+^^^^^^^^^^^
+
+Running a database command without ``--api-version`` or ``AITO_API_VERSION`` still uses v1,
+but now emits a ``FutureWarning``: **the CLI's default becomes v2 in aitoai 2.0**. Changing a
+command-line tool's default is a breaking change, so it waits for the next major (the rule
+since 1.0: the major says which API is the default). To keep v1 after 2.0, set
+``AITO_API_VERSION=v1`` now, or pin ``aitoai<2``.
+
+Local server and profiles
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - ``aito start | stop | status | logs | keys | upgrade | profile``: run a local Aito in Docker (pinned image, ports on
   127.0.0.1, volume ``aito-state``) and store its keys in a profile. They work on a bare ``pip install aitoai``, without the
@@ -15,6 +47,7 @@ Unreleased
   environment is no longer sent the key of a local server's profile (``aito start``) stored for another URL; profiles from
   ``aito configure`` resolve as before.
 - ``~/.config/aito/credentials`` is written owner-only (0600) by ``aito configure`` too, and follows ``XDG_CONFIG_HOME``.
+
 
 1.0.0
 -----
