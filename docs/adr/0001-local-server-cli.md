@@ -150,7 +150,7 @@ no change when Bearer lands.
 - The run was a fresh venv with **no `[cli]` extra**, an empty config directory, and `create_collection`, upload, then `predict`
   through `aito.Client()` with no arguments.
 - This was an agent run on Linux. The ticket's fresh-eyes first-hour rerun belongs after the release, against the published package.
-  **Untested:** Docker Desktop on macOS and Windows, rootless Docker, podman-as-docker.
+  Platform coverage is in the Platforms section below.
 
 Also verified live:
 - `status` / `stop` / `start` again (resumes);
@@ -164,6 +164,41 @@ Also verified live:
 
 Offline tests: `tests/sdk/test_local_profiles.py` covers resolution order, pairing, 0600, profile preservation, `Client()` with no
 arguments, `aito start -h` with the `[cli]` extra unimportable, and `serve` / `run` / `up` each giving the hint and a non-zero exit without being listed.
+
+## Platforms (CI: `.github/workflows/local-server.yml`)
+
+Each row runs the newcomer path on GitHub's runners: `pip install .` (no `[cli]` extra), `aito start`, `aito.Client()` create +
+upload + predict, `aito keys --rotate` (the old key refused, the data kept), an idempotent `aito start`, and `aito stop`.
+Where Aito cannot run, the check is that `aito start` refuses with the fix named, and no traceback. The image is the pinned v2.11.1.
+Run 36711810590, 30.9:
+
+| Runner | Result | `aito start` ready | First prediction |
+|---|---|---|---|
+| linux x64, Docker 28 | passes | 4.4 s | 11.5 s |
+| linux x64, podman 4.9 as `docker` | passes | 4.7 s | 14.1 s |
+| linux arm64, amd64 image under emulation (binfmt, like Docker Desktop on Apple Silicon) | passes | 51.9 s | ~66 s |
+| macOS Intel, colima (Docker 29 in a VM) | passes, exploratory | 50.5 s (plus ~70 s pull) | 129 s |
+| linux arm64, **no** amd64 emulation | refuses in 4.9 s: `exec format error`, and how to install emulation | | |
+| Windows, Docker in Windows-containers mode | refuses: switch Docker Desktop to Linux containers | | |
+| macOS arm64, no Docker | refuses: install Docker Desktop / Engine | | |
+
+Not covered: Docker Desktop itself (it needs a licence and a GUI, so no hosted runner has it; colima is the closest), Windows with
+Linux containers (WSL2 is not available on hosted runners), and rootless Docker. GitHub's Apple Silicon runners cannot run a
+container VM (no nested virtualisation), so the arm64 Mac case is covered by the arm64 Linux rows plus emulation, which is what
+Docker Desktop does there.
+
+Bugs the matrix found, all fixed on this branch:
+- **podman:** `docker info --format {{.ServerVersion}}` fails under podman, so the tool read it as "daemon not reachable". The
+  "already running" check compared image references, which podman normalises, so every `aito start` recreated the container. Both
+  now use what both runtimes report: the exit code, and the image ID.
+- **Crash loops were invisible:** under `--restart unless-stopped`, an amd64 image on an arm64 host without emulation restarts
+  forever and never reads as exited, so the start waited out its timeout. A restart before the first answer now fails at once,
+  with the log tail and the emulation hint.
+- **Slow hosts:** colima took ~50-70 s to health, and its first authenticated request took over 3 s. That request's no-answer was
+  reported as "key refused". The wait is now 300 s with progress lines every 15 s; only 401/403 count as a refused key.
+- **Windows:** non-ASCII in messages came out as mojibake in the Windows console, so messages are ASCII.
+- **Architecture:** a mismatch between the image and the host is announced before the wait. The fix for Apple Silicon is the
+  multi-arch release, not this tool.
 
 ## Consequences
 
