@@ -1,4 +1,4 @@
-"""Credential resolution for ``aito.Client()`` and the profile store ``aito serve`` writes (offline)"""
+"""Credential resolution for ``aito.Client()`` and the profile store ``aito start`` writes (offline)"""
 
 import os
 import stat
@@ -90,7 +90,7 @@ class TestResolveCredentials(BaseTestCase):
         with self.assertRaises(profiles.NoCredentialsError) as ctx:
             profiles.resolve_credentials()
         message = str(ctx.exception)
-        for hint in ('Client(instance_url, api_key)', 'AITO_URL', 'aito serve'):
+        for hint in ('Client(instance_url, api_key)', 'AITO_URL', 'aito start'):
             self.assertIn(hint, message)
 
     def test_the_store_is_owner_only(self):
@@ -126,10 +126,27 @@ class TestConfigureWritesOwnerOnly(BaseTestCase):
 
 
 class TestLocalCommandsNeedNoExtra(BaseTestCase):
-    def test_serve_help_runs_with_the_cli_extra_unimportable(self):
-        # `pip install aitoai && aito serve`: the [cli] extra's modules must not be imported
+    def _help(self, *argv):
+        # the [cli] extra's modules made unimportable, as on a bare `pip install aitoai`
         code = ("import sys; sys.modules['pandas'] = None; sys.modules['argcomplete'] = None; "
-                "sys.argv = ['aito', 'serve', '-h']; from aito.cli import main; main()")
-        res = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True)
+                f"sys.argv = ['aito', {', '.join(repr(a) for a in argv)}]; from aito.cli import main; main()")
+        return subprocess.run([sys.executable, '-c', code], capture_output=True, text=True)
+
+    def test_start_help_runs_with_the_cli_extra_unimportable(self):
+        res = self._help('start', '-h')
         self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn('usage: aito start', res.stdout)
         self.assertIn('--sql-port', res.stdout)
+
+    def test_serve_and_up_are_quiet_aliases_of_start(self):
+        for alias in ('serve', 'up'):
+            res = self._help(alias, '-h')
+            self.assertEqual(res.returncode, 0, res.stderr)
+            self.assertIn('usage: aito start', res.stdout, alias)
+
+    def test_the_aliases_are_not_listed(self):
+        from aito.local.cli import build_parser
+        listing = build_parser().format_help()
+        self.assertIn('start', listing)
+        for alias in ('serve', ' up '):
+            self.assertNotIn(alias, listing)

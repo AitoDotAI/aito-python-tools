@@ -32,7 +32,7 @@ from . import profiles
 PINNED_IMAGE = ('ghcr.io/aitohq/aito:v2.11.1'
                 '@sha256:904295cf491f509de6996e1e104aa1b196a01b4c32e80ba6092c9dccf6612bf5')
 #: The volume name aito.ai/docker already tells people to use, so a user who started
-#: there keeps their data when they switch to ``aito serve``.
+#: there keeps their data when they switch to ``aito start``.
 DEFAULT_VOLUME = 'aito-state'
 DEFAULT_CONTAINER = 'aito'
 DEFAULT_PROFILE = 'local'
@@ -65,7 +65,7 @@ class ServerConfig:
         p = profiles.load_profile(name)
         if not p or 'container' not in p:
             raise LocalServerError(
-                f"no local server profile '{name}'. Start one with `aito serve`"
+                f"no local server profile '{name}'. Start one with `aito start`"
                 + (f" --profile {name}" if name != DEFAULT_PROFILE else ""))
         return cls(profile=name, container=p['container'], volume=p['volume'], image=p['image'],
                    port=int(p['port']), sql_port=int(p['sql_port']))
@@ -78,7 +78,7 @@ def _docker(*args: str, check: bool = True, capture: bool = True) -> subprocess.
                              stderr=subprocess.PIPE if capture else None)
     except FileNotFoundError:
         raise LocalServerError(
-            "Docker is not installed. `aito serve` runs Aito in Docker: install Docker Desktop "
+            "Docker is not installed. `aito start` runs Aito in Docker: install Docker Desktop "
             "(macOS, Windows) or Docker Engine (Linux), https://docs.docker.com/get-docker/")
     if check and res.returncode != 0:
         err = (res.stderr or '').strip() or f'exit {res.returncode}'
@@ -194,7 +194,7 @@ def _remove_managed(container: str) -> None:
         return
     if not _is_managed(info):
         raise LocalServerError(
-            f"a container named '{container}' exists that `aito serve` did not create; it is left "
+            f"a container named '{container}' exists that `aito start` did not create; it is left "
             f"alone. Remove it (`docker rm -f {container}`) or choose another name with --container.")
     _docker('rm', '-f', container)
 
@@ -213,7 +213,7 @@ def _running_with(cfg: ServerConfig, keys: Dict[str, str]) -> bool:
             and host_port('9005/tcp') == cfg.port and host_port('5432/tcp') == cfg.sql_port)
 
 
-def serve(cfg: ServerConfig, activate: Optional[bool] = None, log=print) -> Dict:
+def start(cfg: ServerConfig, activate: Optional[bool] = None, log=print) -> Dict:
     """start (or confirm) the local server and store its profile; idempotent
 
     Keys, in order: the profile's (so a restart never changes them), the ones an earlier
@@ -245,7 +245,7 @@ def serve(cfg: ServerConfig, activate: Optional[bool] = None, log=print) -> Dict
         if not _port_free(cfg.port):
             raise LocalServerError(
                 f"port {cfg.port} on 127.0.0.1 is in use by something else. Pick another: "
-                f"`aito serve --port {cfg.port + 1}`")
+                f"`aito start --port {cfg.port + 1}`")
         if not _port_free(cfg.sql_port):
             free = next((p for p in range(cfg.sql_port + 1, cfg.sql_port + 20) if _port_free(p)), None)
             if free is None:
@@ -300,7 +300,7 @@ def stop(cfg: ServerConfig) -> bool:
     if info is None or not info['State'].get('Running'):
         return False
     if not _is_managed(info):
-        raise LocalServerError(f"'{cfg.container}' was not started by `aito serve`; not stopping it")
+        raise LocalServerError(f"'{cfg.container}' was not started by `aito start`; not stopping it")
     _docker('stop', cfg.container)
     return True
 

@@ -1,4 +1,4 @@
-"""``aito serve | status | logs | stop | keys | upgrade | profile``: the local server commands
+"""``aito start | stop | status | logs | keys | upgrade | profile``: the local server commands
 
 Dispatched from :func:`aito.cli.main` before the ``[cli]`` extra is imported, so they run
 on a bare ``pip install aitoai``. The existing (v1) commands are untouched.
@@ -10,7 +10,11 @@ from typing import List, Optional
 
 from . import profiles, server
 
-COMMANDS = ('serve', 'status', 'logs', 'stop', 'keys', 'upgrade', 'profile')
+COMMANDS = ('start', 'stop', 'status', 'logs', 'keys', 'upgrade', 'profile')
+#: Accepted for `start` but not listed in the help: `start` pairs with stop/status, as in
+#: supabase, localstack, neo4j and pg_ctl, while people and agents will guess these too.
+#: (`serve` usually means a foreground server, `up` a compose stack; see ADR 0001.)
+ALIASES = {'serve': 'start', 'up': 'start'}
 
 
 def _mask(key: str) -> str:
@@ -34,10 +38,10 @@ def _connection_block(cfg: server.ServerConfig, keys, active: bool) -> str:
 """
 
 
-def _cmd_serve(a) -> int:
+def _cmd_start(a) -> int:
     cfg = server.ServerConfig(profile=a.profile, container=a.container, volume=a.volume,
                               image=a.image or server.PINNED_IMAGE, port=a.port, sql_port=a.sql_port)
-    res = server.serve(cfg, activate=True if a.activate else None)
+    res = server.start(cfg, activate=True if a.activate else None)
     print(f"Aito is {res['state']} on {cfg.url} (ready in {res['seconds']:.1f}s, image "
           f"{cfg.image.split('@')[0].rsplit(':', 1)[-1]}, data in volume '{cfg.volume}').")
     for note in res['notes']:
@@ -67,7 +71,7 @@ def _cmd_logs(a) -> int:
 
 def _cmd_stop(a) -> int:
     cfg = server.ServerConfig.from_profile(a.profile)
-    print(f"stopped {cfg.container}; data and keys kept in volume '{cfg.volume}'. `aito serve` starts it again."
+    print(f"stopped {cfg.container}; data and keys kept in volume '{cfg.volume}'. `aito start` starts it again."
           if server.stop(cfg) else f"{cfg.container} is not running.")
     return 0
 
@@ -108,7 +112,7 @@ def _cmd_profile(a) -> int:
         print(f"{'*' if name == active else ' '} {name:<12} {p.get('instance_url', '?'):<40} "
               f"key {_mask(p.get('api_key', ''))}")
     if not profiles.profiles():
-        print(f"no profiles yet: `aito serve` (local) or `aito configure` (an existing instance)")
+        print(f"no profiles yet: `aito start` (local) or `aito configure` (an existing instance)")
     return 0
 
 
@@ -121,7 +125,7 @@ def build_parser() -> argparse.ArgumentParser:
                        help=f'the local server profile (default: {server.DEFAULT_PROFILE})')
         return p
 
-    p = with_profile(sub.add_parser('serve', help='start a local Aito and store its keys in a profile'))
+    p = with_profile(sub.add_parser('start', help='start a local Aito in Docker and store its keys in a profile'))
     p.add_argument('--port', type=int, default=server.DEFAULT_PORT, help='HTTP port on 127.0.0.1 (default 9005)')
     p.add_argument('--sql-port', type=int, default=server.DEFAULT_SQL_PORT,
                    help='Postgres-wire port on 127.0.0.1 (default 5432; the next free one if taken)')
@@ -130,7 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument('--image', help='run another image than the one this SDK version pins')
     p.add_argument('--activate', action='store_true',
                    help='make this the active profile even if another one is active')
-    p.set_defaults(func=_cmd_serve)
+    p.set_defaults(func=_cmd_start)
 
     with_profile(sub.add_parser('status', help='is the local Aito up, and is the stored key accepted')) \
         .set_defaults(func=_cmd_status)
@@ -155,6 +159,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in ALIASES:
+        argv[0] = ALIASES[argv[0]]
     args = build_parser().parse_args(argv)
     if getattr(args, 'action', None) == 'use' and not args.name:
         build_parser().error('profile use needs a NAME')

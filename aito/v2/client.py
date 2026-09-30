@@ -44,7 +44,7 @@ class AitoClientV2:
     :param instance_url: the database URL, e.g. ``https://shared.aito.ai/db/my-db``,
         with no ``/api/...`` suffix. Optional: when omitted, ``AITO_URL`` (or
         ``AITO_INSTANCE_URL``) and ``AITO_API_KEY``, then the active profile in
-        ``~/.config/aito/credentials``, are used, so after ``aito serve``
+        ``~/.config/aito/credentials``, are used, so after ``aito start``
         ``Client()`` reaches the local instance
     :type instance_url: Optional[str]
     :param api_key: the database API key; resolved like ``instance_url`` when omitted

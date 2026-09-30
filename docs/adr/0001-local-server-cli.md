@@ -1,6 +1,6 @@
-# ADR 0001: `aito serve`, a local server CLI, and profile-aware `aito.Client()`
+# ADR 0001: `aito start`, a local server CLI, and profile-aware `aito.Client()`
 
-- Status: **proposed**. A working prototype is on branch `feat/aito-serve`.
+- Status: **proposed**. A working prototype is on branch `feat/aito-start`.
 - Date: 30.9.2026
 - Ticket: td-20260930083456875743 (asked by Antti; scoped by the CPO)
 - Image contract agreed with azure-81, who owns the free image (aito-core `docker/free`).
@@ -32,16 +32,21 @@ The commands are additive to the existing CLI:
 
 | Command | Does |
 |---|---|
-| `aito serve` | Checks Docker; pulls the **pinned** image; creates or reuses the `aito-state` volume; starts the container on **127.0.0.1**; waits for health; stores the profile; prints one copy-paste block (URL, keys, Python, shell export, curl, psql). Idempotent: rerunning it on a healthy server changes nothing. |
+| `aito start` | Checks Docker; pulls the **pinned** image; creates or reuses the `aito-state` volume; starts the container on **127.0.0.1**; waits for health; stores the profile; prints one copy-paste block (URL, keys, Python, shell export, curl, psql). Idempotent: rerunning it on a healthy server changes nothing. |
 | `aito status` | Container state, `GET /version`, and whether the stored key is accepted. Exits 1 when not ready. |
 | `aito logs [-f] [--tail N]` | The container's logs. |
-| `aito stop` | Stops the container. The volume, and with it the data and keys, stays; `aito serve` resumes. |
+| `aito stop` | Stops the container. The volume, and with it the data and keys, stays; `aito start` resumes. |
 | `aito keys [--rotate] [--export]` | Shows the keys, or replaces both. Data is unchanged; the old keys stop working. |
 | `aito upgrade [--image]` | Moves to the image this SDK version pins, with the same keys and data. |
 | `aito profile [list \| use NAME]` | Lists profiles; selects the active one. |
 
-- **Naming.** `serve` follows `ollama serve` and `jupyter server` and reads as "run a server". **Antti decides between `serve` and `up`**;
-  an alias is one line.
+- **Naming: `aito start`**, with `aito serve` and `aito up` as quiet aliases. Antti delegated this ("follow common practice"), and the
+  CPO decided it on 30.9. Tools that start a *background* local server container and return use `start` / `stop` / `status`:
+  `supabase start`, `localstack start`, `neo4j start`, `pg_ctl start`, `brew services start`. `serve` usually means a *foreground*
+  server (`ollama serve`, `npx serve`), and `up` / `down` a compose stack. This command returns once the server is healthy and pairs
+  with `stop`, `status` and `logs`, so it is `start`.
+  People and agents will guess `serve` and `up`, so both run `start`. They are not in the help listing; the docs mention them in one
+  line.
 - **Additive.** These commands are dispatched in `aito.cli.main` *before* the `[cli]` extra is imported, so they run on a bare
   `pip install aitoai`. The existing v1 commands, their names and their behaviour are unchanged, and none of the new names collides.
   The CLI's v1 default through 1.x (the 1.0 promise) is untouched.
@@ -49,20 +54,20 @@ The commands are additive to the existing CLI:
 ### Profiles: one store, shared with `aito configure`
 
 - **Credentials.** `~/.config/aito/credentials` (honouring `XDG_CONFIG_HOME`) is the INI file `aito configure` has always written: one
-  section per profile, with `instance_url` and `api_key`. A profile written by `aito serve` adds `read_only_api_key` and the container
+  section per profile, with `instance_url` and `api_key`. A profile written by `aito start` adds `read_only_api_key` and the container
   it manages (`container`, `volume`, `image`, `port`, `sql_port`).
 - **Active profile.** Recorded in `~/.config/aito/config` (`[aito] active_profile`), so settings never share a namespace with profile
   names.
 - **Permissions.** Files are `0600` and the directory `0700`. Writes create the file with its final mode and `os.replace` it into
   place, so there's no window where it is readable.
   `aito configure` used to write the same file with the default umask; it now writes it through the same 0600 helper.
-- **Activation.** `aito serve` makes `local` the active profile only when the currently active one does not exist, or with
+- **Activation.** `aito start` makes `local` the active profile only when the currently active one does not exist, or with
   `--activate`, so it never hijacks a configured cloud profile.
 
 ### Resolution order: the same for the SDK and the CLI, highest first
 
 1. **Explicit arguments**: `aito.Client(url, key)`, `--instance-url` / `--api-key`.
-2. **Environment**: `AITO_URL` (new, the name `aito serve` prints) or `AITO_INSTANCE_URL` (kept), plus `AITO_API_KEY`.
+2. **Environment**: `AITO_URL` (new, the name `aito start` prints) or `AITO_INSTANCE_URL` (kept), plus `AITO_API_KEY`.
 3. **The active profile**: `AITO_PROFILE` if set, else `config`'s `active_profile`, else `default`. The CLI's `--profile` overrides it.
 
 The ticket listed env, then the active profile, then explicit args. Explicit arguments stay highest, as in every SDK and in this CLI
@@ -73,28 +78,28 @@ kept for the other two.
 - a URL given alone takes the key of the profile stored for *that* URL, or fails;
 - a key given alone fails instead of being sent to whatever the active profile points at.
 
-So after `aito serve`, `aito.Client()` just works, and so does `aito.Client('http://localhost:9005')`.
+So after `aito start`, `aito.Client()` just works, and so does `aito.Client('http://localhost:9005')`.
 
 ### Keys
 
-- `aito serve` generates both keys itself (`secrets.token_hex(24)`), passes them as `READ_WRITE_APIKEY` / `APIKEY` through a temporary
+- `aito start` generates both keys itself (`secrets.token_hex(24)`), passes them as `READ_WRITE_APIKEY` / `APIKEY` through a temporary
   0600 env file (never argv, so never the process list), and stores them in the profile.
 - No log scraping, so it doesn't depend on the image's banner or on log masking.
 - A restart reuses the profile's keys, so they never change unless `aito keys --rotate`.
-- **Adoption.** If the volume was first started by a plain `docker run` that generated keys into `/io/state/.aito-api-keys`, `aito serve`
+- **Adoption.** If the volume was first started by a plain `docker run` that generated keys into `/io/state/.aito-api-keys`, `aito start`
   reads them with a throwaway container and adopts them, so clients already using them keep working.
-  Verified: the key generated by `docker run` answered 200 against the `aito serve`d container.
+  Verified: the key generated by `docker run` answered 200 against the `aito start`d container.
 - If the volume holds no readable keys (the /docker page pins keys by env, and v2.11.1 does not write those to the file), new keys are
   generated and the note says so. With #1528 the image writes pinned keys to the file too, so this case disappears.
 
-### Docker only, for now
+### Docker only
 
 - A bundled-JAR fallback needs a JRE 17, and a JVM the user did not choose (a heap, GC and flags this tool would own). The free JAR
   exists.
 - Docker is already the documented self-host path, gives state isolation (a volume) and a clean `upgrade`, and is what the audit's
   newcomers used.
-- **Antti decides.** The recommendation is Docker-only in phase 1, with a JAR fallback only if data shows Docker-less evaluators.
-- `aito serve` without Docker says what to install, or that the daemon is not running.
+- **Decided (CPO, 30.9): Docker-only in phase 1.** A JAR fallback comes back only if data shows Docker-less evaluators.
+- `aito start` without Docker says what to install, or that the daemon is not running.
 
 ### Pinned image, 127.0.0.1, one volume name
 
@@ -105,9 +110,9 @@ So after `aito serve`, `aito.Client()` just works, and so does `aito.Client('htt
 - **Bind.** Both ports are published on **127.0.0.1** only. Docker's `-p 9005:9005` publishes on 0.0.0.0 and bypasses ufw/firewalld.
   - HTTP: 9005.
   - SQL: 5432, or the next free port when a local Postgres holds 5432 (the note says so).
-- **Volume.** `aito-state`, the name aito.ai/docker already uses. A user moving from the page to `aito serve` keeps their data.
+- **Volume.** `aito-state`, the name aito.ai/docker already uses. A user moving from the page to `aito start` keeps their data.
   The compose file in aito-core `docker/free` still says `aito-data`; it should move to `aito-state` so all three agree (asked of azure-81).
-- **Managed label.** Containers carry `ai.aito.managed-by=aitoai-cli`. A container `aito serve` did not create is never removed or
+- **Managed label.** Containers carry `ai.aito.managed-by=aitoai-cli`. A container `aito start` did not create is never removed or
   stopped; the error names the fix.
 
 ### Image contract (azure-81, checked against code and running images)
@@ -117,7 +122,7 @@ So after `aito serve`, `aito.Client()` just works, and so does `aito.Client('htt
   With #1528, pinned keys are also written to the key file, and a key change logs one warning, not a failure. This suits `--rotate`.
 - `READ_WRITE_APIKEY=""` is FATAL with #1528, and silently regenerates on v2.11.1. The CLI never passes an empty key.
 - `GET /version` is 200 without a key. That's load-bearing for the compose healthcheck and aito-core CI, though not a written
-  guarantee. `aito serve` polls it, then proves the key with an authenticated `GET /api/v2/schema`.
+  guarantee. `aito start` polls it, then proves the key with an authenticated `GET /api/v2/schema`.
 - Ports are 9005 (HTTP) and 5432 (Postgres wire); state lives in `/io/state`.
 
 **Out of scope here.** `Authorization: Bearer` support in the engine goes to a core lane separately. The SDK sends `x-api-key` and needs
@@ -128,7 +133,7 @@ no change when Bearer lands.
 | Path | Steps to type | Wall clock (image cached) | Traps |
 |---|---|---|---|
 | Today, aito.ai/docker (audit, 29.9) | 5: two `openssl rand`, exports, `docker run` with 5 flags, read the banner, carry the key into code | 3:17 at agent speed; 10-15 min for a careful human | key lost in a new terminal; empty key regenerates; no `-v` orphans data |
-| `aito serve` (prototype, 30.9) | **3**: `pip install aitoai`, `aito serve`, `aito.Client()` | **9.1 s and 11.5 s** (two fresh runs: install 1.5 s with uv, serve 5.5 / 8.2 s, first query 2.0 s) | none of the above; keys persist in a 0600 profile |
+| `aito start` (prototype, 30.9) | **3**: `pip install aitoai`, `aito start`, `aito.Client()` | **9.1 s and 11.5 s** (two fresh runs: install 1.5 s with uv, serve 5.5 / 8.2 s, first query 2.0 s) | none of the above; keys persist in a 0600 profile |
 
 - The cold pull (169 MB compressed, 47 s per the audit) is the same image on both paths, so it is added to both.
 - The run was a fresh venv with **no `[cli]` extra**, an empty config directory, and `create_collection`, upload, then `predict`
@@ -137,7 +142,7 @@ no change when Bearer lands.
   **Untested:** Docker Desktop on macOS and Windows, rootless Docker, podman-as-docker.
 
 Also verified live:
-- `status` / `stop` / `serve` again (resumes);
+- `status` / `stop` / `start` again (resumes);
 - `keys --export`;
 - `keys --rotate` (the old key stops working, the data stays, `Client()` follows);
 - `upgrade`;
@@ -147,7 +152,7 @@ Also verified live:
 - a real port conflict, which is refused with the fix named.
 
 Offline tests: `tests/sdk/test_local_profiles.py` covers resolution order, pairing, 0600, profile preservation, `Client()` with no
-arguments, and `aito serve -h` with the `[cli]` extra unimportable.
+arguments, `aito start -h` with the `[cli]` extra unimportable, and `serve` / `up` running `start` without being listed.
 
 ## Consequences
 

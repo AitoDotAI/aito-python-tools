@@ -42,7 +42,7 @@ def write_credentials_file_profile(
          existing_config.add_section(profile_name)
     existing_config.set(section=profile_name, option='instance_url', value=instance_url)
     existing_config.set(section=profile_name, option='api_key', value=api_key)
-    # owner-only (0600), like the profiles `aito serve` writes: the file holds API keys
+    # owner-only (0600), like the profiles `aito start` writes: the file holds API keys
     from aito.local.profiles import _write_private
     _write_private(credentials_file_path, existing_config)
 

@@ -2,7 +2,7 @@
 
 One store, shared with ``aito configure``: ``~/.config/aito/credentials``, an INI file
 with one section per profile (``instance_url``, ``api_key``, and for a profile written
-by ``aito serve`` also ``read_only_api_key`` and the container it manages). Which
+by ``aito start`` also ``read_only_api_key`` and the container it manages). Which
 profile is active is recorded separately in ``~/.config/aito/config``, so a profile
 section never has to share its namespace with settings.
 
@@ -10,7 +10,7 @@ Resolution, for both ``aito.Client()`` and the CLI, highest first:
 
 1. explicit arguments (``Client(url, key)``, ``--instance-url``/``--api-key``)
 2. environment: ``AITO_URL`` (or the older ``AITO_INSTANCE_URL``) and ``AITO_API_KEY``
-3. the active profile: ``AITO_PROFILE`` if set, else the one ``aito serve`` or
+3. the active profile: ``AITO_PROFILE`` if set, else the one ``aito start`` or
    ``aito profile use`` recorded, else ``default``
 
 A key is never paired with a URL it was not stored with. A URL given without a key
@@ -129,10 +129,10 @@ def resolve_credentials(
                 return url, candidate['api_key']
         raise NoCredentialsError(
             f"no API key for {url}: pass api_key, set AITO_API_KEY, or store it in a profile "
-            f"(`aito configure`, or `aito serve` for a local instance)")
+            f"(`aito configure`, or `aito start` for a local instance)")
     if profile and profile.get('instance_url') and profile.get('api_key'):
         return profile['instance_url'], profile['api_key']
     raise NoCredentialsError(
         "no Aito instance configured. Either pass Client(instance_url, api_key), set AITO_URL and "
-        "AITO_API_KEY, or run `aito serve` to start a local instance and store its keys in a profile"
+        "AITO_API_KEY, or run `aito start` to start a local instance and store its keys in a profile"
         + (f" (the active profile '{name}' does not exist in {CREDENTIALS_FILE})" if profile is None else ""))

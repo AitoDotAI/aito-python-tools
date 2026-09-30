@@ -1,6 +1,6 @@
-"""Run and reach a local Aito: ``aito serve`` and the profile store behind ``aito.Client()``
+"""Run and reach a local Aito: ``aito start`` and the profile store behind ``aito.Client()``
 
-Standard library only. ``aito serve``, ``status``, ``logs``, ``stop``, ``keys`` and
+Standard library only. ``aito start``, ``stop``, ``status``, ``logs``, ``keys`` and
 ``upgrade`` work on a bare ``pip install aitoai`` (no ``[cli]`` extra), and resolving
 credentials from a profile adds nothing to ``import aito.v2``.
 
