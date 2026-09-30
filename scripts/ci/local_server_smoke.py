@@ -23,7 +23,13 @@ import urllib.error
 import urllib.request
 
 
+#: A candidate engine image to test instead of the pin (the workflow's `image` input).
+IMAGE = os.environ.get('AITO_SMOKE_IMAGE') or None
+
+
 def aito(*args, check=True):
+    if IMAGE and args and args[0] == 'start':
+        args = (*args, '--image', IMAGE)
     exe = shutil.which('aito')
     assert exe, "the `aito` console script is not on PATH; was the package installed?"
     t = time.monotonic()

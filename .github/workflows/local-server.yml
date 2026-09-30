@@ -14,7 +14,13 @@ on:
       - 'aito/v2/client.py'
       - 'scripts/ci/local_server_smoke.py'
       - '.github/workflows/local-server.yml'
-  workflow_dispatch: {}
+      - 'scripts/pin-engine.py'
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'A candidate engine image to test instead of the pin, e.g. ghcr.io/aitohq/aito:v2.11.2'
+        required: false
+        default: 
 
 jobs:
   smoke:
@@ -35,10 +41,12 @@ jobs:
           - name: linux-arm64 docker (amd64 image, emulated)
             os: ubuntu-24.04-arm
             engine: docker-binfmt
-          - name: linux-arm64 docker (amd64 image, no emulation)
+          # Native arm64: runs the whole path when the image is multi-arch, otherwise
+          # must refuse cleanly (exec format error, no emulation on this runner)
+          - name: linux-arm64 docker (no emulation)
             os: ubuntu-24.04-arm
             engine: docker-nobinfmt
-            refusal: CPU architecture
+            refusal_unless_multiarch: CPU architecture
           - name: macos-arm64 without docker
             os: macos-latest
             engine: none
@@ -89,12 +97,30 @@ jobs:
       - name: pip install .   (no [cli] extra, as a newcomer installs it)
         run: python -m pip install .
 
+      - name: Expectation for this runner and image
+        id: expect
+        shell: bash
+        env:
+          STATIC: ${{ matrix.refusal }}
+          UNLESS_MULTIARCH: ${{ matrix.refusal_unless_multiarch }}
+          IMAGE: ${{ inputs.image }}
+        run: |
+          refusal="$STATIC"
+          if [ -n "$UNLESS_MULTIARCH" ]; then
+            if python scripts/pin-engine.py --check-multiarch ${IMAGE:+"$IMAGE"}; then refusal=""
+            else refusal="$UNLESS_MULTIARCH"; fi
+          fi
+          echo "refusal=$refusal" >> "$GITHUB_OUTPUT"
+          echo "image: ${IMAGE:-the pinned one}; expect: ${refusal:-the full path}"
       - name: aito start -> Client() -> keys --rotate -> stop
-        if: ${{ !matrix.refusal }}
+        if: ${{ !steps.expect.outputs.refusal }}
+        env:
+          AITO_SMOKE_IMAGE: ${{ inputs.image }}
         run: python scripts/ci/local_server_smoke.py
       - name: aito start refuses cleanly
-        if: ${{ matrix.refusal }}
+        if: ${{ steps.expect.outputs.refusal }}
         env:
-          REFUSAL: ${{ matrix.refusal }}
+          REFUSAL: ${{ steps.expect.outputs.refusal }}
+          AITO_SMOKE_IMAGE: ${{ inputs.image }}
         shell: bash
         run: python scripts/ci/local_server_smoke.py --expect-refusal "$REFUSAL"
