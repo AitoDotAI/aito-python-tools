@@ -13,11 +13,34 @@ v2) and ``similarity`` (no ``_similarity`` endpoint). ``--use-job`` is v1 only.
 """
 
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 from aito.schema import AitoTableSchema
 from aito.utils.data_frame_handler import DataFrameHandler
+
+LOG = logging.getLogger('aito.cli')
+
+
+def warn_prose_in_string_columns(table_schema, df, table_name: str) -> None:
+    """warn when a String column is filled with free text
+
+    A String is an exact-match category, so a description column typed String
+    predicts nothing from its words. The same rule the engine uses to infer Text
+    (aito._csv_types.looks_like_text). A warning, not a change: the table's
+    declared type is kept.
+    """
+    from aito._csv_types import looks_like_text
+    for name in table_schema.columns:
+        if table_schema[name].data_type.aito_dtype != 'String' or name not in df:
+            continue
+        values = [str(v) for v in df[name].dropna().tolist()]
+        if looks_like_text(values):
+            LOG.warning(
+                f"column '{name}' of '{table_name}' is declared String, but its values read like free "
+                f"text. A String is an exact-match category, so '{name}' will not help predictions "
+                f"from its words. Declare it Text to use them.")
 
 
 class NotSupportedOnV2(Exception):
@@ -112,11 +135,13 @@ class V1Backend:
         import tempfile
         from os import unlink
         converted_tmp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.ndjson.gz', delete=False)
-        DataFrameHandler().convert_file(
+        table_schema = self._api.get_table_schema(self.client, table_name)
+        converted_df = DataFrameHandler().convert_file(
             read_input=in_file_path, write_output=converted_tmp_file.name, in_format=in_format,
             out_format='ndjson', convert_options={'compression': 'gzip'},
-            use_table_schema=self._api.get_table_schema(self.client, table_name))
+            use_table_schema=table_schema)
         converted_tmp_file.close()
+        warn_prose_in_string_columns(table_schema, converted_df, table_name)
         with open(converted_tmp_file.name, 'rb') as in_f:
             self._api.upload_binary_file(client=self.client, table_name=table_name, binary_file=in_f)
         unlink(converted_tmp_file.name)

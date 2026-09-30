@@ -34,8 +34,8 @@ class RecordingSession:
         self.headers = {}
         self._responses = list(responses or [])
 
-    def request(self, method, url, json=None, params=None, headers=None, timeout=None):
-        self.calls.append({'method': method, 'url': url, 'json': json,
+    def request(self, method, url, json=None, params=None, headers=None, timeout=None, data=None):
+        self.calls.append({'method': method, 'url': url, 'json': json, 'data': data,
                            'params': params, 'headers': headers, 'timeout': timeout})
         if self._responses:
             return self._responses.pop(0)

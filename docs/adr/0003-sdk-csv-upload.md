@@ -1,6 +1,6 @@
 # ADR 0003: `Client.upload_csv`, a CSV into a v2 collection in one call (design note)
 
-- Status: **draft**. No code until this is agreed.
+- Status: **implemented** on branch `feat/upload-csv` (local), after the CPO answered the open questions (below).
 - Date: 30.9.2026
 - Source of the need: both first-hour audits (29.9 Docker, 30.9 `aito start`) hit the same wall. There is no CSV path in the SDK, and
   the obvious workaround (`csv.DictReader` → `upload_entries`) creates every column as `String`. Then:
@@ -45,9 +45,18 @@ def upload_csv(self, name, source, *, schema=None, via='auto', delimiter=',', en
 **Server (#1535 and later).** `POST /api/v2/data/{name}/import` with `Content-Type: text/csv` and the file as the body.
 - The engine parses, types, infers Text, and returns `inferred` and warnings.
 - `request()` gains a private raw-body option: today it only sends JSON.
-- **Detection without a version table:** an engine before #1535 answers a `text/csv` body with 400 `json.malformed`. That exact code
-  means "no CSV support", and `auto` then retries on the client path with the same bytes. Any other error (a real CSV problem, auth)
-  is raised as it is.
+- **Detection without a version table.** An engine before #1535 parses a `text/csv` body as JSON. Observed on v2.11.1, it answers:
+  - 400 `json.malformed` (`Unrecognized token 'invoice_id'…`) for an unquoted header;
+  - 400 `data.bad_request` with **exactly** `Expected JSON array for import` for a quoted header (`"a","b"`).
+
+  Only those two answers mean "no CSV support", and `auto` then takes the client path.
+  - #1535 reports a real CSV problem as `data.bad_request` with `CSV import: …`, and a bad row as `import.failed`. Both are raised,
+    **never retried**, with a test for each direction.
+  - `data.bad_request` is shared with the old engine's quoted-header answer, so the match on the exact old message is load-bearing.
+    **Asked of core:** give #1535's CSV errors a code of their own (for example `import.csv_invalid`).
+  - The CSV is parsed here before anything is sent, so a malformed file fails locally on either engine. The server path only ever
+    receives files that parse.
+  - The path taken is in `result.via` and in a DEBUG log line on `aito.v2`.
 - One request per call. The engine's request-size limit applies, and a too-large body is reported with "use `via='client'`, which
   batches".
 
@@ -82,9 +91,23 @@ that test goes red.
 - **Analyzer choice.** No analyzer is inferred, the same as the engine; picking one is `schema=`. Whether Text should default to a
   language analyzer is core-a's open question, and the SDK follows the engine.
 
-## Open questions
+## Decided (CPO, 30.9)
 
-1. **Name:** `upload_csv` matches `upload_entries`, while `import_csv` matches the endpoint. This note proposes `upload_csv`.
-2. **Should the CLI's v1 `upload-file` warn** when it creates String columns out of prose, until #77 ships?
-3. **Once #1535 is in every supported engine**, should the client path stay, as the offline and `via='client'` path, or go? This
-   note proposes it stays: it's small, and it's the only place the rules are testable without an engine.
+1. **The name is `upload_csv`**, matching the SDK's `upload_*` family.
+2. **The v1 `upload-file` warns** when a String column of the target table receives free text, using the same rule. It's a warning
+   on `aito.cli`; the declared type is kept.
+3. **The client path stays permanently**, for older engines and for the free image's lag behind core.
+
+## As implemented
+
+- **Appends to an existing collection always take the client path.** The declared types are applied here, so a bad cell is named
+  before anything is sent.
+- **`schema=`, or a delimiter other than a comma, also takes the client path,** because that's where they apply.
+  `via='server'` with either one is refused.
+- **Live, v2.11.1 (no #1535):** a 200-row invoice CSV went `via='client'` and `description` was inferred as Text. Predicting
+  `category` from a new description gave **Office 0.932**. The 29.9 audit's `String` workaround got 0.199 on its data.
+  - A quoted-header CSV also fell back.
+  - An append converted to the declared types.
+  - A bad cell failed as `row 2, column 'amount': 'twelve' is not a Decimal`.
+- **The engine side of the shared boundary vectors runs once #1535 is in a released image;** until then only the Python rules are
+  tested.
