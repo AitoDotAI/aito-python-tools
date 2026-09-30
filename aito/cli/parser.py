@@ -240,13 +240,15 @@ def create_client_from_parsed_args(parsed_args, check_credentials=True) -> AitoC
     instance_url = check_flag_env_var_default_credential('instance_url', 'AITO_INSTANCE_URL', 'instance_url')
     api_key = check_flag_env_var_default_credential('api_key', 'AITO_API_KEY', 'api_key')
 
-    # A key read from a profile goes only to that profile's own instance: with the URL from
-    # a flag or AITO_URL and no key given, the active profile (perhaps `local`, from
-    # `aito start`) must not hand its key to some other server.
+    # A key of a local server's profile (written by `aito start`, which may have made it the
+    # active one) goes only to that server: with the URL from a flag or AITO_URL and no key
+    # given, it must not be handed to some other instance. Profiles written by `aito
+    # configure` keep the CLI's old behaviour of combining the two.
     key_profile = sources['api_key']
     if key_profile not in ('flag', 'env') and sources['instance_url'] in ('flag', 'env'):
-        profile_url = get_credentials_file_config()[key_profile].get('instance_url', '')
-        if not same_instance(profile_url, instance_url):
+        stored = get_credentials_file_config()[key_profile]
+        profile_url = stored.get('instance_url', '')
+        if 'container' in stored and not same_instance(profile_url, instance_url):
             raise ParseError(
                 f"no API key for {instance_url}: the key in profile `{key_profile}` belongs to "
                 f"{profile_url or 'another instance'}. Pass --api-key, set AITO_API_KEY, or use "

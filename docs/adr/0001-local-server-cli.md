@@ -77,8 +77,9 @@ since 0.x (documented in its `--help`): an argument you typed must not be overri
 kept for the other two.
 
 **Pairing rule.** A key read from a profile goes only to that profile's own URL:
-- a URL given alone (argument, flag or `AITO_URL`) takes the key of the profile stored for *that* URL, or fails; the v1 CLI
-  applies the same check;
+- a URL given alone (argument, flag or `AITO_URL`) takes the key of the profile stored for *that* URL, or fails. The v1 CLI
+  applies this to profiles `aito start` wrote; for profiles from `aito configure` it keeps its old behaviour (URL and key
+  resolved separately), so existing setups do not break;
 - a key given alone fails instead of being sent to whatever the active profile points at;
 - an argument and an environment variable may be combined (`Client(url)` with `AITO_API_KEY` set): both are the caller's choice.
 

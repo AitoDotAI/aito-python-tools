@@ -12,7 +12,8 @@ Unreleased
   then the active profile (``AITO_PROFILE``). A key stored in a profile is only sent to that profile's URL.
 - The CLI's ``--profile`` defaults to the active profile (``default`` unless ``aito start`` or ``aito profile use`` set
   another), and ``AITO_URL`` is accepted, winning over ``AITO_INSTANCE_URL`` as in the SDK. A URL given by flag or
-  environment is no longer sent a profile key that belongs to another URL.
+  environment is no longer sent the key of a local server's profile (``aito start``) stored for another URL; profiles from
+  ``aito configure`` resolve as before.
 - ``~/.config/aito/credentials`` is written owner-only (0600) by ``aito configure`` too, and follows ``XDG_CONFIG_HOME``.
 
 1.0.0

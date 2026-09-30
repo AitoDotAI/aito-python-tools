@@ -86,17 +86,37 @@ class TestCreateClientFromParsedArgs(CompareTestCase):
                 vars(create_client_from_parsed_args(expected_parsed_args, check_credentials=False))
             )
 
-    def test_a_profile_key_is_not_sent_to_another_url(self):
-        # AITO_URL names a cloud instance but no key is given: the profile (space_oddity, whose
-        # URL is ground_control) must not hand its key to that other server
+    def _profile_file(self, **fields):
+        import configparser, tempfile
+        from pathlib import Path
+        config = configparser.ConfigParser()
+        config['p'] = fields
+        path = Path(tempfile.mkdtemp()) / 'credentials'
+        with path.open('w') as f:
+            config.write(f)
+        return path
+
+    def _resolve_with_aito_url(self, path):
         self.stub_environment_variable('AITO_INSTANCE_URL', None)
         self.stub_environment_variable('AITO_API_KEY', None)
         self.stub_environment_variable('AITO_URL', 'https://elsewhere.aito.app')
-        with patch('aito.utils._credentials_file_utils.DEFAULT_CREDENTIAL_FILE', self.input_folder / 'sample_config'):
-            with self.assertRaises(ParseError) as ctx:
-                create_client_from_parsed_args(vars(self.parser.parse_args(['--profile', 'space_oddity'])),
-                                               check_credentials=False)
+        with patch('aito.utils._credentials_file_utils.DEFAULT_CREDENTIAL_FILE', path):
+            return create_client_from_parsed_args(vars(self.parser.parse_args(['--profile', 'p'])),
+                                                  check_credentials=False)
+
+    def test_a_local_server_key_is_not_sent_to_another_url(self):
+        # AITO_URL names another instance and no key is given: the key `aito start` stored for
+        # 127.0.0.1 must not be handed to that server
+        path = self._profile_file(instance_url='http://127.0.0.1:9005', api_key='local-key', container='aito')
+        with self.assertRaises(ParseError) as ctx:
+            self._resolve_with_aito_url(path)
         self.assertIn('no API key for https://elsewhere.aito.app', str(ctx.exception))
+
+    def test_a_configure_profile_resolves_as_before(self):
+        # profiles from `aito configure` keep the old behaviour: URL and key resolved separately
+        path = self._profile_file(instance_url='https://old.aito.app', api_key='cloud-key')
+        client = self._resolve_with_aito_url(path)
+        self.assertEqual((client.instance_url, client.api_key), ('https://elsewhere.aito.app', 'cloud-key'))
 
     def test_create_client_unknown_profile(self):
         self.stub_environment_variable('AITO_INSTANCE_URL', None)

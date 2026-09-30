@@ -139,6 +139,26 @@ class TestProfilesDoNotShareContainers(LocalServerCase):
         self.assertIn("belongs to profile 'local'", str(ctx.exception))
 
 
+class TestStartRefuses(LocalServerCase):
+    def test_a_configure_profile_is_never_overwritten(self):
+        profiles.save_profile('default', {'instance_url': 'https://x.aito.app', 'api_key': 'cloud-key'})
+        with self.assertRaises(server.LocalServerError) as ctx:
+            self.start('default')
+        self.assertIn('would overwrite', str(ctx.exception))
+        self.assertEqual(profiles.load_profile('default')['api_key'], 'cloud-key')
+
+    def test_a_bad_port_is_refused_not_ignored(self):
+        for given in ({'port': 0}, {'sql_port': 70000}, {'container': ''}):
+            with self.assertRaises(server.LocalServerError, msg=given):
+                server.ServerConfig.for_start('local', **given)
+
+    def test_stop_leaves_another_profiles_container_alone(self):
+        self.start()
+        with self.assertRaises(server.LocalServerError):
+            server.stop(server.ServerConfig(profile='other', container='aito'))
+        self.assertTrue(self.docker.containers['aito']['State']['Running'])
+
+
 class TestIncompleteProfiles(LocalServerCase):
     def test_a_partial_profile_fails_with_a_message_not_a_traceback(self):
         profiles.save_profile('local', {'instance_url': 'http://127.0.0.1:9005', 'container': 'aito'})

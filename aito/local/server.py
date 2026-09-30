@@ -107,16 +107,31 @@ class ServerConfig:
         the image, and a fallback SQL port stays put.
         """
         stored = profiles.load_profile(name) or {}
-        pick = lambda key, default: given.get(key) or stored.get(key) or default  # noqa: E731
+        if stored.get('instance_url') and 'container' not in stored:
+            # a profile from `aito configure` (a cloud or other instance): never overwrite it
+            raise LocalServerError(
+                f"profile '{name}' already holds credentials for {stored['instance_url']} (from `aito "
+                f"configure`); `aito start` would overwrite them. Use another --profile.")
+
+        def pick(key, default):
+            if given.get(key) is not None:
+                return given[key]
+            return stored.get(key) or default
         try:
-            return cls(profile=name,
-                       container=pick('container', default_container(name)),
-                       volume=pick('volume', default_volume(name)),
-                       image=pick('image', PINNED_IMAGE),
-                       port=int(pick('port', DEFAULT_PORT)),
-                       sql_port=int(pick('sql_port', DEFAULT_SQL_PORT)))
+            cfg = cls(profile=name,
+                      container=pick('container', default_container(name)),
+                      volume=pick('volume', default_volume(name)),
+                      image=pick('image', PINNED_IMAGE),
+                      port=int(pick('port', DEFAULT_PORT)),
+                      sql_port=int(pick('sql_port', DEFAULT_SQL_PORT)))
         except ValueError:
             raise LocalServerError(f"profile '{name}' has a non-numeric port; pass --port / --sql-port")
+        for what, port in (('--port', cfg.port), ('--sql-port', cfg.sql_port)):
+            if not 0 < port < 65536:
+                raise LocalServerError(f"{what} {port} is not a usable port (1-65535)")
+        if not cfg.container or not cfg.volume or not cfg.image:
+            raise LocalServerError("--container, --volume and --image may not be empty")
+        return cfg
 
 
 def stored_keys(name: str) -> Dict[str, str]:
@@ -444,6 +459,9 @@ def stop(cfg: ServerConfig) -> bool:
         return False
     if not _is_managed(info):
         raise LocalServerError(f"'{cfg.container}' was not started by `aito start`; not stopping it")
+    owner = (info.get('Config', {}).get('Labels') or {}).get(PROFILE_LABEL)
+    if owner and owner != cfg.profile:
+        raise LocalServerError(f"'{cfg.container}' belongs to profile '{owner}'; use `aito stop --profile {owner}`")
     _docker('stop', cfg.container)
     return True
 
