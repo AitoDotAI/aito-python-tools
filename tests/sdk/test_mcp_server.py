@@ -8,7 +8,9 @@ description tells an agent about when to use it and when not.
 import asyncio
 import json
 import os
+import re
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from tests.cases import BaseTestCase
@@ -154,6 +156,17 @@ class TestWrites(BaseTestCase):
 
 
 @unittest.skipIf(mcp_server is None, 'the mcp extra is not installed')
+class TestMain(BaseTestCase):
+    def test_no_instance_configured_exits_with_the_sdks_hint(self):
+        from aito.local.profiles import NoCredentialsError
+        with mock.patch('aito.v2.client.resolve_credentials',
+                        side_effect=NoCredentialsError('run `aito start` to start a local instance')):
+            with self.assertRaises(SystemExit) as ctx:
+                mcp_server.main()
+        self.assertIn('aito start', str(ctx.exception))
+
+
+@unittest.skipIf(mcp_server is None, 'the mcp extra is not installed')
 class TestWhenToUse(BaseTestCase):
     """the descriptions are where an agent learns when Aito fits and when not"""
 
@@ -183,6 +196,10 @@ class TestWhenToUse(BaseTestCase):
         self.assertIn('LINK target', self.desc['recommend'])
         self.assertIn('prefer predict', self.desc['recommend'])
 
+    def test_evaluate_says_how_to_choose_a_threshold(self):
+        self.assertIn('"select": ["accuracy", "cases"]', self.desc['evaluate'])
+        self.assertIn('threshold', self.desc['evaluate'])
+
     def test_match_names_its_current_non_fit(self):
         self.assertIn('no shared history to a catalogue', self.desc['match'])
 
@@ -198,3 +215,33 @@ class TestWhenToUse(BaseTestCase):
         for name, text in {**self.desc, 'instructions': mcp_server.INSTRUCTIONS}.items():
             with self.subTest(name):
                 self.assertNotIn('calibrated', text.lower())
+
+
+SKILL = Path(__file__).resolve().parents[2] / 'claude-plugin' / 'skills' / 'add-predictive-feature' / 'SKILL.md'
+
+
+@unittest.skipIf(mcp_server is None, 'the mcp extra is not installed')
+class TestSkillMatchesTheServer(BaseTestCase):
+    """the plugin's skill and the server quote the same page; keep them word for word"""
+
+    def setUp(self):
+        super().setUp()
+        # compare words, not layout: the skill wraps its lines and bolds its headlines
+        self.skill = ' '.join(SKILL.read_text().replace('**', '').replace('`', '').split())
+
+    def test_fit_and_non_fit_lines_are_the_same(self):
+        for line in (mcp_server.FIT + '\n' + mcp_server.NON_FIT).splitlines():
+            numbered = re.match(r'\d\. (.*?\.)( |$)', line)
+            if numbered:
+                with self.subTest(line):
+                    self.assertIn(numbered.group(1).replace('`', ''), self.skill)
+
+    def test_checklist_and_separation_are_the_same(self):
+        self.assertIn(' '.join(mcp_server.SEPARATION.replace('`', '').split()), self.skill)
+        for line in mcp_server.CHECKLIST.splitlines()[1:]:
+            question = line.split('?')[0].lstrip('- ')
+            with self.subTest(question):
+                self.assertIn(question, self.skill)
+
+    def test_no_calibration_claim(self):
+        self.assertNotIn('calibrated', self.skill.lower())

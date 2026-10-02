@@ -11,7 +11,9 @@ return the response. Inference results carry ``$p`` and a ``$why`` flattened to 
 base rate and the lift of each piece of evidence. Writes (``put_schema``,
 ``upload_rows``) are refused unless ``AITO_MCP_ALLOW_WRITES=1``: read-only by default.
 
-Run: ``AITO_INSTANCE_URL=... AITO_API_KEY=... aito-mcp`` (stdio).
+Run: ``aito-mcp`` (stdio). It finds the instance the way the SDK does: ``AITO_URL``
+(or ``AITO_INSTANCE_URL``) and ``AITO_API_KEY``, else the active profile, which
+``aito start`` writes for a local instance.
 """
 
 import math
@@ -26,17 +28,18 @@ except ImportError:  # mcp 1.x
     from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
+from aito.local.profiles import NoCredentialsError
 from aito.v2 import AitoClientV2, AitoV2Error
 
 WRITES_ENV = 'AITO_MCP_ALLOW_WRITES'
 
 FIT = """Use Aito when:
 1. The decision repeats, and your own history knows the answer. (Which GL account an invoice goes to, who approves it, which category a ticket belongs to, which product a customer buys next.)
-2. You need to know how sure the answer is: automate the confident cases, ask a person in the middle, step back when unsure.
+2. You need to know how sure the answer is. Automate the confident cases, ask a person in the middle, step back when unsure.
 3. The data is relational, sparse or changing. A correction you write counts in the next query, with no retraining step.
-4. You need many predictions, not one: a prediction behind every field, list and search, without a model or pipeline per use case or per customer.
+4. You need many predictions, not one. A prediction behind every field, list and search, without a model or pipeline per use case or per customer.
 5. Matching that repeats against your own labelled history.
-6. An agent needs grounded tools: the likely answer and its confidence, or a shortlist of options before it reasons."""
+6. An agent needs grounded tools. The likely answer and its confidence, or a shortlist of options before it reasons."""
 
 NON_FIT = """Don't use Aito when (or not yet):
 1. You need open-ended language understanding or generation. Use a language model; an LLM with retrieval (RAG) is more accurate on open text.
@@ -204,7 +207,7 @@ Don't use when: raw full-text search at very large scale is the whole job (a ded
 Use when: before wiring a prediction into an app or an automation, and to choose the confidence threshold for act / suggest / ask a person. Run it once per use case, and again when the data changes a lot.
 Don't use when: you only need one prediction now (use predict).
 
-`query` is a v2 _evaluate body: {"test": <which rows to hold out>, "evaluate": <a _predict body>}, e.g. {"test": {"$index": {"$mod": [4, 0]}}, "evaluate": {"from": "invoices", "where": {"vendor": {"$get": "vendor"}, "description": {"$get": "description"}}, "predict": "gl_account"}}. It can take minutes on a large table.""")
+`query` is a v2 _evaluate body: {"test": <which rows to hold out>, "evaluate": <a _predict body>}, e.g. {"test": {"$index": {"$mod": [4, 0]}}, "evaluate": {"from": "invoices", "where": {"vendor": {"$get": "vendor"}, "description": {"$get": "description"}}, "predict": "gl_account"}}. Add "select": ["accuracy", "cases"] to get each held-out row's top $value and $p and whether it was right: sort the cases by $p and pick the lowest threshold whose accuracy above it meets the user's target. Hold out only rows whose outcome is known. It can take minutes on a large table.""")
     def evaluate(query: Dict[str, Any]) -> Any:
         try:
             response = client.request('POST', '/_evaluate', query, timeout=600.0)
@@ -253,10 +256,10 @@ Derive the schema from the user's existing table: one column per field, with typ
 
 def main() -> None:
     """``aito-mcp``: serve the tools over stdio"""
-    url, key = os.environ.get('AITO_INSTANCE_URL'), os.environ.get('AITO_API_KEY')
-    if not url or not key:
-        raise SystemExit('aito-mcp needs AITO_INSTANCE_URL and AITO_API_KEY in its environment.')
-    client = AitoClientV2(url, key, check_credentials=False)
+    try:
+        client = AitoClientV2(check_credentials=False)
+    except NoCredentialsError as e:
+        raise SystemExit(f'aito-mcp: {e}') from e
     build_server(client).run()
 
 
