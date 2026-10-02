@@ -2,5 +2,6 @@
 # (Every sdist up to 0.6.3 shipped without them and fails with FileNotFoundError.)
 include requirements/base.txt
 include requirements/cli.txt
+include requirements/mcp.txt
 include README.rst
 include LICENSE
