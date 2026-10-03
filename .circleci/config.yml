@@ -53,6 +53,8 @@ commonYAMLStructure:
     run:
       name: create virtualenv and install dependencies
       command: |
+        # a cached venv whose interpreter link broke (the image's Python moved) is rebuilt
+        if [ -d venv ] && ! venv/bin/python -c '' 2>/dev/null; then rm -rf venv; fi
         python -m venv venv
         . venv/bin/activate
         pip install --upgrade pip
@@ -70,6 +72,8 @@ commonYAMLStructure:
     run:
       name: create virtualenv and install dependencies
       command: |
+        # a cached venv whose interpreter link broke (the image's Python moved) is rebuilt
+        if [ -d venv ] && ! venv/bin/python -c '' 2>/dev/null; then rm -rf venv; fi
         python -m venv venv
         . venv/bin/activate
         pip install --upgrade pip
@@ -217,9 +221,12 @@ commonYAMLStructure:
     run:
       name: install safety and security check dependencies
       command: |
-        . venv/bin/activate
-        pip install safety
-        safety check
+        # safety runs in a venv of its own and scans the project venv's frozen list. Installed
+        # into the project venv, its HTTP stack (httpx) collided with mcp 2.x's httpx2 there.
+        venv/bin/pip freeze --exclude-editable > /tmp/frozen-requirements.txt
+        python -m venv /tmp/safety-venv
+        /tmp/safety-venv/bin/pip install safety
+        /tmp/safety-venv/bin/safety check -r /tmp/frozen-requirements.txt
 
 jobs:
   run_dependencies_security_check:
