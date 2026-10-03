@@ -51,7 +51,7 @@ For a multi-tenant app this means one collection per customer (for example
 
 ## 3. Get an instance
 
-- Local, for development: `pip install "aitoai[cli]"`, then `aito start` (needs Docker).
+- Local, for development: `pip install aitoai`, then `aito start` (needs Docker).
   It stores the URL and keys in a profile that the SDK and the `aito` MCP server find
   on their own.
 - An existing instance: set `AITO_URL` and `AITO_API_KEY`.
