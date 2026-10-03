@@ -66,6 +66,25 @@ prints the keys again (``--rotate`` replaces them), ``aito logs`` shows its log 
 ``examples/v2_quickstart.py`` is a runnable end-to-end example that creates a collection,
 loads it, predicts, explains, evaluates and drops it again.
 
+Use Aito from an AI assistant (MCP)
+-----------------------------------
+
+``pip install 'aitoai[mcp]'`` (Python 3.10+) adds ``aito-mcp``, an MCP server for coding
+agents and assistants. Its tools are predict, recommend, relate, match, search, query,
+evaluate and schema/upload. Each tool's description says when Aito fits and when another
+tool (a language model, a trained model, a search engine) is the better choice. Results
+carry ``$p`` and a flattened ``$why``. The server finds the instance the same way as
+``aito.Client()``. It is read-only unless started with ``AITO_MCP_ALLOW_WRITES=1``.
+
+  .. code-block:: console
+
+    $ claude mcp add aito -- aito-mcp      # Claude Code; any MCP client runs `aito-mcp` over stdio
+
+``claude-plugin/`` is a Claude Code plugin with this server and a skill,
+``add-predictive-feature``. The skill walks an agent through a fit check, a schema from
+an existing table, a first prediction, a threshold chosen with ``_evaluate``, and
+act / assist / abstain wiring.
+
 
 Support / Feedback
 ------------------

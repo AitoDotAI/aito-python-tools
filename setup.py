@@ -50,7 +50,8 @@ setup(
     },
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=fetch_requirements(REQUIREMENTS_DIR / 'base.txt'),
-    extras_require={'cli': fetch_requirements(REQUIREMENTS_DIR / 'cli.txt')},
+    extras_require={'cli': fetch_requirements(REQUIREMENTS_DIR / 'cli.txt'),
+                    'mcp': fetch_requirements(REQUIREMENTS_DIR / 'mcp.txt')},
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -71,7 +72,8 @@ setup(
     python_requires='>=3.9',
     entry_points={
         'console_scripts': [
-            'aito = aito.cli:main'
+            'aito = aito.cli:main',
+            'aito-mcp = aito.mcp:main',
         ]
     }
 )

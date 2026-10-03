@@ -4,6 +4,11 @@ Changelog
 Unreleased
 ----------
 
+- ``aito-mcp`` (``pip install 'aitoai[mcp]'``, Python 3.10+): an MCP server over the v2 API for AI
+  assistants and coding agents. Ten tools (predict, recommend, relate, match, search, query, evaluate,
+  get_schema, put_schema, upload_rows), each saying when to use it and when not. Inference results
+  carry ``$p`` and a flattened ``$why``. Writes are refused unless ``AITO_MCP_ALLOW_WRITES=1``.
+- ``claude-plugin/``: a Claude Code plugin with that server and the skill ``add-predictive-feature``.
 - ``Client.upload_csv(name, source)``: a CSV file into a v2 collection in one call. A new collection
   gets the engine's CSV typing, with free text as ``Text``: the engine imports the file itself where it
   supports ``text/csv`` (aito-core #1535), and older engines get the same rules applied in the SDK. An

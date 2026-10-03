@@ -1,0 +1,10 @@
+{
+  "name": "aito",
+  "version": "0.1.0",
+  "description": "Add a predictive feature with Aito, a predictive database, where it fits and only there: a fit check that also says when to use something else, a schema from your existing table, a first prediction, a threshold checked on your own held-out data, and act / assist / abstain wiring. Includes the aito MCP server.",
+  "author": { "name": "Aito", "url": "https://aito.ai" },
+  "homepage": "https://aito.ai/docs/api/v2/",
+  "repository": "https://github.com/AitoDotAI/aito-python-tools",
+  "license": "MIT",
+  "keywords": ["aito", "prediction", "classification", "autofill", "mcp"]
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "aito": {
+      "command": "uvx",
+      "args": ["--from", "aitoai[mcp]", "aito-mcp"]
+    }
+  }
+}
