@@ -155,6 +155,17 @@ class TestWrites(BaseTestCase):
                                  name not in WRITES)
 
 
+class TestEntryPointWithoutTheExtra(BaseTestCase):
+    def test_aito_mcp_names_the_extra_when_mcp_is_missing(self):
+        import aito.mcp
+        missing = ModuleNotFoundError("No module named 'mcp'", name='mcp')
+        with mock.patch.dict('sys.modules', {'aito.mcp.server': None}), \
+                mock.patch('builtins.__import__', side_effect=missing):
+            with self.assertRaises(SystemExit) as ctx:
+                aito.mcp.main()
+        self.assertIn("pip install 'aitoai[mcp]'", str(ctx.exception))
+
+
 @unittest.skipIf(mcp_server is None, 'the mcp extra is not installed')
 class TestMain(BaseTestCase):
     def test_no_instance_configured_exits_with_the_sdks_hint(self):

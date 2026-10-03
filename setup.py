@@ -73,7 +73,7 @@ setup(
     entry_points={
         'console_scripts': [
             'aito = aito.cli:main',
-            'aito-mcp = aito.mcp.server:main',
+            'aito-mcp = aito.mcp:main',
         ]
     }
 )

@@ -1,4 +1,5 @@
-# Everything, for development and CI: the base install plus the [cli] extra.
-# setup.py does NOT read this file — it reads base.txt and cli.txt.
+# Everything, for development and CI: the base install plus the [cli] and [mcp] extras.
+# setup.py does NOT read this file — it reads base.txt, cli.txt and mcp.txt.
 -r base.txt
 -r cli.txt
+-r mcp.txt
