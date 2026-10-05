@@ -245,3 +245,58 @@ class TestSharedLocation(BaseTestCase):
             profiles._write_private(path, config)
             write_credentials_file_profile('local', 'https://x', 'rw2', credentials_file_path=path)
             self.assertNotIn('read_only_api_key', profiles._read(path)['local'])
+
+
+class TestImageForTheHostsCpu(BaseTestCase):
+    """a copy of the pinned image pulled for another CPU must not shadow the host's variant
+
+    Found preparing 1.2.0 (5.10): this machine held an arm64 copy of the multi-arch
+    v2.11.2 (pulled with --platform elsewhere), and `aito start` on the amd64 host ran it
+    and failed with 'exec format error'. The image was present, so nothing was pulled.
+    """
+    IMAGE = 'ghcr.io/aitohq/aito:v2.11.2@sha256:abc'
+
+    def ensure(self, host, local_arch, pull_ok=True, present=True):
+        calls = []
+        arch = {'now': local_arch}
+
+        def docker(*args, check=True, capture=True):
+            calls.append(args)
+            if args[:2] == ('version', '--format'):
+                return mock.Mock(returncode=0, stdout=host + '\n', stderr='')
+            if args[:3] == ('image', 'inspect', '--format'):
+                return mock.Mock(returncode=0, stdout=arch['now'] + '\n', stderr='')
+            if args[:2] == ('pull', '--platform'):
+                if pull_ok:
+                    arch['now'] = host
+                return mock.Mock(returncode=0 if pull_ok else 1, stdout='',
+                                 stderr='' if pull_ok else 'no matching manifest')
+            return mock.Mock(returncode=0, stdout='', stderr='')
+
+        with mock.patch.object(server, '_docker', docker), \
+                mock.patch.object(server, '_image_present', lambda image: present):
+            server._ensure_image(self.IMAGE, log=lambda m: None)
+        return calls
+
+    def test_a_copy_for_another_cpu_is_replaced_by_the_hosts_variant(self):
+        # Docker's classic store maps a digest to one image ("cannot overwrite digest"):
+        # the stale reference goes first, then the host's variant is pulled
+        calls = self.ensure(host='amd64', local_arch='arm64')
+        self.assertEqual([c for c in calls if c[0] in ('pull', 'image') and c[1] in ('rm', '--platform')],
+                         [('image', 'rm', self.IMAGE), ('pull', '--platform', 'linux/amd64', self.IMAGE)])
+
+    def test_the_hosts_own_variant_is_left_alone(self):
+        calls = self.ensure(host='amd64', local_arch='amd64')
+        self.assertFalse([c for c in calls if c[0] == 'pull'])
+
+    def test_a_single_arch_image_is_pulled_back_and_falls_back_to_emulation(self):
+        # no variant for this host: that pull fails, the image is pulled back as it was, and
+        # start goes on under emulation (the start note explains)
+        calls = self.ensure(host='amd64', local_arch='arm64', pull_ok=False)
+        self.assertEqual([c for c in calls if c[0] in ('pull', 'image') and c[1] != 'inspect'],
+                         [('image', 'rm', self.IMAGE), ('pull', '--platform', 'linux/amd64', self.IMAGE),
+                          ('pull', self.IMAGE)])
+
+    def test_a_missing_image_is_pulled_as_before(self):
+        calls = self.ensure(host='amd64', local_arch='', present=False)
+        self.assertEqual([c for c in calls if c[0] == 'pull'], [('pull', self.IMAGE)])

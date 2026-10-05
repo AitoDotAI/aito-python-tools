@@ -95,7 +95,9 @@ def main():
 
     old_url, old_key = client.instance_url, client.api_key
     aito('keys', '--rotate')
-    assert status_of(old_url, old_key) == 403, "the old key still works after --rotate"
+    # a refused key is 403 on engines up to v2.11.1 and 401 from v2.11.2
+    refused = status_of(old_url, old_key)
+    assert refused in (401, 403), f"the old key still works after --rotate (HTTP {refused})"
     rotated = sdk.Client()
     assert rotated.api_key != old_key
     again = rotated.predict(from_table='invoices', where={'vendor': 'Canon'}, predict='gl').first

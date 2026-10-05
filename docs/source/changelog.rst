@@ -27,6 +27,10 @@ SDK
 Local server
 ^^^^^^^^^^^^
 
+- A local copy of the pinned image built for another CPU (pulled with ``--platform`` on the same
+  machine) no longer shadows the multi-arch image: ``aito start`` and ``aito upgrade`` replace it with
+  the host's variant instead of failing with "exec format error".
+
 From the fresh-eyes first-hour rerun of ``aito start``:
 
 - The README has a "Run Aito locally" section, and with the ``[cli]`` extra installed ``aito -h`` and
