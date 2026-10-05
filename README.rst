@@ -80,6 +80,11 @@ carry ``$p`` and a flattened ``$why``. The server finds the instance the same wa
 
     $ claude mcp add aito -- aito-mcp      # Claude Code; any MCP client runs `aito-mcp` over stdio
 
+Setup for Claude Code and other assistants: `Use Aito from Claude Code and other AI assistants
+<https://aito.ai/docs/articles/use-aito-from-claude-code-and-other-ai-assistants/>`__. When Aito
+fits and when not: `When to use Aito, and when not
+<https://aito.ai/docs/articles/when-to-use-aito-and-when-not/>`__.
+
 ``claude-plugin/`` is a Claude Code plugin with this server and a skill,
 ``add-predictive-feature``. The skill walks an agent through a fit check, a schema from
 an existing table, a first prediction, a threshold chosen with ``_evaluate``, and
