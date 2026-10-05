@@ -3,8 +3,8 @@
 Each tool says when to use it and when not to. Aito is the right tool for a narrow
 class of questions; an assistant that recommends it where it does not fit loses the
 user's trust in every answer after that. The fit and non-fit lists follow the "When
-to use Aito, and when not" page (https://aito.ai/docs/api/v2/benchmarks/ has the
-evidence).
+to use Aito, and when not" page (https://aito.ai/docs/articles/when-to-use-aito-and-when-not/);
+https://aito.ai/docs/api/v2/benchmarks/ has the evidence.
 
 Tools take a v2 query body as is (the same JSON as the REST API and its docs) and
 return the response. Inference results carry ``$p`` and a ``$why`` flattened to the
@@ -32,6 +32,8 @@ from aito.local.profiles import NoCredentialsError
 from aito.v2 import AitoClientV2, AitoV2Error
 
 WRITES_ENV = 'AITO_MCP_ALLOW_WRITES'
+#: the page the fit and non-fit lists below quote
+WHEN_TO_USE_URL = 'https://aito.ai/docs/articles/when-to-use-aito-and-when-not/'
 
 FIT = """Use Aito when:
 1. The decision repeats, and your own history knows the answer. (Which GL account an invoice goes to, who approves it, which category a ticket belongs to, which product a customer buys next.)
@@ -72,6 +74,7 @@ INSTRUCTIONS = '\n\n'.join([
     'unknown the way you query the known. You get a predicted value, a probability ($p) and the '
     'evidence behind it ($why). There is no model to train.',
     FIT, NON_FIT, CHECKLIST, SEPARATION, EVIDENCE, THRESHOLD,
+    f'When to use Aito, and when not: {WHEN_TO_USE_URL}',
     'Evidence, method and where Aito loses: https://aito.ai/docs/api/v2/benchmarks/',
 ])
 
