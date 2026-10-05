@@ -1,0 +1,23 @@
+# The `aito-mcp` PyPI package: a name an MCP client can run as `uvx aito-mcp`.
+# All code lives in aitoai (aito.mcp); this package only pins it with the [mcp] extra and
+# exposes the command. Its version moves with aitoai's: release the two together.
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aito-mcp"
+version = "1.2.0"
+description = "MCP server for Aito, the predictive database: says when Aito fits and when not"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = ["aitoai[mcp]==1.2.0"]
+authors = [{name = "aito.ai", email = "admin@aito.ai"}]
+urls = {Homepage = "https://aito.ai/docs/api/v2/", Source = "https://github.com/AitoDotAI/aito-python-tools"}
+
+[project.scripts]
+aito-mcp = "aito.mcp:main"
+
+[tool.setuptools]
+packages = ["aito_mcp"]

@@ -1,0 +1,12 @@
+{
+  "name": "aito",
+  "owner": {"name": "Aito", "url": "https://aito.ai"},
+  "metadata": {"description": "Aito plugins for Claude Code"},
+  "plugins": [
+    {
+      "name": "aito",
+      "source": "./claude-plugin",
+      "description": "Add a predictive feature with Aito where it fits, and say so where it does not: a fit check, a schema from your table, a threshold checked on held-out rows, and the aito MCP server."
+    }
+  ]
+}

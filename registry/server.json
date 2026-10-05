@@ -1,0 +1,28 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.AitoDotAI/aito",
+  "title": "Aito",
+  "description": "Predictions over your own data with $p and $why, no model training; says when Aito does not fit.",
+  "repository": {
+    "url": "https://github.com/AitoDotAI/aito-python-tools",
+    "source": "github",
+    "subfolder": "packaging/aito-mcp"
+  },
+  "websiteUrl": "https://aito.ai/docs/api/v2/",
+  "version": "1.2.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "aito-mcp",
+      "version": "1.2.0",
+      "runtimeHint": "uvx",
+      "transport": {"type": "stdio"},
+      "environmentVariables": [
+        {"name": "AITO_URL", "description": "The Aito instance URL. Optional: without it the server uses the `aito start` profile.", "isRequired": false},
+        {"name": "AITO_API_KEY", "description": "The instance's API key (a read-only key is enough unless writes are enabled).", "isRequired": false, "isSecret": true},
+        {"name": "AITO_MCP_ALLOW_WRITES", "description": "Set to 1 to enable put_schema and upload_rows. Off by default.", "isRequired": false}
+      ]
+    }
+  ]
+}
