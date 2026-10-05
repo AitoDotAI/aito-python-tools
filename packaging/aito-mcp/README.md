@@ -14,6 +14,12 @@ the profile `aito start` writes for a local Aito (`pip install aitoai`, then `ai
 
     claude mcp add aito -- uvx aito-mcp
 
+Setup for Claude Code and other assistants:
+https://aito.ai/docs/articles/use-aito-from-claude-code-and-other-ai-assistants/
+
+When Aito fits, and when another tool is the better choice:
+https://aito.ai/docs/articles/when-to-use-aito-and-when-not/
+
 The code lives in [aitoai](https://pypi.org/project/aitoai/) (`aito.mcp`); this package
 only installs it with the `mcp` extra. Source: https://github.com/AitoDotAI/aito-python-tools
 
