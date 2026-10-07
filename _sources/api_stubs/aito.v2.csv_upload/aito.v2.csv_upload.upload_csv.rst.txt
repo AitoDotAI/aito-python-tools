@@ -1,0 +1,6 @@
+aito.v2.csv\_upload.upload\_csv
+===============================
+
+.. currentmodule:: aito.v2.csv_upload
+
+.. autofunction:: upload_csv

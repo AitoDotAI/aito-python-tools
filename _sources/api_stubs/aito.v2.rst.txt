@@ -35,6 +35,7 @@
    :recursive:
   
      client
+     csv_upload
      errors
      responses
 

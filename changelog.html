@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Changelog &mdash; aito-python-sdk 1.1.0 documentation</title>
+  <title>Changelog &mdash; aito-python-sdk 1.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fc837d61"></script>
+      <script src="_static/documentation_options.js?v=6efca38a"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -65,48 +65,53 @@
 <p class="caption" role="heading"><span class="caption-text">Additional Materials</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">1.1.0</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">1.2.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sdk">SDK</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#local-server">Local server</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">1.1.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cli">CLI</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#deprecation">Deprecation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#local-server-and-profiles">Local server and profiles</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sdk">SDK</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">1.0.0</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#migrating">Migrating</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id3">SDK</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">0.7.0</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id5">Migrating</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id6">SDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">1.0.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#migrating">Migrating</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">SDK</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">0.7.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Migrating</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">SDK</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#docs">Docs</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id7">0.6.3</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id8">SDK</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id9">0.6.3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">SDK</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#fixed">Fixed</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id9">0.6.2</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id10">SDK</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id11">Fixed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">0.6.2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id12">SDK</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id13">Fixed</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id12">0.6.1</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id13">SDK</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id14">0.6.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id15">SDK</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#added">Added</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#engine-v2-7-0-behaviour">Engine v2.7.0 behaviour</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id14">0.6.0</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id15">SDK</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id16">0.6.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id17">SDK</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#aito-v2-client">Aito v2 client</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#errors-and-warnings">Errors and warnings</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#known-api-behaviour-handled-by-the-client">Known API behaviour handled by the client</a></li>
@@ -115,65 +120,65 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id16">0.5.4</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id17">SDK</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id18">0.5.4</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id19">SDK</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#schema-type-support">Schema Type Support</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#improved-schema-inference">Improved Schema Inference</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id18">0.5.3</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id20">0.5.3</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#general">General</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id19">0.5.2</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id20">SDK</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#id21">0.5.1</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id21">0.5.2</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id22">SDK</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id23">0.5.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id24">0.4.3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id25">0.4.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id26">0.4.1</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id27">SDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id23">0.5.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id24">SDK</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id28">0.4.0</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id29">SDK</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id25">0.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id26">0.4.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id27">0.4.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id28">0.4.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id29">SDK</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id30">0.4.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id31">SDK</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#aitoclient">AitoClient</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#api-functions">API functions</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#id30">CLI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id32">CLI</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id31">0.3.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id32">0.3.0</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id33">SDK</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id33">0.3.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id34">0.3.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id35">SDK</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#refactoring">Refactoring</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#new-features">New features</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id34">Deprecation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id36">Deprecation</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#id35">CLI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id37">CLI</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id36">0.2.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id37">0.2.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id38">0.2.0</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id39">CLI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id40">SDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id38">0.2.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id39">0.2.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id40">0.2.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id41">CLI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id42">SDK</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id41">0.1.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id42">0.1.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id43">0.1.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id44">0.0.4</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id45">0.0.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id43">0.1.2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id44">0.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id45">0.1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id46">0.0.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id47">0.0.3</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="community.html">Useful Links</a></li>
@@ -207,7 +212,51 @@
   <section id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading"></a></h1>
 <section id="id1">
-<h2>1.1.0<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<h2>1.2.0<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">start</span></code> runs engine <strong>v2.11.2</strong>, a multi-arch image: native on Apple Silicon and arm64 Linux
+(1.1.0 pinned v2.11.1, amd64 only, which those hosts ran under emulation). <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">upgrade</span></code> moves an
+existing local server to it, keeping its keys and data.</p>
+<section id="sdk">
+<h3>SDK<a class="headerlink" href="#sdk" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">aito-mcp</span></code> (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'aitoai[mcp]'</span></code>, Python 3.10+): an MCP server over the v2 API for AI
+assistants and coding agents. Ten tools (predict, recommend, relate, match, search, query, evaluate,
+get_schema, put_schema, upload_rows), each saying when to use it and when not. Inference results
+carry <code class="docutils literal notranslate"><span class="pre">$p</span></code> and a flattened <code class="docutils literal notranslate"><span class="pre">$why</span></code>. Writes are refused unless <code class="docutils literal notranslate"><span class="pre">AITO_MCP_ALLOW_WRITES=1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">claude-plugin/</span></code>: a Claude Code plugin with that server and the skill <code class="docutils literal notranslate"><span class="pre">add-predictive-feature</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Client.upload_csv(name,</span> <span class="pre">source)</span></code>: a CSV file into a v2 collection in one call. A new collection
+gets the engine’s CSV typing, with free text as <code class="docutils literal notranslate"><span class="pre">Text</span></code>: the engine imports the file itself where it
+supports <code class="docutils literal notranslate"><span class="pre">text/csv</span></code> (aito-core #1535), and older engines get the same rules applied in the SDK. An
+append converts cells to the declared types and names a bad cell’s row and column before anything
+is sent. <code class="docutils literal notranslate"><span class="pre">aito._csv_types.infer_csv</span></code> shows the types without uploading. Standard library only.</p></li>
+<li><p>The v1 <code class="docutils literal notranslate"><span class="pre">upload-file</span></code> warns when a String column receives free text, which it would treat as an
+exact-match category.</p></li>
+</ul>
+</section>
+<section id="local-server">
+<h3>Local server<a class="headerlink" href="#local-server" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>A local copy of the pinned image built for another CPU (pulled with <code class="docutils literal notranslate"><span class="pre">--platform</span></code> on the same
+machine) no longer shadows the multi-arch image: <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">upgrade</span></code> replace it with
+the host’s variant instead of failing with “exec format error”.</p></li>
+</ul>
+<p>From the fresh-eyes first-hour rerun of <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">start</span></code>:</p>
+<ul class="simple">
+<li><p>The README has a “Run Aito locally” section, and with the <code class="docutils literal notranslate"><span class="pre">[cli]</span></code> extra installed <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">-h</span></code> and
+<code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">list</span></code> name the local server commands.</p></li>
+<li><p>The port-conflict hint keeps <code class="docutils literal notranslate"><span class="pre">--profile</span></code>. Following it no longer restarts the <code class="docutils literal notranslate"><span class="pre">local</span></code> server on
+another port. A new profile other than <code class="docutils literal notranslate"><span class="pre">local</span></code> starts on the first free port after 9005.</p></li>
+<li><p>Messages name the cause:
+- <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">status</span></code> on a stopped server says to run <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">start</span></code>;
+- a port held by another profile’s server says so;
+- the printed curl line works on its own;
+- a refused connection to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> hints <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">status</span></code>;
+- an installed module that fails to import is no longer reported as “not installed”.</p></li>
+</ul>
+</section>
+</section>
+<section id="id2">
+<h2>1.1.0<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">aito</span></code> command-line tool can use the <strong>v2 API</strong>, as an opt-in. Nothing changes for
 existing scripts: the CLI still uses v1 unless told otherwise, and will until 2.0.</p>
 <section id="cli">
@@ -252,8 +301,8 @@ environment is no longer sent the key of a local server’s profile (<code class
 <li><p><code class="docutils literal notranslate"><span class="pre">~/.config/aito/credentials</span></code> is written owner-only (0600) by <code class="docutils literal notranslate"><span class="pre">aito</span> <span class="pre">configure</span></code> too, and follows <code class="docutils literal notranslate"><span class="pre">XDG_CONFIG_HOME</span></code>.</p></li>
 </ul>
 </section>
-<section id="sdk">
-<h3>SDK<a class="headerlink" href="#sdk" title="Link to this heading"></a></h3>
+<section id="id3">
+<h3>SDK<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">jsonschema</span></code> is accepted from 3 up to (not including) 5. The <code class="docutils literal notranslate"><span class="pre">~=3.0</span></code> pin from 2019 conflicted
 with most current environments, which use 4.x. Tested on 3.2.0 and 4.26.0.</p></li>
@@ -265,8 +314,8 @@ were found”, or, on v1, with the catch-all “please check your credentials”
 </ul>
 </section>
 </section>
-<section id="id2">
-<h2>1.0.0<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<section id="id4">
+<h2>1.0.0<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
 <p><strong>Breaking.</strong> <code class="docutils literal notranslate"><span class="pre">aito.Client</span></code> is now the <strong>v2</strong> client, and the paths deprecated in 0.7 are
 removed. This is the major release that 0.7 announced; there is no other breaking change.</p>
 <section id="migrating">
@@ -301,8 +350,8 @@ removed. This is the major release that 0.7 announced; there is no other breakin
 </table>
 <p>Importing a removed path raises an <code class="docutils literal notranslate"><span class="pre">ImportError</span></code> that names its replacement.</p>
 </section>
-<section id="id3">
-<h3>SDK<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<section id="id5">
+<h3>SDK<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">aito.Client</span></code> resolves to <code class="docutils literal notranslate"><span class="pre">aito.v2.Client</span></code> (<code class="docutils literal notranslate"><span class="pre">DEFAULT_API_VERSION</span> <span class="pre">=</span> <span class="pre">'v2'</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">aito.client</span></code>, <code class="docutils literal notranslate"><span class="pre">aito.client.v2</span></code> and <code class="docutils literal notranslate"><span class="pre">aito.api</span></code> removed.</p></li>
@@ -311,13 +360,13 @@ v2 support will arrive as an opt-in, and the CLI’s default moves to v2 only in
 </ul>
 </section>
 </section>
-<section id="id4">
-<h2>0.7.0<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<section id="id6">
+<h2>0.7.0<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
 <p>Each Aito API version now has its own package, and <code class="docutils literal notranslate"><span class="pre">aito.Client</span></code> names the default.
 <strong>Nothing changes meaning in this release</strong>: every import that worked in 0.6 still works and
 resolves to the same object. The breaking change is to <em>installation</em> — see below.</p>
-<section id="id5">
-<h3>Migrating<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<section id="id7">
+<h3>Migrating<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Before 0.7 (deprecated, removed in 1.0)</p></th>
@@ -350,8 +399,8 @@ argcomplete — which moved to <code class="docutils literal notranslate"><span 
 install command instead of a traceback, and the affected functions raise an <code class="docutils literal notranslate"><span class="pre">ImportError</span></code>
 that names it.</p>
 </section>
-<section id="id6">
-<h3>SDK<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<section id="id8">
+<h3>SDK<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">aito.v1</span></code> and <code class="docutils literal notranslate"><span class="pre">aito.v2</span></code> packages. Their meaning never changes. <code class="docutils literal notranslate"><span class="pre">aito.v2</span></code> no longer
 lives under <code class="docutils literal notranslate"><span class="pre">aito.client</span></code>, so importing it loads no part of the v1 stack at all.</p></li>
@@ -378,11 +427,11 @@ accepts nothing but the per-candidate frequency <code class="docutils literal no
 </ul>
 </section>
 </section>
-<section id="id7">
-<h2>0.6.3<a class="headerlink" href="#id7" title="Link to this heading"></a></h2>
+<section id="id9">
+<h2>0.6.3<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">aito</span></code> CLI no longer imports pandas before it can print its own version.</p>
-<section id="id8">
-<h3>SDK<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<section id="id10">
+<h3>SDK<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
 <section id="fixed">
 <h4>Fixed<a class="headerlink" href="#fixed" title="Link to this heading"></a></h4>
 <ul class="simple">
@@ -399,13 +448,13 @@ and the file-reading commands pull it when they run, which is when it is needed.
 </section>
 </section>
 </section>
-<section id="id9">
-<h2>0.6.2<a class="headerlink" href="#id9" title="Link to this heading"></a></h2>
-<p>Importing the v2 client no longer drags in the v1 stack’s heavy dependencies.</p>
-<section id="id10">
-<h3>SDK<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
 <section id="id11">
-<h4>Fixed<a class="headerlink" href="#id11" title="Link to this heading"></a></h4>
+<h2>0.6.2<a class="headerlink" href="#id11" title="Link to this heading"></a></h2>
+<p>Importing the v2 client no longer drags in the v1 stack’s heavy dependencies.</p>
+<section id="id12">
+<h3>SDK<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<section id="id13">
+<h4>Fixed<a class="headerlink" href="#id13" title="Link to this heading"></a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">aito.client.v2</span> <span class="pre">import</span> <span class="pre">AitoClientV2</span></code> no longer imports <strong>pandas</strong>, <strong>numpy</strong>,
 <strong>aiohttp</strong> or <strong>langdetect</strong>. The v2 client is a plain HTTP client whose only
@@ -429,11 +478,11 @@ dependencies – they remain in <code class="docutils literal notranslate"><span
 </section>
 </section>
 </section>
-<section id="id12">
-<h2>0.6.1<a class="headerlink" href="#id12" title="Link to this heading"></a></h2>
+<section id="id14">
+<h2>0.6.1<a class="headerlink" href="#id14" title="Link to this heading"></a></h2>
 <p>Follow-ups from the first real consumer of the v2 client, and from Aito engine v2.7.0.</p>
-<section id="id13">
-<h3>SDK<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<section id="id15">
+<h3>SDK<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
 <section id="added">
 <h4>Added<a class="headerlink" href="#added" title="Link to this heading"></a></h4>
 <ul class="simple">
@@ -468,11 +517,11 @@ is kept for older engines</p></li>
 </section>
 </section>
 </section>
-<section id="id14">
-<h2>0.6.0<a class="headerlink" href="#id14" title="Link to this heading"></a></h2>
+<section id="id16">
+<h2>0.6.0<a class="headerlink" href="#id16" title="Link to this heading"></a></h2>
 <p>This version adds a client for the Aito <strong>v2</strong> API.</p>
-<section id="id15">
-<h3>SDK<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<section id="id17">
+<h3>SDK<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
 <section id="aito-v2-client">
 <h4>Aito v2 client<a class="headerlink" href="#aito-v2-client" title="Link to this heading"></a></h4>
 <ul class="simple">
@@ -529,11 +578,11 @@ collection, loads it, predicts, explains, evaluates and drops it again</p></li>
 </section>
 </section>
 </section>
-<section id="id16">
-<h2>0.5.4<a class="headerlink" href="#id16" title="Link to this heading"></a></h2>
+<section id="id18">
+<h2>0.5.4<a class="headerlink" href="#id18" title="Link to this heading"></a></h2>
 <p>This version adds support for new Aito schema types and improves schema inference accuracy.</p>
-<section id="id17">
-<h3>SDK<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<section id="id19">
+<h3>SDK<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
 <section id="schema-type-support">
 <h4>Schema Type Support<a class="headerlink" href="#schema-type-support" title="Link to this heading"></a></h4>
 <ul class="simple">
@@ -552,8 +601,8 @@ collection, loads it, predicts, explains, evaluates and drops it again</p></li>
 </section>
 </section>
 </section>
-<section id="id18">
-<h2>0.5.3<a class="headerlink" href="#id18" title="Link to this heading"></a></h2>
+<section id="id20">
+<h2>0.5.3<a class="headerlink" href="#id20" title="Link to this heading"></a></h2>
 <p>This version updates Python version support and modernizes the project infrastructure.</p>
 <section id="general">
 <h3>General<a class="headerlink" href="#general" title="Link to this heading"></a></h3>
@@ -565,11 +614,11 @@ collection, loads it, predicts, explains, evaluates and drops it again</p></li>
 </ul>
 </section>
 </section>
-<section id="id19">
-<h2>0.5.2<a class="headerlink" href="#id19" title="Link to this heading"></a></h2>
+<section id="id21">
+<h2>0.5.2<a class="headerlink" href="#id21" title="Link to this heading"></a></h2>
 <p>This version adds support for additional Aito API endpoints and helper classes for data modifications.</p>
-<section id="id20">
-<h3>SDK<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<section id="id22">
+<h3>SDK<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Added <code class="xref py py-func docutils literal notranslate"><span class="pre">estimate()</span></code> function for the <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-estimate">Estimate API</a></p></li>
 <li><p>Added <code class="xref py py-func docutils literal notranslate"><span class="pre">aggregate()</span></code> function for the <a class="reference external" href="https://aito.ai/docs/api/#post-api-v1-aggregate">Aggregate API</a></p></li>
@@ -580,11 +629,11 @@ collection, loads it, predicts, explains, evaluates and drops it again</p></li>
 </ul>
 </section>
 </section>
-<section id="id21">
-<h2>0.5.1<a class="headerlink" href="#id21" title="Link to this heading"></a></h2>
+<section id="id23">
+<h2>0.5.1<a class="headerlink" href="#id23" title="Link to this heading"></a></h2>
 <p>This version adds support for multitenant Aito instances and array datatypes.</p>
-<section id="id22">
-<h3>SDK<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<section id="id24">
+<h3>SDK<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Added support for multitenant instance URLs (e.g., <code class="docutils literal notranslate"><span class="pre">https://shared.aito.ai/db/my-database</span></code>)</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">is_multitenant</span></code> property to <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> to detect multitenant instances</p></li>
@@ -594,13 +643,13 @@ as S3 file upload is not available in multitenant environments</p></li>
 </ul>
 </section>
 </section>
-<section id="id23">
-<h2>0.5.0<a class="headerlink" href="#id23" title="Link to this heading"></a></h2>
+<section id="id25">
+<h2>0.5.0<a class="headerlink" href="#id25" title="Link to this heading"></a></h2>
 <p>Parquet file format support added.</p>
 <p>Library dependencies updated to more modern versions. E.g. Pandas 2 is now supported.</p>
 </section>
-<section id="id24">
-<h2>0.4.3<a class="headerlink" href="#id24" title="Link to this heading"></a></h2>
+<section id="id26">
+<h2>0.4.3<a class="headerlink" href="#id26" title="Link to this heading"></a></h2>
 <blockquote>
 <div><p>This version adds better support for performing jobs on Aito.</p>
 <ul class="simple">
@@ -614,8 +663,8 @@ to avoid timeouts during the operation on non-trivial tables.</p></li>
 </ul>
 </div></blockquote>
 </section>
-<section id="id25">
-<h2>0.4.2<a class="headerlink" href="#id25" title="Link to this heading"></a></h2>
+<section id="id27">
+<h2>0.4.2<a class="headerlink" href="#id27" title="Link to this heading"></a></h2>
 <blockquote>
 <div><p>This version fixes a validation discrepancy between Aito Core and the SDK. Previously the
 SDK has allowed creating tables with names containing whitespaces. This is a validation bug,
@@ -624,8 +673,8 @@ since the validation was performed in a slightly different way, depending on the
 the user tries to create a table with an disallowed name.</p>
 </div></blockquote>
 </section>
-<section id="id26">
-<h2>0.4.1<a class="headerlink" href="#id26" title="Link to this heading"></a></h2>
+<section id="id28">
+<h2>0.4.1<a class="headerlink" href="#id28" title="Link to this heading"></a></h2>
 <p>In this version the data conversions and especially CSV reading have been made more robust
 and lenient.</p>
 <p>Errors regarding large integers have been managed by converting integer fields
@@ -634,8 +683,8 @@ treated by ignoring the additional commas and issuing a warning in the log.</p>
 <p>Schema inference has been improved by inferring String type for the empty columns instead of
 Decimal type. Schema inference no more fails in situations, where the column contains only
 whitespaces.</p>
-<section id="id27">
-<h3>SDK<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<section id="id29">
+<h3>SDK<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
 <p>aito.schema package now contains DataSeriesProperties, which is used to infer a column’s
 Aito datatype. DataSeriesProperties now keeps track of the smallest and the largest
 value in the series in order to infer a type according to the number bounds:</p>
@@ -646,8 +695,8 @@ value in the series in order to infer a type according to the number bounds:</p>
 </div></blockquote>
 </section>
 </section>
-<section id="id28">
-<h2>0.4.0<a class="headerlink" href="#id28" title="Link to this heading"></a></h2>
+<section id="id30">
+<h2>0.4.0<a class="headerlink" href="#id30" title="Link to this heading"></a></h2>
 <p>This version contains changes on how you make requests with the <code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code>.
 In addition to specifying the request method and endpoint as before, you can now use different
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">Request</span> <span class="pre">objects</span></code> or use the endpoint methods in the API,
@@ -655,8 +704,8 @@ i.e: <code class="xref py py-func docutils literal notranslate"><span class="pre
 The client now returns enriched <code class="xref py py-mod docutils literal notranslate"><span class="pre">Response</span> <span class="pre">objects</span></code> instead of JSON as before.</p>
 <p>Helper methods of the AitoClient, e.g: create_table, are moved to the <code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.api</span></code> module.</p>
 <p>You can now execute requests from the CLI.</p>
-<section id="id29">
-<h3>SDK<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<section id="id31">
+<h3>SDK<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
 <ul>
 <li><p>Schema objects validation in the <a class="reference internal" href="api_stubs/aito.schema.html#module-aito.schema" title="aito.schema"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aito.schema</span></code></a> module is improved.</p></li>
 <li><p>Refactored the client into the <strong>aito.client</strong> subpacakge:
@@ -702,8 +751,8 @@ The client now returns enriched <code class="xref py py-mod docutils literal not
 </ul>
 </section>
 </section>
-<section id="id30">
-<h3>CLI<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<section id="id32">
+<h3>CLI<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Added the following commands to send a query to Aito API Endpoint: <strong>search</strong>, <strong>predict</strong>, <strong>recommend</strong>, <strong>evaluate</strong>, <strong>similarity</strong>, <strong>match</strong>, <strong>relate</strong>, <strong>generic-query</strong></p></li>
 <li><p>Added the <strong>create-database</strong> command to create database using the Database Schema</p></li>
@@ -712,17 +761,17 @@ The client now returns enriched <code class="xref py py-mod docutils literal not
 </ul>
 </section>
 </section>
-<section id="id31">
-<h2>0.3.1<a class="headerlink" href="#id31" title="Link to this heading"></a></h2>
+<section id="id33">
+<h2>0.3.1<a class="headerlink" href="#id33" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Improved and fixed error codes in documentation</p></li>
 <li><p>Added the <a class="reference internal" href="api_stubs/aito.schema/aito.schema.AitoColumnTypeSchema.html#aito.schema.AitoColumnTypeSchema.infer_from_samples" title="aito.schema.AitoColumnTypeSchema.infer_from_samples"><code class="xref py py-func docutils literal notranslate"><span class="pre">aito.schema.AitoColumnTypeSchema.infer_from_samples()</span></code></a> function that infers the Column Type from samples.</p></li>
 </ul>
 </section>
-<section id="id32">
-<h2>0.3.0<a class="headerlink" href="#id32" title="Link to this heading"></a></h2>
-<section id="id33">
-<h3>SDK<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
+<section id="id34">
+<h2>0.3.0<a class="headerlink" href="#id34" title="Link to this heading"></a></h2>
+<section id="id35">
+<h3>SDK<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
 <section id="refactoring">
 <h4>Refactoring<a class="headerlink" href="#refactoring" title="Link to this heading"></a></h4>
 <ul>
@@ -772,8 +821,8 @@ The client now returns enriched <code class="xref py py-mod docutils literal not
 </li>
 </ul>
 </section>
-<section id="id34">
-<h4>Deprecation<a class="headerlink" href="#id34" title="Link to this heading"></a></h4>
+<section id="id36">
+<h4>Deprecation<a class="headerlink" href="#id36" title="Link to this heading"></a></h4>
 <ul class="simple">
 <li><p>The <strong>SchemaHandler</strong> is deprecated and will be removed in an upcoming release. To migrate:</p>
 <ul>
@@ -785,8 +834,8 @@ The client now returns enriched <code class="xref py py-mod docutils literal not
 </ul>
 </section>
 </section>
-<section id="id35">
-<h3>CLI<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
+<section id="id37">
+<h3>CLI<a class="headerlink" href="#id37" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Removed the <code class="docutils literal notranslate"><span class="pre">database</span></code> command. All the database operations are now exposed as follows:</p>
 <ul>
@@ -814,24 +863,24 @@ The client now returns enriched <code class="xref py py-mod docutils literal not
 </ul>
 </section>
 </section>
-<section id="id36">
-<h2>0.2.2<a class="headerlink" href="#id36" title="Link to this heading"></a></h2>
+<section id="id38">
+<h2>0.2.2<a class="headerlink" href="#id38" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Added missing import warnings to Aito client.</p></li>
 <li><p>Updated AitoClient API documentation.</p></li>
 </ul>
 </section>
-<section id="id37">
-<h2>0.2.1<a class="headerlink" href="#id37" title="Link to this heading"></a></h2>
+<section id="id39">
+<h2>0.2.1<a class="headerlink" href="#id39" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> <code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code> now accepts <a class="reference external" href="https://aito-python-sdk.readthedocs.io/en/latest/sdk.html#sdkuploaddata">generators</a> as well as lists.</p></li>
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">AitoClient</span></code> <strong>upload_entries_by_batches</strong> is deprecated and will be removed in an upcoming release, use <code class="xref py py-func docutils literal notranslate"><span class="pre">upload_entries()</span></code> instead.</p></li>
 </ul>
 </section>
-<section id="id38">
-<h2>0.2.0<a class="headerlink" href="#id38" title="Link to this heading"></a></h2>
-<section id="id39">
-<h3>CLI<a class="headerlink" href="#id39" title="Link to this heading"></a></h3>
+<section id="id40">
+<h2>0.2.0<a class="headerlink" href="#id40" title="Link to this heading"></a></h2>
+<section id="id41">
+<h3>CLI<a class="headerlink" href="#id41" title="Link to this heading"></a></h3>
 <ul>
 <li><p>Added a version flag (<code class="docutils literal notranslate"><span class="pre">--version</span></code>) and verbosity level flags (<code class="docutils literal notranslate"><span class="pre">--verbose</span></code> and <code class="docutils literal notranslate"><span class="pre">--quiet</span></code>) to the CLI.</p></li>
 <li><p>The CLI now returns more concise error messages. Use <code class="docutils literal notranslate"><span class="pre">--verbose</span></code> mode if you want to see the comprehensive error message with stack info.</p></li>
@@ -846,8 +895,8 @@ The client now returns enriched <code class="xref py py-mod docutils literal not
 </li>
 </ul>
 </section>
-<section id="id40">
-<h3>SDK<a class="headerlink" href="#id40" title="Link to this heading"></a></h3>
+<section id="id42">
+<h3>SDK<a class="headerlink" href="#id42" title="Link to this heading"></a></h3>
 <ul>
 <li><p>Renamed the <code class="docutils literal notranslate"><span class="pre">utils</span></code> package to <code class="docutils literal notranslate"><span class="pre">sdk</span></code>. Please change the import statement accordingly. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">aito.sdk.aito_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">AitoClient</span>
@@ -894,16 +943,16 @@ The client now returns enriched <code class="xref py py-mod docutils literal not
 </ul>
 </section>
 </section>
-<section id="id41">
-<h2>0.1.2<a class="headerlink" href="#id41" title="Link to this heading"></a></h2>
+<section id="id43">
+<h2>0.1.2<a class="headerlink" href="#id43" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Fix a bug when converting or uploading a file in Windows due to tempfile permission</p></li>
 <li><p>Fix a bug that requires conversion between String and Text column</p></li>
 <li><p>Add compatibility with Python 3.7 and 3.8</p></li>
 </ul>
 </section>
-<section id="id42">
-<h2>0.1.1<a class="headerlink" href="#id42" title="Link to this heading"></a></h2>
+<section id="id44">
+<h2>0.1.1<a class="headerlink" href="#id44" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Fix a bug that requires database name for sql_function</p></li>
 <li><dl class="simple">
@@ -913,8 +962,8 @@ The client now returns enriched <code class="xref py py-mod docutils literal not
 </li>
 </ul>
 </section>
-<section id="id43">
-<h2>0.1.0<a class="headerlink" href="#id43" title="Link to this heading"></a></h2>
+<section id="id45">
+<h2>0.1.0<a class="headerlink" href="#id45" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><dl class="simple">
 <dt>Integration with SQL. You can now infer table schema, upload data,</dt><dd><p>quick add table from the result of a SQL query.</p>
@@ -928,16 +977,16 @@ The client now returns enriched <code class="xref py py-mod docutils literal not
 <li><p>MySQL</p></li>
 </ul>
 </section>
-<section id="id44">
-<h2>0.0.4<a class="headerlink" href="#id44" title="Link to this heading"></a></h2>
+<section id="id46">
+<h2>0.0.4<a class="headerlink" href="#id46" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Change <code class="docutils literal notranslate"><span class="pre">client</span></code> task to <code class="docutils literal notranslate"><span class="pre">database</span></code> task</p></li>
 <li><p>Requires Aito instance name instead of full URL (use <code class="docutils literal notranslate"><span class="pre">-i</span></code> flag instead of <code class="docutils literal notranslate"><span class="pre">-u</span></code> flag)</p></li>
 <li><p>Support tab completion with arg complete</p></li>
 </ul>
 </section>
-<section id="id45">
-<h2>0.0.3<a class="headerlink" href="#id45" title="Link to this heading"></a></h2>
+<section id="id47">
+<h2>0.0.3<a class="headerlink" href="#id47" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">quick-add-table,</span> <span class="pre">create-table,</span> <span class="pre">delete-table,</span> <span class="pre">delete-databse,</span> <span class="pre">list</span></code> database operation</p></li>
 <li><p>Remove the option to create and use table schema from file-upload</p></li>

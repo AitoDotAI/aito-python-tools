@@ -1,0 +1,37 @@
+aito.v2.csv\_upload
+===================
+
+.. automodule:: aito.v2.csv_upload
+
+  
+  
+  
+
+  
+  
+  .. rubric:: Functions
+
+  .. autosummary::
+    :toctree: ./aito.v2.csv_upload
+    
+      upload_csv
+  
+  
+
+  
+  
+  .. rubric:: Classes
+
+  .. autosummary::
+    :toctree: ./aito.v2.csv_upload
+    
+      CsvUploadResult
+  
+  
+
+  
+  
+  
+
+
+

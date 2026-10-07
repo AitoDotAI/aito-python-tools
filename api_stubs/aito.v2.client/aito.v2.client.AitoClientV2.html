@@ -6,20 +6,20 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.v2.client.AitoClientV2 &mdash; aito-python-sdk 1.1.0 documentation</title>
+  <title>aito.v2.client.AitoClientV2 &mdash; aito-python-sdk 1.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=fc837d61"></script>
+      <script src="../../_static/documentation_options.js?v=6efca38a"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="aito.v2.errors" href="../aito.v2.errors.html" />
+    <link rel="next" title="aito.v2.csv_upload" href="../aito.v2.csv_upload.html" />
     <link rel="prev" title="aito.v2.client" href="../aito.v2.client.html" /> 
 </head>
 
@@ -66,6 +66,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../aito.v2.csv_upload.html">aito.v2.csv_upload</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../aito.v2.errors.html">aito.v2.errors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../aito.v2.responses.html">aito.v2.responses</a></li>
 </ul>
@@ -222,13 +223,16 @@ one the engine reserves, or no instance URL and key could be resolved
 <tr class="row-odd"><td><p><a class="reference internal" href="#aito.v2.client.AitoClientV2.relate" title="aito.v2.client.AitoClientV2.relate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">relate</span></code></a>(from_table, relate[, where, select, ...])</p></td>
 <td><p>find the statistical relationships between a condition and some fields</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#aito.v2.client.AitoClientV2.request" title="aito.v2.client.AitoClientV2.request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code></a>(method, path[, query, timeout])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.v2.client.AitoClientV2.request" title="aito.v2.client.AitoClientV2.request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code></a>(method, path[, query, timeout, ...])</p></td>
 <td><p>make a raw request to a v2 endpoint and return the parsed JSON</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#aito.v2.client.AitoClientV2.search" title="aito.v2.client.AitoClientV2.search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">search</span></code></a>(from_table[, where, select, ...])</p></td>
 <td><p>retrieve matching rows</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#aito.v2.client.AitoClientV2.upload_entries" title="aito.v2.client.AitoClientV2.upload_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_entries</span></code></a>(name, entries[, batch_size])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#aito.v2.client.AitoClientV2.upload_csv" title="aito.v2.client.AitoClientV2.upload_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_csv</span></code></a>(name, source, *[, schema, via, ...])</p></td>
+<td><p>load a CSV file into a collection, creating it with inferred types if needed</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#aito.v2.client.AitoClientV2.upload_entries" title="aito.v2.client.AitoClientV2.upload_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_entries</span></code></a>(name, entries[, batch_size])</p></td>
 <td><p>insert rows into a collection, in batches</p></td>
 </tr>
 </tbody>
@@ -711,7 +715,7 @@ string, so a single name given as a string is wrapped for you</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="aito.v2.client.AitoClientV2.request">
-<span class="sig-name descname"><span class="pre">request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#aito.v2.client.AitoClientV2.request" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#aito.v2.client.AitoClientV2.request" title="Link to this definition"></a></dt>
 <dd><p>make a raw request to a v2 endpoint and return the parsed JSON</p>
 <p>The transport underneath every other method. Use it to reach an endpoint
 the client has no named method for.</p>
@@ -722,6 +726,8 @@ the client has no named method for.</p>
 <li><p><strong>path</strong> (<em>str</em>) – the path below <code class="docutils literal notranslate"><span class="pre">/api/v2</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">/_query</span></code></p></li>
 <li><p><strong>query</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>Dict</em><em>, </em><em>List</em><em>]</em><em>]</em>) – the request body, if any</p></li>
 <li><p><strong>timeout</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – override the client’s timeout for this call</p></li>
+<li><p><strong>data</strong> (<em>Optional</em><em>[</em><em>bytes</em><em>]</em>) – a raw body instead of <code class="docutils literal notranslate"><span class="pre">query</span></code> (for example a CSV for <code class="docutils literal notranslate"><span class="pre">/import</span></code>)</p></li>
+<li><p><strong>content_type</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – the raw body’s media type, e.g. <code class="docutils literal notranslate"><span class="pre">text/csv</span></code></p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
@@ -757,6 +763,41 @@ the client has no named method for.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="aito.v2.client.AitoClientV2.upload_csv">
+<span class="sig-name descname"><span class="pre">upload_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">via</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">','</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aito.v2.client.AitoClientV2.upload_csv" title="Link to this definition"></a></dt>
+<dd><p>load a CSV file into a collection, creating it with inferred types if needed</p>
+<p>A new collection gets the engine’s CSV typing: numbers, booleans and strings
+read from every cell (a leading zero keeps a column a string), and free text
+as <code class="docutils literal notranslate"><span class="pre">Text</span></code>. <code class="docutils literal notranslate"><span class="pre">schema</span></code> overrides the columns it names, which is how an
+analyzer is chosen. Rows for an existing collection are converted to its
+declared types, and a cell that does not fit fails, naming its row and
+column, before anything is sent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – the collection</p></li>
+<li><p><strong>source</strong> – a path (a <code class="docutils literal notranslate"><span class="pre">str</span></code> is always a path), an open file, or the CSV as <code class="docutils literal notranslate"><span class="pre">bytes</span></code></p></li>
+<li><p><strong>schema</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>]</em>) – column definitions overriding the inferred ones, as in <code class="docutils literal notranslate"><span class="pre">create_collection</span></code></p></li>
+<li><p><strong>via</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>: the engine imports the CSV when it can (aito-core with
+<code class="docutils literal notranslate"><span class="pre">text/csv</span></code> import), else it is typed here with the same rules;
+<code class="docutils literal notranslate"><span class="pre">'server'</span></code> or <code class="docutils literal notranslate"><span class="pre">'client'</span></code> forces one</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>rows, the column types, which path was used, and warnings</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>aito.v2.CsvUploadResult</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">upload_csv</span><span class="p">(</span><span class="s1">'invoices'</span><span class="p">,</span> <span class="s1">'invoices.csv'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">inferred</span><span class="p">[</span><span class="s1">'description'</span><span class="p">],</span> <span class="n">res</span><span class="o">.</span><span class="n">via</span>
+<span class="go">(200, 'Text', 'client')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="aito.v2.client.AitoClientV2.upload_entries">
 <span class="sig-name descname"><span class="pre">upload_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#aito.v2.client.AitoClientV2.upload_entries" title="Link to this definition"></a></dt>
 <dd><p>insert rows into a collection, in batches</p>
@@ -786,7 +827,7 @@ the client has no named method for.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../aito.v2.client.html" class="btn btn-neutral float-left" title="aito.v2.client" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../aito.v2.errors.html" class="btn btn-neutral float-right" title="aito.v2.errors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../aito.v2.csv_upload.html" class="btn btn-neutral float-right" title="aito.v2.csv_upload" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

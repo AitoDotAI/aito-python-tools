@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aito.v2.Client &mdash; aito-python-sdk 1.1.0 documentation</title>
+  <title>aito.v2.Client &mdash; aito-python-sdk 1.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=fc837d61"></script>
+      <script src="../../_static/documentation_options.js?v=6efca38a"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -63,6 +63,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../aito.v2.client.html">aito.v2.client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../aito.v2.csv_upload.html">aito.v2.csv_upload</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../aito.v2.errors.html">aito.v2.errors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../aito.v2.responses.html">aito.v2.responses</a></li>
 </ul>
@@ -175,13 +176,16 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">relate</span></code>(from_table, relate[, where, select, ...])</p></td>
 <td><p>find the statistical relationships between a condition and some fields</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code>(method, path[, query, timeout])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code>(method, path[, query, timeout, ...])</p></td>
 <td><p>make a raw request to a v2 endpoint and return the parsed JSON</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">search</span></code>(from_table[, where, select, ...])</p></td>
 <td><p>retrieve matching rows</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_entries</span></code>(name, entries[, batch_size])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_csv</span></code>(name, source, *[, schema, via, ...])</p></td>
+<td><p>load a CSV file into a collection, creating it with inferred types if needed</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload_entries</span></code>(name, entries[, batch_size])</p></td>
 <td><p>insert rows into a collection, in batches</p></td>
 </tr>
 </tbody>

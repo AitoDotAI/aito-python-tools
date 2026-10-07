@@ -36,6 +36,7 @@ aito.v2.client.AitoClientV2
         ~AitoClientV2.relate
         ~AitoClientV2.request
         ~AitoClientV2.search
+        ~AitoClientV2.upload_csv
         ~AitoClientV2.upload_entries
     
     

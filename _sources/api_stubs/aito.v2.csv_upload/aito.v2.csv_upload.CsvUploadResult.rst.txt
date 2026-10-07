@@ -1,0 +1,31 @@
+aito.v2.csv\_upload.CsvUploadResult
+===================================
+
+.. currentmodule:: aito.v2.csv_upload
+
+.. autoclass:: CsvUploadResult
+  :members:
+  :show-inheritance:
+  :inherited-members:
+
+  
+  
+  .. rubric:: Methods
+  .. autosummary::
+    
+    
+    
+
+  
+  
+  .. rubric:: Attributes
+  .. autosummary::
+      
+          ~CsvUploadResult.table
+          ~CsvUploadResult.rows
+          ~CsvUploadResult.inferred
+          ~CsvUploadResult.via
+          ~CsvUploadResult.created
+          ~CsvUploadResult.warnings
+  
+  
