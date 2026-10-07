@@ -25,5 +25,6 @@ claude --plugin-dir ./claude-plugin
 `.mcp.json` runs the server with `uvx --from "aitoai[mcp]" aito-mcp`, which needs
 an aitoai release that has the `mcp` extra (Python 3.10+).
 
-The fit and non-fit lists follow the page "When to use Aito, and when not"; the
-evidence behind each line is at https://aito.ai/docs/api/v2/benchmarks/
+The fit and non-fit lists follow the page "When to use Aito, and when not",
+https://aito.ai/docs/articles/when-to-use-aito-and-when-not/; the evidence behind each line is at
+https://aito.ai/docs/api/v2/benchmarks/

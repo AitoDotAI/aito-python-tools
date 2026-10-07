@@ -256,3 +256,7 @@ class TestSkillMatchesTheServer(BaseTestCase):
 
     def test_no_calibration_claim(self):
         self.assertNotIn('calibrated', self.skill.lower())
+
+    def test_both_link_the_when_to_use_page(self):
+        self.assertIn(mcp_server.WHEN_TO_USE_URL, mcp_server.INSTRUCTIONS)
+        self.assertIn(mcp_server.WHEN_TO_USE_URL, self.skill)

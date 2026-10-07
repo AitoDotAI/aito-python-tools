@@ -38,6 +38,7 @@ Don't use Aito when (or not yet):
 6. **The case is genuinely new, with no history behind it.** `_predict` will give a low probability, which is honest but not useful. That is the language model's job.
 
 If it does not fit, tell the user which case applies and what to use instead, and stop.
+The full page: https://aito.ai/docs/articles/when-to-use-aito-and-when-not/
 The evidence for each line, including where Aito loses: https://aito.ai/docs/api/v2/benchmarks/
 
 ## 2. Decide where the data lives, per customer

@@ -1,8 +1,15 @@
 Changelog
 =========
 
-Unreleased
-----------
+1.2.0
+-----
+
+``aito start`` runs engine **v2.11.2**, a multi-arch image: native on Apple Silicon and arm64 Linux
+(1.1.0 pinned v2.11.1, amd64 only, which those hosts ran under emulation). ``aito upgrade`` moves an
+existing local server to it, keeping its keys and data.
+
+SDK
+^^^
 
 - ``aito-mcp`` (``pip install 'aitoai[mcp]'``, Python 3.10+): an MCP server over the v2 API for AI
   assistants and coding agents. Ten tools (predict, recommend, relate, match, search, query, evaluate,
@@ -16,6 +23,26 @@ Unreleased
   is sent. ``aito._csv_types.infer_csv`` shows the types without uploading. Standard library only.
 - The v1 ``upload-file`` warns when a String column receives free text, which it would treat as an
   exact-match category.
+
+Local server
+^^^^^^^^^^^^
+
+- A local copy of the pinned image built for another CPU (pulled with ``--platform`` on the same
+  machine) no longer shadows the multi-arch image: ``aito start`` and ``aito upgrade`` replace it with
+  the host's variant instead of failing with "exec format error".
+
+From the fresh-eyes first-hour rerun of ``aito start``:
+
+- The README has a "Run Aito locally" section, and with the ``[cli]`` extra installed ``aito -h`` and
+  ``aito list`` name the local server commands.
+- The port-conflict hint keeps ``--profile``. Following it no longer restarts the ``local`` server on
+  another port. A new profile other than ``local`` starts on the first free port after 9005.
+- Messages name the cause:
+  - ``aito status`` on a stopped server says to run ``aito start``;
+  - a port held by another profile's server says so;
+  - the printed curl line works on its own;
+  - a refused connection to ``127.0.0.1`` hints ``aito status``;
+  - an installed module that fails to import is no longer reported as "not installed".
 
 1.1.0
 -----

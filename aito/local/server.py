@@ -29,8 +29,8 @@ from . import profiles
 
 #: The engine release this SDK version runs. Pinned by digest: a tag can be re-pointed,
 #: a digest cannot. Moves with SDK releases; ``aito upgrade`` applies it.
-PINNED_IMAGE = ('ghcr.io/aitohq/aito:v2.11.1'
-                '@sha256:904295cf491f509de6996e1e104aa1b196a01b4c32e80ba6092c9dccf6612bf5')
+PINNED_IMAGE = ('ghcr.io/aitohq/aito:v2.11.2'
+                '@sha256:4b3d5344d1494ed3312dfb1a32be475a83692ac583fb7ce5e1abd20fae9bc4d6')
 #: The volume name aito.ai/docker already tells people to use, so a user who started
 #: there keeps their data when they switch to ``aito start``.
 DEFAULT_VOLUME = 'aito-state'
@@ -376,8 +376,7 @@ def start(cfg: ServerConfig, activate: Optional[bool] = None, log=say) -> Dict:
     else:
         keys = None
         if _volume_exists(cfg.volume):
-            if not _image_present(cfg.image):
-                _pull(cfg.image, log)
+            _ensure_image(cfg.image, log)
             keys = _keys_on_volume(cfg.volume, cfg.image)
             notes.append(f"Adopted the keys already stored in volume '{cfg.volume}'." if keys else
                          f"Volume '{cfg.volume}' exists (its data is kept) but holds no keys this tool can "
@@ -389,8 +388,7 @@ def start(cfg: ServerConfig, activate: Optional[bool] = None, log=say) -> Dict:
         state = 'already running'
     else:
         _remove_managed(cfg.container, cfg.profile)
-        if not _image_present(cfg.image):
-            _pull(cfg.image, log)
+        _ensure_image(cfg.image, log)
         if not _port_free(cfg.port):
             # the hint repeats --profile: without it, following the hint would restart the
             # `local` server on the new port instead (fresh-eyes rerun, 30.9)
@@ -456,6 +454,33 @@ def _pull(image: str, log) -> None:
     _docker('pull', image, capture=False)
 
 
+def _ensure_image(image: str, log) -> None:
+    """the image locally, as the Docker host's own CPU variant when the image has one
+
+    A copy pulled for another CPU (``docker pull --platform`` on this machine, or a
+    single-arch build of the same tag) shadows a multi-arch image: Docker runs what it
+    has, and an arm64 copy on an amd64 host fails with 'exec format error'. So when the
+    local copy is for another CPU, fetch the host's variant. Docker's classic image store
+    maps a digest to one local image and refuses to re-pull it ("cannot overwrite
+    digest"), so the stale reference is removed first; ``docker image rm`` refuses while
+    a container uses it, and then nothing changes. A single-arch image has no variant for
+    this host: that pull fails, the image is pulled back as it was, and the start goes on
+    under emulation, which the start note explains.
+    """
+    if not _image_present(image):
+        _pull(image, log)
+        return
+    host = _docker('version', '--format', '{{.Server.Arch}}', check=False).stdout.strip()
+    local = _docker('image', 'inspect', '--format', '{{.Architecture}}', image, check=False).stdout.strip()
+    if not host or not local or host == local or '<no value>' in host + local:
+        return
+    if _docker('image', 'rm', image, check=False).returncode != 0:
+        return   # a container still uses this copy: leave it, emulation note applies
+    log(f"The local copy of {image.split('@')[0]} was for {local}; pulling the {host} variant ...")
+    if _docker('pull', '--platform', f'linux/{host}', image, check=False).returncode != 0:
+        _pull(image, log)
+
+
 def status(cfg: ServerConfig) -> Dict:
     info = _inspect(cfg.container)
     p = profiles.load_profile(cfg.profile) or {}
@@ -511,8 +536,7 @@ def upgrade(cfg: ServerConfig, image: str = PINNED_IMAGE, log=say) -> Dict:
     keys = stored_keys(cfg.profile)
     before = cfg.image
     cfg.image = image
-    if not _image_present(image):
-        _pull(image, log)
+    _ensure_image(image, log)
     _remove_managed(cfg.container, cfg.profile)
     _run_container(cfg, keys)
     profiles.save_profile(cfg.profile, {'image': image})
