@@ -18,12 +18,12 @@ The reasoning is written down in ``docs/v2-client-design.md``; the short form:
 """
 
 import logging
-import random
 import time
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import requests as requestslib
 
+from aito import _write_contention as contention
 from aito.local.profiles import resolve_credentials
 from aito.utils._generic_utils import instance_url_problem
 from .errors import AitoV2Error
@@ -36,10 +36,7 @@ LOG = logging.getLogger('AitoClientV2')
 
 #: The error code of a write that gave up under concurrent same-table writes without
 #: committing anything (aito-core #1619): safe to repeat, so the client retries it.
-WRITE_CONTENTION = 'write.contention'
-#: full jitter on top of the server's Retry-After: up to BASE * 2**n seconds, at most CAP
-_CONTENTION_BACKOFF_BASE = 0.5
-_CONTENTION_BACKOFF_CAP = 8.0
+WRITE_CONTENTION = contention.WRITE_CONTENTION
 
 #: environment names may not start with these — the engine reserves them
 _RESERVED_ENV_PREFIXES = ('_', 'env.', 'release.')
@@ -109,10 +106,9 @@ class AitoClientV2:
             timeout: float = 30.0,
             check_credentials: bool = True,
             on_response: Optional[Callable[[Any, str], None]] = None,
-            write_contention_retries: int = 3,
+            write_contention_retries: int = contention.DEFAULT_RETRIES,
     ):
-        if write_contention_retries < 0:
-            raise ValueError(f'write_contention_retries must be 0 or more, got {write_contention_retries}')
+        contention.check_retries(write_contention_retries)
         if on_warning not in _ON_WARNING_CHOICES:
             raise ValueError(
                 f"invalid on_warning '{on_warning}', expected one of {'|'.join(_ON_WARNING_CHOICES)}")
@@ -256,7 +252,7 @@ class AitoClientV2:
                 if retries:
                     error.args = (f'{error.args[0]} (retried {retries} times)',)
                 raise error
-            delay = _contention_delay(resp, retries)
+            delay = contention.delay(getattr(resp, 'headers', None), retries)
             retries += 1
             LOG.info('%s %s: write.contention, retry %d of %d in %.1fs',
                      method, path, retries, self.write_contention_retries, delay)
@@ -820,21 +816,3 @@ class AitoClientV2:
     def __repr__(self):
         env = f", env='{self.env}'" if self.env else ''
         return f"AitoClientV2('{self.instance_url}'{env})"
-
-
-def _contention_delay(resp: Any, retry: int) -> float:
-    """seconds before retry number ``retry`` (0-based) of a ``write.contention``
-
-    The server's ``Retry-After`` (in seconds; 1 when absent or not a number) is the
-    floor. On top of it, full jitter up to ``BASE * 2**retry`` (at most ``CAP``), so
-    clients starved by the same churn do not all come back on the same beat.
-    """
-    raw = None
-    for name, value in (getattr(resp, 'headers', None) or {}).items():
-        if name.lower() == 'retry-after':
-            raw = value
-    try:
-        floor = max(0.0, float(raw))
-    except (TypeError, ValueError):
-        floor = 1.0
-    return floor + random.uniform(0.0, min(_CONTENTION_BACKOFF_CAP, _CONTENTION_BACKOFF_BASE * 2 ** retry))

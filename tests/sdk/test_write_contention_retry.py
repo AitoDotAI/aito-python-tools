@@ -59,13 +59,13 @@ class TestWriteContentionIsRetried(RetryCase):
 
     def test_retry_after_is_the_floor_and_jitter_spreads_the_retries(self):
         client = self.client([contention('2'), contention('2'), contention('2'), OK])
-        with mock.patch('aito.v2.client.random.uniform', side_effect=lambda lo, hi: hi):
+        with mock.patch('aito._write_contention.random.uniform', side_effect=lambda lo, hi: hi):
             client.request('POST', '/_delete', {'from': 't', 'where': {'a': 1}})
         # floor 2 s + full jitter up to 0.5 * 2**n (here its top: 0.5, 1, 2)
         self.assertEqual(self.sleeps, [2.5, 3.0, 4.0])
         self.sleeps.clear()
         client = self.client([contention('2'), OK])
-        with mock.patch('aito.v2.client.random.uniform', side_effect=lambda lo, hi: lo):
+        with mock.patch('aito._write_contention.random.uniform', side_effect=lambda lo, hi: lo):
             client.request('POST', '/_delete', {'from': 't'})
         self.assertEqual(self.sleeps, [2.0])
 
@@ -73,13 +73,13 @@ class TestWriteContentionIsRetried(RetryCase):
         for header in (None, 'soon', 'Wed, 21 Oct 2026 07:28:00 GMT'):
             with self.subTest(header):
                 client = self.client([contention(header), OK])
-                with mock.patch('aito.v2.client.random.uniform', side_effect=lambda lo, hi: lo):
+                with mock.patch('aito._write_contention.random.uniform', side_effect=lambda lo, hi: lo):
                     client.request('POST', '/_delete', {'from': 't'})
                 self.assertEqual(self.sleeps, [1.0])
 
     def test_the_jitter_is_capped(self):
         client = self.client([contention()] * 9 + [OK], write_contention_retries=9)
-        with mock.patch('aito.v2.client.random.uniform', side_effect=lambda lo, hi: hi):
+        with mock.patch('aito._write_contention.random.uniform', side_effect=lambda lo, hi: hi):
             client.request('POST', '/_delete', {'from': 't'})
         self.assertEqual(max(self.sleeps), 1.0 + 8.0)
 

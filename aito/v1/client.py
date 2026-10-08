@@ -8,6 +8,7 @@ use it.
 
 import asyncio
 import logging
+import time
 import warnings
 from typing import Dict, List, Union, Tuple, Optional, TYPE_CHECKING
 
@@ -16,6 +17,7 @@ import requests as requestslib
 if TYPE_CHECKING:  # pragma: no cover - import-time typing only
     from aiohttp import ClientSession
 
+from aito import _write_contention as contention
 from aito.exceptions import BaseError
 from aito.utils._generic_utils import instance_url_problem
 from .requests import AitoRequest, BaseRequest, GetVersionRequest
@@ -51,13 +53,16 @@ class RequestError(Error):
     """An error occurred when sending a request to the Aito instance
 
     """
-    def __init__(self, request_obj: AitoRequest, error: Exception):
+    def __init__(self, request_obj: AitoRequest, error: Exception, retries: int = 0):
         """
 
         :param request_obj: the request object
         :type request_obj: AitoRequest
         :param error: the error
         :type error: Exception
+        :param retries: how many times the request was repeated before this error (a 409
+            ``write.contention`` is retried), defaults to 0
+        :type retries: int
         """
         self.request_obj = request_obj
         self.error = error
@@ -72,7 +77,9 @@ class RequestError(Error):
             error_msg = error.message
         else:
             error_msg = str(error)
-        super().__init__(f'failed to {request_obj}: {error_msg}')
+        self.retries = retries
+        suffix = f' (retried {retries} times)' if retries else ''
+        super().__init__(f'failed to {request_obj}: {error_msg}{suffix}')
 
 
 class AitoClient:
@@ -101,7 +108,8 @@ class AitoClient:
             instance_url: str,
             api_key: str,
             check_credentials: bool = True,
-            raise_for_status: bool = True
+            raise_for_status: bool = True,
+            write_contention_retries: int = contention.DEFAULT_RETRIES
     ):
         """
 
@@ -113,7 +121,13 @@ class AitoClient:
         :type check_credentials: bool
         :param raise_for_status: automatically raise RequestError for each failed response, defaults to True
         :type raise_for_status: bool
+        :param write_contention_retries: how many times to repeat a request the server answered with 409
+            ``write.contention``: a write that lost to concurrent writes on the same table and committed
+            nothing, so repeating it is safe. Each retry waits the server's ``Retry-After`` plus exponential
+            jitter (at most 8 s on top). 0 turns it off. Other 409s are never retried. Defaults to 3
+        :type write_contention_retries: int
         :raises BaseError: an error occurred during the creation of AitoClient
+        :raises ValueError: write_contention_retries is negative
 
         >>> aito_client = AitoClient(your_instance_url, your_api_key) # doctest: +SKIP
         >>> # Change the API key to READ-WRITE or READ-ONLY
@@ -126,6 +140,7 @@ class AitoClient:
         self.instance_url = instance_url.strip("/")
         self.api_key = api_key
         self.raise_for_status = raise_for_status
+        self.write_contention_retries = contention.check_retries(write_contention_retries)
         self.instance_version = None
         if check_credentials:
             try:
@@ -272,23 +287,43 @@ class AitoClient:
                 request_obj = AitoRequest.make_request(method, endpoint, query)
             else:
                 raise TypeError("'request() requires either 'request_obj' or 'method' and 'endpoint'")
-        try:
-            resp = requestslib.request(
-                method=request_obj.method,
-                url=self.instance_url + request_obj.endpoint,
-                headers=self.headers,
-                json=request_obj.query
-            )
-            resp.raise_for_status()
-            json_resp = resp.json()
-        except Exception as e:
-            req_err = RequestError(request_obj, e)
-            _raise = raise_for_status if raise_for_status is not None else self.raise_for_status
-            if _raise:
-                raise req_err
-            else:
-                return req_err
-        return request_obj.response_cls(json_resp)
+        retries = 0
+        while True:
+            try:
+                resp = requestslib.request(
+                    method=request_obj.method,
+                    url=self.instance_url + request_obj.endpoint,
+                    headers=self.headers,
+                    json=request_obj.query
+                )
+                # the body is only parsed here for a 409, so a normal response is parsed once
+                if resp.status_code == 409 and self._is_write_contention(
+                        resp.status_code, _json_or_none(resp), retries):
+                    delay = contention.delay(resp.headers, retries)
+                    retries += 1
+                    LOG.info(f'{request_obj}: write.contention, retry {retries} of '
+                             f'{self.write_contention_retries} in {delay:.1f}s')
+                    time.sleep(delay)
+                    continue
+                resp.raise_for_status()
+                json_resp = resp.json()
+            except Exception as e:
+                req_err = RequestError(request_obj, e, retries)
+                _raise = raise_for_status if raise_for_status is not None else self.raise_for_status
+                if _raise:
+                    raise req_err
+                else:
+                    return req_err
+            return request_obj.response_cls(json_resp)
+
+    def _is_write_contention(self, status: int, body, retries: int) -> bool:
+        """a 409 whose code is write.contention, with retries left (aito-core #1619)
+
+        Keyed on the code: the server's other 409s (an env being migrated, an old binary
+        format that needs a repair, a release or branch conflict) are other conditions.
+        """
+        return (status == 409 and retries < self.write_contention_retries
+                and contention.code_of(body) == contention.WRITE_CONTENTION)
 
     async def async_request(
             self, session: 'ClientSession', *,
@@ -321,22 +356,38 @@ class AitoClient:
                 request_obj = AitoRequest.make_request(method, endpoint, query)
             else:
                 raise TypeError("request() requires either 'request_obj' or 'method' and 'endpoint'")
-        try:
-            async with session.request(
-                    method=request_obj.method,
-                    url=self.instance_url + request_obj.endpoint,
-                    json=request_obj.query,
-                    headers=self.headers,
-                    raise_for_status=True
-            ) as resp:
-                return request_obj.response_cls(await resp.json())
-        except Exception as e:
-            req_err = RequestError(request_obj, e)
-            _raise = raise_for_status if raise_for_status is not None else self.raise_for_status
-            if _raise:
-                raise req_err
-            else:
-                return req_err
+        retries = 0
+        while True:
+            delay = None
+            try:
+                async with session.request(
+                        method=request_obj.method,
+                        url=self.instance_url + request_obj.endpoint,
+                        json=request_obj.query,
+                        headers=self.headers,
+                        raise_for_status=False
+                ) as resp:
+                    if resp.status == 409:
+                        try:
+                            body = await resp.json(content_type=None)
+                        except Exception:
+                            body = None
+                        if self._is_write_contention(resp.status, body, retries):
+                            delay = contention.delay(resp.headers, retries)
+                    if delay is None:
+                        resp.raise_for_status()
+                        return request_obj.response_cls(await resp.json())
+            except Exception as e:
+                req_err = RequestError(request_obj, e, retries)
+                _raise = raise_for_status if raise_for_status is not None else self.raise_for_status
+                if _raise:
+                    raise req_err
+                else:
+                    return req_err
+            retries += 1
+            LOG.info(f'async {request_obj}: write.contention, retry {retries} of '
+                     f'{self.write_contention_retries} in {delay:.1f}s')
+            await asyncio.sleep(delay)
 
     async def bounded_async_request(
             self, semaphore: asyncio.Semaphore, *args, **kwargs
@@ -424,3 +475,11 @@ class AitoClient:
         loop = asyncio.get_event_loop()
         responses = loop.run_until_complete(run())
         return responses
+
+
+def _json_or_none(resp) -> Optional[Union[Dict, List]]:
+    """the parsed JSON body, or None when there is none"""
+    try:
+        return resp.json()
+    except ValueError:
+        return None
