@@ -18,10 +18,12 @@ The reasoning is written down in ``docs/v2-client-design.md``; the short form:
 """
 
 import logging
+import time
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import requests as requestslib
 
+from aito import _write_contention as contention
 from aito.local.profiles import resolve_credentials
 from aito.utils._generic_utils import instance_url_problem
 from .errors import AitoV2Error
@@ -31,6 +33,10 @@ from .responses import (
 )
 
 LOG = logging.getLogger('AitoClientV2')
+
+#: The error code of a write that gave up under concurrent same-table writes without
+#: committing anything (aito-core #1619): safe to repeat, so the client retries it.
+WRITE_CONTENTION = contention.WRITE_CONTENTION
 
 #: environment names may not start with these — the engine reserves them
 _RESERVED_ENV_PREFIXES = ('_', 'env.', 'release.')
@@ -71,8 +77,15 @@ class AitoClientV2:
         mostly network. Keep the callback cheap and non-throwing: it runs
         inline, and an exception in it would surface as a failed request
     :type on_response: Optional[Callable[[Any, str], None]]
+    :param write_contention_retries: how many times to repeat a request the server answered
+        with 409 ``write.contention``: a write that lost to concurrent writes on the same table
+        and committed nothing, so repeating it is safe. Each retry waits the server's
+        ``Retry-After`` plus exponential jitter (at most 8 s on top). 0 turns it off; the
+        error is then raised at once. Other 409s are never retried.
+    :type write_contention_retries: int
     :raises ValueError: the instance URL has no scheme or host, the environment name is
-        one the engine reserves, or no instance URL and key could be resolved
+        one the engine reserves, no instance URL and key could be resolved, or
+        ``write_contention_retries`` is negative
         (``NoCredentialsError``)
     :raises AitoV2Error: the credentials could not be verified
 
@@ -93,7 +106,9 @@ class AitoClientV2:
             timeout: float = 30.0,
             check_credentials: bool = True,
             on_response: Optional[Callable[[Any, str], None]] = None,
+            write_contention_retries: int = contention.DEFAULT_RETRIES,
     ):
+        contention.check_retries(write_contention_retries)
         if on_warning not in _ON_WARNING_CHOICES:
             raise ValueError(
                 f"invalid on_warning '{on_warning}', expected one of {'|'.join(_ON_WARNING_CHOICES)}")
@@ -113,6 +128,7 @@ class AitoClientV2:
         self.on_warning = on_warning
         self.timeout = timeout
         self.on_response = on_response
+        self.write_contention_retries = write_contention_retries
         # A pooled session keeps the TCP+TLS connection alive across calls. A
         # fresh connection per request pays the handshake every time, which
         # dominates the per-call wall-clock against a shared instance.
@@ -200,30 +216,47 @@ class AitoClientV2:
         if data is not None:
             headers = {**headers, 'Content-Type': content_type or 'application/octet-stream'}
             body = {'data': data}
-        try:
-            resp = self._session.request(
-                method=method, url=url, params=params, headers=headers,
-                timeout=self.timeout if timeout is None else timeout, **body,
-            )
-        except requestslib.RequestException as e:
-            hint = ''
-            if isinstance(e, requestslib.ConnectionError) and any(
-                    h in self.instance_url for h in ('://127.0.0.1', '://localhost')):
-                hint = ' (a local Aito: is it running? `aito status`, `aito start`)'
-            raise AitoV2Error(f'Aito v2 request failed: {method} {path}: {e}{hint}') from e
+        retries = 0
+        while True:
+            try:
+                resp = self._session.request(
+                    method=method, url=url, params=params, headers=headers,
+                    timeout=self.timeout if timeout is None else timeout, **body,
+                )
+            except requestslib.RequestException as e:
+                hint = ''
+                if isinstance(e, requestslib.ConnectionError) and any(
+                        h in self.instance_url for h in ('://127.0.0.1', '://localhost')):
+                    hint = ' (a local Aito: is it running? `aito status`, `aito start`)'
+                raise AitoV2Error(f'Aito v2 request failed: {method} {path}: {e}{hint}') from e
 
-        if self.on_response is not None:
-            # Before the status check, so a caller observing timings still sees
-            # the calls that failed — those are the ones worth looking at.
-            self.on_response(resp, path)
+            if self.on_response is not None:
+                # Before the status check, so a caller observing timings still sees
+                # the calls that failed — those are the ones worth looking at.
+                self.on_response(resp, path)
 
-        try:
-            parsed = resp.json()
-        except ValueError:
-            parsed = None
+            try:
+                parsed = resp.json()
+            except ValueError:
+                parsed = None
 
-        if resp.status_code >= 400:
-            raise AitoV2Error.from_response(resp.status_code, resp.text, parsed)
+            if resp.status_code < 400:
+                break
+            error = AitoV2Error.from_response(resp.status_code, resp.text, parsed)
+            # Keyed on the code, never on 409 alone: the server's other 409s (an env being
+            # migrated, an old binary format that needs a repair, a release or branch
+            # conflict) are different conditions, and some must never be repeated.
+            if error.code != WRITE_CONTENTION:
+                raise error
+            if retries >= self.write_contention_retries:
+                if retries:
+                    error.args = (f'{error.args[0]} (retried {retries} times)',)
+                raise error
+            delay = contention.delay(getattr(resp, 'headers', None), retries)
+            retries += 1
+            LOG.info('%s %s: write.contention, retry %d of %d in %.1fs',
+                     method, path, retries, self.write_contention_retries, delay)
+            time.sleep(delay)
         if parsed is None:
             raise AitoV2Error(
                 f'Aito v2 returned a non-JSON body for {method} {path}: {resp.text[:200]}',

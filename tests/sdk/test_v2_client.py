@@ -15,10 +15,11 @@ from tests.cases import BaseTestCase
 class FakeResponse:
     """The parts of a ``requests.Response`` the client reads"""
 
-    def __init__(self, status_code=200, body=None, text=None):
+    def __init__(self, status_code=200, body=None, text=None, headers=None):
         self.status_code = status_code
         self._body = body
         self.text = text if text is not None else json.dumps(body)
+        self.headers = headers or {}
 
     def json(self):
         if self._body is None:
