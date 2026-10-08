@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+- The v2 client retries a write the server answered with 409 ``write.contention`` (aito-core
+  #1619): it lost to concurrent writes on the same table and committed nothing, so it is safe to
+  repeat. Up to 3 retries by default (``Client(write_contention_retries=...)``, 0 turns it off),
+  each after the ``Retry-After`` floor plus exponential full jitter. Keyed on the code: other 409s
+  are raised at once, as before. Needs an engine newer than v2.11.4; older engines answer this
+  condition with a 500, which is not retried.
+
 1.2.0
 -----
 
