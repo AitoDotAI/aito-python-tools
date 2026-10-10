@@ -385,11 +385,13 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         parsing_args = ['configure'] if profile_name is None else ['configure', '--profile', profile_name]
         instance_url = os.environ['AITO_INSTANCE_URL']
         api_key = os.environ['AITO_API_KEY']
-        inputs = ['y', instance_url, api_key] if reconfigure else [instance_url, api_key]
+        # the URL (and a reconfigure confirmation) is typed; the key goes through getpass, unechoed
+        inputs = ['y', instance_url] if reconfigure else [instance_url]
         if profile_name is None:
             profile_name = 'default'
 
-        with patch('builtins.input', side_effect=inputs):
+        with patch('builtins.input', side_effect=inputs), \
+                patch('aito.cli.sub_commands.database_sub_command.getpass', return_value=api_key):
             self.parse_and_execute(
                 parsing_args,
                 {

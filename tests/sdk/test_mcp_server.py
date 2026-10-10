@@ -169,13 +169,14 @@ class TestEntryPointWithoutTheExtra(BaseTestCase):
 
 @unittest.skipIf(mcp_server is None, 'the mcp extra is not installed')
 class TestMain(BaseTestCase):
-    def test_no_instance_configured_exits_with_the_sdks_hint(self):
+    def test_no_instance_configured_still_serves_the_setup_steps(self):
+        # it used to exit; an agent reads tool answers, not a process's exit status
         from aito.local.profiles import NoCredentialsError
-        with mock.patch('aito.v2.client.resolve_credentials',
-                        side_effect=NoCredentialsError('run `aito start` to start a local instance')):
-            with self.assertRaises(SystemExit) as ctx:
-                mcp_server.main()
-        self.assertIn('aito start', str(ctx.exception))
+        with mock.patch('aito.v2.client.resolve_credentials', side_effect=NoCredentialsError('none')), \
+                mock.patch.object(mcp_server, 'build_server') as build:
+            mcp_server.main()
+        self.assertIsNone(build.call_args[0][0])
+        build.return_value.run.assert_called_once()
 
 
 @unittest.skipIf(mcp_server is None, 'the mcp extra is not installed')

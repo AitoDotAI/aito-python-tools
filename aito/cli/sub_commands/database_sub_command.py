@@ -1,5 +1,6 @@
 import json
 from abc import ABC, abstractmethod
+from getpass import getpass
 from typing import Dict
 
 from aito.cli.parser import PathArgType, InputArgType, ParseError, prompt_confirmation, \
@@ -37,8 +38,9 @@ class ConfigureSubCommand(SubCommand):
         if not new_instance_url:
             raise ParseError('instance url must not be empty')
 
-        input_ret_val = input(
-            'api key [None]' if not existing_instance_url else f'api key [{mask_api_key(existing_api_key)}]'
+        # without echo: the key must not end up on the screen, in a recording or a scrollback
+        input_ret_val = getpass(
+            'api key [None]: ' if not existing_instance_url else f'api key [{mask_api_key(existing_api_key)}]: '
         )
         new_api_key = input_ret_val if input_ret_val else existing_api_key
         if not new_api_key:

@@ -73,6 +73,19 @@ THRESHOLD = ("$p is a probability you can set a threshold on; check it on your o
              "evaluate tool before you act on it: act above the threshold, suggest in the middle, "
              "ask a person below.")
 
+FREE_MODE_CAP = ('A local `aito start` instance runs free mode: 10,000 rows per table and 50,000 in total. '
+                 'Past that the engine answers row_limit_exceeded with a link to a licence; for more data, '
+                 'use a licensed or hosted instance (https://aito.ai).')
+
+NOT_CONFIGURED = (
+    'NOT CONFIGURED: this aito-mcp server has no Aito instance, so every tool answers with these steps. '
+    'Tell the user which way in fits, and do not upload their data anywhere they did not choose. '
+    '(1) Local: `pip install aitoai`, then `aito start` (needs Docker; free mode: 10,000 rows per '
+    'table, 50,000 in total), then restart this server. '
+    '(2) An existing instance: set AITO_URL and AITO_API_KEY in this server\'s environment, or run '
+    '`aito configure --profile NAME` and set AITO_PROFILE=NAME. '
+    '(3) Hosted Aito, or a licence for more data: https://aito.ai.')
+
 INSTRUCTIONS = '\n\n'.join([
     'Aito is a predictive database: load your data like an ordinary database, then query the '
     'unknown the way you query the known. You get a predicted value, a probability ($p) and the '
@@ -185,17 +198,26 @@ def _inference(call, path: str, query: Dict[str, Any]) -> Any:
     return call(path, _with_select(query), why_on_all='select' in query)
 
 
-def build_server(client: AitoClientV2, allow_writes: Optional[bool] = None) -> Any:
+def build_server(client: Optional[AitoClientV2], allow_writes: Optional[bool] = None) -> Any:
     """the MCP server with every tool bound to ``client``
+
+    With ``client`` None (no instance configured) the server still starts, and every tool
+    answers with the ways in (NOT_CONFIGURED), so the agent can tell the user what to do.
 
     :param allow_writes: enable put_schema and upload_rows; default: the
         ``AITO_MCP_ALLOW_WRITES`` environment variable is ``1``
     """
     if allow_writes is None:
         allow_writes = os.environ.get(WRITES_ENV) == '1'
-    server = _Server(name='aito', instructions=INSTRUCTIONS)
+    server = _Server(name='aito', instructions=INSTRUCTIONS if client is not None
+                     else NOT_CONFIGURED + '\n\n' + INSTRUCTIONS)
+
+    def need_client() -> None:
+        if client is None:
+            raise ToolError(NOT_CONFIGURED)
 
     def call(path: str, body: Any, why_on_all: bool = True) -> Any:
+        need_client()
         try:
             return shape(client.request('POST', path, body), why_on_all)
         except AitoV2Error as e:
@@ -239,6 +261,7 @@ Don't use when: you need a value for one row (use predict) or a ranked choice (u
 
 `query` is a v2 _relate body, e.g. {{"from": "deals", "where": {{"won": true}}, "relate": "industry"}}. Each hit comes back as the related value, its lift, and the counts behind it; small_sample marks a lift resting on fewer than {SMALL_SAMPLE} rows. `raw: true` returns the engine's response unchanged.""")
     def relate(query: Dict[str, Any], raw: bool = False) -> Any:
+        need_client()
         try:
             response = client.request('POST', '/_relate', query)
         except AitoV2Error as e:
@@ -285,6 +308,7 @@ The answer leads with a summary: accuracy against always guessing the most commo
 
 `query` is a v2 _evaluate body: {{"test": <which rows to hold out>, "evaluate": <a _predict body>}}, e.g. {{"test": {{"$index": {{"$mod": [4, 0]}}}}, "evaluate": {{"from": "invoices", "where": {{"vendor": {{"$get": "vendor"}}, "description": {{"$get": "description"}}}}, "predict": "gl_account"}}}}. Add "select": ["accuracy", "cases"] to get each held-out row's top $value and $p and whether it was right: sort the cases by $p and pick the lowest threshold whose accuracy above it meets the user's target. Hold out only rows whose outcome is known. It can take minutes on a large table.""")
     def evaluate(query: Dict[str, Any], raw: bool = False) -> Any:
+        need_client()
         try:
             response = client.request('POST', '/_evaluate', query, timeout=600.0)
         except AitoV2Error as e:
@@ -298,6 +322,7 @@ The answer leads with a summary: accuracy against always guessing the most commo
 
     @server.tool(name='get_schema', annotations=READ, description="""Read the schema: every table with its columns, types and links, or one table's. Start here to see what the data holds and which fields can be predicted.""")
     def get_schema(table: Optional[str] = None) -> Any:
+        need_client()
         try:
             return client.request('GET', f'/schema/{table}' if table else '/schema')
         except AitoV2Error as e:
@@ -311,6 +336,7 @@ Derive the schema from the user's existing table: one column per field, with typ
 `schema` is a v2 schema body, e.g. {{"type": "collection", "columns": {{"invoice_id": {{"type": "String"}}, "vendor": {{"type": "String"}}, "description": {{"type": "Text", "analyzer": "english"}}, "amount": {{"type": "Decimal"}}, "gl_account": {{"type": "String"}}}}}}.""")
     def put_schema(table: str, schema: Dict[str, Any]) -> Any:
         refuse_write('put_schema')
+        need_client()
         try:
             return client.request('PUT', f'/schema/{table}', schema)
         except AitoV2Error as e:
@@ -318,11 +344,13 @@ Derive the schema from the user's existing table: one column per field, with typ
 
     @server.tool(name='upload_rows', annotations=WRITE, description=f"""Add rows to a table. A WRITE: refused unless the user started the server with {WRITES_ENV}=1. The rows count in the very next query; there is no training step.
 
+{FREE_MODE_CAP}
 {SEPARATION}
 
 `rows` is a list of objects matching the table's schema, at most a few thousand per call.""")
     def upload_rows(table: str, rows: List[Dict[str, Any]]) -> Any:
         refuse_write('upload_rows')
+        need_client()
         try:
             client.request('POST', f'/data/{table}/batch', rows)
         except AitoV2Error as e:
@@ -336,8 +364,9 @@ def main() -> None:
     """``aito-mcp``: serve the tools over stdio"""
     try:
         client = AitoClientV2(check_credentials=False)
-    except NoCredentialsError as e:
-        raise SystemExit(f'aito-mcp: {e}') from e
+    except NoCredentialsError:
+        # start anyway: an agent reads the tools' answers, not this process's exit status
+        client = None
     build_server(client).run()
 
 
