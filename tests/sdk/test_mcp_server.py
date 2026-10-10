@@ -99,7 +99,8 @@ class TestInferenceTools(BaseTestCase):
     def test_evaluate_posts_with_a_long_timeout_and_returns_the_metrics(self):
         server = self.serve(FakeResponse(200, {'kind': 'evaluation', 'data': {'accuracy': 0.9}}))
         body = {'test': {'$index': {'$mod': [4, 0]}}, 'evaluate': {'from': 't', 'predict': 'x'}}
-        self.assertEqual(run(server, 'evaluate', {'query': body}), {'accuracy': 0.9})
+        out = run(server, 'evaluate', {'query': body})
+        self.assertEqual((out['summary']['accuracy'], out['metrics']), (0.9, {'accuracy': 0.9}))
         self.assertEqual(self.sent(), ('POST', '/_evaluate', body))
         self.assertEqual(self.client._session.last['timeout'], 600.0)
 
@@ -260,3 +261,102 @@ class TestSkillMatchesTheServer(BaseTestCase):
     def test_both_link_the_when_to_use_page(self):
         self.assertIn(mcp_server.WHEN_TO_USE_URL, mcp_server.INSTRUCTIONS)
         self.assertIn(mcp_server.WHEN_TO_USE_URL, self.skill)
+
+
+# --- response shaping, from dogfooding on internal.aito.ai (10.10) ---------------------------------
+
+RELATE_RESPONSE = {'offset': 0, 'total': 2, 'hits': [
+    {'related': {'channel': 'meeting'}, 'condition': {'good_outcome': True}, 'lift': 1.18, 'n': 39.0,
+     'info': 0.014, 'relation': {'n': 39.0, 'mi': 0.06},
+     'fs': {'f': 10.0, 'fOnCondition': 8.0, 'fCondition': 22.0, 'n': 39.0, 'fOnNotCondition': 2.0},
+     'ps': {'p': 0.256, 'pOnCondition': 0.364, 'pOnNotCondition': 0.118, 'pCondition': 0.564}},
+    {'related': {'channel': 'linkedin'}, 'condition': {'good_outcome': True}, 'lift': 0.62, 'n': 39.0,
+     'info': 0.022, 'relation': {'n': 39.0, 'mi': 0.09},
+     'fs': {'f': 6.0, 'fOnCondition': 1.0, 'fCondition': 22.0, 'n': 39.0, 'fOnNotCondition': 5.0},
+     'ps': {'p': 0.154, 'pOnCondition': 0.045, 'pOnNotCondition': 0.294, 'pCondition': 0.564}},
+]}
+
+EVALUATION = {'kind': 'evaluation', 'data': {
+    'accuracy': 0.8928571428571429, 'baseAccuracy': 0.7767857142857143, 'accuracyGain': 0.1160714285714286,
+    'ece': 0.05470956672436107, 'testSamples': 224, 'trainSamples': 892, 'meanMs': 106.96899712946428,
+    'mxe': 0.597, 'meanNs': 106968997.1, 'logLoss': 0.41}}
+
+NEUTRAL_WHY = {'type': 'product', 'factors': [
+    {'type': 'baseP', 'value': 0.79},
+    {'type': 'relatedPropositionLift', 'proposition': {'title': 'CI'}, 'value': 1.23},
+    {'type': 'relatedPropositionLift', 'proposition': {'title': 'SDK'}, 'value': 1.0},
+]}
+
+
+@unittest.skipIf(mcp_server is None, 'the mcp extra is not installed')
+class TestShaping(BaseTestCase):
+    def serve(self, *responses):
+        self.client = make_client(list(responses))
+        return mcp_server.build_server(self.client, allow_writes=False)
+
+    def test_factors_that_change_nothing_are_dropped_from_why(self):
+        server = self.serve(FakeResponse(200, {'hits': [{'$value': 'rnd', '$p': 0.98, '$why': NEUTRAL_WHY}]}))
+        out = run(server, 'predict', {'query': {'from': 'todos', 'predict': 'area'}})
+        self.assertEqual(out['hits'][0]['$why']['factors'], [{'proposition': {'title': 'CI'}, 'lift': 1.23}])
+
+    def test_by_default_only_the_top_hit_carries_why(self):
+        hits = [{'$value': v, '$p': p, '$why': NEUTRAL_WHY} for v, p in (('rnd', 0.98), ('ops', 0.01))]
+        for tool in ('predict', 'recommend', 'match'):
+            with self.subTest(tool):
+                server = self.serve(FakeResponse(200, {'hits': hits}))
+                out = run(server, tool, {'query': {'from': 't', tool: 'x'}})
+                self.assertIn('$why', out['hits'][0])
+                self.assertNotIn('$why', out['hits'][1])
+                self.assertEqual(out['hits'][1], {'$value': 'ops', '$p': 0.01})
+
+    def test_an_explicit_select_with_why_keeps_it_on_every_hit(self):
+        hits = [{'$value': v, '$p': p, '$why': NEUTRAL_WHY} for v, p in (('rnd', 0.98), ('ops', 0.01))]
+        server = self.serve(FakeResponse(200, {'hits': hits}))
+        out = run(server, 'predict', {'query': {'from': 't', 'predict': 'x', 'select': ['$value', '$p', '$why']}})
+        self.assertTrue(all('$why' in h for h in out['hits']))
+
+    def test_relate_reads_as_lift_with_its_counts_and_flags_small_samples(self):
+        server = self.serve(FakeResponse(200, RELATE_RESPONSE))
+        out = run(server, 'relate', {'query': {'from': 'touches', 'where': {'good_outcome': True},
+                                               'relate': 'channel'}})
+        self.assertEqual(out['condition'], {'good_outcome': True})
+        self.assertEqual(out['hits'][0], {
+            'related': {'channel': 'meeting'}, 'lift': 1.18, 'n_related': 10, 'n_with': 8,
+            'n_condition': 22, 'n': 39, 'p': 0.256, 'p_given_condition': 0.364, 'small_sample': False})
+        self.assertTrue(out['hits'][1]['small_sample'])        # a ×0.62 lift resting on 6 rows
+        self.assertIn('small_sample', out['note'])
+
+    def test_relate_raw_returns_the_engine_response(self):
+        server = self.serve(FakeResponse(200, RELATE_RESPONSE))
+        out = run(server, 'relate', {'query': {'from': 'touches', 'relate': 'channel'}, 'raw': True})
+        self.assertEqual(out, RELATE_RESPONSE)
+
+    def test_evaluate_leads_with_the_honest_comparison(self):
+        server = self.serve(FakeResponse(200, EVALUATION))
+        out = run(server, 'evaluate', {'query': {'test': {}, 'evaluate': {}}})
+        self.assertEqual(out['summary'], {
+            'reading': 'accuracy 89.3% on 224 held-out rows, vs 77.7% for always guessing the most '
+                       'common value; calibration error (ECE) 0.055; 107 ms per prediction',
+            'accuracy': 0.8928571428571429, 'base_accuracy': 0.7767857142857143,
+            'accuracy_gain': 0.1160714285714286, 'ece': 0.05470956672436107,
+            'n': 224, 'train_rows': 892, 'mean_ms': 106.96899712946428})
+        self.assertEqual(out['metrics'], EVALUATION['data'])
+
+    def test_evaluate_raw_returns_the_metrics_as_before(self):
+        server = self.serve(FakeResponse(200, EVALUATION))
+        out = run(server, 'evaluate', {'query': {'test': {}, 'evaluate': {}}, 'raw': True})
+        self.assertEqual(out, EVALUATION['data'])
+
+    def test_evaluate_cases_stay_next_to_the_summary(self):
+        cases = [{'accurate': True, 'top': {'$value': 'a', '$p': 0.9}}]
+        server = self.serve(FakeResponse(200, {'kind': 'evaluation', 'data': {'accuracy': 1.0, 'cases': cases}}))
+        out = run(server, 'evaluate', {'query': {'test': {}, 'evaluate': {}, 'select': ['accuracy', 'cases']}})
+        self.assertEqual(out['cases'], cases)
+        self.assertNotIn('cases', out['metrics'])
+
+    def test_the_tools_that_return_rows_carry_the_privacy_note(self):
+        desc = descriptions(self.serve())
+        for tool in ('search', 'query', 'evaluate'):
+            with self.subTest(tool):
+                self.assertIn(mcp_server.PRIVACY, desc[tool])
+        self.assertIn(mcp_server.PRIVACY, mcp_server.INSTRUCTIONS)

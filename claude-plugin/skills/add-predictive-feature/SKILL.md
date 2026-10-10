@@ -146,6 +146,9 @@ print("overall accuracy", res.data["accuracy"])
 print("act above", threshold_for(cases, 0.98), "suggest above", threshold_for(cases, 0.80))
 ```
 
+On personal data, prefer answers that aggregate (predict, relate, evaluate without cases) over tools
+that return rows (search, query, evaluate cases): every row you fetch enters the conversation.
+
 Report to the user what the evaluation measured (accuracy, the share of rows above
 each threshold), not a general claim about Aito.
 
