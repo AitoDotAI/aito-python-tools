@@ -1,55 +1,63 @@
-# Publishing aito-mcp: release, registry, marketplace (drafts)
+# Releasing aitoai, aito-mcp and the MCP registry entry
 
-Prepared 5.10.2026. Nothing here is published, and each step below needs Antti's yes.
+One version tag publishes all three, from GitHub Actions (`.github/workflows/release.yml`), with
+no stored secrets:
 
-## What gets published
-
-| What | Where | Draft in this repo |
+| What | Where | How the workflow authenticates |
 |---|---|---|
-| aitoai 1.2.0 (the SDK, the `[mcp]` extra, the engine pin v2.11.2) | PyPI | branch `release/1.2.0` |
-| aito-mcp 1.2.0 (a thin package, so a client can run `uvx aito-mcp`) | PyPI | `packaging/aito-mcp/` |
-| the server entry `io.github.AitoDotAI/aito` | the official MCP registry | `registry/server.json` |
-| the plugin `aito` | a Claude Code marketplace: this repo | `.claude-plugin/marketplace.json` |
+| aitoai (the SDK, with the `[mcp]` extra) | PyPI | PyPI Trusted Publishing (OIDC) |
+| aito-mcp (a thin package, so a client can run `uvx aito-mcp`) | PyPI | PyPI Trusted Publishing (OIDC) |
+| the server entry `io.github.AitoDotAI/aito` | the official MCP registry | `mcp-publisher login github-oidc` |
 
-Why a second package: registry clients run `uvx <identifier>`. `uvx aitoai` fails, because
-aitoai's commands are `aito` and `aito-mcp` ("Use `uvx --from aitoai <EXECUTABLE-NAME>`
-instead"). `aito-mcp` depends on `aitoai[mcp]` at the same version and exposes the command.
+Why a second package: registry clients run `uvx <identifier>`. `uvx aitoai` fails, because aitoai's
+commands are `aito` and `aito-mcp` ("Use `uvx --from aitoai <EXECUTABLE-NAME>` instead").
+`aito-mcp` depends on `aitoai[mcp]` at the same version and exposes the command.
 
-## Order
+## Cutting a release (an agent can do all of it; the tag push needs Antti's yes)
 
-1. **Merge the release.** Push `release/1.2.0` and open a PR. Dispatch the "aito start
-   across platforms" workflow with `image=ghcr.io/aitohq/aito:v2.11.2`, then merge once green.
-2. **aitoai to PyPI**, from master: `./do release`. It prompts once and reads `TWINE_*`
-   from `.env`.
-3. **aito-mcp to PyPI**, after aitoai 1.2.0 is live (its dependency must resolve). It is a new
-   project: a token scoped to the `aitoai` project cannot create it, so the first upload needs
-   an account-wide token (then scope a new token to `aito-mcp`):
+1. `python scripts/versions.py bump X.Y.Z`. It writes the version into `aito/__init__.py`,
+   `packaging/aito-mcp/pyproject.toml` (the version and the `aitoai[mcp]==` pin) and
+   `registry/server.json`, and renames the changelog's "Unreleased" section to `X.Y.Z`.
+2. PR, CI green, merge. `tests/sdk/test_release_versions.py` fails CI if any version disagrees.
+3. On master: `git tag X.Y.Z && git push origin X.Y.Z`.
+4. The workflow runs:
+   - it checks the tag equals the version in every file;
+   - it builds and `twine check`s both packages;
+   - it publishes aitoai;
+   - it waits until aitoai is installable, then publishes aito-mcp;
+   - it waits until aito-mcp is on PyPI, then publishes the registry entry.
+5. Verify:
+   - `uvx aito-mcp` runs;
+   - `https://registry.modelcontextprotocol.io/v0/servers?search=io.github.AitoDotAI` shows `X.Y.Z`.
 
-       pip install build twine && cd packaging/aito-mcp && python3 -m build && twine check dist/* && twine upload dist/*
+The SDK docs deploy from master by themselves (`docs.yml`).
 
-4. **Registry.** One-time install of `mcp-publisher`, from the modelcontextprotocol/registry
-   releases. Then:
+## One-time setup (Antti, a few minutes; then no tokens are needed again)
 
-       mcp-publisher login github      # as a member of the AitoDotAI GitHub org
-       mcp-publisher publish registry/server.json
+1. **PyPI Trusted Publishing, on both projects.** On pypi.org, open `aitoai` → Settings → Publishing →
+   Add a new publisher → GitHub. Enter:
+   - Owner `AitoDotAI`
+   - Repository `aito-python-tools`
+   - Workflow `release.yml`
+   - Environment `pypi`
 
-   The registry checks that the aito-mcp PyPI description contains
-   `mcp-name: io.github.AitoDotAI/aito`; `packaging/aito-mcp/README.md` has it.
-5. **Marketplace.** Nothing to submit. Once on master, users run:
+   Then the same for `aito-mcp`.
+2. **The `pypi` environment on GitHub.** In AitoDotAI/aito-python-tools → Settings → Environments →
+   New environment `pypi`:
+   - **Deployment branches and tags:** "Selected branches and tags", add a tag rule `*.*.*`.
+   - **Optional:** "Required reviewers: Antti". Every release then waits for one click in GitHub.
+     That makes Antti's yes an explicit gate even when an agent pushed the tag.
+3. **Nothing for the registry.** The OIDC login grants the repository owner's namespace
+   (`io.github.AitoDotAI/*`) to workflows in AitoDotAI repositories. The environment rule in 2 is
+   what keeps that to release tags.
 
-       /plugin marketplace add AitoDotAI/aito-python-tools
-       /plugin install aito@aito
+## Manual fallback
 
-   Listing in Anthropic's plugin directory would be a separate submission form.
-6. **Docs link** on aito.ai, owned by the website lane.
-
-## Decisions (Antti)
-
-- The second PyPI package, `aito-mcp`. The alternative is no registry entry and only the
-  plugin's `uvx --from 'aitoai[mcp]' aito-mcp`.
-- The registry name: `io.github.AitoDotAI/aito` (GitHub login, works today), or
-  `ai.aito/aito` (needs a DNS TXT record on aito.ai).
-- The engine pin for `aito start`: v2.11.2 now (the latest multi-arch image on ghcr), or
-  wait for v2.11.3/v2.11.4 images (v2.11.4 fixes the nested-from link-path 400).
-- After step 3, whether the plugin's `.mcp.json` moves to `uvx aito-mcp` (shorter, pinned
-  by the package) from `uvx --from 'aitoai[mcp]' aito-mcp` (works today).
+- **aitoai:** `./do release` (reads `TWINE_*` from `.env`).
+- **aito-mcp:**
+  `twine upload --config-file /dev/null --repository-url https://upload.pypi.org/legacy/ -u __token__ packaging/aito-mcp/dist/*`
+  with a token scoped to aito-mcp, built first with `python -m build packaging/aito-mcp`.
+- **Registry:** an org **Owner** logs in with a classic personal access token whose only scope is
+  `read:org`: `mcp-publisher login github --token <PAT>`, then `mcp-publisher publish registry/server.json`.
+  The browser login (`login github`) is a GitHub App that sees only orgs where it is installed, so it
+  grants just the personal namespace.
