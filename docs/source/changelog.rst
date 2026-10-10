@@ -4,6 +4,18 @@ Changelog
 Unreleased
 ----------
 
+- ``aito-mcp`` answers read better, from dogfooding on a production instance:
+
+  - ``$why`` leaves out factors with a lift of exactly 1 (they changed nothing), and by default only
+    the top hit carries it (an explicit ``select`` with ``$why`` keeps it on every hit);
+  - ``evaluate`` leads with a summary: accuracy against always guessing the most common value, the
+    calibration error, the number of held-out rows and the time per prediction, then the full metrics;
+  - ``relate`` returns each related value with its lift and the counts behind it, and flags a lift
+    resting on fewer than 10 rows as ``small_sample``;
+  - ``raw: true`` on ``evaluate`` and ``relate`` returns the engine's response unchanged;
+  - the instructions, ``search``, ``query``, ``evaluate`` and the skill say to prefer aggregate
+    answers on personal data, since every fetched row enters the conversation.
+
 - The v1 and v2 clients retry a write the server answered with 409 ``write.contention``
   (aito-core #1619): it lost to concurrent writes on the same table and committed nothing, so it is
   safe to repeat. Up to 3 retries by default (``write_contention_retries=...`` on either client; 0

@@ -117,6 +117,7 @@ class TestMcpLiveSmoke(BaseTestCase):
                 related = await ok('relate', query={
                     'from': LINES, 'where': {'gl_account': '7300'}, 'relate': 'vendor'})
                 self.assertTrue(related['hits'])
+                self.assertEqual(set(related['hits'][0]) >= {'lift', 'n_related', 'small_sample'}, True)
 
                 matched = await ok('match', query={
                     'from': LINES, 'where': {'description': 'diesel fuel'}, 'match': 'product', 'limit': 2})
@@ -132,7 +133,8 @@ class TestMcpLiveSmoke(BaseTestCase):
                     'test': {'$index': {'$mod': [5, 0]}},  # spans all four vendors
                     'evaluate': {'from': LINES, 'where': {'vendor': {'$get': 'vendor'}},
                                  'predict': 'gl_account'}})
-                self.assertGreater(evaluation.get('accuracy', 0), 0.9, evaluation)
+                self.assertGreater(evaluation['summary']['accuracy'], 0.9, evaluation)
+                self.assertIn('always guessing the most common value', evaluation['summary']['reading'])
 
                 error, text = await call('predict', query={'from': LINES, 'predict': 'no_such_field'})
                 self.assertTrue(error)
