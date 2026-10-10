@@ -6,7 +6,9 @@ an aitoai that does not exist, or a registry entry for a package version nobody 
 """
 
 import importlib.util
+import os
 import shutil
+import unittest
 import tempfile
 from pathlib import Path
 
@@ -27,6 +29,9 @@ class TestReleaseVersions(BaseTestCase):
             shutil.copy(ROOT / name, tmp / name)
         return tmp
 
+    # The built-package CI jobs rewrite aito/__init__.py to a dev version before building
+    # (scripts/deploy --bump-version dev), so the tree is inconsistent there by design.
+    @unittest.skipIf(os.environ.get('TEST_BUILT_PACKAGE'), 'the built-package job bumps aitoai to a dev version')
     def test_the_repository_is_consistent(self):
         self.assertEqual(versions.problems(ROOT), [])
 
