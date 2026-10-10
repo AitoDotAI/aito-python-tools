@@ -1,0 +1,106 @@
+name: Release
+
+# A version tag (e.g. 1.2.1) publishes everything a release ships, with no stored secrets:
+#   1. aitoai to PyPI          (PyPI Trusted Publishing: this workflow's OIDC identity)
+#   2. aito-mcp to PyPI        (the same; it pins aitoai[mcp]==<the same version>)
+#   3. registry/server.json to the official MCP registry (mcp-publisher login github-oidc)
+# The tag must equal the version in every file (scripts/versions.py check). Cut a release with:
+#   python scripts/versions.py bump X.Y.Z   -> PR, CI green, merge -> git tag X.Y.Z && git push origin X.Y.Z
+# The `pypi` environment gates the publishing jobs: restrict it to tags in the repository settings.
+# The SDK docs deploy from master on their own (docs.yml).
+
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  MCP_PUBLISHER_VERSION: v1.8.1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: The tag is the version in every file
+        run: python scripts/versions.py check --tag "$GITHUB_REF_NAME"
+      - name: Build aitoai and aito-mcp
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build --outdir dist/aitoai .
+          python -m build --outdir dist/aito-mcp packaging/aito-mcp
+          twine check dist/aitoai/* dist/aito-mcp/*
+      - uses: actions/upload-artifact@v5
+        with:
+          name: dist
+          path: dist/
+
+  pypi-aitoai:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/aitoai/
+
+  pypi-aito-mcp:
+    needs: pypi-aitoai
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - name: Wait until aitoai is installable (aito-mcp pins it)
+        run: |
+          for _ in $(seq 1 30); do
+            pip download --no-deps --quiet --dest /tmp/probe "aitoai==$GITHUB_REF_NAME" && exit 0
+            sleep 10
+          done
+          echo "aitoai $GITHUB_REF_NAME did not appear on PyPI"; exit 1
+      - uses: actions/download-artifact@v5
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/aito-mcp/
+
+  mcp-registry:
+    needs: pypi-aito-mcp
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Wait until aito-mcp is on PyPI (the registry checks the package exists)
+        run: |
+          for _ in $(seq 1 30); do
+            curl -sf "https://pypi.org/pypi/aito-mcp/$GITHUB_REF_NAME/json" > /dev/null && exit 0
+            sleep 10
+          done
+          echo "aito-mcp $GITHUB_REF_NAME did not appear on PyPI"; exit 1
+      - name: Install mcp-publisher
+        run: |
+          curl -sfL "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+      - name: Publish to the MCP registry
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish registry/server.json
