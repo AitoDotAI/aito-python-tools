@@ -53,7 +53,7 @@ def write_credentials_file_profile(
 
 
 def mask_instance_url(instance_url: str):
-    pattern = re.compile('^https://(.+?)\.(.+)$')
+    pattern = re.compile(r'^https://(.+?)\.(.+)$')
     matched = pattern.search(instance_url)
     if matched is None:
         return '****' if len(instance_url) <= 4 else (len(instance_url) - 4) * '*' + instance_url[-4:]

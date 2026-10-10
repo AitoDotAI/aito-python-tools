@@ -54,7 +54,9 @@ For a multi-tenant app this means one collection per customer (for example
 
 - Local, for development: `pip install aitoai`, then `aito start` (needs Docker).
   It stores the URL and keys in a profile that the SDK and the `aito` MCP server find
-  on their own.
+  on their own. It runs **free mode: 10,000 rows per table, 50,000 in total**. Past that
+  the engine answers `row_limit_exceeded` with a link to a licence; for more data use a
+  licensed or hosted instance (https://aito.ai) from the start.
 - An existing instance: set `AITO_URL` and `AITO_API_KEY`.
 - To look before installing anything: the public sandbox, no signup,
   https://aito.ai/docs/api/v2/quickstart/

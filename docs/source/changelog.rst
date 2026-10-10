@@ -4,6 +4,14 @@ Changelog
 Unreleased
 ----------
 
+- ``aito-mcp`` with no instance configured starts anyway, and every tool answers with the ways in
+  (``aito start``, ``AITO_URL``/``AITO_API_KEY`` or a profile, or aito.ai), so an agent can tell the
+  user instead of seeing a server that failed to start. There is no automatic shared sandbox.
+- ``upload_rows`` and the skill state the free-mode cap of a local ``aito start`` instance (10,000 rows
+  per table, 50,000 in total), so an agent does not route a large job there.
+- ``aito configure`` reads the API key without echoing it.
+- No invalid-escape warning from ``aito.utils._credentials_file_utils`` on Python 3.12+.
+
 - ``aito-mcp`` answers read better, from dogfooding on a production instance:
 
   - ``$why`` leaves out factors with a lift of exactly 1 (they changed nothing), and by default only
