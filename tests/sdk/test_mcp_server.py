@@ -178,6 +178,13 @@ class TestMain(BaseTestCase):
         self.assertIsNone(build.call_args[0][0])
         build.return_value.run.assert_called_once()
 
+    def test_the_handshake_reports_the_package_version(self):
+        # it reported '' on mcp 2.x and the mcp package's own version on 1.x
+        from aito import __version__
+        server = mcp_server.build_server(None)
+        lowlevel = getattr(server, '_lowlevel_server', None) or server._mcp_server  # 2.x / 1.x
+        self.assertEqual(lowlevel.create_initialization_options().server_version, __version__)
+
 
 @unittest.skipIf(mcp_server is None, 'the mcp extra is not installed')
 class TestWhenToUse(BaseTestCase):
