@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+- ``aito-mcp`` reports its own version in the MCP handshake (it reported an empty one on mcp 2.x,
+  and the mcp package's version on 1.x).
+
 1.2.1
 -----
 

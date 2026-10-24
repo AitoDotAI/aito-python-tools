@@ -16,6 +16,7 @@ Run: ``aito-mcp`` (stdio). It finds the instance the way the SDK does: ``AITO_UR
 ``aito start`` writes for a local instance.
 """
 
+import inspect
 import math
 import os
 from typing import Any, Dict, List, Optional
@@ -28,6 +29,7 @@ except ImportError:  # mcp 1.x
     from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
+from aito import __version__
 from aito.local.profiles import NoCredentialsError
 from aito.v2 import AitoClientV2, AitoV2Error
 
@@ -209,8 +211,14 @@ def build_server(client: Optional[AitoClientV2], allow_writes: Optional[bool] = 
     """
     if allow_writes is None:
         allow_writes = os.environ.get(WRITES_ENV) == '1'
+    # the version the client sees in the handshake: mcp 2.x takes it as an argument,
+    # 1.x keeps it on the low-level server (and would otherwise report its own version)
+    versioned = 'version' in inspect.signature(_Server).parameters
     server = _Server(name='aito', instructions=INSTRUCTIONS if client is not None
-                     else NOT_CONFIGURED + '\n\n' + INSTRUCTIONS)
+                     else NOT_CONFIGURED + '\n\n' + INSTRUCTIONS,
+                     **({'version': __version__} if versioned else {}))
+    if not versioned:
+        server._mcp_server.version = __version__
 
     def need_client() -> None:
         if client is None:
