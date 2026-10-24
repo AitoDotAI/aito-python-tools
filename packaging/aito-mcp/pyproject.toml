@@ -7,12 +7,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aito-mcp"
-version = "1.2.0"
+version = "1.2.1"
 description = "MCP server for Aito, the predictive database: says when Aito fits and when not"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-dependencies = ["aitoai[mcp]==1.2.0"]
+dependencies = ["aitoai[mcp]==1.2.1"]
 authors = [{name = "aito.ai", email = "admin@aito.ai"}]
 urls = {Homepage = "https://aito.ai/docs/api/v2/", Source = "https://github.com/AitoDotAI/aito-python-tools"}
 

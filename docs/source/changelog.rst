@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Unreleased
-----------
+1.2.1
+-----
 
 - ``aito-mcp`` with no instance configured starts anyway, and every tool answers with the ways in
   (``aito start``, ``AITO_URL``/``AITO_API_KEY`` or a profile, or aito.ai), so an agent can tell the
