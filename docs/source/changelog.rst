@@ -6,6 +6,17 @@ Unreleased
 
 - ``aito-mcp`` reports its own version in the MCP handshake (it reported an empty one on mcp 2.x,
   and the mcp package's version on 1.x).
+- The v2 client retries a request the server turned away with 429 (admission control: busy now,
+  come back after ``Retry-After``). Up to 3 retries by default (``rate_limit_retries=...``; 0 turns
+  it off), each after ``Retry-After`` plus jitter, and at most 60 s of waiting in all for one
+  request: a longer ``Retry-After`` is raised at once, and the error names 429 and the wait. This
+  covers queries and job submissions alike.
+- ``Retry-After`` given as an HTTP date is honoured, for 429 and ``write.contention`` alike (it
+  used to count as 1 s).
+- A job's status or result (``GET .../jobs/{id}``, ``.../jobs/{id}/result``) is no longer retried
+  on ``write.contention``, by either client: the job's stored result does not change, so fetching
+  it again only delayed the error. The v2 error now says to pause the writers and submit the job
+  again.
 
 1.2.1
 -----

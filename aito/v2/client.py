@@ -81,11 +81,18 @@ class AitoClientV2:
         with 409 ``write.contention``: a write that lost to concurrent writes on the same table
         and committed nothing, so repeating it is safe. Each retry waits the server's
         ``Retry-After`` plus exponential jitter (at most 8 s on top). 0 turns it off; the
-        error is then raised at once. Other 409s are never retried.
+        error is then raised at once. Other 409s are never retried, and neither is a
+        job's status or result: a job that lost is submitted again.
     :type write_contention_retries: int
+    :param rate_limit_retries: how many times to repeat a request the server turned away
+        with 429 (admission control: busy now, come back after ``Retry-After``, given in
+        seconds or as an HTTP date). Each retry waits that plus jitter, and the waits for
+        one request add up to 60 s at most: a longer ``Retry-After`` is raised at once.
+        0 turns it off.
+    :type rate_limit_retries: int
     :raises ValueError: the instance URL has no scheme or host, the environment name is
         one the engine reserves, no instance URL and key could be resolved, or
-        ``write_contention_retries`` is negative
+        ``write_contention_retries`` or ``rate_limit_retries`` is negative
         (``NoCredentialsError``)
     :raises AitoV2Error: the credentials could not be verified
 
@@ -107,8 +114,10 @@ class AitoClientV2:
             check_credentials: bool = True,
             on_response: Optional[Callable[[Any, str], None]] = None,
             write_contention_retries: int = contention.DEFAULT_RETRIES,
+            rate_limit_retries: int = contention.DEFAULT_RATE_LIMIT_RETRIES,
     ):
         contention.check_retries(write_contention_retries)
+        contention.check_retries(rate_limit_retries, 'rate_limit_retries')
         if on_warning not in _ON_WARNING_CHOICES:
             raise ValueError(
                 f"invalid on_warning '{on_warning}', expected one of {'|'.join(_ON_WARNING_CHOICES)}")
@@ -129,6 +138,7 @@ class AitoClientV2:
         self.timeout = timeout
         self.on_response = on_response
         self.write_contention_retries = write_contention_retries
+        self.rate_limit_retries = rate_limit_retries
         # A pooled session keeps the TCP+TLS connection alive across calls. A
         # fresh connection per request pays the handshake every time, which
         # dominates the per-call wall-clock against a shared instance.
@@ -217,6 +227,8 @@ class AitoClientV2:
             headers = {**headers, 'Content-Type': content_type or 'application/octet-stream'}
             body = {'data': data}
         retries = 0
+        rate_limited = 0
+        waited = 0.0
         while True:
             try:
                 resp = self._session.request(
@@ -243,10 +255,30 @@ class AitoClientV2:
             if resp.status_code < 400:
                 break
             error = AitoV2Error.from_response(resp.status_code, resp.text, parsed)
+            if resp.status_code == contention.RATE_LIMITED:
+                delay = contention.delay(getattr(resp, 'headers', None), rate_limited)
+                if rate_limited >= self.rate_limit_retries:
+                    error.args = (f'{error.args[0]} (429: the server is busy; retried '
+                                  f'{rate_limited} times over {waited:.0f}s)',)
+                    raise error
+                if waited + delay > contention.MAX_RATE_LIMIT_WAIT:
+                    error.args = (f'{error.args[0]} (429: the server asked to wait {delay:.0f}s more, '
+                                  f'beyond the {contention.MAX_RATE_LIMIT_WAIT:.0f}s this client waits '
+                                  f'for one request; retried {rate_limited} times)',)
+                    raise error
+                rate_limited += 1
+                waited += delay
+                LOG.info('%s %s: 429, retry %d of %d in %.1fs',
+                         method, path, rate_limited, self.rate_limit_retries, delay)
+                time.sleep(delay)
+                continue
             # Keyed on the code, never on 409 alone: the server's other 409s (an env being
             # migrated, an old binary format that needs a repair, a release or branch
             # conflict) are different conditions, and some must never be repeated.
             if error.code != WRITE_CONTENTION:
+                raise error
+            if contention.is_job_poll(method, path):
+                error.args = (f'{error.args[0]} ({contention.JOB_CONTENTION_HINT})',)
                 raise error
             if retries >= self.write_contention_retries:
                 if retries:
