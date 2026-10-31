@@ -7,6 +7,7 @@ use it.
 """
 
 import asyncio
+import json
 import logging
 import time
 import warnings
@@ -19,6 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover - import-time typing only
 
 from aito import _write_contention as contention
 from aito.exceptions import BaseError
+from aito.local.profiles import SET_THE_KEY
 from aito.utils._generic_utils import instance_url_problem
 from .requests import AitoRequest, BaseRequest, GetVersionRequest
 from .responses import BaseResponse
@@ -49,6 +51,37 @@ def _is_aiohttp_response_error(error: Exception) -> bool:
     return isinstance(error, ClientResponseError)
 
 
+def _message_of(body: str) -> str:
+    """what a failed response says went wrong: its ``message``, else the body itself
+
+    The server names the cause there (a refused ``where`` clause, an unknown key), so it
+    is what a caller needs to see, not the status line.
+    """
+    try:
+        parsed = json.loads(body)
+    except ValueError:
+        return body
+    if isinstance(parsed, dict) and parsed.get('message'):
+        return parsed['message']
+    return body
+
+
+async def _raise_with_body(resp) -> None:
+    """raise aiohttp's error for a failed response, carrying the server's message
+
+    ``raise_for_status`` puts the status line ("Bad Request") in the error, and the body,
+    which says what was wrong with the query, would be lost.
+    """
+    from aiohttp import ClientResponseError
+    try:
+        message = _message_of(await resp.text())
+    except Exception:  # the body could not be read: the status line is all there is
+        message = ''
+    raise ClientResponseError(resp.request_info, resp.history, status=resp.status,
+                              message=message or resp.reason or f'HTTP {resp.status}',
+                              headers=resp.headers)
+
+
 class RequestError(Error):
     """An error occurred when sending a request to the Aito instance
 
@@ -67,12 +100,7 @@ class RequestError(Error):
         self.request_obj = request_obj
         self.error = error
         if isinstance(error, requestslib.HTTPError):
-            try:
-                resp = error.response.json()
-                error_msg = resp['message'] if 'message' in resp else resp
-            except (ValueError, KeyError):
-                # Response is not valid JSON or doesn't have expected structure
-                error_msg = error.response.text or str(error)
+            error_msg = _message_of(error.response.text) or str(error)
         elif _is_aiohttp_response_error(error):
             error_msg = error.message
         else:
@@ -143,13 +171,21 @@ class AitoClient:
         self.write_contention_retries = contention.check_retries(write_contention_retries)
         self.instance_version = None
         if check_credentials:
+            if not (api_key or '').strip():
+                # an empty key is a 401 at the server; say so before sending one
+                raise Error(f'the API key is empty: {SET_THE_KEY}')
             try:
                 version_resp = self._request_version()
                 self.instance_version = version_resp.version
                 # Also verify API key is valid by making an authenticated request
                 self._verify_api_key()
-            except Exception:
-                raise Error('failed to instantiate Aito Client, please check your credentials')
+            except requestslib.HTTPError as e:  # the key check answered
+                message = _message_of(e.response.text)
+                if e.response.status_code == 401:
+                    raise Error(f'the API key was refused: {message}. Check the key: {SET_THE_KEY}') from e
+                raise Error(f'failed to instantiate Aito Client, please check your credentials: {message}') from e
+            except Exception as e:
+                raise Error(f'failed to instantiate Aito Client, please check your credentials: {e}') from e
 
     @property
     def _base_url(self) -> str:
@@ -377,7 +413,8 @@ class AitoClient:
                         if self._is_write_contention(resp.status, body, retries, request_obj):
                             delay = contention.delay(resp.headers, retries)
                     if delay is None:
-                        resp.raise_for_status()
+                        if resp.status >= 400:
+                            await _raise_with_body(resp)
                         return request_obj.response_cls(await resp.json())
             except Exception as e:
                 req_err = RequestError(request_obj, e, retries)

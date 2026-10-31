@@ -24,7 +24,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import requests as requestslib
 
 from aito import _write_contention as contention
-from aito.local.profiles import resolve_credentials
+from aito.local.profiles import SET_THE_KEY, NoCredentialsError, resolve_credentials
 from aito.utils._generic_utils import instance_url_problem
 from .errors import AitoV2Error
 from .responses import (
@@ -91,10 +91,11 @@ class AitoClientV2:
         0 turns it off.
     :type rate_limit_retries: int
     :raises ValueError: the instance URL has no scheme or host, the environment name is
-        one the engine reserves, no instance URL and key could be resolved, or
-        ``write_contention_retries`` or ``rate_limit_retries`` is negative
-        (``NoCredentialsError``)
-    :raises AitoV2Error: the credentials could not be verified
+        one the engine reserves, no instance URL and key could be resolved or the key is
+        empty (``NoCredentialsError``), or ``write_contention_retries`` or
+        ``rate_limit_retries`` is negative
+    :raises AitoV2Error: the credentials could not be verified; a refused key (401) says
+        how to set it
 
     >>> client = AitoClientV2(your_instance_url, your_api_key) # doctest: +SKIP
     >>> res = client.predict( # doctest: +SKIP
@@ -127,6 +128,9 @@ class AitoClientV2:
         url_problem = instance_url_problem(instance_url)
         if url_problem:
             raise ValueError(url_problem)
+        if not api_key.strip():
+            # an empty key is a 401 at the server; say so before sending one
+            raise NoCredentialsError(f'the API key is empty: {SET_THE_KEY}')
         if env is not None:
             self._validate_env_name(env)
 
@@ -151,7 +155,13 @@ class AitoClientV2:
         self._session = requestslib.Session()
 
         if check_credentials:
-            self.get_schema()
+            try:
+                self.get_schema()
+            except AitoV2Error as e:
+                if e.status_code != 401:
+                    raise
+                raise AitoV2Error(f'{e.message}. Check the key: {SET_THE_KEY}', code=e.code,
+                                  status_code=e.status_code, body=e.body) from e
 
     @staticmethod
     def _validate_env_name(env: str) -> None:

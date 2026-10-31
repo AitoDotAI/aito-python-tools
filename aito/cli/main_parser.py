@@ -10,6 +10,7 @@ import argcomplete
 
 from aito import __version__
 from aito.exceptions import BaseError
+from aito.v2.errors import AitoV2Error
 from .parser import ArgParser, DEFAULT_CONFIG_DIR
 from .sub_commands.convert_sub_command import ConvertSubCommand
 from .sub_commands.database_sub_command import ConfigureSubCommand, QuickAddTableSubCommand, CreateTableSubCommand, \
@@ -184,6 +185,9 @@ To see the help text, you can run:
         else:
             try:
                 self._commands_map[command_name].parse_and_execute(parsed_args)
+            except AitoV2Error as e:
+                # not logged when raised (aito.v2.errors), so this is the only place it shows
+                self.exit(2, f"{self.prog}: error: {e}\n")
             except BaseError:
                 self.exit(2)
             except Exception as e:

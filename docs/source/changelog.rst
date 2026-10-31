@@ -17,6 +17,17 @@ Unreleased
   on ``write.contention``, by either client: the job's stored result does not change, so fetching
   it again only delayed the error. The v2 error now says to pause the writers and submit the job
   again.
+- A server's reason for refusing a request reaches the user. The engine now refuses with a 400
+  (v2: 501) what it used to answer 200 with the filter silently dropped: a condition it cannot
+  apply under ``$not``/``$or``/``$and``, and an operator in a v1 ``_estimate`` ``where``.
+
+  - The v1 async path (``async_request``, ``batch_requests``) carries the body's message in the
+    error; it carried only the status line ("Bad Request").
+  - The CLI prints a v2 error and its message; it exited with status 2 and printed nothing.
+  - An empty API key is refused before any request, saying how to set it. A key the server
+    refuses (401) when the client starts says so, gives the server's message and how to set the
+    key; on v1 it was the catch-all "please check your credentials", which now also gives the
+    cause of any other failure.
 
 1.2.1
 -----
