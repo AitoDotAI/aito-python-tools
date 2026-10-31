@@ -28,6 +28,10 @@ Unreleased
     refuses (401) when the client starts says so, gives the server's message and how to set the
     key; on v1 it was the catch-all "please check your credentials", which now also gives the
     cause of any other failure.
+  - Code that matches on these errors may need a change. ``AitoClientV2`` now refuses a blank key
+    when it is built, even with ``check_credentials=False``: it raises ``NoCredentialsError``, a
+    ``ValueError``. ``AitoClient`` refuses one only when it checks the credentials. The v1 message
+    for a refused key no longer contains "check your credentials".
 
 1.2.1
 -----
