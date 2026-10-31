@@ -70,7 +70,8 @@ class TestWriteContentionIsRetried(RetryCase):
         self.assertEqual(self.sleeps, [2.0])
 
     def test_a_missing_or_unreadable_retry_after_means_one_second(self):
-        for header in (None, 'soon', 'Wed, 21 Oct 2026 07:28:00 GMT'):
+        # an HTTP date is read (tests/sdk/test_rate_limit_retry.py)
+        for header in (None, 'soon', 'Wed, 99 Foo 2026 07:28:00 GMT'):
             with self.subTest(header):
                 client = self.client([contention(header), OK])
                 with mock.patch('aito._write_contention.random.uniform', side_effect=lambda lo, hi: lo):
@@ -118,8 +119,9 @@ class TestOnlyThisConditionIsRetried(RetryCase):
                 self.assertEqual((self.sent(client), self.sleeps), (1, []))
 
     def test_the_code_alone_decides_not_the_status(self):
-        # a 500 or 503 is not retried as contention, even with a Retry-After
-        for status in (500, 503, 429):
+        # a 500 or 503 is not retried as contention, even with a Retry-After (a 429 has its
+        # own policy: tests/sdk/test_rate_limit_retry.py)
+        for status in (500, 503):
             with self.subTest(status):
                 client = self.client([FakeResponse(status, {'kind': 'error', 'data': {'message': 'x'}},
                                                    headers={'Retry-After': '1'}), OK])

@@ -298,7 +298,7 @@ class AitoClient:
                 )
                 # the body is only parsed here for a 409, so a normal response is parsed once
                 if resp.status_code == 409 and self._is_write_contention(
-                        resp.status_code, _json_or_none(resp), retries):
+                        resp.status_code, _json_or_none(resp), retries, request_obj):
                     delay = contention.delay(resp.headers, retries)
                     retries += 1
                     LOG.info(f'{request_obj}: write.contention, retry {retries} of '
@@ -316,13 +316,15 @@ class AitoClient:
                     return req_err
             return request_obj.response_cls(json_resp)
 
-    def _is_write_contention(self, status: int, body, retries: int) -> bool:
+    def _is_write_contention(self, status: int, body, retries: int, request_obj: AitoRequest) -> bool:
         """a 409 whose code is write.contention, with retries left (aito-core #1619)
 
         Keyed on the code: the server's other 409s (an env being migrated, an old binary
-        format that needs a repair, a release or branch conflict) are other conditions.
+        format that needs a repair, a release or branch conflict) are other conditions. Never
+        a job's status or result: a stored result does not change; the job is resubmitted.
         """
         return (status == 409 and retries < self.write_contention_retries
+                and not contention.is_job_poll(request_obj.method, request_obj.endpoint)
                 and contention.code_of(body) == contention.WRITE_CONTENTION)
 
     async def async_request(
@@ -372,7 +374,7 @@ class AitoClient:
                             body = await resp.json(content_type=None)
                         except Exception:
                             body = None
-                        if self._is_write_contention(resp.status, body, retries):
+                        if self._is_write_contention(resp.status, body, retries, request_obj):
                             delay = contention.delay(resp.headers, retries)
                     if delay is None:
                         resp.raise_for_status()

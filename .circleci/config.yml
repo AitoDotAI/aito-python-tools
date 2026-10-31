@@ -91,6 +91,8 @@ commonYAMLStructure:
     run:
       name: create doc virtualenv and install dependencies
       command: |
+        # a cached venv whose interpreter link broke (the image's Python moved) is rebuilt
+        if [ -d venv ] && ! venv/bin/python -c '' 2>/dev/null; then rm -rf venv; fi
         python -m venv venv
         . venv/bin/activate
         pip install --upgrade pip
