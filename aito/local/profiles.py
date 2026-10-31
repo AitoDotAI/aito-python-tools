@@ -34,6 +34,8 @@ DEFAULT_PROFILE = 'default'
 
 URL_ENV_VARS = ('AITO_URL', 'AITO_INSTANCE_URL')
 KEY_ENV_VAR = 'AITO_API_KEY'
+#: how to give a client its key, for the messages that say it has none or a wrong one
+SET_THE_KEY = f'pass api_key, set {KEY_ENV_VAR}, or store it in a profile with `aito configure`'
 PROFILE_ENV_VAR = 'AITO_PROFILE'
 
 
