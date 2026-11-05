@@ -289,6 +289,7 @@ class AitoClientV2:
                 raise error
             if contention.is_job_poll(method, path):
                 error.args = (f'{error.args[0]} ({contention.JOB_CONTENTION_HINT})',)
+                error._job_result = True
                 raise error
             if retries >= self.write_contention_retries:
                 if retries:

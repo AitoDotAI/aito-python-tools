@@ -45,6 +45,38 @@ CLI's default moves to v2 only in 2.0. The design is written up in
 ``pip install aitoai`` installs the API clients. The command-line tool, schema inference
 and file conversion need the dataframe toolchain: ``pip install 'aitoai[cli]'``.
 
+Errors and retries
+------------------
+
+A v2 error is an ``AitoV2Error`` with the server's ``code`` and ``status_code``; branch on
+those, not on the message. ``is_not_found`` is a missing table or collection.
+
+The client repeats a request only when that is safe, waiting the server's ``Retry-After``
+plus jitter:
+
+- 409 ``write.contention``: a write that lost to concurrent writes on the same table and
+  committed nothing. Up to 3 retries (``write_contention_retries=``; 0 turns it off). Other
+  409s are never repeated.
+- 429: the server was busy and turned the request away. Up to 3 retries, and at most 60 s of
+  waiting for one request (``rate_limit_retries=``; 0 turns it off).
+
+It does not repeat a job's status or result (a stored result does not change: submit the job
+again), or a 503: a write answered 503 may or may not have been applied, so read before
+repeating it. With the retries off, or after the last one, ``err.is_retryable`` says whether
+repeating the same request later is safe:
+
+  .. code-block:: python
+
+    from aito.v2 import Client, AitoV2Error
+
+    client = Client(url, key, rate_limit_retries=0)   # this caller queues its own retries
+    try:
+        prediction = client.predict(from_table='invoices', where=invoice, predict='GLCode')
+    except AitoV2Error as err:
+        if not err.is_retryable:
+            raise
+        queue_for_later(invoice)
+
 Run Aito locally
 ----------------
 
