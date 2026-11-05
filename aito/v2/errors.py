@@ -24,6 +24,7 @@ everywhere, the fallback becomes redundant rather than wrong.)
 import logging
 from typing import Any, Optional
 
+from aito import _write_contention as contention
 from aito.exceptions import BaseError
 
 LOG = logging.getLogger('AitoClientV2')
@@ -75,6 +76,7 @@ class AitoV2Error(BaseError):
         """
         self.code = code
         self.status_code = status_code
+        self._job_result = False  # set for a job's stored result, which repeating never changes
         self.body = body
         self.message = message
         # Deliberately NOT BaseError.__init__, which logs at ERROR on
@@ -99,6 +101,25 @@ class AitoV2Error(BaseError):
         :rtype: bool
         """
         return self.code == 'not_found' or self.status_code == 404
+
+    @property
+    def is_retryable(self) -> bool:
+        """whether the same request is safe to repeat later, and can then succeed
+
+        True for what the client itself retries: a write that lost to concurrent writes
+        (``write.contention``: nothing was committed) and a request the server turned away
+        with 429 before running it. For a caller that turns those retries off, or runs out
+        of them; wait the response's ``Retry-After`` first.
+
+        False for a job's stored ``write.contention`` result (fetching it again returns the
+        same result: submit the job again) and for a 503: a write answered 503 may or may
+        not have been applied, so read before repeating it.
+
+        :rtype: bool
+        """
+        if self._job_result:
+            return False
+        return self.code == contention.WRITE_CONTENTION or self.status_code == contention.RATE_LIMITED
 
     @classmethod
     def from_response(cls, status_code: int, body: str, parsed: Any = None) -> 'AitoV2Error':
