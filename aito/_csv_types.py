@@ -49,6 +49,13 @@ def read_source(source: CsvSource, encoding: str = 'utf-8') -> bytes:
     return data.encode(encoding) if isinstance(data, str) else data
 
 
+def _refuse_duplicates(header: Sequence[str]):
+    """a repeated column would keep only its last cell, as the engine's /import refuses it"""
+    duplicates = sorted({h for h in header if header.count(h) > 1})
+    if duplicates:
+        raise CsvFormatError(f"CSV import: duplicate header column(s) {', '.join(duplicates)}")
+
+
 def parse_csv(source: CsvSource, delimiter: str = ',', encoding: str = 'utf-8'
               ) -> Tuple[List[str], List[List[Optional[str]]]]:
     """the header and the rows; an empty cell is ``None`` (missing)
@@ -68,9 +75,7 @@ def parse_csv(source: CsvSource, delimiter: str = ',', encoding: str = 'utf-8'
         if not name.strip():
             raise CsvFormatError(f"CSV import: header column {i + 1} is empty")
         header.append(name.strip())
-    duplicates = sorted({h for h in header if header.count(h) > 1})
-    if duplicates:
-        raise CsvFormatError(f"CSV import: duplicate header column(s) {', '.join(duplicates)}")
+    _refuse_duplicates(header)
     rows = []
     for number, record in enumerate(records[1:], start=2):
         if not record:
@@ -165,8 +170,10 @@ def typed_rows(header: List[str], rows: List[List[Optional[str]]], columns: Dict
     A missing cell is left out of its row. A cell that does not fit its column's
     type raises ``ValueError`` naming the row (as numbered in the file, header = 1)
     and the column, before anything is sent. A column absent from ``columns`` is
-    sent as a string, for the engine to accept or refuse.
+    sent as a string, for the engine to accept or refuse. A repeated header column
+    raises ``CsvFormatError``, as in ``parse_csv``.
     """
+    _refuse_duplicates(header)
     types = {name: (spec.get('type') if isinstance(spec, dict) else str(spec)) for name, spec in columns.items()}
     out = []
     for number, r in enumerate(rows, start=2):

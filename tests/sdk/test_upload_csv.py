@@ -10,7 +10,7 @@ import logging
 import tempfile
 from pathlib import Path
 
-from aito._csv_types import CsvFormatError, infer_csv, looks_like_text, parse_csv
+from aito._csv_types import CsvFormatError, infer_csv, looks_like_text, parse_csv, typed_rows
 from aito.v2 import AitoClientV2, AitoV2Error
 from tests.cases import BaseTestCase
 from tests.sdk.test_v2_client import FakeResponse, RecordingSession
@@ -166,6 +166,28 @@ class TestUploadCsv(BaseTestCase):
             bad.upload_csv('invoices', b'invoice_id,amount,category\nA1,twelve,Office\n')
         self.assertIn("row 2, column 'amount': 'twelve' is not a Decimal", str(ctx.exception))
         self.assertEqual(len(bad._session.calls), 1, "a bad cell must fail before anything is sent")
+
+    def test_a_duplicate_header_is_refused_before_anything_is_sent(self):
+        # spreadsheet exports repeat a header; keeping the last column would lose the other's
+        # values, so every path refuses it the way the engine's /import does
+        body = b'invoice_id,amount,amount\nA1,12.5,13\n'
+        existing = FakeResponse(200, {'type': 'collection', 'columns': {
+            'invoice_id': {'type': 'String'}, 'amount': {'type': 'Decimal'}}})
+        missing = FakeResponse(404, {'kind': 'error', 'data': {'code': 'not_found', 'message': 'x'}})
+        for via, first in (('client', missing), ('auto', missing), ('server', missing), ('auto', existing)):
+            with self.subTest(via=via, appending=first is existing):
+                c = self.client(first)
+                with self.assertRaises(CsvFormatError) as ctx:
+                    c.upload_csv('invoices', body, via=via)
+                self.assertIn('duplicate header column(s) amount', str(ctx.exception))
+                self.assertEqual(c._session.calls, [])
+
+    def test_typed_rows_refuses_a_duplicate_header_too(self):
+        # its callers parse first, but on its own it would keep the last 'amount' and drop the other
+        with self.assertRaises(CsvFormatError) as ctx:
+            typed_rows(['id', 'amount', 'amount'], [['A1', '12.5', '13']],
+                       {'id': {'type': 'String'}, 'amount': {'type': 'Decimal'}})
+        self.assertIn('duplicate header column(s) amount', str(ctx.exception))
 
     def test_a_str_source_is_always_a_path(self):
         c = self.client()
