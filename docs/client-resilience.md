@@ -46,11 +46,23 @@ v2.12.0:
   (`PUT /api/v1/schema/{t}`), and a column-level `"primaryKey": true` in a v2 schema. Both answer
   200 and create a table with no key.
 
-The SDK doesn't reach the upsert yet: `AitoClientV2.create_collection` takes no primary key, and
-`upload_entries` sends no `on_conflict`. So a batch whose response was lost (a reset, a timeout,
-a 503) may have landed, and sending it again can duplicate it. No client retries a batch
-insert on such a failure. The 409 `write.contention` retry is safe because the engine commits
-nothing before answering it.
+Other engine facts, checked on v2.11.2 and v2.12.0:
+- A batch is all or nothing: one bad row (say, two rows with the same key) fails it, and none
+  of it lands.
+- `on_conflict` takes `error` (the default), `update` or `ignore`. On a collection without a
+  key, `update` and `ignore` are refused with 400 ("requires a declared primaryKey"), so they
+  can never append twice.
+
+In the v2 SDK:
+
+```python
+client.create_collection('invoices', columns, primary_key='id')   # or a list: a composite key
+client.upload_entries('invoices', rows, on_conflict='update')      # resending is safe
+```
+
+Into a table without a key, a batch whose response was lost (a reset, a timeout, a 503) may
+have landed, and sending it again can duplicate it. No client retries such a batch. The 409
+`write.contention` retry is safe because the engine commits nothing before answering it.
 
 **A failed batch mid-upload:**
 - **v1 `api.upload_entries`** logs the failed batch as an error and carries on with the next.
@@ -63,7 +75,7 @@ nothing before answering it.
 To resume after a failure into a table without a key, a caller has to find out what landed,
 e.g. by querying the batch's ids or counting the table, rather than resending blindly.
 Alternatively, it loads into a fresh table and swaps it in. With a keyed v2 collection, it can
-resend with `on_conflict=update` through `client.request`.
+resend the upload with `on_conflict='update'`.
 
 ## Opt-in transient retries (v2)
 
@@ -76,10 +88,18 @@ repeated:
 - GETs;
 - the queries `_query`, `_search`, `_predict`, `_recommend`, `_relate`, `_match`, `_estimate`,
   `_aggregate`, `_evaluate` and `_batch`;
-- `optimize`.
+- `optimize`;
+- a batch sent with `on_conflict=update` or `ignore` (`upload_entries(..., on_conflict=...)`):
+  the same rows land once however often it's sent.
 
-Never a batch insert, `import`, a delete, a schema write, `_modify`, an env or a job
-submission. Tests: `tests/sdk/test_transient_retry.py`.
+  This relies on the engine refusing `update` and `ignore` on a collection without a key
+  (checked on v2.11.2 and v2.12.0). The client doesn't look up the schema before retrying, so
+  an engine that accepted them there would make the retry duplicate rows. The live suite pins
+  the refusal on every CI engine
+  (`test_on_conflict_without_a_primary_key_is_refused`), so such an engine fails CI first.
+
+Never a plain batch insert (or one with `on_conflict=error`), `import`, `stream`, a delete, a
+schema write, `_modify`, an env or a job submission. Tests: `tests/sdk/test_transient_retry.py`.
 
 ## Not changed here: defaults, for Antti
 
@@ -90,6 +110,3 @@ submission. Tests: `tests/sdk/test_transient_retry.py`.
 - **Transient retries on by default.**
 - **The same opt-in retries for the v1 clients.** That one isn't a default change, but v1 is
   legacy, so it's left until someone needs it.
-
-Not changed here either, and not a default change: a `primary_key=` on `create_collection` and
-an `on_conflict=` on `upload_entries`, so a caller can make an upload safe to resend.
