@@ -92,6 +92,12 @@ repeated:
 - a batch sent with `on_conflict=update` or `ignore` (`upload_entries(..., on_conflict=...)`):
   the same rows land once however often it's sent.
 
+  This relies on the engine refusing `update` and `ignore` on a collection without a key
+  (checked on v2.11.2 and v2.12.0). The client doesn't look up the schema before retrying, so
+  an engine that accepted them there would make the retry duplicate rows. The live suite pins
+  the refusal on every CI engine
+  (`test_on_conflict_without_a_primary_key_is_refused`), so such an engine fails CI first.
+
 Never a plain batch insert (or one with `on_conflict=error`), `import`, `stream`, a delete, a
 schema write, `_modify`, an env or a job submission. Tests: `tests/sdk/test_transient_retry.py`.
 

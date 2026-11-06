@@ -135,6 +135,22 @@ class TestAitoClientV2Live(BaseTestCase):
         finally:
             self.client.delete_collection(scratch)
 
+    def test_on_conflict_without_a_primary_key_is_refused(self):
+        # The client retries an update/ignore batch without looking up the schema
+        # (aito/_write_contention.py _is_upsert_batch): safe only while the engine refuses
+        # them on a collection with no key. If this starts to pass rows through, that retry
+        # would duplicate them.
+        scratch = f'{TEST_COLLECTION}_unkeyed'
+        self.client.create_collection(scratch, {'id': {'type': 'String'}})
+        try:
+            for value in ('update', 'ignore'):
+                with self.subTest(value), self.assertRaises(AitoV2Error) as ctx:
+                    self.client.upload_entries(scratch, [{'id': '1'}], on_conflict=value)
+                self.assertEqual(ctx.exception.status_code, 400)
+            self.assertEqual(self.client.search(from_table=scratch, limit=0).total, 0)
+        finally:
+            self.client.delete_collection(scratch)
+
     def test_missing_collection_is_a_typed_not_found(self):
         with self.assertRaises(AitoV2Error) as ctx:
             self.client.get_schema('no_such_collection_here')

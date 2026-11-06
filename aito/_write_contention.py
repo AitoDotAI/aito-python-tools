@@ -116,7 +116,14 @@ def is_safe_to_repeat(method: str, path: str) -> bool:
 
 def _is_upsert_batch(path: str) -> bool:
     """a batch whose every on_conflict is update or ignore: the same rows land once however often
-    it is sent, and the engine refuses either on a collection without a primary key"""
+    it is sent
+
+    This RELIES ON THE ENGINE refusing update and ignore on a collection without a primary key
+    (400 "requires a declared primaryKey", v2.11.2 and v2.12.0): that is what keeps the retry
+    from appending twice, without a schema lookup. An engine that accepted them there would
+    make this retry duplicate rows. tests/sdk/test_v2_live.py pins the refusal on every CI
+    engine, so such an engine fails CI before it ships here.
+    """
     route, _, query = path.partition('?')
     if not _BATCH.match(route):
         return False
