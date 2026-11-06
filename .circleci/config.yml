@@ -32,7 +32,7 @@ workflows:
             - run_sdk_and_cli_tests_built_package
             - run_postgres_tests_built_package
       # Opt-in, against shared: what only a cloud instance does (the v1 file upload's S3
-      # URL). Release branches only.
+      # path; a local engine takes the batch fallback). Release branches only.
       - run_shared_smoke:
           filters:
             branches:
