@@ -32,10 +32,22 @@ safe: true for 409 `write.contention` and 429, false for everything else. That i
 
 ## Are uploads safe to repeat?
 
-**No.** The engine's batch insert appends: it doesn't upsert, and a table has no key to
-upsert on. Checked on v2.12.0, a schema's `primaryKey` is accepted and silently dropped. The
-same two rows sent twice through `POST /api/v1/data/{t}/batch` gave 4 rows, and once more
-through `/api/v2/data/{t}/batch` gave 6. So a batch whose response was lost (a reset, a timeout,
+**Only into a v2 collection with a primary key, sent with `?on_conflict=update`.** Checked on
+v2.12.0:
+
+- **A v1 table, or a v2 collection without a primary key:** the batch insert appends. The same
+  rows sent twice are stored twice: two rows became 4, then 6, through
+  `POST /api/v1/data/{t}/batch` and then `/api/v2/data/{t}/batch`.
+- **A v2 collection created with a top-level `"primaryKey": "id"`:** the key is kept and
+  enforced. A repeated row is refused with 400 `data.bad_request` ("primary key 'id' = 1 already
+  exists ... use on_conflict=update to upsert"). `POST /api/v2/data/{t}/batch?on_conflict=update`
+  upserts, so resending it is safe.
+- **Silently dropped, with no error or warning:** a top-level `primaryKey` in a v1 schema
+  (`PUT /api/v1/schema/{t}`), and a column-level `"primaryKey": true` in a v2 schema. Both answer
+  200 and create a table with no key.
+
+The SDK doesn't reach the upsert yet: `AitoClientV2.create_collection` takes no primary key, and
+`upload_entries` sends no `on_conflict`. So a batch whose response was lost (a reset, a timeout,
 a 503) may have landed, and sending it again can duplicate it. No client retries a batch
 insert on such a failure. The 409 `write.contention` retry is safe because the engine commits
 nothing before answering it.
@@ -48,9 +60,10 @@ nothing before answering it.
 - **v2 `AitoClientV2.upload_entries`** raises at the failed batch. The batches before it have
   landed, and the count of those isn't in the error.
 
-To resume after a failure, a caller has to find out what landed, e.g. by querying the batch's
-ids or counting the table, rather than resending blindly. Alternatively, it loads into a fresh
-table and swaps it in.
+To resume after a failure into a table without a key, a caller has to find out what landed,
+e.g. by querying the batch's ids or counting the table, rather than resending blindly.
+Alternatively, it loads into a fresh table and swaps it in. With a keyed v2 collection, it can
+resend with `on_conflict=update` through `client.request`.
 
 ## Opt-in transient retries (v2)
 
@@ -77,3 +90,6 @@ submission. Tests: `tests/sdk/test_transient_retry.py`.
 - **Transient retries on by default.**
 - **The same opt-in retries for the v1 clients.** That one isn't a default change, but v1 is
   legacy, so it's left until someone needs it.
+
+Not changed here either, and not a default change: a `primary_key=` on `create_collection` and
+an `on_conflict=` on `upload_entries`, so a caller can make an upload safe to resend.

@@ -7,8 +7,8 @@ client behaves as it always has.
 
 Only requests that change nothing are repeated: GETs, the query endpoints (``_query``,
 ``_search``, ``_predict``, ``_recommend``, ``_relate``, ``_match``, ``_estimate``,
-``_aggregate``, ``_evaluate``, ``_batch``) and ``optimize``. Never a batch insert (the engine
-does not upsert: a batch sent twice stores its rows twice), a delete, a schema write,
+``_aggregate``, ``_evaluate``, ``_batch``) and ``optimize``. Never a batch insert (into a table
+without a primary key, a batch sent twice stores its rows twice), a delete, a schema write,
 ``_modify`` or a job submission: a write that failed in transit may have landed. Offline: a
 recording session plays the server.
 """

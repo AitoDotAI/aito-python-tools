@@ -95,7 +95,7 @@ class AitoClientV2:
         change nothing are repeated: GETs, the queries (``query``, ``search``, ``predict``,
         ``recommend``, ``relate``, ``match``, ``estimate``, ``aggregate``, ``evaluate``,
         ``batch``) and ``optimize``. Never a write: one that failed in transit may have landed,
-        and a batch insert sent twice stores its rows twice
+        and a batch insert into a collection without a primary key stores its rows twice
     :type retries: int
     :param backoff: the transient retries' wait in seconds: retry n waits up to
         ``backoff * 2**n`` (full jitter, at most 8 s), on top of a ``Retry-After`` the

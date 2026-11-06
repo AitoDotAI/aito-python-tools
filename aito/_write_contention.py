@@ -21,7 +21,8 @@ time left is raised at once rather than slept through.
 A transient failure (502, 503 or 504, a dropped connection, a timeout) is retried only when
 the client opts in (``AitoClientV2(retries=...)``, default 0), and only for a request that
 changes nothing (:func:`is_safe_to_repeat`): a write that failed in transit may have landed,
-and the engine's batch insert does not upsert, so a repeated batch stores its rows twice.
+and a batch insert into a table without a primary key appends, so a repeated batch stores
+its rows twice.
 
 Standard library only.
 """
