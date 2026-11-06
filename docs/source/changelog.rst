@@ -4,6 +4,11 @@ Changelog
 Unreleased
 ----------
 
+- ``AitoClientV2(retries=n, backoff=s)``: opt-in retries for a transient failure (a 502, 503 or
+  504, a dropped connection, a timeout), only for requests that change nothing: GETs, the
+  queries and ``optimize``. Never a write: a batch insert sent twice stores its rows twice. Off
+  by default, so nothing changes unless you set it. ``docs/client-resilience.md`` covers what
+  each client does on each failure.
 - A file upload to a self-hosted Aito works: ``aito database upload-file``, ``quick-add-table``
   and ``api.upload_file`` / ``quick_add_table`` failed there with a bare 500, because the file
   upload goes through S3 and a self-hosted engine has none. When the engine refuses it

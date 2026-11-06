@@ -90,10 +90,21 @@ class AitoClientV2:
         one request add up to 60 s at most: a longer ``Retry-After`` is raised at once.
         0 turns it off.
     :type rate_limit_retries: int
+    :param retries: how many times to repeat a request that met a transient failure: a 502,
+        503 or 504, a dropped connection or a timeout. Off (0) by default. Only requests that
+        change nothing are repeated: GETs, the queries (``query``, ``search``, ``predict``,
+        ``recommend``, ``relate``, ``match``, ``estimate``, ``aggregate``, ``evaluate``,
+        ``batch``) and ``optimize``. Never a write: one that failed in transit may have landed,
+        and a batch insert sent twice stores its rows twice
+    :type retries: int
+    :param backoff: the transient retries' wait in seconds: retry n waits up to
+        ``backoff * 2**n`` (full jitter, at most 8 s), on top of a ``Retry-After`` the
+        response carries. Defaults to 0.5
+    :type backoff: float
     :raises ValueError: the instance URL has no scheme or host, the environment name is
         one the engine reserves, no instance URL and key could be resolved or the key is
-        empty (``NoCredentialsError``), or ``write_contention_retries`` or
-        ``rate_limit_retries`` is negative
+        empty (``NoCredentialsError``), or ``write_contention_retries``,
+        ``rate_limit_retries``, ``retries`` or ``backoff`` is negative
     :raises AitoV2Error: the credentials could not be verified; a refused key (401) says
         how to set it
 
@@ -116,9 +127,14 @@ class AitoClientV2:
             on_response: Optional[Callable[[Any, str], None]] = None,
             write_contention_retries: int = contention.DEFAULT_RETRIES,
             rate_limit_retries: int = contention.DEFAULT_RATE_LIMIT_RETRIES,
+            retries: int = 0,
+            backoff: float = 0.5,
     ):
         contention.check_retries(write_contention_retries)
         contention.check_retries(rate_limit_retries, 'rate_limit_retries')
+        contention.check_retries(retries, 'retries')
+        if backoff < 0:
+            raise ValueError(f'backoff must be 0 or more, got {backoff}')
         if on_warning not in _ON_WARNING_CHOICES:
             raise ValueError(
                 f"invalid on_warning '{on_warning}', expected one of {'|'.join(_ON_WARNING_CHOICES)}")
@@ -143,6 +159,8 @@ class AitoClientV2:
         self.on_response = on_response
         self.write_contention_retries = write_contention_retries
         self.rate_limit_retries = rate_limit_retries
+        self.retries = retries
+        self.backoff = backoff
         # A pooled session keeps the TCP+TLS connection alive across calls. A
         # fresh connection per request pays the handshake every time, which
         # dominates the per-call wall-clock against a shared instance.
@@ -239,6 +257,7 @@ class AitoClientV2:
         retries = 0
         rate_limited = 0
         waited = 0.0
+        transient = 0
         while True:
             try:
                 resp = self._session.request(
@@ -246,11 +265,17 @@ class AitoClientV2:
                     timeout=self.timeout if timeout is None else timeout, **body,
                 )
             except requestslib.RequestException as e:
+                if (isinstance(e, (requestslib.ConnectionError, requestslib.Timeout))
+                        and self._may_repeat(method, path, transient)):
+                    self._wait_transient(method, path, transient, None, type(e).__name__)
+                    transient += 1
+                    continue
                 hint = ''
                 if isinstance(e, requestslib.ConnectionError) and any(
                         h in self.instance_url for h in ('://127.0.0.1', '://localhost')):
                     hint = ' (a local Aito: is it running? `aito status`, `aito start`)'
-                raise AitoV2Error(f'Aito v2 request failed: {method} {path}: {e}{hint}') from e
+                suffix = f' (retried {transient} times)' if transient else ''
+                raise AitoV2Error(f'Aito v2 request failed: {method} {path}: {e}{hint}{suffix}') from e
 
             if self.on_response is not None:
                 # Before the status check, so a caller observing timings still sees
@@ -265,6 +290,15 @@ class AitoClientV2:
             if resp.status_code < 400:
                 break
             error = AitoV2Error.from_response(resp.status_code, resp.text, parsed)
+            if resp.status_code in contention.TRANSIENT_STATUSES:
+                if self._may_repeat(method, path, transient):
+                    self._wait_transient(method, path, transient, getattr(resp, 'headers', None),
+                                         str(resp.status_code))
+                    transient += 1
+                    continue
+                if transient:
+                    error.args = (f'{error.args[0]} (retried {transient} times)',)
+                raise error
             if resp.status_code == contention.RATE_LIMITED:
                 delay = contention.delay(getattr(resp, 'headers', None), rate_limited)
                 if rate_limited >= self.rate_limit_retries:
@@ -306,6 +340,17 @@ class AitoClientV2:
                 status_code=resp.status_code, body=resp.text,
             )
         return parsed
+
+    def _may_repeat(self, method: str, path: str, transient: int) -> bool:
+        """whether a transient failure is retried: opted in, retries left, and a request
+        that changes nothing"""
+        return transient < self.retries and contention.is_safe_to_repeat(method, path)
+
+    def _wait_transient(self, method: str, path: str, transient: int, headers, what: str) -> None:
+        delay = contention.transient_delay(headers, transient, self.backoff)
+        LOG.info('%s %s: %s, retry %d of %d in %.1fs',
+                 method, path, what, transient + 1, self.retries, delay)
+        time.sleep(delay)
 
     def _respond(self, response_cls, method: str, path: str,
                  query: Optional[Union[Dict, List]] = None,

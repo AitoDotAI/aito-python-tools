@@ -77,6 +77,13 @@ repeating the same request later is safe:
             raise
         queue_for_later(invoice)
 
+Transient failures (a 502, 503 or 504, a dropped connection, a timeout) are retried only if you
+opt in, and only for requests that change nothing: reads, queries and ``optimize``, never a
+write. A batch insert sent twice stores its rows twice. ``Client(url, key, retries=3,
+backoff=0.5)`` waits up to ``backoff * 2**n`` seconds before retry n. The default is
+``retries=0``. What each client does on each failure, and how to resume a failed upload:
+``docs/client-resilience.md``.
+
 Run Aito locally
 ----------------
 
