@@ -217,9 +217,9 @@ and point the variables at it:
     $ export AITO_GROCERY_DEMO_INSTANCE_URL=$AITO_INSTANCE_URL AITO_GROCERY_DEMO_API_KEY=<rw-test-key>
     $ python tests/fixtures/grocery/seed.py
 
-The seed replaces the database's schema, so it refuses any host but localhost. A few tests need
-a cloud instance (the v1 file upload hands back an S3 URL a local engine does not have) and
-skip on a local one. ``AITO_SKIP_LIVE_TESTS=1`` skips the live tests when no instance is set,
+The seed replaces the database's schema, so it refuses any host but localhost. A local engine
+has no S3, so the file-upload tests take the batch fallback there; the S3 path itself runs
+against a cloud instance in CI's release-branch smoke. ``AITO_SKIP_LIVE_TESTS=1`` skips the live tests when no instance is set,
 as the Windows CI job does.
 
 There are multiple test suites:

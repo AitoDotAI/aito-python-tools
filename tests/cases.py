@@ -18,19 +18,6 @@ from .parser import ROOT_PATH
 LOG = logging.getLogger('TestCase')
 
 
-def _is_local(url: Optional[str]) -> bool:
-    from urllib.parse import urlparse
-    return bool(url) and urlparse(url).hostname in ('localhost', '127.0.0.1', '::1')
-
-
-#: The v1 file upload (POST /api/v1/data/{table}/file) hands back a presigned S3 URL. A
-#: self-hosted engine has no S3 and answers 500, so these tests need a cloud instance: they
-#: run in the opt-in shared smoke (AITO_INSTANCE_URL on aito.app), not against CI's local one.
-needs_cloud_file_upload = unittest.skipIf(
-    _is_local(os.environ.get('AITO_INSTANCE_URL')),
-    'the v1 file upload needs a cloud instance (S3); a self-hosted engine answers 500')
-
-
 class BaseTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:

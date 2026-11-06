@@ -4,6 +4,11 @@ Changelog
 Unreleased
 ----------
 
+- A file upload to a self-hosted Aito works: ``aito database upload-file``, ``quick-add-table``
+  and ``api.upload_file`` / ``quick_add_table`` failed there with a bare 500, because the file
+  upload goes through S3 and a self-hosted engine has none. When the engine refuses it
+  (``file_upload.unavailable``, or the bare 500 from an engine off Aito's own cloud), the rows are
+  sent through ``/batch`` instead, with one warning. A 500 on Aito's cloud is still raised.
 - The SDK guide and ``AitoClientV2.relate`` document that a v2 relate hit's ``related`` is
   bare (``{'vendor': 'Elenia Oy'}``), where v1 wrapped the value in ``$has``: a v1 parser finds
   no rows, without an error.

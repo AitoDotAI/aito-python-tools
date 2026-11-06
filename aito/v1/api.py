@@ -490,6 +490,33 @@ def _stream_entries_from_gzip(binary_file: BinaryIO) -> Iterable[Dict]:
                 yield json.loads(line)
 
 
+#: Aito's own cloud, whose engines have the S3 storage the file upload needs
+_CLOUD_HOST_SUFFIXES = ('.aito.ai', '.aito.app')
+#: what an engine without S3 storage answers the file upload with (aito-core, after v2.12.0)
+FILE_UPLOAD_UNAVAILABLE = 'file_upload.unavailable'
+
+
+def _file_upload_unavailable(client: AitoClient, error: RequestError) -> bool:
+    """whether the engine refused the file upload because it has no S3 storage
+
+    A newer engine says so: ``file_upload.unavailable``. v2.12.0 and older answer a bare 500
+    with nothing to tell it apart, so that counts only off Aito's own cloud: a self-hosted
+    engine has no S3, while a 500 on the cloud is a real failure and is raised.
+    """
+    from urllib.parse import urlparse
+    response = getattr(error.error, 'response', None)
+    if response is None:
+        return False
+    try:
+        body = response.json()
+    except ValueError:
+        body = None
+    if isinstance(body, dict) and body.get('error') == FILE_UPLOAD_UNAVAILABLE:
+        return True
+    host = urlparse(client.instance_url).hostname or ''
+    return response.status_code == 500 and not host.endswith(_CLOUD_HOST_SUFFIXES)
+
+
 def upload_binary_file(
         client: AitoClient,
         table_name: str,
@@ -501,7 +528,9 @@ def upload_binary_file(
     """`upload a binary file object to a table <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__
 
     For multitenant instances, this function uses streaming batch uploads instead of S3 file upload,
-    as S3 file upload is not supported in multitenant environments.
+    as S3 file upload is not supported in multitenant environments. An engine without S3 storage
+    (a self-hosted one) refuses the file upload, and the rows are then sent in batches too, with
+    a warning.
 
     .. note::
 
@@ -522,20 +551,31 @@ def upload_binary_file(
     """
     LOG.debug(f'uploading file object to table `{table_name}`...')
 
-    if client.is_multitenant:
-        # For multitenant instances, use streaming batch upload
-        LOG.info(f'using streaming upload for multitenant instance')
-        entries = _stream_entries_from_gzip(binary_file)
+    def stream():
         upload_entries(
             client=client,
             table_name=table_name,
-            entries=entries,
+            entries=_stream_entries_from_gzip(binary_file),
             batch_size=batch_size,
             optimize_on_finished=optimize_on_finished
         )
+
+    if client.is_multitenant:
+        # For multitenant instances, use streaming batch upload
+        LOG.info(f'using streaming upload for multitenant instance')
+        stream()
     else:
         # For non-multitenant instances, use S3 file upload
-        init_upload_resp = initiate_upload_file(client=client, table_name=table_name)
+        try:
+            init_upload_resp = initiate_upload_file(client=client, table_name=table_name)
+        except RequestError as e:
+            if not _file_upload_unavailable(client, e):
+                raise
+            # Nothing was committed: the initiate call only hands out an upload URL
+            LOG.warning(f'this Aito has no file upload (no S3 storage): sending the rows to '
+                        f'/api/v1/data/{table_name}/batch in batches of {batch_size} instead')
+            stream()
+            return
         upload_binary_file_to_s3(initiate_upload_file_response=init_upload_resp, binary_file=binary_file)
         upload_session_id = init_upload_resp['id']
         trigger_file_processing(client=client, table_name=table_name, session_id=upload_session_id)
@@ -559,7 +599,9 @@ def upload_file(
     """`upload a file <https://aito.ai/docs/api/#post-api-v1-data-table-file>`__ to the specfied table
 
     For multitenant instances, this function uses streaming batch uploads instead of S3 file upload,
-    as S3 file upload is not supported in multitenant environments.
+    as S3 file upload is not supported in multitenant environments. An engine without S3 storage
+    (a self-hosted one) refuses the file upload, and the rows are then sent in batches too, with
+    a warning.
 
     .. note::
 
@@ -602,7 +644,9 @@ def quick_add_table(
     """Create a table and upload a file to the table, using the default inferred schema
 
     For multitenant instances, this function uses streaming batch uploads instead of S3 file upload,
-    as S3 file upload is not supported in multitenant environments.
+    as S3 file upload is not supported in multitenant environments. An engine without S3 storage
+    (a self-hosted one) refuses the file upload, and the rows are then sent in batches too, with
+    a warning.
 
     :param client: the AitoClient instance
     :type client: AitoClient
