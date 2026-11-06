@@ -151,6 +151,24 @@ class TestAitoClientV2Live(BaseTestCase):
         finally:
             self.client.delete_collection(scratch)
 
+    def test_a_failed_upload_says_what_landed_and_resumes_as_an_upsert(self):
+        # docs/client-resilience.md, "Resuming a failed upload": the recipe, against an engine
+        scratch = f'{TEST_COLLECTION}_resume'
+        self.client.create_collection(scratch, {'id': {'type': 'String'}, 'a': {'type': 'String'}},
+                                      primary_key='id')
+        try:
+            rows = [{'id': str(i), 'a': 'x'} for i in range(6)]
+            bad = rows[:3] + [{'a': 'no key'}] + rows[4:]  # batch 1 (rows 2-3) is refused whole
+            with self.assertRaises(AitoV2Error) as ctx:
+                self.client.upload_entries(scratch, bad, batch_size=2, on_conflict='update')
+            err = ctx.exception
+            self.assertEqual((err.batches_landed, err.rows_landed, err.failed_batch), (1, 2, 1))
+            self.assertEqual(self.client.search(from_table=scratch, limit=0).total, 2)
+            self.client.upload_entries(scratch, rows[err.rows_landed:], batch_size=2, on_conflict='update')
+            self.assertEqual(self.client.search(from_table=scratch, limit=0).total, 6)
+        finally:
+            self.client.delete_collection(scratch)
+
     def test_missing_collection_is_a_typed_not_found(self):
         with self.assertRaises(AitoV2Error) as ctx:
             self.client.get_schema('no_such_collection_here')

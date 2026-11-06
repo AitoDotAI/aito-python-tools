@@ -27,8 +27,9 @@ safe: true for 409 `write.contention` and 429, false for everything else. That i
 - **v1 async:** aiohttp's default session timeout, 300 s in all and 30 s to connect. It can't be
   set.
 - **v2:** `AitoClientV2(timeout=30.0)` per client; `client.timeout` can be changed between calls.
-  A per-call `timeout=` exists on `request`, `query`, `evaluate` (600 s by default) and `batch`,
-  but not on `search`, `predict`, `recommend`, `relate`, `match`, `estimate` or `aggregate`.
+  Every query method also takes a per-call `timeout=` that overrides the client's for that
+  call: `request`, `query`, `search`, `predict`, `recommend`, `relate`, `match`, `estimate`,
+  `aggregate`, `batch`, and `evaluate` (600 s by default).
 
 ## Are uploads safe to repeat?
 
@@ -69,13 +70,50 @@ have landed, and sending it again can duplicate it. No client retries such a bat
   It raises only if no batch at all succeeded. A partial upload returns normally, and the
   caller can't tell from the return value which rows are missing (the log names the batch's
   index range).
-- **v2 `AitoClientV2.upload_entries`** raises at the failed batch. The batches before it have
-  landed, and the count of those isn't in the error.
+- **v2 `AitoClientV2.upload_entries`** raises at the failed batch, with the same `AitoV2Error`
+  as any other failure. The batches before it have landed. The error says how far the upload
+  got:
+  - `batches_landed`;
+  - `rows_landed`, the rows of those batches;
+  - `failed_batch`, its 0-based index.
 
-To resume after a failure into a table without a key, a caller has to find out what landed,
-e.g. by querying the batch's ids or counting the table, rather than resending blindly.
-Alternatively, it loads into a fresh table and swaps it in. With a keyed v2 collection, it can
-resend the upload with `on_conflict='update'`.
+  All three are `None` on any other error.
+
+### Resuming a failed upload (v2)
+
+The failed batch itself is all or nothing in the engine. If it was refused (a 4xx), none of it
+landed. If it failed in transit (a reset, a timeout, a 503), it may have landed whole.
+
+**Into a collection with a primary key: resend the rest as an upsert.** Every row that's already
+there is replaced by itself, so the batch that may have landed can't duplicate:
+
+```python
+client.create_collection('invoices', columns, primary_key='id')
+try:
+    client.upload_entries('invoices', rows, on_conflict='update')
+except AitoV2Error as err:
+    if err.rows_landed is None:
+        raise
+    client.upload_entries('invoices', rows[err.rows_landed:], on_conflict='update')
+```
+
+With `retries=n` on the client, the upsert batches are also retried through 502/503/504,
+resets and timeouts before the error is raised at all.
+
+**Into a collection without a key: resend from the landed count, after checking the failed
+batch.**
+- Refused with a 4xx: none of it landed, so resend `rows[err.rows_landed:]` after fixing what
+  the error names.
+- Failed in transit: first count the table, e.g. `client.search(from_table=..., limit=0).total`
+  against the count before the upload plus `err.rows_landed`.
+  - If the failed batch is in, resend `rows[err.rows_landed + batch_size:]`.
+  - If not, resend `rows[err.rows_landed:]`.
+
+  The count is only reliable while nothing else writes to the table. Otherwise, load into a fresh
+  table and swap it in.
+
+A v1 `api.upload_entries` failure has no such state: it skips the failed batch and carries on,
+and the log names the batch's index range.
 
 ## Opt-in transient retries (v2)
 

@@ -4,6 +4,12 @@ Changelog
 Unreleased
 ----------
 
+- Every v2 query method takes a per-call ``timeout=``: ``search``, ``predict``, ``recommend``,
+  ``relate``, ``match``, ``estimate`` and ``aggregate`` now too, as ``query``, ``evaluate`` and
+  ``batch`` did. Left out, the client's timeout applies, as before.
+- A v2 ``upload_entries`` that fails at a batch raises the same ``AitoV2Error``, which now also
+  carries ``batches_landed``, ``rows_landed`` and ``failed_batch``, so the upload can be resumed
+  from ``entries[err.rows_landed:]``. ``docs/client-resilience.md`` has the recipe.
 - ``AitoClientV2.create_collection(..., primary_key='id')`` (or a list of columns) creates a
   collection with a key, and ``upload_entries(..., on_conflict='update' | 'ignore' | 'error')``
   says what a row whose key is already stored does. An upsert (``update`` or ``ignore``) lands

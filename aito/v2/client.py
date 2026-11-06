@@ -486,6 +486,12 @@ class AitoClientV2:
             both. Defaults to None: not sent
         :type on_conflict: Optional[str]
         :raises ValueError: ``on_conflict`` is not one of the three
+        :raises AitoV2Error: a batch failed. The batches before it have landed: the error's
+            ``batches_landed``, ``rows_landed`` and ``failed_batch`` say how far it got, so
+            ``entries[err.rows_landed:]`` is what is left. The failed batch is all or nothing,
+            but one that failed in transit (a reset, a timeout, a 503) may have landed:
+            resending from ``rows_landed`` is safe with ``on_conflict='update'`` into a keyed
+            collection; without a key, check what landed first
         :return: the number of rows inserted
         :rtype: int
         """
@@ -493,9 +499,16 @@ class AitoClientV2:
             raise ValueError(f"invalid on_conflict {on_conflict!r}, expected 'error', 'update' or 'ignore'")
         path = f'/data/{name}/batch' + (f'?on_conflict={on_conflict}' if on_conflict else '')
         total = 0
-        for start in range(0, len(entries), batch_size):
+        for batch, start in enumerate(range(0, len(entries), batch_size)):
             chunk = entries[start:start + batch_size]
-            result = self.request('POST', path, chunk)
+            try:
+                result = self.request('POST', path, chunk)
+            except AitoV2Error as error:
+                error.batches_landed, error.rows_landed, error.failed_batch = batch, start, batch
+                landed = f"{start} row{'s' if start != 1 else ''} in {batch} batch{'es' if batch != 1 else ''}"
+                error.args = (f'{error.args[0]} (upload_entries: batch {batch} failed; {landed} '
+                              f'landed before it)',)
+                raise
             total += int(result.get('count', len(chunk)))
         return total
 
@@ -644,6 +657,7 @@ class AitoClientV2:
             order_by: Optional[Any] = None,
             limit: Optional[int] = None,
             offset: Optional[int] = None,
+            timeout: Optional[float] = None,
     ) -> V2RowsResponse:
         """retrieve matching rows
 
@@ -662,12 +676,14 @@ class AitoClientV2:
         :type limit: Optional[int]
         :param offset: the number of hits to skip
         :type offset: Optional[int]
+        :param timeout: override the client's timeout for this call
+        :type timeout: Optional[float]
         :rtype: V2RowsResponse
         """
         query = self._body(
             {'from': from_table}, where=where, select=select, orderBy=order_by,
             limit=limit, offset=offset)
-        return self._respond(V2RowsResponse, 'POST', '/_search', query)
+        return self._respond(V2RowsResponse, 'POST', '/_search', query, timeout=timeout)
 
     def predict(
             self,
@@ -677,6 +693,7 @@ class AitoClientV2:
             select: Optional[List] = None,
             limit: Optional[int] = None,
             why: bool = False,
+            timeout: Optional[float] = None,
     ) -> V2RowsResponse:
         """predict the values of a field, ranked by probability
 
@@ -695,6 +712,8 @@ class AitoClientV2:
         :type limit: Optional[int]
         :param why: include the ``$why`` explanation tree in the default select
         :type why: bool
+        :param timeout: override the client's timeout for this call
+        :type timeout: Optional[float]
         :rtype: V2RowsResponse
 
         >>> res = client.predict( # doctest: +SKIP
@@ -706,7 +725,7 @@ class AitoClientV2:
             select = ['$p', '$value', '$why'] if why else ['$p', '$value']
         query = self._body(
             {'from': from_table, 'predict': predict}, where=where, select=select, limit=limit)
-        return self._respond(V2RowsResponse, 'POST', '/_predict', query)
+        return self._respond(V2RowsResponse, 'POST', '/_predict', query, timeout=timeout)
 
     def recommend(
             self,
@@ -716,6 +735,7 @@ class AitoClientV2:
             where: Optional[Dict] = None,
             select: Optional[List] = None,
             limit: Optional[int] = None,
+            timeout: Optional[float] = None,
     ) -> V2RowsResponse:
         """rank the values of a field by how well they achieve a goal
 
@@ -732,12 +752,14 @@ class AitoClientV2:
         :type select: Optional[List]
         :param limit: the maximum number of hits
         :type limit: Optional[int]
+        :param timeout: override the client's timeout for this call
+        :type timeout: Optional[float]
         :rtype: V2RowsResponse
         """
         query = self._body(
             {'from': from_table, 'recommend': recommend, 'goal': goal},
             where=where, select=select, limit=limit)
-        return self._respond(V2RowsResponse, 'POST', '/_recommend', query)
+        return self._respond(V2RowsResponse, 'POST', '/_recommend', query, timeout=timeout)
 
     def relate(
             self,
@@ -747,6 +769,7 @@ class AitoClientV2:
             select: Optional[List] = None,
             order_by: Optional[Any] = None,
             limit: Optional[int] = None,
+            timeout: Optional[float] = None,
     ) -> V2RowsResponse:
         """find the statistical relationships between a condition and some fields
 
@@ -771,6 +794,8 @@ class AitoClientV2:
             ``{'vendor': {'$has': 'Elenia Oy'}}``: a parser written for v1 that looks for
             ``$has`` finds nothing, without an error. The client returns the shape the server
             sent.
+        :param timeout: override the client's timeout for this call
+        :type timeout: Optional[float]
         :rtype: V2RowsResponse
         """
         if isinstance(relate, str):
@@ -782,7 +807,7 @@ class AitoClientV2:
         query = self._body(
             {'from': from_table, 'relate': relate},
             where=where, select=select, orderBy=order_by, limit=limit)
-        return self._respond(V2RowsResponse, 'POST', '/_relate', query)
+        return self._respond(V2RowsResponse, 'POST', '/_relate', query, timeout=timeout)
 
     def match(
             self,
@@ -792,6 +817,7 @@ class AitoClientV2:
             select: Optional[List] = None,
             limit: Optional[int] = None,
             why: bool = False,
+            timeout: Optional[float] = None,
     ) -> V2RowsResponse:
         """rank the candidate values of a link field against some evidence
 
@@ -824,6 +850,8 @@ class AitoClientV2:
         :type limit: Optional[int]
         :param why: include the ``$why`` explanation tree in the default select
         :type why: bool
+        :param timeout: override the client's timeout for this call
+        :type timeout: Optional[float]
         :rtype: V2RowsResponse
 
         >>> res = client.match( # doctest: +SKIP
@@ -836,7 +864,7 @@ class AitoClientV2:
             select = ['$p', '$value', '$why'] if why else ['$p', '$value']
         query = self._body(
             {'from': from_table, 'match': match}, where=where, select=select, limit=limit)
-        return self._respond(V2RowsResponse, 'POST', '/_match', query)
+        return self._respond(V2RowsResponse, 'POST', '/_match', query, timeout=timeout)
 
     def estimate(
             self,
@@ -844,6 +872,7 @@ class AitoClientV2:
             estimate: str,
             where: Optional[Dict] = None,
             select: Optional[List] = None,
+            timeout: Optional[float] = None,
     ) -> V2EstimateResponse:
         """estimate the numeric value of a field
 
@@ -855,16 +884,19 @@ class AitoClientV2:
         :type where: Optional[Dict]
         :param select: the payload keys to return, e.g. ``['value', 'why']``
         :type select: Optional[List]
+        :param timeout: override the client's timeout for this call
+        :type timeout: Optional[float]
         :rtype: V2EstimateResponse
         """
         query = self._body({'from': from_table, 'estimate': estimate}, where=where, select=select)
-        return self._respond(V2EstimateResponse, 'POST', '/_estimate', query)
+        return self._respond(V2EstimateResponse, 'POST', '/_estimate', query, timeout=timeout)
 
     def aggregate(
             self,
             from_table: str,
             aggregate: List[str],
             where: Optional[Dict] = None,
+            timeout: Optional[float] = None,
     ) -> V2AggregateResponse:
         """compute aggregates over the rows a filter selects
 
@@ -875,10 +907,12 @@ class AitoClientV2:
         :type aggregate: List[str]
         :param where: the filter
         :type where: Optional[Dict]
+        :param timeout: override the client's timeout for this call
+        :type timeout: Optional[float]
         :rtype: V2AggregateResponse
         """
         query = self._body({'from': from_table, 'aggregate': aggregate}, where=where)
-        return self._respond(V2AggregateResponse, 'POST', '/_aggregate', query)
+        return self._respond(V2AggregateResponse, 'POST', '/_aggregate', query, timeout=timeout)
 
     def evaluate(self, query: Dict, timeout: Optional[float] = 600.0) -> V2EvaluationResponse:
         """run a held-out evaluation and return its metrics

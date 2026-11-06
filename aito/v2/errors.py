@@ -77,6 +77,12 @@ class AitoV2Error(BaseError):
         self.code = code
         self.status_code = status_code
         self._job_result = False  # set for a job's stored result, which repeating never changes
+        #: set when ``upload_entries`` raised it: the batches and the rows that landed before the
+        #: failed batch (``entries[rows_landed:]`` is what is left), and the failed batch's 0-based
+        #: index. None otherwise
+        self.batches_landed: Optional[int] = None
+        self.rows_landed: Optional[int] = None
+        self.failed_batch: Optional[int] = None
         self.body = body
         self.message = message
         # Deliberately NOT BaseError.__init__, which logs at ERROR on
