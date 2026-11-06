@@ -163,6 +163,7 @@ class TestAitoClientV2Live(BaseTestCase):
                 self.client.upload_entries(scratch, bad, batch_size=2, on_conflict='update')
             err = ctx.exception
             self.assertEqual((err.batches_landed, err.rows_landed, err.failed_batch), (1, 2, 1))
+            self.assertEqual(err.failed_batch_outcome, 'refused')
             self.assertEqual(self.client.search(from_table=scratch, limit=0).total, 2)
             self.client.upload_entries(scratch, rows[err.rows_landed:], batch_size=2, on_conflict='update')
             self.assertEqual(self.client.search(from_table=scratch, limit=0).total, 6)

@@ -487,11 +487,13 @@ class AitoClientV2:
         :type on_conflict: Optional[str]
         :raises ValueError: ``on_conflict`` is not one of the three
         :raises AitoV2Error: a batch failed. The batches before it have landed: the error's
-            ``batches_landed``, ``rows_landed`` and ``failed_batch`` say how far it got, so
-            ``entries[err.rows_landed:]`` is what is left. The failed batch is all or nothing,
-            but one that failed in transit (a reset, a timeout, a 503) may have landed:
-            resending from ``rows_landed`` is safe with ``on_conflict='update'`` into a keyed
-            collection; without a key, check what landed first
+            ``batches_landed``, ``rows_landed`` and ``failed_batch`` say how far it got. Its
+            ``failed_batch_outcome`` says what is known of the failed batch. ``'refused'`` (a
+            4xx): none of it landed, ``rows_landed`` is exact and ``entries[err.rows_landed:]``
+            is what is left. ``'unknown'`` (a 5xx, a reset, a timeout): it may have landed even
+            though the client saw an error, so ``rows_landed`` is a lower bound and resending
+            from it can duplicate rows. Then resend with ``on_conflict='update'`` into a keyed
+            collection, or count the table first
         :return: the number of rows inserted
         :rtype: int
         """
@@ -505,9 +507,13 @@ class AitoClientV2:
                 result = self.request('POST', path, chunk)
             except AitoV2Error as error:
                 error.batches_landed, error.rows_landed, error.failed_batch = batch, start, batch
+                # a 4xx is a refusal; a 5xx, or no response at all, may have committed the batch
+                refused = error.status_code is not None and 400 <= error.status_code < 500
+                error.failed_batch_outcome = 'refused' if refused else 'unknown'
                 landed = f"{start} row{'s' if start != 1 else ''} in {batch} batch{'es' if batch != 1 else ''}"
-                error.args = (f'{error.args[0]} (upload_entries: batch {batch} failed; {landed} '
-                              f'landed before it)',)
+                fate = 'refused' if refused else 'may have landed'
+                error.args = (f'{error.args[0]} (upload_entries: batch {batch} failed and {fate}; '
+                              f'{landed} landed before it)',)
                 raise
             total += int(result.get('count', len(chunk)))
         return total

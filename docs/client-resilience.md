@@ -77,12 +77,22 @@ have landed, and sending it again can duplicate it. No client retries such a bat
   - `rows_landed`, the rows of those batches;
   - `failed_batch`, its 0-based index.
 
-  All three are `None` on any other error.
+  - `failed_batch_outcome`:
+    - `'refused'` (a 4xx): none of the failed batch landed, and `rows_landed` is exact;
+    - `'unknown'` (a 5xx, a reset, a timeout): the failed batch may have landed on the server
+      even though the client saw an error, so `rows_landed` is a lower bound.
+
+  All four are `None` on any other error.
 
 ### Resuming a failed upload (v2)
 
-The failed batch itself is all or nothing in the engine. If it was refused (a 4xx), none of it
-landed. If it failed in transit (a reset, a timeout, a 503), it may have landed whole.
+**Is a v2 batch atomic?** Verified for refusals, on v2.11.2 and v2.12.0: a batch with one bad
+row (a missing key, or two rows with the same key) is refused whole, and none of its rows land.
+**Not verified** for a failure while the engine is writing, such as a crash or a timeout mid-commit.
+So after an `'unknown'` outcome, assume any part of the failed batch may have landed.
+
+After `'refused'`, resending `rows[err.rows_landed:]` is exact. After `'unknown'`, a resend that
+doesn't check can duplicate rows; use one of the two ways below.
 
 **Into a collection with a primary key: resend the rest as an upsert.** Every row that's already
 there is replaced by itself, so the batch that may have landed can't duplicate:
@@ -102,12 +112,14 @@ resets and timeouts before the error is raised at all.
 
 **Into a collection without a key: resend from the landed count, after checking the failed
 batch.**
-- Refused with a 4xx: none of it landed, so resend `rows[err.rows_landed:]` after fixing what
-  the error names.
-- Failed in transit: first count the table, e.g. `client.search(from_table=..., limit=0).total`
+- `'refused'`: none of it landed, so resend `rows[err.rows_landed:]` after fixing what the
+  error names.
+- `'unknown'`: first count the table, e.g. `client.search(from_table=..., limit=0).total`,
   against the count before the upload plus `err.rows_landed`.
-  - If the failed batch is in, resend `rows[err.rows_landed + batch_size:]`.
-  - If not, resend `rows[err.rows_landed:]`.
+  - If the failed batch is in whole, resend `rows[err.rows_landed + batch_size:]`.
+  - If none of it is in, resend `rows[err.rows_landed:]`.
+  - A count in between is a partly landed batch, which hasn't been observed and isn't ruled out.
+    The count can't say which rows landed, so load into a fresh table instead.
 
   The count is only reliable while nothing else writes to the table. Otherwise, load into a fresh
   table and swap it in.

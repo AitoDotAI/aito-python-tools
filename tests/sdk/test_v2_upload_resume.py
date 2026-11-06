@@ -26,7 +26,7 @@ ROWS = [{'id': str(i)} for i in range(5)]
 
 
 def client_with(responses):
-    client = make_client()
+    client = make_client(rate_limit_retries=0)  # a 429 is raised, not slept through
     client._session = RaisingSession(responses)
     return client
 
@@ -58,7 +58,7 @@ class TestAFailedBatchSaysWhatLanded(BaseTestCase):
         client = client_with([inserted(2), status(400)])
         with self.assertRaises(AitoV2Error) as raised:
             client.upload_entries('invoices', ROWS, batch_size=2)
-        self.assertIn('batch 1 failed', str(raised.exception))
+        self.assertIn('batch 1 failed and refused', str(raised.exception))
         self.assertIn('2 rows in 1 batch landed before it', str(raised.exception))
 
     def test_resuming_from_rows_landed_sends_only_the_rest(self):
@@ -71,6 +71,28 @@ class TestAFailedBatchSaysWhatLanded(BaseTestCase):
         self.assertEqual(sent, ROWS[:2] + ROWS[2:4] + ROWS[2:])
 
 
+class TestTheFailedBatchsOutcome(BaseTestCase):
+    """a 4xx refused the batch: none of it landed and rows_landed is exact. A 5xx, a reset or
+    a timeout leaves it unknown: it may have landed, so rows_landed is a lower bound"""
+
+    def test_a_4xx_is_refused(self):
+        for code in (400, 401, 404, 409, 429):
+            with self.subTest(code):
+                client = client_with([inserted(2), status(code)])
+                with self.assertRaises(AitoV2Error) as raised:
+                    client.upload_entries('invoices', ROWS, batch_size=2)
+                self.assertEqual(raised.exception.failed_batch_outcome, 'refused')
+
+    def test_a_5xx_a_reset_or_a_timeout_is_unknown(self):
+        for failure in (status(500), status(503), requests.ConnectionError('reset'), requests.ReadTimeout('slow')):
+            with self.subTest(repr(failure)):
+                client = client_with([inserted(2), failure])
+                with self.assertRaises(AitoV2Error) as raised:
+                    client.upload_entries('invoices', ROWS, batch_size=2)
+                self.assertEqual(raised.exception.failed_batch_outcome, 'unknown')
+                self.assertIn('may have landed', str(raised.exception))
+
+
 class TestOtherErrorsCarryNone(BaseTestCase):
     def test_a_query_error(self):
         client = client_with([status(400)])
@@ -78,3 +100,4 @@ class TestOtherErrorsCarryNone(BaseTestCase):
             client.request('POST', '/_query', {'from': 't'})
         error = raised.exception
         self.assertEqual((error.batches_landed, error.rows_landed, error.failed_batch), (None, None, None))
+        self.assertIsNone(error.failed_batch_outcome)
