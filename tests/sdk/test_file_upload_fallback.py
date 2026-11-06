@@ -142,6 +142,8 @@ class TestFileUploadFallbackLogs(BaseTestCase):
                 engine, records = self.upload(url, initiate)
                 self.assertEqual(self.sent(engine), ROWS)
                 self.assertEqual(self.errors(records), [])
+                # the client's lower-level records of the refused call stay, for whoever debugs it
+                self.assertTrue([r for r in records if r.name == 'AitoClient' and r.levelno == logging.DEBUG])
                 warnings = [r.getMessage() for r in records if r.levelno == logging.WARNING]
                 self.assertEqual(len(warnings), 1, warnings)
                 self.assertIn(status, warnings[0])

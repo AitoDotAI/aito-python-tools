@@ -521,7 +521,7 @@ def _file_upload_unavailable(client: AitoClient, error: RequestError) -> bool:
 
 @contextmanager
 def _held_client_logs():
-    """hold back what the client logs in this thread, and pass it on at the end unless cleared"""
+    """hold back what the client logs in this thread, and pass on at the end what is left held"""
     client_log, thread = logging.getLogger('AitoClient'), threading.get_ident()
     held = []
 
@@ -597,7 +597,7 @@ def upload_binary_file(
             except RequestError as e:
                 if not _file_upload_unavailable(client, e):
                     raise
-                held.clear()
+                held[:] = [record for record in held if record.levelno < logging.ERROR]
                 # Nothing was committed: the initiate call only hands out an upload URL
                 LOG.warning(f'this Aito has no file upload (no S3 storage; the file upload answered '
                             f'{e.error.response.status_code}): sending the rows to '
