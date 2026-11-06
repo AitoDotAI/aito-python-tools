@@ -11,6 +11,7 @@ is a real failure and still raises. Offline: a fake server answers.
 import gzip
 import io
 import json
+import logging
 from unittest import mock
 
 import requests
@@ -113,3 +114,51 @@ class TestFileUploadFallback(BaseTestCase):
             engine = self.upload('https://my-instance.aito.app', initiated)
         to_s3.assert_called_once()
         self.assertEqual(engine.batches, [])
+
+
+class TestFileUploadFallbackLogs(BaseTestCase):
+    """the fallback logs one warning, naming the engine's status; a refusal it does not take is
+    logged as an error, as before"""
+
+    def upload(self, url, initiate):
+        engine = FakeEngine(initiate)
+        with mock.patch('aito.v1.client.requestslib.request', engine), \
+                self.assertLogs(level=logging.DEBUG) as logs:
+            client = AitoClient(url, 'key', check_credentials=False)
+            try:
+                api.upload_binary_file(client, 't', gzipped(ROWS), batch_size=2, optimize_on_finished=False)
+            except RequestError:
+                pass
+        return engine, logs.records
+
+    def errors(self, records):
+        return [r.getMessage() for r in records if r.levelno >= logging.ERROR]
+
+    def test_the_fallback_logs_no_error_and_its_warning_names_the_status(self):
+        bare_500 = response(500, 'There was an internal server error.', 'Internal Server Error')
+        for url, initiate, status in (('http://localhost:9005', bare_500, '500'),
+                                      ('https://my-instance.aito.app', response(501, UNAVAILABLE), '501')):
+            with self.subTest(url):
+                engine, records = self.upload(url, initiate)
+                self.assertEqual(self.sent(engine), ROWS)
+                self.assertEqual(self.errors(records), [])
+                # the client's lower-level records of the refused call stay, for whoever debugs it
+                self.assertTrue([r for r in records if r.name == 'AitoClient' and r.levelno == logging.DEBUG])
+                warnings = [r.getMessage() for r in records if r.levelno == logging.WARNING]
+                self.assertEqual(len(warnings), 1, warnings)
+                self.assertIn(status, warnings[0])
+
+    def test_a_refusal_the_fallback_does_not_take_is_still_logged_as_an_error(self):
+        bare_500 = response(500, 'There was an internal server error.', 'Internal Server Error')
+        for url, initiate in (('https://my-instance.aito.app', bare_500),
+                              ('http://localhost:9005', response(401, {'status': 401, 'message': 'bad key'})),
+                              ('http://localhost:9005', response(501, {'status': 501, 'error': 'x', 'message': 'x'}))):
+            with self.subTest(url=url, status=initiate.status_code):
+                engine, records = self.upload(url, initiate)
+                self.assertEqual(engine.batches, [])
+                errors = self.errors(records)
+                self.assertEqual(len(errors), 1, errors)
+                self.assertIn('failed to POST(/api/v1/data/t/file)', errors[0])
+
+    def sent(self, engine):
+        return [row for batch in engine.batches for row in batch]
