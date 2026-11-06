@@ -146,6 +146,15 @@ class TestRequestBodies(BaseTestCase):
         self.assertEqual(body['select'], ['related', 'condition', 'lift', 'fs'])
         self.assertEqual(body['orderBy'], 'lift')
 
+    def test_relate_returns_related_as_the_server_sends_it(self):
+        # v2 answers the related value bare, {"vendor": "Elenia Oy"}, where v1 wrapped it as
+        # {"vendor": {"$has": "Elenia Oy"}}; the client hands it over unchanged, never rewritten
+        hit = {'related': {'vendor': 'Elenia Oy'}, 'condition': {'gl_code': '6110'}, 'lift': 2.4,
+               'fs': {'f': 12.0, 'fOnCondition': 9.0, 'fCondition': 15.0, 'n': 200.0}}
+        client = make_client([FakeResponse(200, {'offset': 0, 'total': 1, 'hits': [hit]})])
+        res = client.relate(from_table='invoices', relate='vendor', where={'gl_code': '6110'})
+        self.assertEqual([h['related'] for h in res], [{'vendor': 'Elenia Oy'}])
+
     def test_relate_passes_a_list_through(self):
         client = make_client()
         client.relate(from_table='t', relate=['a', 'b'])

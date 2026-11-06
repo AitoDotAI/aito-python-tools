@@ -689,6 +689,11 @@ class AitoClientV2:
         :type order_by: Optional[Any]
         :param limit: the maximum number of hits
         :type limit: Optional[int]
+        :return: one hit per related value. Its ``related`` is the field and value **bare**,
+            ``{'vendor': 'Elenia Oy'}``, where v1 wrapped the value as
+            ``{'vendor': {'$has': 'Elenia Oy'}}``: a parser written for v1 that looks for
+            ``$has`` finds nothing, without an error. The client returns the shape the server
+            sent.
         :rtype: V2RowsResponse
         """
         if isinstance(relate, str):

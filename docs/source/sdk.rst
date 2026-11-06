@@ -124,6 +124,19 @@ Querying:
   - Anything else, via the universal ``_query`` endpoint:
     :py:func:`~aito.v2.client.AitoClientV2.query`
 
+A relate hit's ``related`` is the field and value bare in v2, where v1 wrapped the value in
+``$has``. Code ported from v1 that reads ``$has`` silently finds no rows, so read the value
+directly:
+
+.. code:: python
+
+    for hit in client.relate(from_table='invoices', where={'gl_code': '6110'}, relate='vendor'):
+        print(hit['related'], hit['lift'])   # {'vendor': 'Elenia Oy'} 2.4
+        # v1 answered {'vendor': {'$has': 'Elenia Oy'}}
+
+``relate`` also takes a list of fields where v1 took a bare string; a single name given as a
+string is wrapped for you.
+
 .. note::
 
   The named methods post to v2's *enforced* named endpoints, which validate that the body
