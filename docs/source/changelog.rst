@@ -4,6 +4,11 @@ Changelog
 Unreleased
 ----------
 
+- ``AitoClientV2.create_collection(..., primary_key='id')`` (or a list of columns) creates a
+  collection with a key, and ``upload_entries(..., on_conflict='update' | 'ignore' | 'error')``
+  says what a row whose key is already stored does. An upsert (``update`` or ``ignore``) lands
+  once however often it is sent, so resending a failed upload is safe, and the opt-in
+  ``retries`` repeat it. A plain batch is still never retried.
 - ``AitoClientV2(retries=n, backoff=s)``: opt-in retries for a transient failure (a 502, 503 or
   504, a dropped connection, a timeout), only for requests that change nothing: GETs, the
   queries and ``optimize``. Never a write: a batch insert into a table without a key stores

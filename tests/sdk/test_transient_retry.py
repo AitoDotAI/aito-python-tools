@@ -7,8 +7,10 @@ client behaves as it always has.
 
 Only requests that change nothing are repeated: GETs, the query endpoints (``_query``,
 ``_search``, ``_predict``, ``_recommend``, ``_relate``, ``_match``, ``_estimate``,
-``_aggregate``, ``_evaluate``, ``_batch``) and ``optimize``. Never a batch insert (into a table
-without a primary key, a batch sent twice stores its rows twice), a delete, a schema write,
+``_aggregate``, ``_evaluate``, ``_batch``), ``optimize``, and a batch sent with
+``on_conflict=update`` or ``ignore``, which lands once however often it is sent. Never a plain
+batch insert (into a table without a primary key, a batch sent twice stores its rows twice), a
+delete, a schema write,
 ``_modify`` or a job submission: a write that failed in transit may have landed. Offline: a
 recording session plays the server.
 """
@@ -171,3 +173,26 @@ class TestTheRetriesAreCappedAndSpread(TransientCase):
         with jitter_at_most():
             client.request('POST', '/_query', {'from': 't'})
         self.assertEqual(self.sleeps, [4.0])
+
+
+class TestAnUpsertBatchIsRetried(TransientCase):
+    """A batch sent with on_conflict=update or ignore leaves the collection the same however often
+    it lands, and the engine refuses either on a collection without a key: safe to repeat"""
+
+    def test_on_conflict_update_and_ignore(self):
+        for value in ('update', 'ignore'):
+            with self.subTest(value):
+                client = self.client([status(503), requests.ConnectionError('reset'), OK], retries=2)
+                client.upload_entries('invoices', [{'id': 'a'}], on_conflict=value)
+                self.assertEqual(self.sent(client), 3)
+
+    def test_a_plain_batch_or_on_conflict_error_is_still_never_retried(self):
+        for path in ('/data/invoices/batch', '/data/invoices/batch?on_conflict=error',
+                     '/data/invoices/batch?on_conflict=update&on_conflict=error',
+                     '/data/invoices/batch?on_conflict=', '/data/invoices/stream?on_conflict=update',
+                     '/data/invoices/import?on_conflict=update'):
+            with self.subTest(path):
+                client = self.client([status(503), OK], retries=3)
+                with self.assertRaises(AitoV2Error):
+                    client.request('POST', path, [{'id': 'a'}])
+                self.assertEqual(self.sent(client), 1)

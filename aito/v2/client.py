@@ -43,6 +43,8 @@ _RESERVED_ENV_PREFIXES = ('_', 'env.', 'release.')
 
 #: what to do when a response carries warnings
 _ON_WARNING_CHOICES = ('ignore', 'log', 'raise')
+#: what a batch row whose primary key is already stored does (the engine's ``on_conflict``)
+_ON_CONFLICT_CHOICES = ('error', 'update', 'ignore')
 
 
 class AitoClientV2:
@@ -94,8 +96,9 @@ class AitoClientV2:
         503 or 504, a dropped connection or a timeout. Off (0) by default. Only requests that
         change nothing are repeated: GETs, the queries (``query``, ``search``, ``predict``,
         ``recommend``, ``relate``, ``match``, ``estimate``, ``aggregate``, ``evaluate``,
-        ``batch``) and ``optimize``. Never a write: one that failed in transit may have landed,
-        and a batch insert into a collection without a primary key stores its rows twice
+        ``batch``), ``optimize``, and an upsert (``upload_entries(..., on_conflict='update')`` or
+        ``'ignore'``). Never another write: one that failed in transit may have landed, and a
+        batch insert into a collection without a primary key stores its rows twice
     :type retries: int
     :param backoff: the transient retries' wait in seconds: retry n waits up to
         ``backoff * 2**n`` (full jitter, at most 8 s), on top of a ``Retry-After`` the
@@ -407,7 +410,8 @@ class AitoClientV2:
         """
         return self.request('GET', f'/schema/{table}' if table else '/schema')
 
-    def create_collection(self, name: str, columns: Dict) -> Dict:
+    def create_collection(self, name: str, columns: Dict,
+                          primary_key: Optional[Union[str, List[str]]] = None) -> Dict:
         """create a v2 collection
 
         :param name: the collection name
@@ -417,6 +421,13 @@ class AitoClientV2:
             ``Boolean`` and the array and ``Json`` types, plus ``link``,
             ``analyzer`` and ``nullable``
         :type columns: Dict
+        :param primary_key: the column, or the list of columns, that identifies a row. The
+            collection then refuses a row whose key it already holds, unless the batch is
+            sent with ``upload_entries(..., on_conflict='update')`` or ``'ignore'``, which
+            makes resending an upload safe. Every row must carry the key. Defaults to none:
+            rows are appended, and a batch sent twice is stored twice
+        :type primary_key: Optional[Union[str, List[str]]]
+        :raises ValueError: a key column is not in ``columns``
         :rtype: Dict
 
         >>> client.create_collection('invoices', { # doctest: +SKIP
@@ -426,7 +437,16 @@ class AitoClientV2:
         ... })
         {'status': 'created', 'table': 'invoices', 'type': 'collection'}
         """
-        return self.request('PUT', f'/schema/{name}', {'type': 'collection', 'columns': columns})
+        body = {'type': 'collection', 'columns': columns}
+        if primary_key is not None:
+            # top-level: a column's own "primaryKey": true is accepted by the engine and dropped
+            missing = [c for c in ([primary_key] if isinstance(primary_key, str) else primary_key)
+                       if c not in columns]
+            if missing:
+                raise ValueError(f"primary key column(s) {', '.join(repr(c) for c in missing)} "
+                                 f"not in the collection's columns")
+            body['primaryKey'] = primary_key
+        return self.request('PUT', f'/schema/{name}', body)
 
     def delete_collection(self, name: str) -> Dict:
         """delete a collection or legacy table and its data
@@ -448,7 +468,8 @@ class AitoClientV2:
 
     # --- data ----------------------------------------------------------
 
-    def upload_entries(self, name: str, entries: List[Dict], batch_size: int = 1000) -> int:
+    def upload_entries(self, name: str, entries: List[Dict], batch_size: int = 1000,
+                       on_conflict: Optional[str] = None) -> int:
         """insert rows into a collection, in batches
 
         :param name: the collection name
@@ -457,13 +478,24 @@ class AitoClientV2:
         :type entries: List[Dict]
         :param batch_size: the number of rows per request
         :type batch_size: int
+        :param on_conflict: for a collection with a primary key, what a row whose key is
+            already stored does: ``'error'`` (the engine's default) fails the batch,
+            ``'update'`` replaces the stored row, ``'ignore'`` keeps it. With ``'update'`` or
+            ``'ignore'`` the same batch sent twice leaves the collection as one send does, so
+            the client's opt-in ``retries`` repeat it. A collection without a key refuses
+            both. Defaults to None: not sent
+        :type on_conflict: Optional[str]
+        :raises ValueError: ``on_conflict`` is not one of the three
         :return: the number of rows inserted
         :rtype: int
         """
+        if on_conflict is not None and on_conflict not in _ON_CONFLICT_CHOICES:
+            raise ValueError(f"invalid on_conflict {on_conflict!r}, expected 'error', 'update' or 'ignore'")
+        path = f'/data/{name}/batch' + (f'?on_conflict={on_conflict}' if on_conflict else '')
         total = 0
         for start in range(0, len(entries), batch_size):
             chunk = entries[start:start + batch_size]
-            result = self.request('POST', f'/data/{name}/batch', chunk)
+            result = self.request('POST', path, chunk)
             total += int(result.get('count', len(chunk)))
         return total
 

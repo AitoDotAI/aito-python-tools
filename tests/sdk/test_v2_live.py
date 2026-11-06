@@ -116,6 +116,25 @@ class TestAitoClientV2Live(BaseTestCase):
         finally:
             self.client.delete_collection(scratch)
 
+    def test_a_keyed_collection_refuses_a_repeated_row_and_upserts_on_request(self):
+        scratch = f'{TEST_COLLECTION}_keyed'
+        self.client.create_collection(scratch, {'id': {'type': 'String'}, 'a': {'type': 'String'}},
+                                      primary_key='id')
+        try:
+            self.assertEqual(self.client.get_schema(scratch).get('primaryKey'), ['id'])
+            self.client.upload_entries(scratch, [{'id': '1', 'a': 'x'}])
+            with self.assertRaises(AitoV2Error) as ctx:
+                self.client.upload_entries(scratch, [{'id': '1', 'a': 'x'}])
+            self.assertEqual(ctx.exception.status_code, 400)
+            # the same upsert sent twice lands once
+            for _ in range(2):
+                self.client.upload_entries(scratch, [{'id': '1', 'a': 'y'}, {'id': '2', 'a': 'z'}],
+                                           on_conflict='update')
+            hits = self.client.search(from_table=scratch, limit=10).hits
+            self.assertCountEqual([(h['id'], h['a']) for h in hits], [('1', 'y'), ('2', 'z')])
+        finally:
+            self.client.delete_collection(scratch)
+
     def test_missing_collection_is_a_typed_not_found(self):
         with self.assertRaises(AitoV2Error) as ctx:
             self.client.get_schema('no_such_collection_here')

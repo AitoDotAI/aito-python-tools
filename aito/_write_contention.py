@@ -22,7 +22,8 @@ A transient failure (502, 503 or 504, a dropped connection, a timeout) is retrie
 the client opts in (``AitoClientV2(retries=...)``, default 0), and only for a request that
 changes nothing (:func:`is_safe_to_repeat`): a write that failed in transit may have landed,
 and a batch insert into a table without a primary key appends, so a repeated batch stores
-its rows twice.
+its rows twice. The exception is a batch sent with ``on_conflict=update`` or ``ignore``,
+which lands once however often it is sent.
 
 Standard library only.
 """
@@ -32,6 +33,7 @@ import re
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from typing import Any, Optional
+from urllib.parse import parse_qs
 
 #: the error code: v1 carries it in the body's ``error``, v2 in ``data.code``
 WRITE_CONTENTION = 'write.contention'
@@ -58,6 +60,8 @@ TRANSIENT_STATUSES = (502, 503, 504)
 #: the v2 POSTs that read and change nothing, plus optimize, which is idempotent
 _SAFE_POST = re.compile(r'^(/_(query|search|predict|recommend|relate|match|estimate|aggregate|evaluate|batch)'
                         r'|/data/[^/?]+/optimize)/?(\?.*)?$')
+#: a v2 batch insert, safe to repeat only as an upsert
+_BATCH = re.compile(r'^/data/[^/?]+/batch/?$')
 
 
 def is_job_poll(method: str, path: str) -> bool:
@@ -102,9 +106,22 @@ def delay(headers: Any, retry: int) -> float:
 
 
 def is_safe_to_repeat(method: str, path: str) -> bool:
-    """whether a v2 request changes nothing when it is sent twice: a GET, a query, or optimize"""
+    """whether a v2 request leaves the same state when it is sent twice: a GET, a query,
+    optimize, or a batch sent with ``on_conflict=update`` or ``ignore``"""
     method = method.upper()
-    return method == 'GET' or (method == 'POST' and bool(_SAFE_POST.match(path)))
+    if method == 'GET':
+        return True
+    return method == 'POST' and (bool(_SAFE_POST.match(path)) or _is_upsert_batch(path))
+
+
+def _is_upsert_batch(path: str) -> bool:
+    """a batch whose every on_conflict is update or ignore: the same rows land once however often
+    it is sent, and the engine refuses either on a collection without a primary key"""
+    route, _, query = path.partition('?')
+    if not _BATCH.match(route):
+        return False
+    values = parse_qs(query, keep_blank_values=True).get('on_conflict', [])
+    return bool(values) and all(v in ('update', 'ignore') for v in values)
 
 
 def transient_delay(headers: Any, retry: int, backoff: float) -> float:
