@@ -18,6 +18,12 @@ A 429 (the server's admission control turning a request away for now) is retried
 same way, with its own count and a cap on the total wait: a Retry-After longer than the
 time left is raised at once rather than slept through.
 
+A transient failure (502, 503 or 504, a dropped connection, a timeout) is retried only when
+the client opts in (``AitoClientV2(retries=...)``, default 0), and only for a request that
+changes nothing (:func:`is_safe_to_repeat`): a write that failed in transit may have landed,
+and a batch insert into a table without a primary key appends, so a repeated batch stores
+its rows twice.
+
 Standard library only.
 """
 
@@ -46,6 +52,12 @@ DEFAULT_RATE_LIMIT_RETRIES = 3
 MAX_RATE_LIMIT_WAIT = 60.0
 
 _JOB_POLL = re.compile(r'/jobs/[^/?]+(/result)?/?(\?.*)?$')
+
+#: the statuses of a gateway or an engine that could not answer now: retried when opted in
+TRANSIENT_STATUSES = (502, 503, 504)
+#: the v2 POSTs that read and change nothing, plus optimize, which is idempotent
+_SAFE_POST = re.compile(r'^(/_(query|search|predict|recommend|relate|match|estimate|aggregate|evaluate|batch)'
+                        r'|/data/[^/?]+/optimize)/?(\?.*)?$')
 
 
 def is_job_poll(method: str, path: str) -> bool:
@@ -87,6 +99,20 @@ def retry_after(headers: Any) -> float:
 def delay(headers: Any, retry: int) -> float:
     """seconds to wait before retry number ``retry`` (0-based)"""
     return retry_after(headers) + random.uniform(0.0, min(BACKOFF_CAP, BACKOFF_BASE * 2 ** retry))
+
+
+def is_safe_to_repeat(method: str, path: str) -> bool:
+    """whether a v2 request changes nothing when it is sent twice: a GET, a query, or optimize"""
+    method = method.upper()
+    return method == 'GET' or (method == 'POST' and bool(_SAFE_POST.match(path)))
+
+
+def transient_delay(headers: Any, retry: int, backoff: float) -> float:
+    """seconds to wait before transient retry number ``retry`` (0-based): full jitter up to
+    ``backoff * 2**retry`` (at most ``CAP``), on top of a Retry-After the response carries"""
+    has_retry_after = any(str(name).lower() == 'retry-after' for name in (headers or {}))
+    floor = retry_after(headers) if has_retry_after else 0.0
+    return floor + random.uniform(0.0, min(BACKOFF_CAP, backoff * 2 ** retry))
 
 
 def check_retries(retries: int, name: str = 'write_contention_retries') -> int:
