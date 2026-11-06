@@ -4,7 +4,9 @@ Different APIs that takes an :class:`Aito Client object <aito.v1.client.AitoClie
 
 import logging
 import tempfile
+import threading
 import time
+from contextlib import contextmanager
 from os import PathLike, unlink
 from pathlib import Path
 from typing import Dict, List, BinaryIO, Union, Tuple, Iterable, Optional
@@ -517,6 +519,27 @@ def _file_upload_unavailable(client: AitoClient, error: RequestError) -> bool:
     return response.status_code == 500 and not host.endswith(_CLOUD_HOST_SUFFIXES)
 
 
+@contextmanager
+def _held_client_logs():
+    """hold back what the client logs in this thread, and pass it on at the end unless cleared"""
+    client_log, thread = logging.getLogger('AitoClient'), threading.get_ident()
+    held = []
+
+    def hold(record):
+        if record.thread != thread:
+            return True
+        held.append(record)
+        return False
+
+    client_log.addFilter(hold)
+    try:
+        yield held
+    finally:
+        client_log.removeFilter(hold)
+        for record in held:
+            client_log.handle(record)
+
+
 def upload_binary_file(
         client: AitoClient,
         table_name: str,
@@ -566,14 +589,23 @@ def upload_binary_file(
         stream()
     else:
         # For non-multitenant instances, use S3 file upload
-        try:
-            init_upload_resp = initiate_upload_file(client=client, table_name=table_name)
-        except RequestError as e:
-            if not _file_upload_unavailable(client, e):
-                raise
-            # Nothing was committed: the initiate call only hands out an upload URL
-            LOG.warning(f'this Aito has no file upload (no S3 storage): sending the rows to '
-                        f'/api/v1/data/{table_name}/batch in batches of {batch_size} instead')
+        # The client logs a refusal as an error as it raises it: held back until it is known
+        # whether the fallback takes over, so a self-hosted upload that succeeds logs no error
+        with _held_client_logs() as held:
+            try:
+                init_upload_resp = initiate_upload_file(client=client, table_name=table_name)
+            except RequestError as e:
+                if not _file_upload_unavailable(client, e):
+                    raise
+                held.clear()
+                # Nothing was committed: the initiate call only hands out an upload URL
+                LOG.warning(f'this Aito has no file upload (no S3 storage; the file upload answered '
+                            f'{e.error.response.status_code}): sending the rows to '
+                            f'/api/v1/data/{table_name}/batch in batches of {batch_size} instead')
+                fell_back = True
+            else:
+                fell_back = False
+        if fell_back:
             stream()
             return
         upload_binary_file_to_s3(initiate_upload_file_response=init_upload_resp, binary_file=binary_file)
