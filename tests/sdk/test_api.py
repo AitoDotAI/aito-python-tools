@@ -13,7 +13,7 @@ from aito.schema import AitoDatabaseSchema, AitoTableSchema, AitoColumnTypeSchem
 import aito.v1.requests as aito_requests
 import aito.v1.responses as aito_responses
 from aito.utils._file_utils import read_ndjson_gz_file
-from tests.cases import CompareTestCase
+from tests.cases import CompareTestCase, needs_cloud_file_upload
 from tests.sdk.contexts import default_client, grocery_demo_client, endpoint_methods_test_context
 
 
@@ -247,6 +247,7 @@ class TestQuickAddTableAPI(CompareTestCase):
         else:
             self.assertCountEqual(table_entries, file_content)
 
+    @needs_cloud_file_upload
     def test_quick_add_table(self):
         input_file = self.input_folder / f'{self.default_table_name}.csv'
         self.addCleanup(input_file.unlink)
@@ -256,6 +257,7 @@ class TestQuickAddTableAPI(CompareTestCase):
         self.compare_table_entries_to_file_content(
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json')
 
+    @needs_cloud_file_upload
     def test_quick_add_table_different_name_different_format(self):
         input_file = self.input_folder / 'invoice.txt'
         self.addCleanup(input_file.unlink)

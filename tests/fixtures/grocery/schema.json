@@ -1,0 +1,135 @@
+{
+  "contexts": {
+    "columns": {
+      "basket": {
+        "type": "String[]"
+      },
+      "day": {
+        "type": "Int"
+      },
+      "id": {
+        "type": "String"
+      },
+      "month": {
+        "type": "Int"
+      },
+      "prevBasket": {
+        "type": "String[]"
+      },
+      "query": {
+        "analyzer": "English",
+        "type": "Text"
+      },
+      "queryPhrase": {
+        "type": "String"
+      },
+      "type": {
+        "type": "String"
+      },
+      "user": {
+        "link": "users.id",
+        "type": "String"
+      },
+      "visit": {
+        "link": "visits.id",
+        "type": "String"
+      },
+      "week": {
+        "type": "Int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    },
+    "type": "table"
+  },
+  "impressions": {
+    "columns": {
+      "context": {
+        "link": "contexts.id",
+        "type": "String"
+      },
+      "product": {
+        "link": "products.id",
+        "type": "String"
+      },
+      "purchase": {
+        "type": "Boolean"
+      }
+    },
+    "type": "table"
+  },
+  "products": {
+    "columns": {
+      "category": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "Decimal"
+      },
+      "googleClicks": {
+        "type": "Int"
+      },
+      "googleImpressions": {
+        "type": "Int"
+      },
+      "id": {
+        "type": "String"
+      },
+      "name": {
+        "analyzer": "English",
+        "type": "Text"
+      },
+      "price": {
+        "type": "Decimal"
+      },
+      "tags": {
+        "type": "String[]"
+      }
+    },
+    "type": "table"
+  },
+  "users": {
+    "columns": {
+      "id": {
+        "type": "String"
+      },
+      "tags": {
+        "type": "String[]"
+      }
+    },
+    "type": "table"
+  },
+  "visits": {
+    "columns": {
+      "day": {
+        "type": "Int"
+      },
+      "id": {
+        "type": "String"
+      },
+      "month": {
+        "type": "Int"
+      },
+      "prev": {
+        "link": "this.id",
+        "nullable": true,
+        "type": "String"
+      },
+      "purchases": {
+        "type": "String[]"
+      },
+      "user": {
+        "link": "users.id",
+        "type": "String"
+      },
+      "week": {
+        "type": "Int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    },
+    "type": "table"
+  }
+}

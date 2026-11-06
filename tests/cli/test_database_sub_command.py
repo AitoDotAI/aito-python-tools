@@ -13,8 +13,9 @@ from parameterized import parameterized
 from aito.v1.api import create_table, delete_table, get_existing_tables, check_table_exists, query_entries, upload_entries
 from aito.utils._credentials_file_utils import get_credentials_file_config
 from aito.schema import AitoTableSchema, AitoDatabaseSchema
+from tests.cases import needs_cloud_file_upload
 from tests.cli.parser_and_cli_test_case import ParserAndCLITestCase
-from tests.sdk.contexts import default_client, endpoint_methods_test_context
+from tests.sdk.contexts import default_client, endpoint_methods_test_context, get_env_var
 
 
 class TestDatabaseSubCommands(ParserAndCLITestCase):
@@ -138,6 +139,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             execute_exception=SystemExit
         )
 
+    @needs_cloud_file_upload
     def test_upload_file(self):
         self.create_table()
         expected_args= {
@@ -155,6 +157,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
         )
 
+    @needs_cloud_file_upload
     def test_upload_file_different_format(self):
         self.create_table()
         expected_args = {
@@ -172,6 +175,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json'
         )
 
+    @needs_cloud_file_upload
     def test_upload_file_infer_format(self):
         self.create_table()
         expected_args = {
@@ -247,6 +251,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
                 self.parse_and_execute(['delete-table', self.default_table_name], expected_args)
         self.assertFalse(check_table_exists(self.client, self.default_table_name))
 
+    @needs_cloud_file_upload
     def test_quick_add_table(self):
         input_file = self.input_folder / f'{self.default_table_name}.csv'
         self.addCleanup(input_file.unlink)
@@ -264,6 +269,7 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
         self.compare_table_entries_to_file_content(
             self.default_table_name, self.input_folder / 'invoice_no_null_value.json')
 
+    @needs_cloud_file_upload
     def test_quick_add_table_different_name(self):
         input_file = self.input_folder / 'invoice.txt'
         self.addCleanup(input_file.unlink)
@@ -429,8 +435,8 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
     @parameterized.expand(endpoint_methods_test_context)
     def test_query_to_endpoint(self, endpoint, request_cls, query, response_cls):
         command = endpoint.replace('_', '-')
-        instance_url = os.environ['AITO_GROCERY_DEMO_INSTANCE_URL']
-        api_key = os.environ['AITO_GROCERY_DEMO_API_KEY']
+        instance_url = get_env_var('AITO_GROCERY_DEMO_INSTANCE_URL')
+        api_key = get_env_var('AITO_GROCERY_DEMO_API_KEY')
         query_str = json.dumps(query)
 
         expected_args = {
@@ -448,8 +454,8 @@ class TestDatabaseSubCommands(ParserAndCLITestCase):
     @parameterized.expand(endpoint_methods_test_context)
     def test_query_to_endpoint_with_job(self, endpoint, request_cls, query, response_cls):
         command = endpoint.replace('_', '-')
-        instance_url = os.environ['AITO_GROCERY_DEMO_INSTANCE_URL']
-        api_key = os.environ['AITO_GROCERY_DEMO_API_KEY']
+        instance_url = get_env_var('AITO_GROCERY_DEMO_INSTANCE_URL')
+        api_key = get_env_var('AITO_GROCERY_DEMO_API_KEY')
         query_str = json.dumps(query)
 
         expected_args = {

@@ -17,6 +17,13 @@ def get_requests_resp_and_aito_resp(aito_client: AitoClient, request_obj: aito_r
         json=request_obj.query
     )
     raw_resp_json = raw_resp_obj.json()
+    # Every comparison below reads the first hit. An error answer or an empty table must fail
+    # here, naming the cause, not as a KeyError or IndexError further down
+    if raw_resp_obj.status_code >= 400:
+        raise AssertionError(f'{request_obj} answered {raw_resp_obj.status_code}: {raw_resp_obj.text[:300]}')
+    if isinstance(raw_resp_json, dict) and 'hits' in raw_resp_json and not raw_resp_json['hits']:
+        raise AssertionError(f'{request_obj} returned no hits: is the grocery fixture loaded '
+                             f'(tests/fixtures/grocery)?')
 
     aito_resp = aito_client.request(request_obj=request_obj)
     return raw_resp_json, aito_resp
