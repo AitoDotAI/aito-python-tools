@@ -37,10 +37,9 @@ workflows:
           filters:
             branches:
               only: /^release\/.*/
-      # Its doctests upload to the same shared instance (quickstart's 'reddit' table), so two
-      # pipelines' doc builds counted each other's rows (#81 and #82: 16000, expected 10000).
-      - build_docs:
-          serial-group: << pipeline.project.slug >>/build-docs
+      # Its doctests upload quickstart's 'reddit' table: to its own Aito, since two pipelines'
+      # doc builds on shared counted each other's rows (#81 and #82: 16000, expected 10000).
+      - build_docs
       - build_and_deploy_to_test_pypi:
           requires:
             - build_docs
@@ -249,6 +248,10 @@ commonYAMLStructure:
   - &local_engine_keys
     READ_WRITE_APIKEY: ci-local-read-write-not-a-secret
     APIKEY: ci-local-read-only-not-a-secret
+  # The Aito image also serves SQL on 5432, which is Postgres's in the jobs that run both
+  - &local_engine_with_postgres
+    <<: *local_engine_keys
+    PGWIRE_PORT: "5433"
   - &local_engine_environment
     AITO_INSTANCE_URL: http://localhost:9005
     AITO_API_KEY: ci-local-read-write-not-a-secret
@@ -301,7 +304,10 @@ jobs:
           POSTGRES_DB: circleci_test
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test_pw
+      - image: ghcr.io/aitohq/aito:v2.12.0
+        environment: *local_engine_with_postgres
     environment:
+      <<: *local_engine_environment
       SQL_DRIVER: PostgreSQL Unicode
       SQL_SERVER: localhost
       SQL_DATABASE: circleci_test
@@ -318,6 +324,7 @@ jobs:
       - *install_pyodbc
       - *save_venv_cache_build_and_test
       - *wait_postgres
+      - *seed_local_engine
       - *run_postgres_connection_test
       - *install_postgres_cli_linux
       - *prepare_data_postgres
@@ -369,7 +376,10 @@ jobs:
           POSTGRES_DB: circleci_test
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test_pw
+      - image: ghcr.io/aitohq/aito:v2.12.0
+        environment: *local_engine_with_postgres
     environment:
+      <<: *local_engine_environment
       SQL_DRIVER: PostgreSQL Unicode
       SQL_SERVER: localhost
       SQL_DATABASE: circleci_test
@@ -388,6 +398,7 @@ jobs:
       - *install_postgres_odbc_driver_linux
       - *install_pyodbc
       - *wait_postgres
+      - *seed_local_engine
       - *run_postgres_connection_test
       - *install_postgres_cli_linux
       - *prepare_data_postgres
@@ -433,12 +444,16 @@ jobs:
   build_docs:
     docker:
       - image: cimg/python:3.11
+      - image: ghcr.io/aitohq/aito:v2.12.0
+        environment: *local_engine_keys
+    environment: *local_engine_environment
     working_directory: ~/repo
     steps:
       - checkout
       - *restore_build_doc_venv_cache
       - *create_build_doc_venv
       - *save_build_doc_venv_cache
+      - *seed_local_engine
       - run:
           name: run inline docs tests
           command: |
