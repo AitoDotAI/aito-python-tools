@@ -71,7 +71,7 @@ class TestAitoClientGroceryCase(CompareTestCase):
         self.assertTrue(all([isinstance(res, BaseResponse) for res in responses]))
         self.assertEqual(
             [res.json for res in responses],
-            [{'offset': 0, 'total': 134, 'hits': [{'id': '0'}]}] * 3
+            [{'offset': 0, 'total': 67, 'hits': [{'id': '0'}]}] * 3
         )
 
     def test_batch_queries_erroneous_query(self):
@@ -83,6 +83,6 @@ class TestAitoClientGroceryCase(CompareTestCase):
         self.assertTrue(isinstance(responses[0], HitsResponse))
         self.assertEqual(
             responses[0].json,
-            {'offset': 0, 'total': 134, 'hits': [{'id': '0'}]}
+            {'offset': 0, 'total': 67, 'hits': [{'id': '0'}]}
         )
         self.assertTrue(isinstance(responses[1], RequestError))

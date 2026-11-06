@@ -1,3 +1,4 @@
+import unittest
 from os import getenv
 
 from aito.v1 import AitoClient
@@ -10,6 +11,10 @@ from aito.v1.responses import HitsResponse, SearchResponse, PredictResponse, Rec
 def get_env_var(var_name):
     env_var = getenv(var_name)
     if not env_var:
+        # A job with no engine (Windows: CircleCI runs no Linux containers there) sets this,
+        # and its live tests skip. Anywhere else a missing instance is an error, never a skip
+        if getenv('AITO_SKIP_LIVE_TESTS'):
+            raise unittest.SkipTest(f'a live test: `{var_name}` is not set (AITO_SKIP_LIVE_TESTS)')
         raise KeyError(f'environment variable `{var_name}` not found')
     return env_var
 

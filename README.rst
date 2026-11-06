@@ -205,6 +205,23 @@ You can use our test cli to run tests:
 
   Some tests require some environment variables to be setup. Use the test CLI list command to discover and display the test suites and cases
 
+The live tests run against a local Aito loaded with a fixture they own
+(``tests/fixtures/grocery``), as CI does. Run one with your own test keys, load the fixture,
+and point the variables at it:
+
+  .. code-block:: console
+
+    $ docker run -d -p 127.0.0.1:9005:9005 -e READ_WRITE_APIKEY=<rw-test-key> -e APIKEY=<ro-test-key> \
+        ghcr.io/aitohq/aito:v2.12.0
+    $ export AITO_INSTANCE_URL=http://localhost:9005 AITO_API_KEY=<rw-test-key>
+    $ export AITO_GROCERY_DEMO_INSTANCE_URL=$AITO_INSTANCE_URL AITO_GROCERY_DEMO_API_KEY=<rw-test-key>
+    $ python tests/fixtures/grocery/seed.py
+
+The seed replaces the database's schema, so it refuses any host but localhost. A few tests need
+a cloud instance (the v1 file upload hands back an S3 URL a local engine does not have) and
+skip on a local one. ``AITO_SKIP_LIVE_TESTS=1`` skips the live tests when no instance is set,
+as the Windows CI job does.
+
 There are multiple test suites:
 
 1. CLI suite:

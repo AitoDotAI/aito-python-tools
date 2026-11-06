@@ -8,26 +8,35 @@ workflows:
   commit:
     jobs:
       - run_dependencies_security_check
-      - run_sdk_and_cli_tests_linux
+      # The live tests run against an Aito in the job itself, loaded with a fixture the tests
+      # own (tests/fixtures/grocery), never against shared: what shared held on the day made
+      # them flake (#96, #99; 5.11.2026). Both the engine `aito start` pins
+      # (aito/local/server.py; tests/sdk/test_ci_engines.py keeps the two in step) and the
+      # latest release.
+      - run_sdk_and_cli_tests_linux:
+          matrix: &engines
+            parameters:
+              engine: [v2.11.2, v2.12.0]
       - run_postgres_tests_linux
       - run_sdk_and_cli_tests_win
-      - run_sdk_and_cli_tests_built_package
+      - run_sdk_and_cli_tests_built_package:
+          matrix: *engines
       - run_postgres_tests_built_package
-      # Deletes and recreates the shared test instance's database, so a PR pipeline running
-      # it wiped any other open PR's live tests mid-run (#77 and #78, 30.9.2026). It runs on
-      # master only, and one pipeline at a time: the serial group queues a second master
-      # pipeline's run instead of overlapping it.
+      # Deletes and recreates the whole database: on the job's own engine, so on every
+      # pipeline, with no other pipeline to disturb (it used to wipe shared mid-run, #77, #78).
       - run_alter_instance_db_tests:
-          serial-group: << pipeline.project.slug >>/alter-instance-db
           requires:
             - run_sdk_and_cli_tests_linux
             - run_postgres_tests_linux
             - run_sdk_and_cli_tests_win
             - run_sdk_and_cli_tests_built_package
             - run_postgres_tests_built_package
+      # Opt-in, against shared: what only a cloud instance does (the v1 file upload's S3
+      # URL). Release branches only.
+      - run_shared_smoke:
           filters:
             branches:
-              only: master
+              only: /^release\/.*/
       # Its doctests upload to the same shared instance (quickstart's 'reddit' table), so two
       # pipelines' doc builds counted each other's rows (#81 and #82: 16000, expected 10000).
       - build_docs:
@@ -177,6 +186,12 @@ commonYAMLStructure:
           (git diff --quiet HEAD origin/master -- . ":!docs") -and (echo "NO CHANGE - SKIP") -and (exit 0)
         }
         venv\Scripts\activate.ps1
+        # CircleCI runs no Linux containers on Windows, so no local Aito: the live tests skip
+        # here (the Linux jobs run them), and never fall back to the shared instance
+        foreach ($v in 'AITO_INSTANCE_URL', 'AITO_API_KEY', 'AITO_GROCERY_DEMO_INSTANCE_URL', 'AITO_GROCERY_DEMO_API_KEY') {
+          Remove-Item "Env:$v" -ErrorAction SilentlyContinue
+        }
+        $Env:AITO_SKIP_LIVE_TESTS = '1'
         # PowerShell does not stop on a failing native command, and a job's result is the
         # LAST command's exit code: an sdk-suite failure was reported green whenever the
         # cli suite passed. Check both.
@@ -230,6 +245,23 @@ commonYAMLStructure:
         /tmp/safety-venv/bin/pip install safety
         /tmp/safety-venv/bin/safety check -r /tmp/frozen-requirements.txt
 
+  # Test keys for the job's own engine, which holds only the fixture: not secrets
+  - &local_engine_keys
+    READ_WRITE_APIKEY: ci-local-read-write-not-a-secret
+    APIKEY: ci-local-read-only-not-a-secret
+  - &local_engine_environment
+    AITO_INSTANCE_URL: http://localhost:9005
+    AITO_API_KEY: ci-local-read-write-not-a-secret
+    AITO_GROCERY_DEMO_INSTANCE_URL: http://localhost:9005
+    AITO_GROCERY_DEMO_API_KEY: ci-local-read-write-not-a-secret
+  - &seed_local_engine
+    run:
+      name: wait for the local Aito and load the grocery fixture
+      command: |
+        for i in $(seq 1 90); do curl -sf localhost:9005/version && break; sleep 2; done
+        curl -sf localhost:9005/version > /dev/null || { echo "the local Aito did not start"; exit 1; }
+        python3 tests/fixtures/grocery/seed.py
+
 jobs:
   run_dependencies_security_check:
     docker:
@@ -243,14 +275,21 @@ jobs:
       - *install_and_run_safety_check
 
   run_sdk_and_cli_tests_linux:
+    parameters:
+      engine:
+        type: string
     docker:
       - image: cimg/python:3.11
+      - image: ghcr.io/aitohq/aito:<< parameters.engine >>
+        environment: *local_engine_keys
+    environment: *local_engine_environment
     working_directory: ~/repo
     steps:
       - checkout
       - *restore_venv_cache_build_and_test
       - *create_venv_and_install_build_and_test_dependencies_linux
       - *save_venv_cache_build_and_test
+      - *seed_local_engine
       - *run_sdk_and_cli_tests
       - *store_log_files
 
@@ -301,9 +340,15 @@ jobs:
       - *store_log_files
 
   run_sdk_and_cli_tests_built_package:
+    parameters:
+      engine:
+        type: string
     docker:
       - image: cimg/python:3.11
+      - image: ghcr.io/aitohq/aito:<< parameters.engine >>
+        environment: *local_engine_keys
     environment:
+      <<: *local_engine_environment
       TEST_BUILT_PACKAGE: True
     working_directory: ~/repo
     steps:
@@ -312,6 +357,7 @@ jobs:
       - *create_venv_and_install_deploy_and_test_dependencies
       - *save_venv_cache_deploy_and_test
       - *build_and_install_package
+      - *seed_local_engine
       - *run_sdk_and_cli_tests
       - *store_log_files
 
@@ -351,15 +397,37 @@ jobs:
   run_alter_instance_db_tests:
     docker:
       - image: cimg/python:3.11
+      - image: ghcr.io/aitohq/aito:v2.12.0
+        environment: *local_engine_keys
     working_directory: ~/repo
     environment:
+      <<: *local_engine_environment
       RUN_ALTER_INSTANCE_DB_TESTS: True
     steps:
       - checkout
       - *restore_venv_cache_build_and_test
       - *create_venv_and_install_build_and_test_dependencies_linux
       - *save_venv_cache_build_and_test
+      - *seed_local_engine
       - *run_alter_db_unittests
+      - *store_log_files
+
+  # The project's shared-instance variables, unchanged: the tests only a cloud instance can run
+  run_shared_smoke:
+    docker:
+      - image: cimg/python:3.11
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - *restore_venv_cache_build_and_test
+      - *create_venv_and_install_build_and_test_dependencies_linux
+      - *save_venv_cache_build_and_test
+      - run:
+          name: the v1 file upload against a cloud instance
+          command: |
+            . venv/bin/activate
+            python -m tests -v case sdk.test_api.TestQuickAddTableAPI
+            python -m tests -v method cli.test_database_sub_command.TestDatabaseSubCommands.test_upload_file
       - *store_log_files
 
   build_docs:
