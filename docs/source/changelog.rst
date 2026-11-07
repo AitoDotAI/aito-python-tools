@@ -32,6 +32,10 @@ Unreleased
 - The SDK guide and ``AitoClientV2.relate`` document that a v2 relate hit's ``related`` is
   bare (``{'vendor': 'Elenia Oy'}``), where v1 wrapped the value in ``$has``: a v1 parser finds
   no rows, without an error.
+
+1.3.0
+-----
+
 - ``AitoV2Error.is_retryable``: whether repeating the same request later is safe and can
   succeed (409 ``write.contention`` and 429; not a job's stored result, not a 503). For a caller
   that turns the client's retries off or runs out of them. The README has a new "Errors and
