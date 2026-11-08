@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Unreleased
-----------
+1.3.0
+-----
 
 - Every v2 query method takes a per-call ``timeout=``: ``search``, ``predict``, ``recommend``,
   ``relate``, ``match``, ``estimate`` and ``aggregate`` now too, as ``query``, ``evaluate`` and
