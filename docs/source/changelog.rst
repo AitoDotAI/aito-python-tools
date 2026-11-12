@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+- ``aito start`` and ``aito upgrade`` run engine v2.12.0 (was v2.11.2), pinned by its
+  multi-arch digest. The SDK and CLI tests have run against v2.12.0 since 1.3.0.
+
 1.3.0
 -----
 

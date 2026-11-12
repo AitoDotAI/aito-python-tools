@@ -29,8 +29,8 @@ from . import profiles
 
 #: The engine release this SDK version runs. Pinned by digest: a tag can be re-pointed,
 #: a digest cannot. Moves with SDK releases; ``aito upgrade`` applies it.
-PINNED_IMAGE = ('ghcr.io/aitohq/aito:v2.11.2'
-                '@sha256:4b3d5344d1494ed3312dfb1a32be475a83692ac583fb7ce5e1abd20fae9bc4d6')
+PINNED_IMAGE = ('ghcr.io/aitohq/aito:v2.12.0'
+                '@sha256:1332fac7b1ce40b3ad8d66b3b6d85c3a0162d2883fc535cd64f80420e7ab7c93')
 #: The volume name aito.ai/docker already tells people to use, so a user who started
 #: there keeps their data when they switch to ``aito start``.
 DEFAULT_VOLUME = 'aito-state'
