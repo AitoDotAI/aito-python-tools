@@ -77,15 +77,15 @@ repeating the same request later is safe:
             raise
         queue_for_later(invoice)
 
-Transient failures (a 502, 503 or 504, a dropped connection, a timeout) are retried only if you
-opt in, and only for requests that change nothing: reads, queries and ``optimize``, never a
-write: a batch insert sent twice stores its rows twice. The exception is an upsert into a
+Transient failures (a 502, 503 or 504, a dropped connection, a connect timeout) are retried,
+twice by default, only for requests that change nothing: reads, queries and ``optimize``, never
+a write: a batch insert sent twice stores its rows twice. The exception is an upsert into a
 collection with a primary key, ``create_collection(name, columns, primary_key='id')`` and then
-``upload_entries(name, rows, on_conflict='update')``: it lands once however often it's sent,
-so it's retried too. ``Client(url, key, retries=3,
-backoff=0.5)`` waits up to ``backoff * 2**n`` seconds before retry n. The default is
-``retries=0``. What each client does on each failure, and how to resume a failed upload:
-``docs/client-resilience.md``.
+``upload_entries(name, rows, on_conflict='update')``: it lands once however often it's sent, so
+it's retried too. ``Client(url, key, retries=3, backoff=0.5)`` waits up to ``backoff * 2**n``
+seconds before retry n. The default is ``retries=2``; ``retries=0`` turns them off. A read
+timeout is retried only with ``retry_read_timeouts=True``. What each client does on each
+failure, and how to resume a failed upload: ``docs/client-resilience.md``.
 
 Run Aito locally
 ----------------

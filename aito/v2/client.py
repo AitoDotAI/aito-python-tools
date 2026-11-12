@@ -93,8 +93,9 @@ class AitoClientV2:
         0 turns it off.
     :type rate_limit_retries: int
     :param retries: how many times to repeat a request that met a transient failure: a 502,
-        503 or 504, a dropped connection or a timeout. Off (0) by default. Only requests that
-        change nothing are repeated: GETs, the queries (``query``, ``search``, ``predict``,
+        503 or 504, a dropped connection or a connect timeout (a read timeout only with
+        ``retry_read_timeouts``). Defaults to 2; 0 turns them off. Only requests that change
+        nothing are repeated: GETs, the queries (``query``, ``search``, ``predict``,
         ``recommend``, ``relate``, ``match``, ``estimate``, ``aggregate``, ``evaluate``,
         ``batch``), ``optimize``, and an upsert (``upload_entries(..., on_conflict='update')`` or
         ``'ignore'``). Never another write: one that failed in transit may have landed, and a
@@ -104,6 +105,10 @@ class AitoClientV2:
         ``backoff * 2**n`` (full jitter, at most 8 s), on top of a ``Retry-After`` the
         response carries. Defaults to 0.5
     :type backoff: float
+    :param retry_read_timeouts: also repeat a request whose answer didn't come within
+        ``timeout``, under the same rules. Off by default: a server too busy to answer in
+        time gets the same work again, and a call can wait about three times ``timeout``
+    :type retry_read_timeouts: bool
     :raises ValueError: the instance URL has no scheme or host, the environment name is
         one the engine reserves, no instance URL and key could be resolved or the key is
         empty (``NoCredentialsError``), or ``write_contention_retries``,
@@ -130,8 +135,9 @@ class AitoClientV2:
             on_response: Optional[Callable[[Any, str], None]] = None,
             write_contention_retries: int = contention.DEFAULT_RETRIES,
             rate_limit_retries: int = contention.DEFAULT_RATE_LIMIT_RETRIES,
-            retries: int = 0,
+            retries: int = 2,
             backoff: float = 0.5,
+            retry_read_timeouts: bool = False,
     ):
         contention.check_retries(write_contention_retries)
         contention.check_retries(rate_limit_retries, 'rate_limit_retries')
@@ -164,6 +170,7 @@ class AitoClientV2:
         self.rate_limit_retries = rate_limit_retries
         self.retries = retries
         self.backoff = backoff
+        self.retry_read_timeouts = retry_read_timeouts
         # A pooled session keeps the TCP+TLS connection alive across calls. A
         # fresh connection per request pays the handshake every time, which
         # dominates the per-call wall-clock against a shared instance.
@@ -268,8 +275,10 @@ class AitoClientV2:
                     timeout=self.timeout if timeout is None else timeout, **body,
                 )
             except requestslib.RequestException as e:
-                if (isinstance(e, (requestslib.ConnectionError, requestslib.Timeout))
-                        and self._may_repeat(method, path, transient)):
+                # a ConnectTimeout is a ConnectionError: it never reached the server
+                transient_error = isinstance(e, requestslib.ConnectionError) or (
+                    isinstance(e, requestslib.ReadTimeout) and self.retry_read_timeouts)
+                if transient_error and self._may_repeat(method, path, transient):
                     self._wait_transient(method, path, transient, None, type(e).__name__)
                     transient += 1
                     continue
@@ -482,7 +491,7 @@ class AitoClientV2:
             already stored does: ``'error'`` (the engine's default) fails the batch,
             ``'update'`` replaces the stored row, ``'ignore'`` keeps it. With ``'update'`` or
             ``'ignore'`` the same batch sent twice leaves the collection as one send does, so
-            the client's opt-in ``retries`` repeat it. A collection without a key refuses
+            the client's ``retries`` repeat it. A collection without a key refuses
             both. Defaults to None: not sent
         :type on_conflict: Optional[str]
         :raises ValueError: ``on_conflict`` is not one of the three
