@@ -27,6 +27,9 @@ from .responses import BaseResponse
 
 LOG = logging.getLogger('AitoClient')
 
+#: seconds a sync request waits for the server; the async requests stop at aiohttp's 300 s too
+DEFAULT_TIMEOUT = 300.0
+
 
 class Error(BaseError):
     """An error occurred when using the client
@@ -137,7 +140,8 @@ class AitoClient:
             api_key: str,
             check_credentials: bool = True,
             raise_for_status: bool = True,
-            write_contention_retries: int = contention.DEFAULT_RETRIES
+            write_contention_retries: int = contention.DEFAULT_RETRIES,
+            timeout: Optional[float] = DEFAULT_TIMEOUT
     ):
         """
 
@@ -154,8 +158,12 @@ class AitoClient:
             nothing, so repeating it is safe. Each retry waits the server's ``Retry-After`` plus exponential
             jitter (at most 8 s on top). 0 turns it off. Other 409s are never retried. Defaults to 3
         :type write_contention_retries: int
+        :param timeout: seconds to wait for the server before a request is raised as a
+            :class:`.RequestError`, the credential check included. Defaults to 300, as the
+            async requests' aiohttp default; None waits for ever (the behaviour before 1.3.1)
+        :type timeout: Optional[float]
         :raises BaseError: an error occurred during the creation of AitoClient
-        :raises ValueError: write_contention_retries is negative
+        :raises ValueError: write_contention_retries is negative, or timeout is not positive
 
         >>> aito_client = AitoClient(your_instance_url, your_api_key) # doctest: +SKIP
         >>> # Change the API key to READ-WRITE or READ-ONLY
@@ -169,6 +177,9 @@ class AitoClient:
         self.api_key = api_key
         self.raise_for_status = raise_for_status
         self.write_contention_retries = contention.check_retries(write_contention_retries)
+        if timeout is not None and timeout <= 0:
+            raise ValueError(f'timeout must be positive or None, got {timeout}')
+        self.timeout = timeout
         self.instance_version = None
         if check_credentials:
             if not (api_key or '').strip():
@@ -217,7 +228,8 @@ class AitoClient:
                 method=GetVersionRequest.method,
                 url=version_url,
                 headers=self.headers,
-                json=None
+                json=None,
+                timeout=self.timeout
             )
             resp.raise_for_status()
             return GetVersionRequest.response_cls(resp.json())
@@ -235,7 +247,8 @@ class AitoClient:
             method='GET',
             url=schema_url,
             headers=self.headers,
-            json=None
+            json=None,
+            timeout=self.timeout
         )
         resp.raise_for_status()
 
@@ -330,7 +343,8 @@ class AitoClient:
                     method=request_obj.method,
                     url=self.instance_url + request_obj.endpoint,
                     headers=self.headers,
-                    json=request_obj.query
+                    json=request_obj.query,
+                    timeout=self.timeout
                 )
                 # the body is only parsed here for a 409, so a normal response is parsed once
                 if resp.status_code == 409 and self._is_write_contention(
