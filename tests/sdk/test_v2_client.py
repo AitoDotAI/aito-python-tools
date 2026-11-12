@@ -307,7 +307,8 @@ class TestErrors(BaseTestCase):
         self.assertIn('not authorized', str(ctx.exception))
 
     def test_a_non_json_error_body_still_raises(self):
-        client = make_client([FakeResponse(502, None, text='<html>bad gateway</html>')])
+        # retries=0: a 502 on a query is retried by default, and this test is about the body
+        client = make_client([FakeResponse(502, None, text='<html>bad gateway</html>')], retries=0)
         with self.assertRaises(AitoV2Error) as ctx:
             client.query({'from': 't'})
         self.assertEqual(ctx.exception.status_code, 502)

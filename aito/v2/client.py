@@ -93,7 +93,7 @@ class AitoClientV2:
         0 turns it off.
     :type rate_limit_retries: int
     :param retries: how many times to repeat a request that met a transient failure: a 502,
-        503 or 504, a dropped connection or a timeout. Off (0) by default. Only requests that
+        503 or 504, a dropped connection or a timeout. Defaults to 2; 0 turns them off. Only requests that
         change nothing are repeated: GETs, the queries (``query``, ``search``, ``predict``,
         ``recommend``, ``relate``, ``match``, ``estimate``, ``aggregate``, ``evaluate``,
         ``batch``), ``optimize``, and an upsert (``upload_entries(..., on_conflict='update')`` or
@@ -130,7 +130,7 @@ class AitoClientV2:
             on_response: Optional[Callable[[Any, str], None]] = None,
             write_contention_retries: int = contention.DEFAULT_RETRIES,
             rate_limit_retries: int = contention.DEFAULT_RATE_LIMIT_RETRIES,
-            retries: int = 0,
+            retries: int = 2,
             backoff: float = 0.5,
     ):
         contention.check_retries(write_contention_retries)
@@ -482,7 +482,7 @@ class AitoClientV2:
             already stored does: ``'error'`` (the engine's default) fails the batch,
             ``'update'`` replaces the stored row, ``'ignore'`` keeps it. With ``'update'`` or
             ``'ignore'`` the same batch sent twice leaves the collection as one send does, so
-            the client's opt-in ``retries`` repeat it. A collection without a key refuses
+            the client's ``retries`` repeat it. A collection without a key refuses
             both. Defaults to None: not sent
         :type on_conflict: Optional[str]
         :raises ValueError: ``on_conflict`` is not one of the three

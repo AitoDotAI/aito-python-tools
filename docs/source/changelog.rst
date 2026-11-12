@@ -12,6 +12,12 @@ Unreleased
   ``RequestError`` where it used to succeed**, for example a heavy ``_evaluate`` sent directly
   rather than as a job. Use the job form, a larger ``timeout``, or ``AitoClient(...,
   timeout=None)`` for no limit, as before.
+- ``AitoClientV2`` retries a transient failure by default: ``retries=2``, ``backoff=0.5``
+  (opt-in in 1.3.0). The same requests as before are repeated, and only those: GETs, the
+  queries, ``optimize`` and an upsert batch (``on_conflict='update'`` or ``'ignore'``). A plain
+  batch insert, a delete, a schema write, ``_modify``, an env or a job submission is still never
+  retried. ``retries=0`` restores the 1.3.0 behaviour. A query that keeps timing out now raises
+  after three attempts.
 
 1.3.0
 -----

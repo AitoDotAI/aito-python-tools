@@ -10,9 +10,9 @@ safely be repeated.
 |---|---|---|---|
 | 409 `write.contention` | retried, 3 by default (`write_contention_retries`) | retried, same | retried, same |
 | 429 | raised (`RequestError`) | raised | retried, 3 by default, at most 60 s of waiting (`rate_limit_retries`) |
-| 502 / 503 / 504 | raised | raised | raised; with `retries=n`, retried for requests that change nothing |
-| connection refused / reset | raised | raised | raised; with `retries=n`, as above |
-| read timeout | after 300 s (`timeout`), raised | after 300 s in all (aiohttp's default) | after `timeout` (30 s); with `retries=n`, as above |
+| 502 / 503 / 504 | raised | raised | retried, 2 by default (`retries`), for requests that change nothing |
+| connection refused / reset | raised | raised | retried, as above |
+| read timeout | after 300 s (`timeout`), raised | after 300 s in all (aiohttp's default) | after `timeout` (30 s); retried, as above |
 | any other 4xx / 5xx | raised | raised | raised |
 
 `AitoV2Error.is_retryable` says whether repeating the same request later can succeed and is
@@ -107,7 +107,7 @@ except AitoV2Error as err:
     client.upload_entries('invoices', rows[err.rows_landed:], on_conflict='update')
 ```
 
-With `retries=n` on the client, the upsert batches are also retried through 502/503/504,
+With the client's `retries` (2 by default), the upsert batches are also retried through 502/503/504,
 resets and timeouts before the error is raised at all.
 
 **Into a collection without a key: resend from the landed count, after checking the failed
@@ -127,14 +127,15 @@ batch.**
 A v1 `api.upload_entries` failure has no such state: it skips the failed batch and carries on,
 and the log names the batch's index range.
 
-## Opt-in transient retries (v2)
+## Transient retries (v2)
 
-`AitoClientV2(retries=n, backoff=0.5)` repeats a request up to n times after a 502, 503 or 504, a
+`AitoClientV2(retries=2, backoff=0.5)` repeats a request up to n times after a 502, 503 or 504, a
 dropped connection or a timeout. Retry k waits up to `backoff * 2**k` seconds (full jitter, at
 most 8 s), on top of a `Retry-After` the response carries.
 
-The default `retries=0` keeps the old behaviour. Only requests that change nothing are
-repeated:
+Both are the defaults since 1.3.1 (opt-in in 1.3.0); `retries=0` turns them off. A query that
+times out is retried too, so with the defaults a call that keeps timing out raises after three
+times `timeout` plus the waits. Only requests that change nothing are repeated:
 - GETs;
 - the queries `_query`, `_search`, `_predict`, `_recommend`, `_relate`, `_match`, `_estimate`,
   `_aggregate`, `_evaluate` and `_batch`;
@@ -155,6 +156,5 @@ schema write, `_modify`, an env or a job submission. Tests: `tests/sdk/test_tran
 
 - **v1 `upload_entries` raising on the first failed batch** instead of returning a partial
   upload.
-- **Transient retries on by default.**
 - **The same opt-in retries for the v1 clients.** That one isn't a default change, but v1 is
   legacy, so it's left until someone needs it.

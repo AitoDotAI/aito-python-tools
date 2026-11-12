@@ -2,8 +2,8 @@
 
 ``AitoClientV2(retries=n, backoff=s)`` repeats a request that met a 502, 503 or 504, a
 dropped connection or a timeout, up to n times, waiting up to ``s * 2**attempt`` seconds
-(full jitter, at most 8 s; a 503's ``Retry-After`` is the floor). The default is 0: the
-client behaves as it always has.
+(full jitter, at most 8 s; a 503's ``Retry-After`` is the floor). The default is 2 retries
+with a 0.5 s backoff; ``retries=0`` turns them off.
 
 Only requests that change nothing are repeated: GETs, the query endpoints (``_query``,
 ``_search``, ``_predict``, ``_recommend``, ``_relate``, ``_match``, ``_estimate``,
@@ -50,19 +50,47 @@ class TransientCase(RetryCase):
         return client
 
 
-class TestOffByDefault(TransientCase):
-    def test_a_503_is_raised_at_once(self):
-        client = self.client([status(503), OK])
+class TestOnByDefault(TransientCase):
+    def test_a_503_on_a_query_is_retried_twice(self):
+        client = self.client([status(503), status(503), OK])
+        client.request('POST', '/_predict', {'from': 't', 'predict': 'x'})
+        self.assertEqual((self.sent(client), len(self.sleeps)), (3, 2))
+
+    def test_the_third_failure_is_raised(self):
+        client = self.client([status(503)] * 3 + [OK])
+        with self.assertRaises(AitoV2Error) as raised:
+            client.request('POST', '/_query', {'from': 't'})
+        self.assertEqual(self.sent(client), 3)
+        self.assertEqual(raised.exception.status_code, 503)
+
+    def test_the_default_backoff_is_half_a_second(self):
+        client = self.client([status(503), status(503), OK])
+        with jitter_at_most():
+            client.request('POST', '/_query', {'from': 't'})
+        self.assertEqual(self.sleeps, [0.5, 1.0])
+
+    def test_retries_0_turns_them_off(self):
+        client = self.client([status(503), OK], retries=0)
         with self.assertRaises(AitoV2Error) as raised:
             client.request('POST', '/_predict', {'from': 't', 'predict': 'x'})
         self.assertEqual((self.sent(client), self.sleeps), (1, []))
         self.assertEqual(raised.exception.status_code, 503)
 
-    def test_a_dropped_connection_is_raised_at_once(self):
-        client = self.client([requests.ConnectionError('reset'), OK])
+    def test_a_dropped_connection_is_raised_at_once_with_retries_0(self):
+        client = self.client([requests.ConnectionError('reset'), OK], retries=0)
         with self.assertRaises(AitoV2Error):
             client.request('POST', '/_query', {'from': 't'})
         self.assertEqual(self.sent(client), 1)
+
+    def test_a_plain_batch_insert_is_never_retried_by_default(self):
+        # a batch into a collection without a key appends: sent twice, its rows land twice
+        for failure in (status(502), status(503), status(504), requests.ConnectionError('reset'),
+                        requests.ReadTimeout('slow')):
+            with self.subTest(repr(failure)):
+                client = self.client([failure, OK, OK])
+                with self.assertRaises(AitoV2Error):
+                    client.upload_entries('invoices', [{'id': 'a'}])
+                self.assertEqual((self.sent(client), self.sleeps), (1, []))
 
     def test_retries_must_not_be_negative(self):
         with self.assertRaises(ValueError):
