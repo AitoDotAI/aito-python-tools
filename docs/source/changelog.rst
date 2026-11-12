@@ -18,6 +18,11 @@ Unreleased
   batch insert, a delete, a schema write, ``_modify``, an env or a job submission is still never
   retried. A read timeout isn't retried by default (``retry_read_timeouts=True`` opts in): a
   busy server would get the same work again. ``retries=0`` restores the 1.3.0 behaviour.
+- v1 ``api.upload_entries(..., raise_on_failure=True)`` stops at the first failed batch with an
+  ``UploadEntriesError`` carrying ``rows_uploaded`` (resume from ``entries[rows_uploaded:]``)
+  and ``failed_range``, without sending the rest or optimizing. The default is unchanged: the
+  upload goes on past a failed batch. An upload that finished with some batches failed now
+  ends with an ERROR naming their row ranges, where it logged INFO.
 
 1.3.0
 -----
