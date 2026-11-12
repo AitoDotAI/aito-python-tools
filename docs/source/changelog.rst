@@ -16,8 +16,8 @@ Unreleased
   (opt-in in 1.3.0). The same requests as before are repeated, and only those: GETs, the
   queries, ``optimize`` and an upsert batch (``on_conflict='update'`` or ``'ignore'``). A plain
   batch insert, a delete, a schema write, ``_modify``, an env or a job submission is still never
-  retried. ``retries=0`` restores the 1.3.0 behaviour. A query that keeps timing out now raises
-  after three attempts.
+  retried. A read timeout isn't retried by default (``retry_read_timeouts=True`` opts in): a
+  busy server would get the same work again. ``retries=0`` restores the 1.3.0 behaviour.
 
 1.3.0
 -----

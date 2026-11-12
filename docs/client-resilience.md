@@ -11,8 +11,8 @@ safely be repeated.
 | 409 `write.contention` | retried, 3 by default (`write_contention_retries`) | retried, same | retried, same |
 | 429 | raised (`RequestError`) | raised | retried, 3 by default, at most 60 s of waiting (`rate_limit_retries`) |
 | 502 / 503 / 504 | raised | raised | retried, 2 by default (`retries`), for requests that change nothing |
-| connection refused / reset | raised | raised | retried, as above |
-| read timeout | after 300 s (`timeout`), raised | after 300 s in all (aiohttp's default) | after `timeout` (30 s); retried, as above |
+| connection refused / reset, connect timeout | raised | raised | retried, as above |
+| read timeout | after 300 s (`timeout`), raised | after 300 s in all (aiohttp's default) | after `timeout` (30 s), raised; retried only with `retry_read_timeouts=True` |
 | any other 4xx / 5xx | raised | raised | raised |
 
 `AitoV2Error.is_retryable` says whether repeating the same request later can succeed and is
@@ -130,12 +130,14 @@ and the log names the batch's index range.
 ## Transient retries (v2)
 
 `AitoClientV2(retries=2, backoff=0.5)` repeats a request up to n times after a 502, 503 or 504, a
-dropped connection or a timeout. Retry k waits up to `backoff * 2**k` seconds (full jitter, at
+dropped connection or a connect timeout. Retry k waits up to `backoff * 2**k` seconds (full jitter, at
 most 8 s), on top of a `Retry-After` the response carries.
 
-Both are the defaults since 1.3.1 (opt-in in 1.3.0); `retries=0` turns them off. A query that
-times out is retried too, so with the defaults a call that keeps timing out raises after three
-times `timeout` plus the waits. Only requests that change nothing are repeated:
+Both are the defaults since 1.3.1 (opt-in in 1.3.0); `retries=0` turns them off. A read
+timeout (the server didn't answer within `timeout`) is not retried by default: a server too
+busy to answer in time would get the same work again, and a 30 s timeout would become about
+90 s. `retry_read_timeouts=True` retries it too. Only requests that change nothing are
+repeated:
 - GETs;
 - the queries `_query`, `_search`, `_predict`, `_recommend`, `_relate`, `_match`, `_estimate`,
   `_aggregate`, `_evaluate` and `_batch`;
