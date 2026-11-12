@@ -124,14 +124,17 @@ batch.**
   The count is only reliable while nothing else writes to the table. Otherwise, load into a fresh
   table and swap it in.
 
-A v1 `api.upload_entries` failure has no such state: it skips the failed batch and carries on,
-and the log names the batch's index range.
+A v1 `api.upload_entries` goes on past a failed batch by default: each failed batch is logged at
+ERROR with its row range, and an upload that finished with some failed ends with an ERROR naming
+them all. It raises only when no batch landed. Since 1.3.1, `raise_on_failure=True` stops at the
+first failed batch instead, with an `UploadEntriesError` whose `rows_uploaded` says where to
+resume (`entries[rows_uploaded:]`) and whose `failed_range` is the batch's rows.
 
 ## Transient retries (v2)
 
-`AitoClientV2(retries=2, backoff=0.5)` repeats a request up to n times after a 502, 503 or 504, a
-dropped connection or a connect timeout. Retry k waits up to `backoff * 2**k` seconds (full jitter, at
-most 8 s), on top of a `Retry-After` the response carries.
+`AitoClientV2(retries=2, backoff=0.5)` repeats a request up to `retries` times after a 502, 503
+or 504, a dropped connection or a connect timeout. Retry k waits up to `backoff * 2**k` seconds
+(full jitter, at most 8 s), on top of a `Retry-After` the response carries.
 
 Both are the defaults since 1.3.1 (opt-in in 1.3.0); `retries=0` turns them off. A read
 timeout (the server didn't answer within `timeout`) is not retried by default: a server too
@@ -156,7 +159,8 @@ schema write, `_modify`, an env or a job submission. Tests: `tests/sdk/test_tran
 
 ## Not changed here: defaults, for Antti
 
-- **v1 `upload_entries` raising on the first failed batch** instead of returning a partial
-  upload.
+- **v1 `upload_entries` raising on the first failed batch by default.** It's opt-in
+  (`raise_on_failure=True`) in 1.x; making it the default waits for 2.0, since some uploads
+  that complete today would raise.
 - **The same opt-in retries for the v1 clients.** That one isn't a default change, but v1 is
   legacy, so it's left until someone needs it.

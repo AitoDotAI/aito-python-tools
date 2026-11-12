@@ -24,6 +24,22 @@ from aito.utils.data_frame_handler import DataFrameHandler
 
 LOG = logging.getLogger('AitoAPI')
 
+
+class UploadEntriesError(Exception):
+    """a batch of :func:`upload_entries` failed with ``raise_on_failure=True``
+
+    :ivar rows_uploaded: the rows of the batches before the failed one, all uploaded:
+        ``entries[rows_uploaded:]`` is what is left to send
+    :ivar failed_range: the failed batch's ``(begin, end)`` row indices, end exclusive
+
+    The request's error is its ``__cause__``.
+    """
+
+    def __init__(self, message: str, rows_uploaded: int, failed_range: Tuple[int, int]):
+        super().__init__(message)
+        self.rows_uploaded = rows_uploaded
+        self.failed_range = failed_range
+
 def get_version(client: AitoClient) -> str:
     """get the aito instance version
 
@@ -312,9 +328,14 @@ def upload_entries(
         table_name: str,
         entries: Iterable[Dict],
         batch_size: int = 1000,
-        optimize_on_finished: bool = True
+        optimize_on_finished: bool = True,
+        raise_on_failure: bool = False
 ):
     """populate table entries by batches of batch_size
+
+    By default a failed batch is logged at ERROR with its row range and the upload goes on;
+    it raises only when no batch landed, and an upload with some batches failed ends with an
+    ERROR naming them. ``raise_on_failure=True`` stops at the first failed batch instead.
 
     .. note::
 
@@ -331,6 +352,12 @@ def upload_entries(
     :param optimize_on_finished: `optimize <https://aito.ai/docs/api/#post-api-v1-data-table-optimize>`__
         the table on finished, defaults to True
     :type optimize_on_finished: bool
+    :param raise_on_failure: raise :class:`UploadEntriesError` at the first failed batch,
+        without sending the rest or optimizing, instead of going on. Defaults to False
+    :type raise_on_failure: bool
+    :raises UploadEntriesError: a batch failed and ``raise_on_failure`` is set. Its
+        ``rows_uploaded`` says where to resume: ``entries[rows_uploaded:]``
+    :raises Exception: no batch landed
 
     Upload a Pandas DataFrame
 
@@ -342,7 +369,7 @@ def upload_entries(
     Upload a generator of entries
 
     >>> def entries_generator(start, end):
-    ...     for idx in range(start,clea end):
+    ...     for idx in range(start, end):
     ...         entry = {'id': idx}
     ...         yield entry
     >>> client.upload_entries(
@@ -356,6 +383,7 @@ def upload_entries(
     LOG.info(f'uploading entries to table `{table_name}` with batch size of {batch_size}...')
     begin_index, last_index, populated_count = 0, 0, 0
     entries_batch = []
+    failed_ranges = []
 
     def _upload_single_batch(begin_idx, last_idx, populated_c, batch_content):
         try:
@@ -365,6 +393,12 @@ def upload_entries(
             LOG.info(f'uploaded batch {begin_idx}:{last_idx}')
         except Exception as e:
             LOG.error(f'batch {begin_idx}:{last_idx} failed: {e}')
+            if raise_on_failure:
+                raise UploadEntriesError(
+                    f'upload_entries to `{table_name}`: batch {begin_idx}:{last_idx} failed '
+                    f'({populated_c} rows uploaded before it; resume from entries[{populated_c}:]): {e}',
+                    rows_uploaded=populated_c, failed_range=(begin_idx, last_idx)) from e
+            failed_ranges.append((begin_idx, last_idx))
         return populated_c
 
     for entry in entries:
@@ -384,7 +418,13 @@ def upload_entries(
     if populated_count == 0:
         raise Exception("failed to upload any data into Aito")
 
-    LOG.info(f'uploaded {populated_count}/{last_index} entries to table `{table_name}`')
+    if failed_ranges:
+        ranges = ', '.join(f'{b}:{e}' for b, e in failed_ranges)
+        count = len(failed_ranges)
+        LOG.error(f'uploaded {populated_count}/{last_index} entries to table `{table_name}`; '
+                  f'{count} batch{"es" if count != 1 else ""} failed: rows {ranges}')
+    else:
+        LOG.info(f'uploaded {populated_count}/{last_index} entries to table `{table_name}`')
 
     if optimize_on_finished:
         optimize_table(client, table_name)
