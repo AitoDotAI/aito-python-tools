@@ -6,6 +6,12 @@ Unreleased
 
 - ``aito start`` and ``aito upgrade`` run engine v2.12.0 (was v2.11.2), pinned by its
   multi-arch digest. The SDK and CLI tests have run against v2.12.0 since 1.3.0.
+- The v1 ``AitoClient`` gives up on a request after 300 s by default (``timeout=300.0``), as the
+  async requests already did; before, a server that accepted the connection and never answered
+  blocked the caller forever. **A sync v1 request that takes longer than 300 s now raises a
+  ``RequestError`` where it used to succeed**, for example a heavy ``_evaluate`` sent directly
+  rather than as a job. Use the job form, a larger ``timeout``, or ``AitoClient(...,
+  timeout=None)`` for no limit, as before.
 
 1.3.0
 -----

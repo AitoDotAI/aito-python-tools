@@ -12,7 +12,7 @@ safely be repeated.
 | 429 | raised (`RequestError`) | raised | retried, 3 by default, at most 60 s of waiting (`rate_limit_retries`) |
 | 502 / 503 / 504 | raised | raised | raised; with `retries=n`, retried for requests that change nothing |
 | connection refused / reset | raised | raised | raised; with `retries=n`, as above |
-| read timeout | never happens: no timeout | after 300 s in all (aiohttp's default) | after `timeout` (30 s); with `retries=n`, as above |
+| read timeout | after 300 s (`timeout`), raised | after 300 s in all (aiohttp's default) | after `timeout` (30 s); with `retries=n`, as above |
 | any other 4xx / 5xx | raised | raised | raised |
 
 `AitoV2Error.is_retryable` says whether repeating the same request later can succeed and is
@@ -21,9 +21,9 @@ safe: true for 409 `write.contention` and 429, false for everything else. That i
 
 ## Timeouts
 
-- **v1 sync: none.** `requests` is called without `timeout`, so a request to an engine that
-  accepts the connection and never answers waits forever. You can't set one per client or per
-  call.
+- **v1 sync:** `AitoClient(timeout=300.0)` by default since 1.3.1, the credential check
+  included; `client.timeout` can be changed between calls. A request that runs out raises a
+  `RequestError`. `timeout=None` waits forever, as every version before 1.3.1 did.
 - **v1 async:** aiohttp's default session timeout, 300 s in all and 30 s to connect. It can't be
   set.
 - **v2:** `AitoClientV2(timeout=30.0)` per client; `client.timeout` can be changed between calls.
@@ -153,8 +153,6 @@ schema write, `_modify`, an env or a job submission. Tests: `tests/sdk/test_tran
 
 ## Not changed here: defaults, for Antti
 
-- **A default timeout for the v1 sync client**, which has none. Adding one makes a slow call
-  that succeeds today fail.
 - **v1 `upload_entries` raising on the first failed batch** instead of returning a partial
   upload.
 - **Transient retries on by default.**
