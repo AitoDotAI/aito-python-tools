@@ -32,6 +32,7 @@ from mcp.types import ToolAnnotations
 from aito import __version__
 from aito.local.profiles import NoCredentialsError
 from aito.v2 import AitoClientV2, AitoV2Error
+from aito.v2.limits import MAX_REQUEST_BYTES, json_bytes, over_the_limit_message
 
 WRITES_ENV = 'AITO_MCP_ALLOW_WRITES'
 #: the page the fit and non-fit lists below quote
@@ -355,12 +356,29 @@ Derive the schema from the user's existing table: one column per field, with typ
 {FREE_MODE_CAP}
 {SEPARATION}
 
-`rows` is a list of objects matching the table's schema, at most a few thousand per call.""")
-    def upload_rows(table: str, rows: List[Dict[str, Any]]) -> Any:
+`rows` is a list of objects matching the table's schema, at most a few thousand per call. A call is all or nothing: if it fails, none of its rows were added. A call over the engine's request limit of {MAX_REQUEST_BYTES:,} bytes is refused before sending; split it into smaller calls.
+
+`on_conflict` is for a table with a primary key: "update" replaces a stored row with the same key, "ignore" keeps it, "error" (the default) fails the call. With "update" or "ignore" a call over the limit is sent in parts, since resending it can't duplicate rows.""")
+    def upload_rows(table: str, rows: List[Dict[str, Any]], on_conflict: Optional[str] = None) -> Any:
         refuse_write('upload_rows')
         need_client()
+        if on_conflict not in (None, 'error', 'update', 'ignore'):
+            raise ToolError(f"invalid on_conflict {on_conflict!r}, expected 'error', 'update' or 'ignore'")
+        upsert = on_conflict in ('update', 'ignore')
+        nbytes = json_bytes(rows)
+        if nbytes > MAX_REQUEST_BYTES and not upsert:
+            # Agents retry a failed call whole: a call that landed in parts and then failed
+            # would be resent and duplicate the parts that landed. So it stays one request.
+            raise ToolError(f'upload_rows: {over_the_limit_message(nbytes)}, so nothing was sent. '
+                            f'Split the rows into smaller calls, or, into a table with a primary key, '
+                            f'call with on_conflict="update", which is sent in parts')
         try:
-            client.request('POST', f'/data/{table}/batch', rows)
+            if upsert:
+                # the same rows land once however often they're sent, so parts are safe
+                client.upload_entries(table, rows, batch_size=max(len(rows), 1), on_conflict=on_conflict)
+            else:
+                path = f'/data/{table}/batch' + (f'?on_conflict={on_conflict}' if on_conflict else '')
+                client.request('POST', path, rows)
         except AitoV2Error as e:
             raise ToolError(str(e)) from e
         return {'table': table, 'uploaded': len(rows)}

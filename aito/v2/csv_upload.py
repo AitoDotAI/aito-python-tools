@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from aito import _csv_types
+from . import limits
 from .errors import AitoV2Error
 
 LOG = logging.getLogger('aito.v2')
@@ -93,8 +94,14 @@ def upload_csv(client, name: str, source, *, schema: Optional[Dict] = None, via:
         LOG.debug("upload_csv %s: appended %d rows via='client'", name, count)
         return CsvUploadResult(name, count, _type_names(declared), 'client', created=False)
 
-    # schema= and other delimiters are applied here, so they take the client path
-    if via != 'client' and delimiter == ',' and not schema:
+    too_big = len(body) > limits.MAX_REQUEST_BYTES
+    if via == 'server' and too_big:
+        raise AitoV2Error(f"upload_csv: via='server' sends the CSV in one request, and "
+                          f"{limits.over_the_limit_message(len(body))}; nothing was sent. "
+                          f"via='auto' or 'client' uploads it in parts", code='payload_too_large')
+    # schema= and other delimiters are applied here, so they take the client path; so does a
+    # CSV over the engine's request-body limit, which the client path splits
+    if via != 'client' and delimiter == ',' and not schema and not too_big:
         try:
             res = client.request('POST', f'/data/{name}/import', data=body, content_type='text/csv')
             count = int(res.get('count', len(rows)))

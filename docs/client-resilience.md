@@ -85,6 +85,12 @@ have landed, and sending it again can duplicate it. No client retries such a bat
 
   All four are `None` on any other error.
 
+**Request size.** The engine refuses a request body over 10,000,000 bytes with 413
+`payload_too_large` (measured on v2.12.0: exactly 10,000,000 is accepted). Since 1.3.1,
+`upload_entries` keeps each batch under 9 MB as well as under `batch_size`, so rows of 100 kB
+go about 89 to a request. A row over the limit by itself raises before anything is sent. The
+limit is `aito.v2.limits.MAX_REQUEST_BYTES`.
+
 ### Resuming a failed upload (v2)
 
 **Is a v2 batch atomic?** Measured atomic for 1000-row batches: each landed whole or not at

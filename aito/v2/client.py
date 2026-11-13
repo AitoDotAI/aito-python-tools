@@ -26,6 +26,7 @@ import requests as requestslib
 from aito import _write_contention as contention
 from aito.local.profiles import SET_THE_KEY, NoCredentialsError, resolve_credentials
 from aito.utils._generic_utils import instance_url_problem
+from . import limits
 from .errors import AitoV2Error
 from .responses import (
     V2AggregateResponse, V2BatchResponse, V2EstimateResponse, V2EvaluationResponse,
@@ -286,6 +287,11 @@ class AitoClientV2:
                 if isinstance(e, requestslib.ConnectionError) and any(
                         h in self.instance_url for h in ('://127.0.0.1', '://localhost')):
                     hint = ' (a local Aito: is it running? `aito status`, `aito start`)'
+                if isinstance(e, requestslib.ConnectionError):
+                    nbytes = len(data) if data is not None else limits.json_bytes(query)
+                    if nbytes > limits.MAX_REQUEST_BYTES:
+                        # a proxy drops the connection where the engine itself answers 413
+                        hint += f' ({limits.over_the_limit_message(nbytes)}: send it in parts)'
                 suffix = f' (retried {transient} times)' if transient else ''
                 raise AitoV2Error(f'Aito v2 request failed: {method} {path}: {e}{hint}{suffix}') from e
 
@@ -485,7 +491,8 @@ class AitoClientV2:
         :type name: str
         :param entries: the rows to insert
         :type entries: List[Dict]
-        :param batch_size: the number of rows per request
+        :param batch_size: the most rows per request. A request is also kept under 9 MB,
+            below the engine's 10,000,000-byte body limit, so big rows go in smaller batches
         :type batch_size: int
         :param on_conflict: for a collection with a primary key, what a row whose key is
             already stored does: ``'error'`` (the engine's default) fails the batch,
@@ -494,7 +501,9 @@ class AitoClientV2:
             the client's ``retries`` repeat it. A collection without a key refuses
             both. Defaults to None: not sent
         :type on_conflict: Optional[str]
-        :raises ValueError: ``on_conflict`` is not one of the three
+        :raises ValueError: ``on_conflict`` is not one of the three, or ``batch_size`` is below 1
+        :raises AitoV2Error: with code ``payload_too_large``, before anything is sent: a row is
+            over the engine's request-body limit by itself
         :raises AitoV2Error: a batch failed. The batches before it have landed: the error's
             ``batches_landed``, ``rows_landed`` and ``failed_batch`` say how far it got. Its
             ``failed_batch_outcome`` says what is known of the failed batch. ``'refused'`` (a
@@ -510,9 +519,15 @@ class AitoClientV2:
         if on_conflict is not None and on_conflict not in _ON_CONFLICT_CHOICES:
             raise ValueError(f"invalid on_conflict {on_conflict!r}, expected 'error', 'update' or 'ignore'")
         path = f'/data/{name}/batch' + (f'?on_conflict={on_conflict}' if on_conflict else '')
+        if batch_size < 1:
+            raise ValueError(f'batch_size must be at least 1, got {batch_size}')
+        try:
+            ranges = limits.plan_batches(entries, batch_size)
+        except limits.OverTheLimit as e:
+            raise AitoV2Error(f'upload_entries: {e}', code='payload_too_large') from e
         total = 0
-        for batch, start in enumerate(range(0, len(entries), batch_size)):
-            chunk = entries[start:start + batch_size]
+        for batch, (start, end) in enumerate(ranges):
+            chunk = entries[start:end]
             try:
                 result = self.request('POST', path, chunk)
             except AitoV2Error as error:
