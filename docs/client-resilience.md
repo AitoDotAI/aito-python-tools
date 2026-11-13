@@ -96,7 +96,10 @@ limit is `aito.v2.limits.MAX_REQUEST_BYTES`.
 
 **Is a v2 batch atomic?** Yes, on a single-node server: a batch lands with all of its rows or
 none. This was measured at 1,000 rows and at the 10 MB request limit (163,770 rows). The engine
-commits a v2 batch in one step, so the sizes in between are expected to behave the same.
+commits a v2 batch in one step, so the sizes in between are expected to behave the same: on a
+single node, aito-core's `DataApiV2Support.insertBatch` adds the whole batch in one
+`commitToEnv`, with no chunking. A cluster node takes a journaled path instead, which isn't
+covered here.
 - **Refusals** (checked on v2.11.2 and v2.12.0): a batch with one bad row, such as a missing key
   or two rows with the same key, is refused whole, and none of its rows land.
 - **Crashes and timeouts at 1000 rows** (measured by core-3 on 6–7.11.2026, board ticket
