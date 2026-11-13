@@ -87,13 +87,18 @@ have landed, and sending it again can duplicate it. No client retries such a bat
 
 ### Resuming a failed upload (v2)
 
-**Is a v2 batch atomic?** Yes. A batch lands whole or not at all:
+**Is a v2 batch atomic?** Yes, as measured, for batches of up to 50,000 rows. A batch lands
+whole or not at all:
 - **Refusals** (checked on v2.11.2 and v2.12.0): a batch with one bad row, such as a missing key
   or two rows with the same key, is refused whole, and none of its rows land.
 - **Crashes and timeouts** (measured by core-3 on 6–7.11.2026, board ticket
   td-20261107000050914187): 20 SIGKILLs across 517 batches, and client timeouts across 614
   batches. Every batch landed with all of its rows or none, and every acknowledged batch
-  survived a restart.
+  survived a restart. The batches were of 1000 rows, the client's default `batch_size`.
+- **Bigger batches: not verified.** The engine's limits page (`/v2/limits`, "Data writes")
+  says a data write commits in flushes of 50,000 rows (more with `?batchSize=`). So a batch
+  larger than that may land in parts. Keep `batch_size` at or below 50,000 if you rely on
+  atomicity.
 
 **But a timed-out batch can land late.** In the same runs, a batch the client had given up on
 still committed afterwards: the row total held still for 15 s, then grew by 13 whole batches
