@@ -501,8 +501,9 @@ class AitoClientV2:
             4xx): none of it landed, ``rows_landed`` is exact and ``entries[err.rows_landed:]``
             is what is left. ``'unknown'`` (a 5xx, a reset, a timeout): it may have landed even
             though the client saw an error, so ``rows_landed`` is a lower bound and resending
-            from it can duplicate rows. Then resend with ``on_conflict='update'`` into a keyed
-            collection, or count the table first
+            from it can duplicate rows. It can also land after the client gave up, so no
+            check makes a resend safe: resend with ``on_conflict='update'`` into a keyed
+            collection, or load into a fresh one
         :return: the number of rows inserted
         :rtype: int
         """

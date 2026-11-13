@@ -6,7 +6,7 @@ the same ``AitoV2Error`` as before (a caller that catches it is unaffected), and
 is what is left) and ``failed_batch`` (its 0-based index). A batch is all or nothing in the
 engine, but one that failed in transit (a reset, a timeout, a 503) may have landed. Resending
 from ``rows_landed`` is safe with ``on_conflict='update'`` into a keyed collection; without a
-key, check what landed first. Other errors leave the three None. Offline: a recording
+key, no resend is (the batch can land after any check). Other errors leave the three None. Offline: a recording
 session plays the server.
 """
 

@@ -67,9 +67,9 @@ have landed, and sending it again can duplicate it. No client retries such a bat
 
 **A failed batch mid-upload:**
 - **v1 `api.upload_entries`** logs the failed batch as an error and carries on with the next.
-  It raises only if no batch at all succeeded. A partial upload returns normally, and the
-  caller can't tell from the return value which rows are missing (the log names the batch's
-  index range).
+  It raises only if no batch at all succeeded, and an upload with some batches failed ends
+  with an ERROR naming their row ranges. `raise_on_failure=True` stops at the first failed
+  batch instead (see the end of this section).
 - **v2 `AitoClientV2.upload_entries`** raises at the failed batch, with the same `AitoV2Error`
   as any other failure. The batches before it have landed. The error says how far the upload
   got:
@@ -80,19 +80,34 @@ have landed, and sending it again can duplicate it. No client retries such a bat
   - `failed_batch_outcome`:
     - `'refused'` (a 4xx): none of the failed batch landed, and `rows_landed` is exact;
     - `'unknown'` (a 5xx, a reset, a timeout): the failed batch may have landed on the server
-      even though the client saw an error, so `rows_landed` is a lower bound.
+      even though the client saw an error, possibly after the client gave up, so
+      `rows_landed` is a lower bound.
 
   All four are `None` on any other error.
 
 ### Resuming a failed upload (v2)
 
-**Is a v2 batch atomic?** Verified for refusals, on v2.11.2 and v2.12.0: a batch with one bad
-row (a missing key, or two rows with the same key) is refused whole, and none of its rows land.
-**Not verified** for a failure while the engine is writing, such as a crash or a timeout mid-commit.
-So after an `'unknown'` outcome, assume any part of the failed batch may have landed.
+**Is a v2 batch atomic?** Measured atomic for 1000-row batches: each landed whole or not at
+all. The engine commits in flushes of 50,000 rows, so a batch of up to 50,000 is expected to be
+atomic but isn't measured, and larger batches may land in parts.
+- **Refusals** (checked on v2.11.2 and v2.12.0): a batch with one bad row, such as a missing key
+  or two rows with the same key, is refused whole, and none of its rows land.
+- **Crashes and timeouts** (measured by core-3 on 6–7.11.2026, board ticket
+  td-20261107000050914187): 20 SIGKILLs across 517 batches, and client timeouts across 614
+  batches. Every batch landed with all of its rows or none, and every acknowledged batch
+  survived a restart. The batches were of 1000 rows, the client's default `batch_size`.
+- **Bigger batches:** the 50,000-row flush is from the engine's limits page (`/v2/limits`,
+  "Data writes"; raised with `?batchSize=`). Measuring above it is board ticket
+  td-20261113082157454471. Until then, keep `batch_size` at the default if you rely on
+  atomicity.
 
-After `'refused'`, resending `rows[err.rows_landed:]` is exact. After `'unknown'`, a resend that
-doesn't check can duplicate rows; use one of the two ways below.
+**But a timed-out batch can land late.** In the same runs, a batch the client had given up on
+still committed afterwards: the row total held still for 15 s, then grew by 13 whole batches
+when the engine drained them at shutdown. So waiting, or counting the table, can't show that
+an `'unknown'` batch didn't land.
+
+After `'refused'`, resending `rows[err.rows_landed:]` is exact. After `'unknown'`, the only
+safe resend is an upsert into a collection with a primary key.
 
 **Into a collection with a primary key: resend the rest as an upsert.** Every row that's already
 there is replaced by itself, so the batch that may have landed can't duplicate:
@@ -107,22 +122,18 @@ except AitoV2Error as err:
     client.upload_entries('invoices', rows[err.rows_landed:], on_conflict='update')
 ```
 
-With the client's `retries` (2 by default), the upsert batches are also retried through 502/503/504,
-resets and timeouts before the error is raised at all.
+With the client's `retries` (2 by default), the upsert batches are also retried through
+502/503/504, resets and connect timeouts before the error is raised at all, and through read
+timeouts too with `retry_read_timeouts=True`. In core-3's measurement, 40 batches of 1000 rows
+resent with `on_conflict=update` after a 0.02 s timeout gave exactly 40,000 rows; the same
+resend into a keyless collection gave 72,000.
 
-**Into a collection without a key: resend from the landed count, after checking the failed
-batch.**
-- `'refused'`: none of it landed, so resend `rows[err.rows_landed:]` after fixing what the
-  error names.
-- `'unknown'`: first count the table, e.g. `client.search(from_table=..., limit=0).total`,
-  against the count before the upload plus `err.rows_landed`.
-  - If the failed batch is in whole, resend `rows[err.rows_landed + batch_size:]`.
-  - If none of it is in, resend `rows[err.rows_landed:]`.
-  - A count in between is a partly landed batch, which hasn't been observed and isn't ruled out.
-    The count can't say which rows landed, so load into a fresh table instead.
-
-  The count is only reliable while nothing else writes to the table. Otherwise, load into a fresh
-  table and swap it in.
+**Into a collection without a key:**
+- `'refused'`: none of the failed batch landed, so resend `rows[err.rows_landed:]` after fixing
+  what the error names.
+- `'unknown'`: no resend is safe. The batch may land after any check you make, and then a
+  resend duplicates it. Either load into a fresh collection that has a primary key and resend
+  with `on_conflict='update'`, or load the whole upload into a fresh table and swap it in.
 
 A v1 `api.upload_entries` goes on past a failed batch by default: each failed batch is logged at
 ERROR with its row range, and an upload that finished with some failed ends with an ERROR naming
