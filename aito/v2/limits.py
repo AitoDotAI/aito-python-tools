@@ -29,7 +29,10 @@ def json_bytes(value: Any) -> int:
 
 
 def batch_body_bytes(row_sizes: Sequence[int]) -> int:
-    """the size of a JSON array of rows of these sizes: ``[`` ``]`` and a ``, `` between rows"""
+    """the size of a JSON array of rows of these sizes
+
+    The brackets, and a comma and a space between rows, as ``json.dumps`` writes them.
+    """
     return 2 + sum(row_sizes) + 2 * max(len(row_sizes) - 1, 0)
 
 
