@@ -360,7 +360,8 @@ Derive the schema from the user's existing table: one column per field, with typ
         refuse_write('upload_rows')
         need_client()
         try:
-            client.request('POST', f'/data/{table}/batch', rows)
+            # one request, unless the rows are over the engine's 10 MB body limit
+            client.upload_entries(table, rows, batch_size=max(len(rows), 1))
         except AitoV2Error as e:
             raise ToolError(str(e)) from e
         return {'table': table, 'uploaded': len(rows)}
