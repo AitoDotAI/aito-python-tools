@@ -4,6 +4,11 @@ Changelog
 Unreleased
 ----------
 
+- ``docs/client-resilience.md``: a v2 batch is atomic (core-3 measured it under SIGKILL and
+  client timeouts), so the resume recipe no longer allows for a partly landed batch. A timed-out
+  batch can still land after the client gave up, so after an ``'unknown'`` outcome the recipe
+  is now only an upsert into a keyed collection; the count-the-table path is gone.
+
 - ``aito start`` and ``aito upgrade`` run engine v2.12.0 (was v2.11.2), pinned by its
   multi-arch digest. The SDK and CLI tests have run against v2.12.0 since 1.3.0.
 - The v1 ``AitoClient`` gives up on a request after 300 s by default (``timeout=300.0``), as the
