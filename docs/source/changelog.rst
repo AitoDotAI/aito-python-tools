@@ -4,10 +4,10 @@ Changelog
 Unreleased
 ----------
 
-- ``docs/client-resilience.md``: a v2 batch is atomic on a single-node server. It was measured
-  under SIGKILL and client timeouts at 1000 rows, and under SIGKILL at 163,770 rows (9.99 MB,
-  just under the request limit), so the resume recipe no longer allows for a partly landed
-  batch. A timed-out batch can still land after the client gave up, so after an ``'unknown'``
+- ``docs/client-resilience.md``: a v2 batch is atomic on a single-node server, measured under
+  SIGKILL and client timeouts at 1,000 rows and under SIGKILL at the 10 MB request limit
+  (163,770 rows). The engine commits a batch in one step, so sizes in between are expected to
+  behave the same, and the resume recipe no longer allows for a partly landed batch. A timed-out batch can still land after the client gave up, so after an ``'unknown'``
   outcome the recipe is now only an upsert into a keyed collection; the count-the-table path is
   gone.
 

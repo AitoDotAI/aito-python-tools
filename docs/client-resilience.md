@@ -94,8 +94,9 @@ limit is `aito.v2.limits.MAX_REQUEST_BYTES`.
 
 ### Resuming a failed upload (v2)
 
-**Is a v2 batch atomic?** Yes, on a single-node server, at every size a request can have: a
-batch lands with all of its rows or none.
+**Is a v2 batch atomic?** Yes, on a single-node server: a batch lands with all of its rows or
+none. This was measured at 1,000 rows and at the 10 MB request limit (163,770 rows). The engine
+commits a v2 batch in one step, so the sizes in between are expected to behave the same.
 - **Refusals** (checked on v2.11.2 and v2.12.0): a batch with one bad row, such as a missing key
   or two rows with the same key, is refused whole, and none of its rows land.
 - **Crashes and timeouts at 1000 rows** (measured by core-3 on 6–7.11.2026, board ticket
@@ -105,8 +106,10 @@ batch lands with all of its rows or none.
 - **Crashes at the size limit** (measured by core-3 on 13.11.2026, board ticket
   td-20261113143812172383): one batch of 163,770 rows, 9.99 MB, just under the request limit,
   with the server SIGKILLed at nine points while it processed it. This was done into a
-  collection without a key and into a keyed one with `on_conflict=update`. All 18 killed runs
-  left no rows, and both answered runs kept every row after a restart.
+  collection without a key and into a keyed one, preloaded with the same keys, with
+  `on_conflict=update`. All 18 killed runs left none of the batch's rows (in the keyed
+  collection every row kept its previous value), and both answered runs kept every row after a
+  restart.
 - **Not measured:** a cluster node, and the v1 stream insert and `/import`. The engine's
   50,000-row chunks (`?batchSize=`) apply to the v1 stream insert and the v1 file upload, not to
   a v2 `/batch` (the engine's limits page, `/v2/limits`, "Batch & ingest", since aito-core
