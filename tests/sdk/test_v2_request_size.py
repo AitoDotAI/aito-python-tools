@@ -190,14 +190,51 @@ class TestUploadCsvOverTheLimit(SizeCase):
 
 @unittest.skipIf(mcp_server is None, 'the mcp extra is not installed')
 class TestMcpUploadRows(SizeCase):
-    def test_a_12_mb_upload_is_split(self):
+    """an agent retries a failed call whole, so a call is one request unless it is an upsert"""
+
+    def serve(self, client):
+        with mock.patch.dict(os.environ, {mcp_server.WRITES_ENV: '1'}):
+            return mcp_server.build_server(client)
+
+    def call(self, server, **arguments):
+        from tests.sdk.test_mcp_server import run
+        return run(server, 'upload_rows', arguments)
+
+    def test_a_plain_call_over_the_limit_is_refused_before_sending(self):
+        client = self.client()
+        server = self.serve(client)
+        with self.assertRaises(mcp_server.ToolError) as raised:
+            self.call(server, table='t', rows=rows_of(120, 100_000))
+        message = str(raised.exception)
+        self.assertIn('10,000,000', message)
+        self.assertIn('on_conflict="update"', message)
+        self.assertEqual(client._session.calls, [])
+
+    def test_a_plain_call_under_the_limit_is_one_request(self):
+        rows = rows_of(95, 100_000)   # 9.5 MB: over the SDK's 9 MB target, under the limit
+        client = self.client([inserted(95)])
+        out = self.call(self.serve(client), table='t', rows=rows)
+        self.assertEqual(out, {'table': 't', 'uploaded': 95})
+        self.assertEqual([c['json'] for c in self.batches(client)], [rows])
+
+    def test_an_upsert_over_the_limit_is_sent_in_parts(self):
         rows = rows_of(120, 100_000)
         client = self.client([inserted(89), inserted(31)])
-        with mock.patch.dict(os.environ, {mcp_server.WRITES_ENV: '1'}):
-            server = mcp_server.build_server(client)
-        from tests.sdk.test_mcp_server import run
-        out = run(server, 'upload_rows', {'table': 't', 'rows': rows})
+        out = self.call(self.serve(client), table='t', rows=rows, on_conflict='update')
         self.assertEqual(out, {'table': 't', 'uploaded': 120})
         sent = self.batches(client)
         self.assertGreater(len(sent), 1)
+        self.assertTrue(all(c['url'].endswith('/data/t/batch?on_conflict=update') for c in sent))
         self.assertEqual([r for c in sent for r in c['json']], rows)
+
+    def test_on_conflict_error_is_not_an_upsert(self):
+        client = self.client()
+        with self.assertRaises(mcp_server.ToolError):
+            self.call(self.serve(client), table='t', rows=rows_of(120, 100_000), on_conflict='error')
+        self.assertEqual(client._session.calls, [])
+
+    def test_a_bad_on_conflict_is_refused(self):
+        client = self.client()
+        with self.assertRaises(mcp_server.ToolError):
+            self.call(self.serve(client), table='t', rows=[{'id': 'a'}], on_conflict='merge')
+        self.assertEqual(client._session.calls, [])

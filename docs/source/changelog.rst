@@ -36,8 +36,12 @@ Unreleased
   failed batch still says how far the upload got. A single row over the limit raises
   ``AitoV2Error`` (code ``payload_too_large``) before anything is sent. ``upload_csv`` sends a
   CSV over the limit through the client path (``via='auto'``), or refuses it before sending
-  (``via='server'``). The MCP ``upload_rows`` tool splits the same way; under 9 MB it is one
-  request, as before. A dropped connection on a body over the limit now says so.
+  (``via='server'``). A dropped connection on a body over the limit now says so.
+- MCP ``upload_rows`` stays one all-or-nothing request, since an agent retries a failed call
+  whole. A call over the 10,000,000-byte limit is refused before sending, naming the limit,
+  where it used to fail at the engine. It takes a new ``on_conflict`` (``'update'``,
+  ``'ignore'`` or ``'error'``). An upsert into a table with a primary key over the limit is sent
+  in parts, since resending it can't duplicate rows.
 
 1.3.0
 -----
