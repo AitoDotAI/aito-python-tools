@@ -4,9 +4,10 @@ Changelog
 Unreleased
 ----------
 
-- ``docs/client-resilience.md``: a v2 batch of up to 50,000 rows is atomic (core-3 measured
-  1000-row batches under SIGKILL and client timeouts; the engine commits in flushes of 50,000),
-  so the resume recipe no longer allows for a partly landed batch. A timed-out
+- ``docs/client-resilience.md``: a v2 batch is measured atomic for 1000-row batches (the
+  default ``batch_size``) under SIGKILL and client timeouts, so the resume recipe no longer
+  allows for a partly landed batch at that size. Above the engine's 50,000-row flush, a batch
+  may land in parts. A timed-out
   batch can still land after the client gave up, so after an ``'unknown'`` outcome the recipe
   is now only an upsert into a keyed collection; the count-the-table path is gone.
 
