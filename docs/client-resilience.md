@@ -49,7 +49,8 @@ v2.12.0:
 
 Other engine facts, checked on v2.11.2 and v2.12.0:
 - A batch is all or nothing: one bad row (say, two rows with the same key) fails it, and none
-  of it lands.
+  of it lands. A batch interrupted by a crash also lands whole or not at all (see
+  "Is a v2 batch atomic?" below).
 - `on_conflict` takes `error` (the default), `update` or `ignore`. On a collection without a
   key, `update` and `ignore` are refused with 400 ("requires a declared primaryKey"), so they
   can never append twice.
@@ -93,19 +94,23 @@ limit is `aito.v2.limits.MAX_REQUEST_BYTES`.
 
 ### Resuming a failed upload (v2)
 
-**Is a v2 batch atomic?** Measured atomic for 1000-row batches: each landed whole or not at
-all. The engine commits in flushes of 50,000 rows, so a batch of up to 50,000 is expected to be
-atomic but isn't measured, and larger batches may land in parts.
+**Is a v2 batch atomic?** Yes, on a single-node server, at every size a request can have: a
+batch lands with all of its rows or none.
 - **Refusals** (checked on v2.11.2 and v2.12.0): a batch with one bad row, such as a missing key
   or two rows with the same key, is refused whole, and none of its rows land.
-- **Crashes and timeouts** (measured by core-3 on 6–7.11.2026, board ticket
+- **Crashes and timeouts at 1000 rows** (measured by core-3 on 6–7.11.2026, board ticket
   td-20261107000050914187): 20 SIGKILLs across 517 batches, and client timeouts across 614
   batches. Every batch landed with all of its rows or none, and every acknowledged batch
-  survived a restart. The batches were of 1000 rows, the client's default `batch_size`.
-- **Bigger batches:** the 50,000-row flush is from the engine's limits page (`/v2/limits`,
-  "Data writes"; raised with `?batchSize=`). Measuring above it is board ticket
-  td-20261113082157454471. Until then, keep `batch_size` at the default if you rely on
-  atomicity.
+  survived a restart.
+- **Crashes at the size limit** (measured by core-3 on 13.11.2026, board ticket
+  td-20261113143812172383): one batch of 163,770 rows, 9.99 MB, just under the request limit,
+  with the server SIGKILLed at nine points while it processed it. This was done into a
+  collection without a key and into a keyed one with `on_conflict=update`. All 18 killed runs
+  left no rows, and both answered runs kept every row after a restart.
+- **Not measured:** a cluster node, and the v1 stream insert and `/import`. The engine's
+  50,000-row chunks (`?batchSize=`) apply to the v1 stream insert and the v1 file upload, not to
+  a v2 `/batch` (the engine's limits page, `/v2/limits`, "Batch & ingest", since aito-core
+  #1944).
 
 **But a timed-out batch can land late.** In the same runs, a batch the client had given up on
 still committed afterwards: the row total held still for 15 s, then grew by 13 whole batches

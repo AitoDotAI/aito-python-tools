@@ -4,12 +4,12 @@ Changelog
 Unreleased
 ----------
 
-- ``docs/client-resilience.md``: a v2 batch is measured atomic for 1000-row batches (the
-  default ``batch_size``) under SIGKILL and client timeouts, so the resume recipe no longer
-  allows for a partly landed batch at that size. Above the engine's 50,000-row flush, a batch
-  may land in parts. A timed-out
-  batch can still land after the client gave up, so after an ``'unknown'`` outcome the recipe
-  is now only an upsert into a keyed collection; the count-the-table path is gone.
+- ``docs/client-resilience.md``: a v2 batch is atomic on a single-node server. It was measured
+  under SIGKILL and client timeouts at 1000 rows, and under SIGKILL at 163,770 rows (9.99 MB,
+  just under the request limit), so the resume recipe no longer allows for a partly landed
+  batch. A timed-out batch can still land after the client gave up, so after an ``'unknown'``
+  outcome the recipe is now only an upsert into a keyed collection; the count-the-table path is
+  gone.
 
 - ``aito start`` and ``aito upgrade`` run engine v2.12.0 (was v2.11.2), pinned by its
   multi-arch digest. The SDK and CLI tests have run against v2.12.0 since 1.3.0.
